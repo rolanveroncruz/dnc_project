@@ -1,38 +1,29 @@
-mod handlers;
 mod db;
-
-use axum::{
-    routing::get,
-    Router,
-};
-
 use std::net::SocketAddr;
-use crate::handlers::{
-    boiler::hello_world,
-    boiler::healthcheck,
-};
+use tokio::net::TcpListener;
 use dotenvy::dotenv;
-use db::{init_db,check_db};
-
+use dnc_backend::{build_app, AppState};
+use db::check_db;
 #[tokio::main]
 async fn main(){
     dotenv().ok(); // Load environment variables from .env file
-    let _db = init_db().await.unwrap();
+    let port=std::env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse::<u16>()
+        .expect("PORT must be a valid u16");
 
-    check_db(&_db).await;
-    println!("Database connection established");
+    let the_state= AppState::new().await;
+    check_db(&the_state.db).await;
+    let app=build_app(the_state);
+    let addr= SocketAddr::from(([0,0,0,0], port));
+    let listener=TcpListener::bind(addr)
+        .await
+        .expect("Failed to bind");
 
-    let server_port = std::env::var("SERVER_PORT").unwrap_or("3000".to_string());
+    println!("Listening on http://{}", addr);
 
-    let app = Router::new()
-        .route("/", get( hello_world))
-        .route("/healthcheck", get( healthcheck));
-
-    // Define the address to serve the application on
-    let addr = SocketAddr::from(([127, 0, 0, 1], server_port.parse::<u16>().unwrap()));
-
-    println!("Listening on {}", addr);
-    axum::serve(tokio::net::TcpListener::bind(&addr).await.unwrap(), app)
+    axum::serve(listener, app)
         .await
         .unwrap();
+
 }

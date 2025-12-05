@@ -1,8 +1,8 @@
-use std::time::Duration;
-use sea_orm::{Database, ConnectOptions, DatabaseConnection, DbErr};
 use log;
-
-pub async fn init_db() -> Result<DatabaseConnection, DbErr>{
+use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
+use std::time::Duration;
+#[allow(dead_code)]
+pub async fn init_db() -> Result<DatabaseConnection, DbErr> {
     dotenvy::dotenv().ok();
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut opt = ConnectOptions::new(db_url);
@@ -19,8 +19,12 @@ pub async fn init_db() -> Result<DatabaseConnection, DbErr>{
     let db = Database::connect(opt).await?;
     Ok(db)
 }
-
+#[allow(dead_code)]
 pub async fn check_db(db: &DatabaseConnection) {
     assert!(db.ping().await.is_ok());
-    db.clone().close().await.expect("Database connection problem");
+    println!("Database connection OK");
+    db.clone()
+        .close()
+        .await
+        .expect("Database connection problem");
 }

@@ -17,3 +17,10 @@ Learning to use sea-orm.
 ### Dec 5, 2025
 * haven't started trying migrations yet. 
 * will follow 02prod book re healthcheck endpoint.
+* The plan moving forward is to:
+  *   learn enough of SeaORM to be able to write migrations to setup the user+roles+permissions 
+      tables with initial data.
+  * Then implement the login endpoint, which requires checking the credentials against the database.
+  * Refactor the code to automate testing the login endpoint.
+  * Initialize the frontend to allow logging in.
+  * Setup the containerization and deployment.
