@@ -16,3 +16,6 @@ serde_json = "1.0.145"
 dotenvy = "0.15.7"
 sea-orm = { version="2.0.0-rc.20", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 log = "0.4.28"
+argon2 = "0.5.3"
+password-hash = "0.5.0"
+rand_core = "0.9.3"

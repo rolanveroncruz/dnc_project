@@ -1,13 +1,16 @@
 use sea_orm_migration::{prelude::*, schema::*};
 use crate::m20251205_075435_create_table_role::Role;
 
+// password hashing libraries
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2};
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // 1. Create the User table
         manager
             .create_table(
                 Table::create()
@@ -54,6 +57,15 @@ impl MigrationTrait for Migration {
 impl Migration {
 
     async fn add_user(manager: &SchemaManager<'_>, name: &str, email: &str, password: &str, role_name: &str)->Result<(), DbErr>{
+        let mut rng = OsRng;
+        let salt = SaltString::generate(&mut rng);
+        let argon2 = Argon2::default();
+        let password_hash= argon2
+            .hash_password(password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
+
+
         let insert = Query::insert()
             .into_table(User::Table)
             .columns([User::Name, User::Email, User::Password, User::RoleId])
@@ -61,7 +73,7 @@ impl Migration {
                 Query::select()
                     .expr(Expr::val(name))
                     .expr(Expr::val(email))
-                    .expr(Expr::val(password))
+                    .expr(Expr::val(password_hash))
 
                     .expr(
                         SimpleExpr::SubQuery(

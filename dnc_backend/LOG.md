@@ -24,4 +24,6 @@ Learning to use sea-orm.
   3. roles are names for groups of permissions.
   4. role-permissions aggregate permissions into roles.
   5. users are people who have roles.
+* Completed migrations, including refactoring the creation of the above tables and the insertion of initial data. 
+  This insertion of initial data includes hashing the password.
   
