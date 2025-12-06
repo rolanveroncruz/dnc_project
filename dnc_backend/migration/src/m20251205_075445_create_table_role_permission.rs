@@ -47,6 +47,21 @@ impl MigrationTrait for Migration {
 
 
         // 2. Insert Initial Data
+        Self::insert_role_permission(manager, "Administrator", "user", "create").await?;
+
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(RolePermission::Table).to_owned())
+            .await?;
+        Ok(())
+    }
+}
+
+impl Migration {
+    async fn insert_role_permission(manager:&SchemaManager<'_>, role_name:&str, resource_name:&str, permission_action_name:&str)->Result<(), DbErr>{
         let insert = Query::insert()
             .into_table(RolePermission::Table)
             .columns([RolePermission::RoleId, RolePermission::PermissionId])
@@ -60,7 +75,7 @@ impl MigrationTrait for Migration {
                                 Query::select()
                                     .column(Role::Id)
                                     .from(Role::Table)
-                                    .and_where(Expr::col(Role::Name).eq("Administrator"))
+                                    .and_where(Expr::col(Role::Name).eq(role_name))
                                     .limit(1)
                                     .to_owned()
                                     .into()
@@ -73,8 +88,8 @@ impl MigrationTrait for Migration {
                             None,
                             Box::new(
                                 Query::select()
-                                .column((Permission::Table, Permission::Id))
-                                .from(Permission::Table)
+                                    .column((Permission::Table, Permission::Id))
+                                    .from(Permission::Table)
                                     // 1. Join with DataObject table
                                     .join(
                                         JoinType::InnerJoin,
@@ -83,11 +98,11 @@ impl MigrationTrait for Migration {
                                             .equals((DataObject::Table,DataObject::Id)),
                                     )
                                     // 2. Filter using the Data Object's name column
-                                    .and_where( Expr::col(DataObject::Name).eq("User"))
+                                    .and_where( Expr::col(DataObject::Name).eq(resource_name))
                                     // 3. Filter using the PermissionAction enum
                                     .and_where(
                                         Expr::col(Permission::Action).eq(
-                                            Expr::val("create").cast_as(PermissionAction::EnumName)
+                                            Expr::val(permission_action_name).cast_as(PermissionAction::EnumName)
                                         )
                                     )
                                     .limit(1)
@@ -101,16 +116,11 @@ impl MigrationTrait for Migration {
             .to_owned();
 
         manager.exec_stmt(insert).await?;
-
         Ok(())
+
+
     }
 
-    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .drop_table(Table::drop().table(RolePermission::Table).to_owned())
-            .await?;
-        Ok(())
-    }
 }
 #[derive(Iden)]
 enum RolePermission{

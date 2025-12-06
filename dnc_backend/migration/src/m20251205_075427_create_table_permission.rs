@@ -55,21 +55,15 @@ impl MigrationTrait for Migration {
             .await?;
 
         // 3. Create Initial Data
-        let insert = Query::insert()
-            .into_table(Permission::Table)
-            .columns([Permission::DataObjectId, Permission::Action])
-            .select_from(
-                Query::select()
-                    .column(DataObject::Id)
-                    .expr(Expr::val("create").cast_as(PermissionAction::EnumName))
-                    .from(DataObject::Table)
-                    .and_where(Expr::col(DataObject::Name).eq("User"))
-                    .to_owned()
-            )
-            .map_err(|e|DbErr::Custom(format!("{:?}", e)))?
-            .to_owned();
-
-        manager.exec_stmt(insert).await?;
+        Self::add_permission(manager, "dataobject", "create").await?;
+        Self::add_permission(manager, "dataobject", "read").await?;
+        Self::add_permission(manager, "dataobject", "update").await?;
+        Self::add_permission(manager, "user", "create").await?;
+        Self::add_permission(manager, "user", "read").await?;
+        Self::add_permission(manager, "user", "update").await?;
+        Self::add_permission(manager, "permission", "create").await?;
+        Self::add_permission(manager, "permission", "read").await?;
+        Self::add_permission(manager, "permission", "update").await?;
 
         Ok(())
     }
@@ -81,6 +75,28 @@ impl MigrationTrait for Migration {
 
         Ok(())
     }
+}
+
+impl Migration {
+    async fn add_permission(manager: &SchemaManager<'_>, resource_name: &str, action_val: &str)->Result<(), DbErr>{
+        let insert = Query::insert()
+            .into_table(Permission::Table)
+            .columns([Permission::DataObjectId, Permission::Action])
+            .select_from(
+                Query::select()
+                    .column(DataObject::Id)
+                    .expr(Expr::val(action_val).cast_as(PermissionAction::EnumName))
+                    .from(DataObject::Table)
+                    .and_where(Expr::col((DataObject::Table, DataObject::Name)).eq(resource_name))
+                    .to_owned()
+            )
+            .map_err(|e|DbErr::Custom(format!("{:?}", e)))?
+            .to_owned();
+
+        manager.exec_stmt(insert).await
+
+    }
+
 }
 
 #[derive(DeriveIden)]

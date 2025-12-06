@@ -40,14 +40,28 @@ impl MigrationTrait for Migration {
             ).await?;
 
         // 2. Create the Admin user
+        Self::add_user(manager, "admin", "admin@dnc.com.ph", "password", "Administrator").await?;
+
+        Ok(())
+
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(User::Table).to_owned()).await?;
+        Ok(())
+    }
+}
+impl Migration {
+
+    async fn add_user(manager: &SchemaManager<'_>, name: &str, email: &str, password: &str, role_name: &str)->Result<(), DbErr>{
         let insert = Query::insert()
             .into_table(User::Table)
             .columns([User::Name, User::Email, User::Password, User::RoleId])
             .select_from(
                 Query::select()
-                    .expr(Expr::val("Admin"))
-                    .expr(Expr::val("admin@dnc.com.ph"))
-                    .expr(Expr::val("password"))
+                    .expr(Expr::val(name))
+                    .expr(Expr::val(email))
+                    .expr(Expr::val(password))
 
                     .expr(
                         SimpleExpr::SubQuery(
@@ -56,7 +70,7 @@ impl MigrationTrait for Migration {
                                 Query::select()
                                     .column(Role::Id)
                                     .from(Role::Table)
-                                    .and_where(Expr::col(Role::Name).eq("Administrator"))
+                                    .and_where(Expr::col(Role::Name).eq(role_name))
                                     .limit(1)
                                     .to_owned()
                                     .into()
@@ -67,13 +81,6 @@ impl MigrationTrait for Migration {
             ).map_err(|e|DbErr::Custom(format!("{:?}", e)))?
             .to_owned();
         manager.exec_stmt(insert).await?;
-
-        Ok(())
-
-    }
-
-    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(User::Table).to_owned()).await?;
         Ok(())
     }
 }
