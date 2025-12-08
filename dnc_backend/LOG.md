@@ -27,3 +27,5 @@ Learning to use sea-orm.
 * Completed migrations, including refactoring the creation of the above tables and the insertion of initial data. 
   This insertion of initial data includes hashing the password.
   
+### Dec 8, 2025
+* Completed the login endpoint.
