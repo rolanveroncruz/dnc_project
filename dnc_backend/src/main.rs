@@ -1,5 +1,5 @@
 mod db;
-
+mod entities;
 use std::error::Error;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -24,7 +24,8 @@ async fn main()-> Result<(), Box<dyn Error>> {
         .expect("PORT must be a valid u16");
 
     let the_state= AppState::new().await;
-    check_db(&the_state.db).await;
+    let db = &the_state.db;
+    check_db(&db).await;
     let app=build_app(the_state);
     let addr= SocketAddr::from(([0,0,0,0], port));
     let listener=TcpListener::bind(addr)

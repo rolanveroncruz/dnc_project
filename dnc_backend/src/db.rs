@@ -23,8 +23,4 @@ pub async fn init_db() -> Result<DatabaseConnection, DbErr> {
 pub async fn check_db(db: &DatabaseConnection) {
     assert!(db.ping().await.is_ok());
     println!("Database connection OK");
-    db.clone()
-        .close()
-        .await
-        .expect("Database connection problem");
 }

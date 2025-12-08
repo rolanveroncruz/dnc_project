@@ -1,5 +1,6 @@
 mod handlers;
 mod db;
+mod entities;
 #[derive(Clone)]
 pub struct AppState {
     pub db: DatabaseConnection,
@@ -13,12 +14,14 @@ impl AppState {
 }
 
 
-use axum::{Router, routing::get};
+use axum::{Router, routing::get, routing::post};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck};
+use handlers::user_roles_permissions::{ login_handler};
 pub fn build_app(my_state:AppState)->Router{
     Router::new()
         .route("/hello", get( hello_world))
         .route("/healthcheck", get( healthcheck))
+        .route("/login", post(login_handler))
         .with_state(my_state)
 }
