@@ -5,7 +5,9 @@ mod entities;
 pub struct AppState {
     pub db: DatabaseConnection,
 }
-use http::Method;
+
+use std::time::Duration;
+use http::{Method, Request, Response};
 use tower_http::cors::CorsLayer;
 
 impl AppState {
@@ -21,8 +23,9 @@ use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck};
 use handlers::user_roles_permissions::{ login_handler};
 use tower_http::trace::{TraceLayer, DefaultMakeSpan, DefaultOnResponse};
+use tracing::Span;
 
-pub fn build_app(my_state:AppState)->Router{
+pub fn build_app(my_state:AppState) ->Router{
 
     // 1. Define CORS policy
     let cors = CorsLayer::new()
@@ -44,13 +47,23 @@ pub fn build_app(my_state:AppState)->Router{
         .layer(cors)
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(
-                    DefaultMakeSpan::new()
-                        .include_headers(true)
+                .on_request(())
+                .make_span_with( |req: &Request<_>| {
+                    tracing::info_span!(
+                        "http_request",
+                        method = %req.method(),
+                        path = %req.uri().path(),
                     )
-                .on_response(DefaultOnResponse::new()
-                    .include_headers(true)
-                    .latency_unit(tower_http::LatencyUnit::Millis),
-                ),
-        )
+                })
+                .on_response( |res:&Response<_>, latency:Duration, span: &Span| {
+                    let status = res.status().as_u16();
+                    let latency_ms = latency.as_millis() as u64;
+                    tracing::info!(
+                        parent:span,
+                        status = status,
+                        latency_ms = latency_ms,
+                        "request_finished"
+                    );
+                },
+        ))
 }

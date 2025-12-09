@@ -34,7 +34,7 @@ async fn main()-> Result<(), Box<dyn Error>> {
     tracing_subscriber::registry()
         .with(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("tower_http=trace, axum=trace,info" )),
+                .unwrap_or_else(|_| EnvFilter::new("info,tower_http=info, axum=info" )),
         )
         .with(
             fmt::layer()
