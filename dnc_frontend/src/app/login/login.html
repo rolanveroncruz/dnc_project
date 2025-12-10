@@ -24,12 +24,21 @@
           <mat-label>Password</mat-label>
           <input
             matInput
-            type="password"
+            [type]="showPassword? 'text' : 'password'"
             placeholder="Enter your password"
             required
             name="password"
             [(ngModel)]="password"
           />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="showPassword = !showPassword"
+            aria-label="Toggle password visibility"
+            >
+            <mat-icon>{{showPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
         </mat-form-field>
 
         <!-- Submit button -->

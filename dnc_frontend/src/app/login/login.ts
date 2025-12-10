@@ -3,8 +3,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import {MatIconModule} from "@angular/material/icon";
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {LoginService} from "../login.service";
+import {firstValueFrom} from 'rxjs';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -13,24 +15,33 @@ import {LoginService} from "../login.service";
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
     FormsModule,
     ReactiveFormsModule,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
-export class Login {
+export class LoginComponent {
   email: string = "";
   password: string = "";
+  isLoading: boolean = false;
+  showPassword: boolean = false;
   constructor(private LoginService: LoginService){}
 
-  handleSubmit(){
-    console.log("submit")
-    this.LoginService.login(this.email, this.password).subscribe(res => {
-      console.log(res)
-    }, err => {
-      console.log(err)
-    });
+  async handleSubmit(){
+    this.isLoading = true;
+
+    try{
+      const response = await firstValueFrom(this.LoginService.login(this.email, this.password));
+      console.log("In component, Login success:", response);
+
+    } catch(e:any){
+      console.log("In component, Login failed:", e.message);
+    } finally {
+      this.isLoading = false;
+    }
+
 
   }
 }

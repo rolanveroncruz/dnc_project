@@ -1,0 +1,79 @@
+/* src/app/layout/shell.component.scss */
+
+.layout-container {
+  height: 100vh;
+}
+
+.layout-sidenav {
+  width: 240px;
+  background: #fafafa;
+  border-right: 1px solid #e0e0e0;
+}
+
+.sidenav-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  height: 64px;
+}
+
+.app-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.layout-main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.layout-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.toolbar-menu-button {
+  margin-right: 8px;
+}
+
+.toolbar-title {
+  font-weight: 600;
+  margin-right: 16px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* Top-nav buttons spacing and selected state */
+.top-nav-button {
+  margin: 0 8px;
+  text-transform: none; // keep labels like 'Home' instead of 'HOME'
+}
+
+.top-nav-icon {
+  margin-right: 4px;
+  font-size: 18px;
+}
+
+/* Selected top nav */
+.top-active {
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* Main outlet area */
+.layout-content {
+  padding: 16px 24px;
+  overflow: auto;
+  background: #f5f5f5;
+  height: 100%;
+}
+
+/* Active link styling in sidenav */
+.active-link {
+  background: rgba(25, 118, 210, 0.08);
+}
