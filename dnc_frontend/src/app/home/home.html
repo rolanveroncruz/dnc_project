@@ -1,1 +1,87 @@
-<h1>Home</h1>
+<mat-toolbar color="primary" class="navbar">
+  <span class="logo">
+    <mat-icon>health_and_safety</mat-icon> Dental Network Company
+  </span>
+  <span class="spacer"></span>
+  <div class="nav-links">
+    <button mat-button>Services</button>
+    <button mat-button>Locations</button>
+    <button mat-button>About Us</button>
+    <button mat-raised-button color="accent" routerLink="login">Login</button>
+  </div>
+</mat-toolbar>
+
+<header class="hero">
+  <div class="hero-content">
+    <h1>Your Smile, Our Passion.</h1>
+    <p>Comprehensive dental care for the whole company across the country.</p>
+    <div class="hero-actions">
+      <button mat-raised-button color="primary"  (click)="bookAppointment()">
+        Schedule an Appointment <mat-icon iconPositionEnd>calendar_today</mat-icon>
+      </button>
+      <button mat-stroked-button class="learn-more-btn">
+        Learn More
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="section-container">
+  <h2 class="section-title">Our Services</h2>
+  <div class="cards-grid">
+    @for (service of services; track service.title) {
+      <mat-card  class="service-card">
+        <mat-card-header>
+          <div mat-card-avatar class="service-icon">
+            <mat-icon>{{ service.icon }}</mat-icon>
+          </div>
+          <mat-card-title>{{ service.title }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ service.description }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">DETAILS</button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+</section>
+
+<mat-divider></mat-divider>
+
+<section class="section-container bg-light">
+  <h2 class="section-title">Find a Clinic Near You</h2>
+  <div class="cards-grid">
+    @for (clinic of clinics; track clinic.name) {
+      <mat-card class="location-card">
+        <mat-card-header>
+          <mat-card-title>{{ clinic.name }}</mat-card-title>
+          <mat-card-subtitle>{{ clinic.hours }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="address-row"><mat-icon inline>place</mat-icon> {{ clinic.address }}</p>
+          <p class="phone-row"><mat-icon inline>phone</mat-icon> {{ clinic.phone }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+         <button mat-stroked-button color="primary">Get Directions</button>
+          <button mat-button color="accent">Call Now</button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-content">
+    <div>
+      <h3>BrightSmile Dental Group</h3>
+      <p>&copy; 2025 All Rights Reserved.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Patient Portal</a>
+    </div>
+  </div>
+</footer>
