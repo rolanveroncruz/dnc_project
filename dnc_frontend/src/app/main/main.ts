@@ -10,6 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { filter } from 'rxjs/operators';
+import {MatLine} from '@angular/material/core';
 
 type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
@@ -39,6 +40,7 @@ interface SideNavItem {
     MatListModule,
     MatButtonModule,
     MatDividerModule,
+    MatLine,
   ],
   templateUrl: './main.html',
   styleUrl: './main.scss',
@@ -48,11 +50,11 @@ export class MainComponent {
   activeTopNav: TopNavKey = 'dashboard';
 
   topNavItems: TopNavItem[] = [
-    { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: 'dashboard',    disabled:false},
-    { key: 'csr',        label: 'CSR',        icon: 'build',         route: 'csr',     disabled:false},
-    { key: 'reports',    label: 'Reports',    icon: 'bar_chart',     route: 'reports', disabled:false},
-    { key: 'billing',    label: 'Billing',    icon: 'receipt_long',  route: 'billing', disabled:false},
-    { key: 'setup',      label: 'Setup',      icon: 'settings',      route: 'setup',   disabled:false},
+    { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: '/main/dashboard',    disabled:false},
+    { key: 'csr',        label: 'CSR',        icon: 'build',         route: '/main/csr',     disabled:false},
+    { key: 'reports',    label: 'Reports',    icon: 'bar_chart',     route: '/main/reports', disabled:false},
+    { key: 'billing',    label: 'Billing',    icon: 'receipt_long',  route: '/main/billing', disabled:false},
+    { key: 'setup',      label: 'Setup',      icon: 'settings',      route: '/main/setup',   disabled:false},
   ];
 
   sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
@@ -74,10 +76,11 @@ export class MainComponent {
       { label: 'Payments',  icon: 'payments',   route: '/billing/payments' },
     ],
     setup: [
-      { label: 'Dental Services',     icon: 'Dentistry',     route: '/main/setup/dental-services' },
-      { label: 'Users',     icon: 'person',     route: '/setup/users' },
-      { label: 'Roles',     icon: 'security',   route: '/setup/roles' },
-      { label: 'System',    icon: 'tune',       route: '/setup/system' },
+      { label: 'Dental Services',     icon: 'D',     route: '/main/setup/dental-services' },
+      { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities' },
+      { label: 'Users',     icon: 'person',     route: '/main/setup/users' },
+      { label: 'Roles',     icon: 'security',   route: '/main/setup/roles' },
+      { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos' },
     ],
   };
 
@@ -105,7 +108,7 @@ export class MainComponent {
   private updateActiveTopNavFromUrl() {
     const url = this.router.url.split('?')[0].split('#')[0];
     const segments = url.split('/').filter(Boolean); // remove empty segments
-    const firstSegment = (segments[0] ?? 'home') as TopNavKey;
+    const firstSegment = (segments[1] ?? 'home') as TopNavKey;
 
     // If segment is not in our keys, default to 'home'
     const validKeys: TopNavKey[] = ['dashboard', 'csr', 'reports', 'billing', 'setup'];

@@ -42,7 +42,8 @@
       <span class="spacer"></span>
 
       <!-- Top-level nav items -->
-      <ng-container *ngFor="let item of topNavItems">
+      @for ( item of topNavItems; track  item.key) {
+        <ng-container>
         <button
           mat-button
           class="top-nav-button"
@@ -55,6 +56,7 @@
           {{ item.label }}
         </button>
       </ng-container>
+      }
 
       <span class="spacer"></span>
 

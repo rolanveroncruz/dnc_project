@@ -8,6 +8,11 @@ import {CsrHome} from './features/csr/csr-home/csr-home';
 import {ReportsHome} from './features/reports/reports-home/reports-home';
 import {BillingHome} from './features/billing/billing-home/billing-home';
 import {MainHome} from './features/main/main-home/main-home';
+import {DentalServices} from './features/setup/dental-services/dental-services';
+import {ClinicCapabilities} from './features/setup/clinic-capabilities/clinic-capabilities';
+import {SetupUsers} from './features/setup/setup-users/setup-users';
+import {SetupRoles} from './features/setup/setup-roles/setup-roles';
+import {SetupHMOs} from './features/setup/setup-hmos/setup-hmos';
 
 export const routes: Routes = [
   {
@@ -23,8 +28,16 @@ export const routes: Routes = [
       { path: '', component: MainHome, title: 'Main Home'},
       {
         path: 'setup',
-        component: SetupHome,
         title: 'Setup Home',
+        children:[
+          { path: '', component: SetupHome, title: 'Setup Home'},
+          { path: 'dental-services', component: DentalServices, title: 'Dental Services'},
+          { path: 'clinic-capabilities', component: ClinicCapabilities, title: 'Clinic Capabilities'},
+          { path: 'users', component: SetupUsers, title: 'Users'},
+          { path: 'roles', component: SetupRoles, title: 'Roles'},
+          { path: 'hmos', component: SetupHMOs, title: 'HMOs'}
+
+         ]
       }, // end of 'setup'
       {
         path:'dashboard',

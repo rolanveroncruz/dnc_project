@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-setup-home',
-  imports: [],
+  imports: [
+  ],
   templateUrl: './setup-home.html',
   styleUrl: './setup-home.scss',
 })
