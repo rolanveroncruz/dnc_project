@@ -29,3 +29,8 @@ Learning to use sea-orm.
   
 ### Dec 8, 2025
 * Completed the login endpoint.
+
+
+Dec 20, 2025
+* When login is successful, need to return a menu->activation map, which contains information about which menu items 
+* are activated for the user.

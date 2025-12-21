@@ -11,6 +11,20 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
 
         // 1. Create Table
+        // DataObjects are the objects (essentially db tables) that we need to maintain permissions for.
+        // I've removed the dataobjects and permissions as DataObjects as these are internal tables
+        // no user would ever need to add to or modify.
+        // Instead, we have:
+        // 1. dental_service
+        // 2. clinic_capabilities
+        // 3. user
+        // 4. role
+        // 5. role_permission
+        // 6. hmo
+        // 7. dental_contract
+        // 8. clinic
+        // 9. dentist
+        // 10. endorsement
         manager
             .create_table(
                 Table::create()
@@ -45,9 +59,16 @@ impl MigrationTrait for Migration {
             ).await?;
 
         // 3.Insert Initial Data
-        Self::add_dataobject(manager, "dataobject", "dataobject Data Object").await?;
-        Self::add_dataobject(manager, "permission", "permission Data Object").await?;
+        Self::add_dataobject(manager, "dental_service", "dental_service Data Object").await?;
+        Self::add_dataobject(manager, "clinic_capability", "clinic_capability Data Object").await?;
         Self::add_dataobject(manager, "user", "user Data Object").await?;
+        Self::add_dataobject(manager, "role", "permission Data Object").await?;
+        Self::add_dataobject(manager, "role_permission", "role_permission Data Object").await?;
+        Self::add_dataobject(manager, "hmo", "hmo Data Object").await?;
+        Self::add_dataobject(manager, "dental_contract", "dental_contract Data Object").await?;
+        Self::add_dataobject(manager, "clinic", "clinic Data Object").await?;
+        Self::add_dataobject(manager, "dentist", "dentist Data Object").await?;
+        Self::add_dataobject(manager, "endorsement", "endorsement Data Object").await?;
 
         Ok(())
     }

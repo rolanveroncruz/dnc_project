@@ -10,13 +10,16 @@ use jsonwebtoken::Header;
 use password_hash::{PasswordHash, PasswordVerifier};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Related};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Deserialize)]
 pub struct LoginRequest {
     email: String,
     password: String,
 }
-
+/// JWT Claims
+/// This struct represents the information in the JWT token, which after encoding,
+/// becomes the token field in the LoginResponse struct.
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims{
     sub:i32, // subject: user id
@@ -24,6 +27,17 @@ struct Claims{
     role_id: i32,
     exp:usize // expiration timestamp
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MenuState {
+    Enabled,
+    Disabled,
+}
+
+pub type MenuActivationMap = HashMap<String, MenuState>;
+
+
 
 use crate::AppState;
 #[derive(Serialize)]
@@ -34,6 +48,7 @@ pub struct LoginResponse{
     role_id:i32,
     role_name:String,
     token:String,
+    menu_activation_map:MenuActivationMap,
 }
 use crate::entities::{user, role};
 
@@ -123,6 +138,9 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
                 format!("Token creation error:{e}")
             )
         })?;
+    let mut menu_activation_map:MenuActivationMap = MenuActivationMap::new();
+    menu_activation_map.insert("setup".to_string(), MenuState::Enabled);
+    menu_activation_map.insert("csr".to_string(), MenuState::Disabled);
 
     // 4. Return LoginResponse with JWT included
     let response = LoginResponse {
@@ -132,6 +150,7 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
         role_id: user.role_id,
         role_name:role.name,
         token,
+        menu_activation_map,
     };
 
     Ok(Json(response))

@@ -76,11 +76,15 @@ export class MainComponent {
       { label: 'Payments',  icon: 'payments',   route: '/billing/payments' },
     ],
     setup: [
-      { label: 'Dental Services',     icon: 'D',     route: '/main/setup/dental-services' },
+      { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services' },
       { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities' },
       { label: 'Users',     icon: 'person',     route: '/main/setup/users' },
       { label: 'Roles',     icon: 'security',   route: '/main/setup/roles' },
       { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos' },
+      { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/hmos' },
+      { label: 'Clinics',    icon: 'home',       route: '/main/setup/hmos' },
+      { label: 'Dentists',    icon: 'face',       route: '/main/setup/hmos' },
+      { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/hmos' },
     ],
   };
 

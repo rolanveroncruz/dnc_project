@@ -12,6 +12,7 @@ path = "src/lib.rs"
 [dependencies]
 argon2 = { version="0.5", features = ["std"] }
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+chrono = "0.4.42"
 
 [dependencies.sea-orm-migration]
 version = "2.0.0-rc.20"

@@ -47,7 +47,16 @@ impl MigrationTrait for Migration {
 
 
         // 2. Insert Initial Data
-        Self::insert_role_permission(manager, "Administrator", "user", "create").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "dental_service").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "clinic_capability").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "user").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "role").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "role_permission").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "hmo").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "dental_contract").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "clinic").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "dentist").await?;
+        Self::insert_role_all_permissions(manager, "Administrator", "endorsement").await?;
 
         Ok(())
     }
@@ -61,7 +70,15 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration {
+    async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
+        let permissions = vec!["create", "read", "update" ];
+        for permission in permissions{
+            Self::insert_role_permission(manager, role_name, resource_name, permission).await?;
+        }
+        Ok(())
+    }
     async fn insert_role_permission(manager:&SchemaManager<'_>, role_name:&str, resource_name:&str, permission_action_name:&str)->Result<(), DbErr>{
+        println!("Inserting {} permission for role: {} and resource: {}", permission_action_name, role_name, resource_name);
         let insert = Query::insert()
             .into_table(RolePermission::Table)
             .columns([RolePermission::RoleId, RolePermission::PermissionId])

@@ -22,7 +22,7 @@ use axum::{Router, routing::get, routing::post};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck};
 use handlers::user_roles_permissions::{ login_handler};
-use tower_http::trace::{TraceLayer, DefaultMakeSpan, DefaultOnResponse};
+use tower_http::trace::{TraceLayer };
 use tracing::Span;
 
 pub fn build_app(my_state:AppState) ->Router{

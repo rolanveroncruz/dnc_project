@@ -1,3 +1,9 @@
+/// Permissions are how we control roles' access to resources.
+/// A permission can either be 'create', 'read' or 'update'.
+/// Instead of having a (role, dataobject, permission) triplet,
+/// it has seemed better to have (role, (dataobject, permission)) pair.
+/// The (dataobject permission) tuple is what we store in the permission table.
+///
 use sea_orm_migration::{prelude::* };
 use sea_orm_migration::sea_query::extension::postgres::Type;
 use crate::m20251205_063628_create_table_dataobject::DataObject;
@@ -55,15 +61,18 @@ impl MigrationTrait for Migration {
             .await?;
 
         // 3. Create Initial Data
-        Self::add_permission(manager, "dataobject", "create").await?;
-        Self::add_permission(manager, "dataobject", "read").await?;
-        Self::add_permission(manager, "dataobject", "update").await?;
-        Self::add_permission(manager, "user", "create").await?;
-        Self::add_permission(manager, "user", "read").await?;
-        Self::add_permission(manager, "user", "update").await?;
-        Self::add_permission(manager, "permission", "create").await?;
-        Self::add_permission(manager, "permission", "read").await?;
-        Self::add_permission(manager, "permission", "update").await?;
+        Self::add_all_permissions(manager, "dataobject").await?;
+        Self::add_all_permissions(manager, "permission").await?;
+        Self::add_all_permissions(manager, "dental_service").await?;
+        Self::add_all_permissions(manager, "clinic_capability").await?;
+        Self::add_all_permissions(manager, "user" ).await?;
+        Self::add_all_permissions(manager, "role").await?;
+        Self::add_all_permissions(manager, "role_permission").await?;
+        Self::add_all_permissions(manager, "hmo").await?;
+        Self::add_all_permissions(manager, "dental_contract").await?;
+        Self::add_all_permissions(manager, "clinic").await?;
+        Self::add_all_permissions(manager, "dentist").await?;
+        Self::add_all_permissions(manager, "endorsement").await?;
 
         Ok(())
     }
@@ -78,6 +87,12 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration {
+    async fn add_all_permissions(manager: &SchemaManager<'_>, resource_name: &str)->Result<(), DbErr>{
+        Self::add_permission(manager, resource_name, "create").await?;
+        Self::add_permission(manager, resource_name, "read").await?;
+        Self::add_permission(manager, resource_name, "update").await?;
+        Ok(())
+    }
     async fn add_permission(manager: &SchemaManager<'_>, resource_name: &str, action_val: &str)->Result<(), DbErr>{
         let insert = Query::insert()
             .into_table(Permission::Table)

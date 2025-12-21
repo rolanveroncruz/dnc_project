@@ -24,13 +24,7 @@ impl MigrationTrait for Migration {
             .await?;
 
         // 2. Insert the Administrator Role
-        let insert = Query::insert()
-            .into_table(Role::Table)
-            .columns([Role::Name, Role::Description])
-            .values_panic(["Administrator".into(), "Admin Role".into()])
-            .to_owned();
-
-        manager.execute(insert).await?;
+        Self::insert_role(manager, "Administrator", "Administrator Role").await?;
 
         Ok(())
     }
@@ -40,6 +34,18 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(Role::Table).to_owned())
             .await
     }
+}
+impl Migration{
+    async fn insert_role(manager:&SchemaManager<'_>, role_name:&str, description:&str)->Result<(), DbErr>{
+        let insert = Query::insert()
+            .into_table(Role::Table)
+            .columns([Role::Name, Role::Description])
+            .values_panic([Expr::val(role_name), Expr::val(description)])
+            .to_owned();
+        manager.exec_stmt(insert).await?;
+        Ok(())
+    }
+
 }
 #[derive(Iden)]
 pub enum Role{
