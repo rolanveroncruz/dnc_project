@@ -34,3 +34,6 @@ Learning to use sea-orm.
 Dec 20, 2025
 * When login is successful, need to return a menu->activation map, which contains information about which menu items 
 * are activated for the user.
+
+### Dec 21, 2025
+* inserted migration for Admin to access all menu items in setup.
