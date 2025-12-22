@@ -1,4 +1,5 @@
 mod db;
+#[allow(unused_imports, dead_code)]
 mod entities;
 use std::error::Error;
 use std::net::SocketAddr;

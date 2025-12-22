@@ -1,14 +1,14 @@
+use sea_orm::{DatabaseConnection, RelationTrait};
+use sea_orm::QuerySelect;
 use argon2::Argon2;
 use axum::{
-    extract::{Json, State}
-
-    ,
+    extract::{Json, State},
     http::StatusCode,
 };
 use jsonwebtoken::{encode, EncodingKey};
 use jsonwebtoken::Header;
 use password_hash::{PasswordHash, PasswordVerifier};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Related};
+use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter,};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -32,7 +32,6 @@ struct Claims{
 #[serde(rename_all = "lowercase")]
 pub enum MenuState {
     Enabled,
-    Disabled,
 }
 
 pub type MenuActivationMap = HashMap<String, MenuState>;
@@ -50,11 +49,12 @@ pub struct LoginResponse{
     token:String,
     menu_activation_map:MenuActivationMap,
 }
-use crate::entities::{user, role};
+use crate::entities::{user, permission, data_object, role_permission};
 
 pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<LoginRequest>)
-    -> Result<Json<LoginResponse>,(StatusCode, String)>{
-    // 1. Find user by email
+                           -> Result<Json<LoginResponse>,(StatusCode, String)>{
+
+    // 1. Find the user by email
     let maybe_user = user::Entity::find()
         .filter(user::Column::Email.eq(payload.email.clone()))
         .one(&state.db)
@@ -71,8 +71,7 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
     };
 
     // 2. Fetch the role associated with the user.
-    let maybe_role = user::Entity::find_related()
-        .filter(role::Column::Id.eq(user.role_id))
+    let maybe_role= crate::entities::role::Entity::find_by_id(user.role_id)
         .one(&state.db)
         .await
         .map_err(|e| {
@@ -138,9 +137,8 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
                 format!("Token creation error:{e}")
             )
         })?;
-    let mut menu_activation_map:MenuActivationMap = MenuActivationMap::new();
-    menu_activation_map.insert("setup".to_string(), MenuState::Enabled);
-    menu_activation_map.insert("csr".to_string(), MenuState::Disabled);
+
+    let menu_activation_map = build_menu_activation_map(& state.db, role.id).await.unwrap();
 
     // 4. Return LoginResponse with JWT included
     let response = LoginResponse {
@@ -155,7 +153,32 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
 
     Ok(Json(response))
 
+}
+
+use crate::entities::sea_orm_active_enums::PermissionActionEnum;
+async fn build_menu_activation_map(db: &DatabaseConnection, role_id:i32)->Result<MenuActivationMap, DbErr>{
+    let mut menu_activation_map:MenuActivationMap = MenuActivationMap::new();
+    let readable_data_objects:Vec<String>= role_permission::Entity::find()
+        .join( sea_orm::JoinType::InnerJoin, role_permission::Relation::Permission.def(),)
+        .join( sea_orm::JoinType::InnerJoin, permission::Relation::DataObject.def(),)
+        .filter(permission::Column::Action.eq(PermissionActionEnum::Read))
+        .filter(role_permission::Column::RoleId.eq(role_id))
+        .select_only()
+        .column(data_object::Column::Name)
+        .distinct()
+        .into_tuple::<(String,)>()
+        .all(db)
+        .await?
+        .into_iter()
+        .map(|(name,) | name)
+        .collect();
 
 
+    for data_object in readable_data_objects{
+        menu_activation_map.insert(data_object, MenuState::Enabled);
+    }
+
+
+    Ok(menu_activation_map)
 
 }
