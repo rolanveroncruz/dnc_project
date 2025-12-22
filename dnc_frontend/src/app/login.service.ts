@@ -30,7 +30,7 @@ export class LoginService {
     const body: LoginRequest = {email, password};
     return this.httpClient.post<LoginResponse>(`${this.apiUrl}/login`, body).pipe(
       tap( response=> {
-        if (response.token) {
+        if (this.isValid(response)){
           this.setUser(response);
         }else{
           console.log("In Service, Login Failed");
@@ -38,6 +38,13 @@ export class LoginService {
       })
     )
   }
+  // Check if the response is valid. If so, write it to the local storage.
+  isValid(user: LoginResponse):boolean {
+
+
+    return true;
+  }
+
   setUser(user: LoginResponse){
     this.currentUser = user;
   console.log("In Service, Login Success:", this.currentUser);

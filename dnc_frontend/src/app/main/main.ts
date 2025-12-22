@@ -47,14 +47,15 @@ interface SideNavItem {
 })
 export class MainComponent {
   isSidenavOpened = false;
+  canSideNavToggle = false;
   activeTopNav: TopNavKey = 'dashboard';
 
   topNavItems: TopNavItem[] = [
-    { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: '/main/dashboard',    disabled:false},
-    { key: 'csr',        label: 'CSR',        icon: 'build',         route: '/main/csr',     disabled:false},
-    { key: 'reports',    label: 'Reports',    icon: 'bar_chart',     route: '/main/reports', disabled:false},
-    { key: 'billing',    label: 'Billing',    icon: 'receipt_long',  route: '/main/billing', disabled:false},
-    { key: 'setup',      label: 'Setup',      icon: 'settings',      route: '/main/setup',   disabled:false},
+    { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: '/main/dashboard',    disabled:true},
+    { key: 'csr',        label: 'CSR',        icon: 'build',         route: '/main/csr',     disabled:true},
+    { key: 'reports',    label: 'Reports',    icon: 'bar_chart',     route: '/main/reports', disabled:true},
+    { key: 'billing',    label: 'Billing',    icon: 'receipt_long',  route: '/main/billing', disabled:true},
+    { key: 'setup',      label: 'Setup',      icon: 'settings',      route: '/main/setup',   disabled:true},
   ];
 
   sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
@@ -96,7 +97,10 @@ export class MainComponent {
   }
 
   toggleSidenav() {
-    this.isSidenavOpened = !this.isSidenavOpened;
+    if (this.canSideNavToggle) {
+      this.isSidenavOpened = !this.isSidenavOpened;
+
+    }
   }
 
   onTopNavClick(item: TopNavItem) {
