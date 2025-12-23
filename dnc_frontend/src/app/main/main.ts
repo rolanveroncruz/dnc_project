@@ -11,7 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { filter } from 'rxjs/operators';
 import {MatLine} from '@angular/material/core';
-import {LoginService} from '../login.service';
+import {LoginService, MenuActivationMap} from '../login.service';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 
 type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
@@ -43,6 +44,9 @@ interface SideNavItem {
     MatButtonModule,
     MatDividerModule,
     MatLine,
+    MatMenu,
+    MatMenuTrigger,
+    MatMenuItem,
   ],
   templateUrl: './main.html',
   styleUrl: './main.scss',
@@ -92,7 +96,7 @@ export class MainComponent implements OnInit {
       { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/endorsements', disabled:true },
     ],
   };
-  menu_activation_map: Map<string, string>|undefined = new Map();
+  menu_activation_map: MenuActivationMap = {};
 
   constructor() {
     // Keep activeTopNav in sync with the current URL
@@ -103,22 +107,26 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log("In MainComponent ngOnInit, IsLoggedIn:", this.loginService?.IsLoggedIn);
-    this.menu_activation_map = this.loginService.menu_activation_map;
+    console.log("In MainComponent ngOnInit, IsLoggedIn:", this.loginService?.menuActivationMap());
+    this.menu_activation_map = this.loginService?.menuActivationMap();
     console.log("In MainComponent ngOnInit, menu_activation_map:", this.menu_activation_map);
     this.configure_setup_menu();
   }
+  logout(){
+    this.loginService.logout();
+    this.router.navigate(['/']);
+  }
   configure_setup_menu(){
     if (
-      this.menu_activation_map?.has("dental_service") ||
-      this.menu_activation_map?.has("clinic_capability") ||
-      this.menu_activation_map?.has("user" ) ||
-      this.menu_activation_map?.has("role" ) ||
-      this.menu_activation_map?.has("hmo" ) ||
-      this.menu_activation_map?.has("dental_contract" ) ||
-      this.menu_activation_map?.has("clinic" ) ||
-      this.menu_activation_map?.has("dentist" ) ||
-      this.menu_activation_map?.has("endorsement" )
+      "dental_service" in this.menu_activation_map ||
+      "clinic capability" in this.menu_activation_map ||
+      "user" in this.menu_activation_map ||
+      "role" in this.menu_activation_map ||
+      "hmo" in this.menu_activation_map ||
+      "dental_contract" in this.menu_activation_map ||
+      "clinic" in this.menu_activation_map ||
+      "dentist" in this.menu_activation_map ||
+      "endorsement" in this.menu_activation_map
     )
       this.topNavItems[4].disabled = false;
 
@@ -135,7 +143,7 @@ export class MainComponent implements OnInit {
 
 
   activate_item(menu_key:string, side_nav_key:string){
-    const activated_item= this.menu_activation_map?.has(menu_key);
+    const activated_item= menu_key in this.menu_activation_map;
     console.log(`${side_nav_key} Activated? ${activated_item}`);
     this.activate_SideNav(side_nav_key, activated_item);
   }

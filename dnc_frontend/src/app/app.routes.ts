@@ -17,6 +17,7 @@ import {SetupDentalContracts} from './features/setup/setup-dental-contracts/setu
 import {SetupClinics} from './features/setup/setup-clinics/setup-clinics';
 import {SetupDentists} from './features/setup/setup-dentists/setup-dentists';
 import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
+import {authGuard} from './auth-guard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,7 @@ export const routes: Routes = [
   {
     path:'main',
     component: MainComponent,
+    canActivate: [authGuard],
     title: 'Main',
     children: [
       { path: '', component: MainHome, title: 'Main Home'},

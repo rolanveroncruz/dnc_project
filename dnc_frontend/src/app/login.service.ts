@@ -1,8 +1,15 @@
-import { Injectable } from '@angular/core';
+import {Inject, Injectable, PLATFORM_ID, computed, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../environments/environment';
+import {isPlatformBrowser} from '@angular/common';
 import {Observable, tap} from 'rxjs';
 
+export type MenuActivationMap = Record<string, string>;
+
+type PersistedAuth = {
+  token: string;
+  menuActivationMap: MenuActivationMap;
+}
 
 export interface LoginRequest{
   email: string;
@@ -16,18 +23,34 @@ export interface LoginResponse{
   role_id: number;
   role_name: string;
   token: string;
-  menu_activation_map: Record<string, string>;
+  menu_activation_map: MenuActivationMap;
 }
+
+const AUTH_KEY = 'dnc_login_v1';
+
 @Injectable({
   providedIn: 'root',
 })
 export class LoginService {
+  private readonly isBrowser:boolean;
   private apiUrl = environment.apiUrl;
   currentUser: LoginResponse | undefined;
-  IsLoggedIn: boolean = false;
-  menu_activation_map: Map<string, string> |  undefined;
-  constructor( private httpClient: HttpClient ) {
-    console.log('Login Service Initialized', Math.random())
+
+  // ---- state (signals) -------
+  readonly token =signal<string | null>(null);
+  readonly menuActivationMap = signal<MenuActivationMap> ({});
+
+
+  // ---- derived state -------
+  readonly isLoggedIn = computed( ()=> !!this.token());
+
+  constructor(@Inject(PLATFORM_ID)platformId: object, private httpClient: HttpClient ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+
+    if (this.isBrowser){
+      this.restoreFromStorage();
+    }
+
   }
 
   login(email:string, password:string):Observable<LoginResponse>{
@@ -36,16 +59,21 @@ export class LoginService {
       tap( response=> {
         let isValid = this.isValid(response);
         if (isValid){
-          this.menu_activation_map = new Map(Object.entries(response.menu_activation_map))
-          this.setUser(response);
+          /* Successful Login()
+           */
+          this.loginSuccess(response.token, response.menu_activation_map);
+
         }else{
           console.log("In Service, Login Failed");
         }
       })
     )
   }
-  getMenuActivationMap():Map<string, string> | undefined{
-    return this.menu_activation_map;
+
+  loginSuccess(token: string, menuActivationMap: MenuActivationMap){
+    this.token.set(token);
+    this.menuActivationMap.set(menuActivationMap);
+    this.persistToStorage();
   }
 
   // Check if the response is valid. If so, write it to the local storage.
@@ -68,17 +96,49 @@ export class LoginService {
     );
   }
 
-  setUser(user: LoginResponse){
-    this.currentUser = user;
-    this.IsLoggedIn = true;
-  console.log("In Service, Login Success:", this.currentUser);
-  }
   logout(){
-    this.currentUser = undefined;
-    this.IsLoggedIn = false;
+    this.token.set(null);
+    this.menuActivationMap.set({});
+    this.clearStorage();
   }
-  isLoggedIn(){
-    return this.IsLoggedIn;
+ // ---------- persistence helpers ----------------------
+  private clearStorage(){
+    if (!this.isBrowser) return;
+    localStorage.removeItem(AUTH_KEY);
+  }
+
+  private persistToStorage(){
+    if (!this.isBrowser) return;
+
+    const token = this.token();
+    if (!token) return;
+
+    const payLoad:PersistedAuth = {
+      token,
+      menuActivationMap: this.menuActivationMap()
+    };
+
+    localStorage.setItem(AUTH_KEY, JSON.stringify(payLoad));
+  }
+
+  private restoreFromStorage(){
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return;
+    try{
+      const parsed = JSON.parse(raw) as Partial<PersistedAuth>;
+      if (typeof parsed.token === 'string' && parsed.token.length > 0){
+        this.token.set(parsed.token);
+      } else{
+        this.token.set(null);
+      }
+      if (parsed.menuActivationMap && typeof parsed.menuActivationMap === 'object'){
+        this.menuActivationMap.set(parsed.menuActivationMap);
+      }else{
+        this.menuActivationMap.set({});
+      }
+    } catch {
+      localStorage.removeItem(AUTH_KEY);
+    }
   }
 
 }
