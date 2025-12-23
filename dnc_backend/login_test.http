@@ -1,0 +1,12 @@
+### request to example server
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "admin@dnc.com.ph",
+  "password": "password"
+}
+
+
+
+###

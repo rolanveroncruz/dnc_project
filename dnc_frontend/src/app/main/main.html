@@ -1,0 +1,90 @@
+<!-- src/app/layout/shell.component.html -->
+<mat-sidenav-container class="layout-container">
+  <!-- Side Navigation -->
+  <mat-sidenav
+    class="layout-sidenav"
+    [mode]="'side'"
+    [(opened)]="isSidenavOpened"
+  >
+    <div class="sidenav-header">
+      <span class="app-title">My App</span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <mat-nav-list>
+      @for(item of sideNavItems; track item.label) {
+      <a
+        mat-list-item
+        [routerLink]="item.disabled? null: item.route"
+        routerLinkActive="active-link"
+        [class.disabled-item] = "item.disabled"
+        [attr.tabindex]="item.disabled ? -1 : 0"
+        [attr.aria-disabled]="item.disabled"
+      >
+        <mat-icon matListIcon>{{ item.icon }}</mat-icon>
+        <span matLine>{{ item.label }}</span>
+      </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main Content Area -->
+  <mat-sidenav-content class="layout-main">
+    <!-- Top Navigation -->
+    <mat-toolbar color="primary" class="layout-toolbar">
+      <button
+        mat-icon-button
+        class="toolbar-menu-button"
+        (click)="toggleSidenav()"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+      <img src="dnc_logo.png" width="60" alt="logo" class="logo" />
+
+      <span class="toolbar-title">Dental Network Company</span>
+
+      <span class="spacer"></span>
+
+      <!-- Top-level nav items -->
+      @for ( item of topNavItems; track  item.key) {
+        <ng-container>
+        <button
+          mat-button
+          class="top-nav-button"
+          [routerLink]="item.route"
+          [disabled]="item.disabled"
+          [ngClass]="{ 'top-active': activeTopNav === item.key }"
+          (click)="onTopNavClick(item)"
+        >
+          <mat-icon class="top-nav-icon">{{ item.icon }}</mat-icon>
+          {{ item.label }}
+        </button>
+      </ng-container>
+      }
+
+      <span class="spacer"></span>
+
+      <!-- Right side: user/profile, etc. -->
+      <button mat-icon-button aria-label="Notifications">
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button
+              aria-label="Account"
+              [matMenuTriggerFor]="accountMenu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #accountMenu="matMenu">
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- Child content from router -->
+    <main class="layout-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
