@@ -77,3 +77,10 @@
 .active-link {
   background: rgba(25, 118, 210, 0.08);
 }
+
+
+.disabled-item {
+  pointer-events: none;
+  opacity: 0.15;
+  cursor: default;
+}

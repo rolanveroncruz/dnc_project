@@ -41,7 +41,7 @@ pub type MenuActivationMap = HashMap<String, MenuState>;
 use crate::AppState;
 #[derive(Serialize)]
 pub struct LoginResponse{
-    id: i32,
+    user_id: i32,
     name: String,
     email: String,
     role_id:i32,
@@ -142,7 +142,7 @@ pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<Log
 
     // 4. Return LoginResponse with JWT included
     let response = LoginResponse {
-        id: user.id,
+        user_id: user.id,
         name: user.name,
         email: user.email,
         role_id: user.role_id,

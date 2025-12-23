@@ -13,15 +13,19 @@
     <mat-divider></mat-divider>
 
     <mat-nav-list>
+      @for(item of sideNavItems; track item.label) {
       <a
         mat-list-item
-        *ngFor="let item of sideNavItems"
-        [routerLink]="item.route"
+        [routerLink]="item.disabled? null: item.route"
         routerLinkActive="active-link"
+        [class.disabled-item] = "item.disabled"
+        [attr.tabindex]="item.disabled ? -1 : 0"
+        [attr.aria-disabled]="item.disabled"
       >
         <mat-icon matListIcon>{{ item.icon }}</mat-icon>
         <span matLine>{{ item.label }}</span>
       </a>
+      }
     </mat-nav-list>
   </mat-sidenav>
 

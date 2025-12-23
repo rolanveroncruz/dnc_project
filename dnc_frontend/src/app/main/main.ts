@@ -1,5 +1,5 @@
 // src/app/layout/shell.component.ts
-import { Component } from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 
@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { filter } from 'rxjs/operators';
 import {MatLine} from '@angular/material/core';
+import {LoginService} from '../login.service';
 
 type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
@@ -19,13 +20,14 @@ interface TopNavItem {
   label: string;
   icon: string;
   route: string;
-  disabled?: boolean;
+  disabled: boolean;
 }
 
 interface SideNavItem {
   label: string;
   icon: string;
   route: string;
+  disabled: boolean;
 }
 
 @Component({
@@ -45,10 +47,12 @@ interface SideNavItem {
   templateUrl: './main.html',
   styleUrl: './main.scss',
 })
-export class MainComponent {
+export class MainComponent implements OnInit {
   isSidenavOpened = false;
   canSideNavToggle = false;
   activeTopNav: TopNavKey = 'dashboard';
+  private router= inject(Router);
+  public loginService = inject(LoginService);
 
   topNavItems: TopNavItem[] = [
     { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: '/main/dashboard',    disabled:true},
@@ -60,40 +64,89 @@ export class MainComponent {
 
   sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
     dashboard: [
-      { label: 'Overview',  icon: 'dashboard', route: '/home/overview' },
-      { label: 'Activity',  icon: 'timeline',  route: '/home/activity' },
+      { label: 'Overview',  icon: 'dashboard', route: '/home/overview', disabled:true },
+      { label: 'Activity',  icon: 'timeline',  route: '/home/activity', disabled:true },
     ],
     csr: [
-      { label: 'Orders',    icon: 'shopping_cart', route: '/operations/orders' },
-      { label: 'Inventory', icon: 'inventory_2',   route: '/operations/inventory' },
-      { label: 'Customers', icon: 'group',         route: '/operations/customers' },
+      { label: 'Orders',    icon: 'shopping_cart', route: '/operations/orders', disabled:true },
+      { label: 'Inventory', icon: 'inventory_2',   route: '/operations/inventory',disabled: true },
+      { label: 'Customers', icon: 'group',         route: '/operations/customers', disabled:true },
     ],
     reports: [
-      { label: 'Sales Report',    icon: 'stacked_line_chart', route: '/reports/sales' },
-      { label: 'Performance',     icon: 'insights',           route: '/reports/performance' },
+      { label: 'Sales Report',    icon: 'stacked_line_chart', route: '/reports/sales',disabled:true },
+      { label: 'Performance',     icon: 'insights',           route: '/reports/performance', disabled:true },
     ],
     billing: [
-      { label: 'Invoices',  icon: 'receipt',    route: '/billing/invoices' },
-      { label: 'Payments',  icon: 'payments',   route: '/billing/payments' },
+      { label: 'Invoices',  icon: 'receipt',    route: '/billing/invoices', disabled:true },
+      { label: 'Payments',  icon: 'payments',   route: '/billing/payments', disabled:true },
     ],
     setup: [
-      { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services' },
-      { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities' },
-      { label: 'Users',     icon: 'person',     route: '/main/setup/users' },
-      { label: 'Roles',     icon: 'security',   route: '/main/setup/roles' },
-      { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos' },
-      { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/hmos' },
-      { label: 'Clinics',    icon: 'home',       route: '/main/setup/hmos' },
-      { label: 'Dentists',    icon: 'face',       route: '/main/setup/hmos' },
-      { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/hmos' },
+      { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services', disabled:true},
+      { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities', disabled:true },
+      { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
+      { label: 'Roles',     icon: 'security',   route: '/main/setup/roles', disabled:true },
+      { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos', disabled:true  },
+      { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/dental-contracts', disabled:true },
+      { label: 'Clinics',    icon: 'home',       route: '/main/setup/clinics', disabled:true },
+      { label: 'Dentists',    icon: 'face',       route: '/main/setup/dentists', disabled:true },
+      { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/endorsements', disabled:true },
     ],
   };
+  menu_activation_map: Map<string, string>|undefined = new Map();
 
-  constructor(private router: Router) {
+  constructor() {
     // Keep activeTopNav in sync with the current URL
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe(() => this.updateActiveTopNavFromUrl());
+
+  }
+
+  ngOnInit(): void {
+    console.log("In MainComponent ngOnInit, IsLoggedIn:", this.loginService?.IsLoggedIn);
+    this.menu_activation_map = this.loginService.menu_activation_map;
+    console.log("In MainComponent ngOnInit, menu_activation_map:", this.menu_activation_map);
+    this.configure_setup_menu();
+  }
+  configure_setup_menu(){
+    if (
+      this.menu_activation_map?.has("dental_service") ||
+      this.menu_activation_map?.has("clinic_capability") ||
+      this.menu_activation_map?.has("user" ) ||
+      this.menu_activation_map?.has("role" ) ||
+      this.menu_activation_map?.has("hmo" ) ||
+      this.menu_activation_map?.has("dental_contract" ) ||
+      this.menu_activation_map?.has("clinic" ) ||
+      this.menu_activation_map?.has("dentist" ) ||
+      this.menu_activation_map?.has("endorsement" )
+    )
+      this.topNavItems[4].disabled = false;
+
+    this.activate_item("dental_service", "Dental Services");
+    this.activate_item("clinic_capability", "Clinic Capabilities");
+    this.activate_item("user", "Users");
+    this.activate_item("role", "Roles");
+    this.activate_item("hmo", "HMOs");
+    this.activate_item("dental_contract", "Dental Contracts");
+    this.activate_item("clinic", "Clinics");
+    this.activate_item("dentist", "Dentists");
+    this.activate_item("endorsement", "Endorsements");
+  }
+
+
+  activate_item(menu_key:string, side_nav_key:string){
+    const activated_item= this.menu_activation_map?.has(menu_key);
+    console.log(`${side_nav_key} Activated? ${activated_item}`);
+    this.activate_SideNav(side_nav_key, activated_item);
+  }
+
+  activate_SideNav( key:string, activated:boolean |undefined ){
+    const setup_sidenav = this.sideNavConfig['setup'];
+    const sideNavItem = setup_sidenav.find(item => item.label === key);
+    if (!sideNavItem) return;
+    sideNavItem.disabled = !activated;
+
+
   }
 
   toggleSidenav() {
