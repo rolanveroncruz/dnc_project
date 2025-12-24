@@ -12,23 +12,23 @@ use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter,};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LoginRequest {
-    email: String,
-    password: String,
+    pub email: String,
+    pub password: String,
 }
 /// JWT Claims
 /// This struct represents the information in the JWT token, which after encoding,
 /// becomes the token field in the LoginResponse struct.
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims{
+pub struct Claims{
     sub:i32, // subject: user id
-    email:String,
+    pub email:String,
     role_id: i32,
     exp:usize // expiration timestamp
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize,)]
 #[serde(rename_all = "lowercase")]
 pub enum MenuState {
     Enabled,
@@ -39,14 +39,14 @@ pub type MenuActivationMap = HashMap<String, MenuState>;
 
 
 use crate::AppState;
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LoginResponse{
     user_id: i32,
     name: String,
     email: String,
     role_id:i32,
     role_name:String,
-    token:String,
+    pub token:String,
     menu_activation_map:MenuActivationMap,
 }
 use crate::entities::{user, permission, data_object, role_permission};

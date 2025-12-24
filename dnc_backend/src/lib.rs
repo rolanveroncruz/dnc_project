@@ -1,4 +1,5 @@
-mod handlers;
+pub mod handlers;
+pub use handlers::{LoginRequest, LoginResponse, Claims};
 mod db;
 mod entities;
 #[derive(Clone)]
