@@ -8,8 +8,9 @@ pub struct AppState {
 }
 
 use std::time::Duration;
-use http::{Method, Request, Response};
-use tower_http::cors::CorsLayer;
+use http::{HeaderValue, Method, Request, Response};
+use http::request::Parts;
+use tower_http::cors::{CorsLayer, AllowOrigin};
 
 impl AppState {
     pub async fn new() -> Self {
@@ -19,20 +20,43 @@ impl AppState {
 }
 
 
-use axum::{Router, routing::get, routing::post};
+use axum::{Router, routing::get, routing::post, middleware};
 use sea_orm::DatabaseConnection;
-use handlers::boiler::{hello_world, healthcheck};
+use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::user_roles_permissions::{ login_handler};
 use tower_http::trace::{TraceLayer };
 use tracing::Span;
 
+
+
+fn protected_routes()->Router<AppState>{
+    Router::<AppState>::new()
+        .route("/test_post", post(test_posting_json))
+        .route("/whoami", post(whoami))
+}
+use jsonwebtoken::{Validation, Algorithm, DecodingKey};
+use handlers::JwtConfig;
+use std::sync::Arc;
+use handlers::{require_jwt};
+
 pub fn build_app(my_state:AppState) ->Router{
 
     // 1. Define CORS policy
+    let allowed_hosts : Vec<String> = std::env::var("ALLOW_HOSTS")
+        .unwrap_or_default()
+        .split(",")
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
     let cors = CorsLayer::new()
         // allow Angular dev origin
-        .allow_origin("http://localhost:4200".parse::<http::HeaderValue>().unwrap())
-        // allow methods
+        .allow_origin(AllowOrigin::predicate( move |origin: &HeaderValue, _parts:&Parts | {
+            allowed_hosts
+                .iter()
+                .any(|allowed| origin.as_bytes() == allowed.as_bytes())
+        }))
+             // allow methods
         .allow_methods(vec![Method::GET,
                             Method::POST,
                             Method::PUT,
@@ -40,7 +64,20 @@ pub fn build_app(my_state:AppState) ->Router{
         // allow headers frontend sends
         .allow_headers(vec![http::header::AUTHORIZATION, http::header::CONTENT_TYPE]);
 
+    let mut validation = Validation::new(Algorithm::HS512);
+    validation.validate_exp = true;
+
+    let jwt_cfg = Arc::new(JwtConfig{
+        decoding_key: DecodingKey::from_secret(std::env::var("JWT_SECRET").unwrap().as_bytes()),
+        validation,
+    });
+    let protected:Router<AppState> = protected_routes().layer(middleware::from_fn_with_state(
+        jwt_cfg.clone(),
+        require_jwt,
+    ));
+
     Router::new()
+        .nest("/api", protected)
         .route("/hello", get( hello_world))
         .route("/healthcheck", get( healthcheck))
         .route("/login", post(login_handler))

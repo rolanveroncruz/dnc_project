@@ -12,6 +12,8 @@ use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter,};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::handlers::structs::Claims;
+
 #[derive(Serialize, Deserialize)]
 pub struct LoginRequest {
     pub email: String,
@@ -20,13 +22,6 @@ pub struct LoginRequest {
 /// JWT Claims
 /// This struct represents the information in the JWT token, which after encoding,
 /// becomes the token field in the LoginResponse struct.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims{
-    sub:i32, // subject: user id
-    pub email:String,
-    role_id: i32,
-    exp:usize // expiration timestamp
-}
 
 #[derive(Serialize, Deserialize,)]
 #[serde(rename_all = "lowercase")]

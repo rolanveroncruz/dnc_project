@@ -1,5 +1,13 @@
 
 pub mod boiler;
 pub mod user_roles_permissions;
+mod structs;
+mod request_parts;
+mod middlewares;
 
-pub use user_roles_permissions::{LoginRequest, LoginResponse, Claims};
+pub use structs::Claims;
+
+pub use user_roles_permissions::{LoginRequest, LoginResponse};
+pub use structs::JwtConfig;
+
+pub use middlewares::{inject_jwt_config, require_jwt};
