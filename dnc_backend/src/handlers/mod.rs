@@ -5,9 +5,9 @@ mod structs;
 mod request_parts;
 mod middlewares;
 
-pub use structs::Claims;
+pub use structs::{Claims, JwtConfig};
 
 pub use user_roles_permissions::{LoginRequest, LoginResponse};
-pub use structs::JwtConfig;
 
 pub use middlewares::{inject_jwt_config, require_jwt};
+pub use boiler::WhoAmIResponse;

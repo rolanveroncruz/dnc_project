@@ -32,7 +32,7 @@ use tracing::Span;
 fn protected_routes()->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
-        .route("/whoami", post(whoami))
+        .route("/whoami", get(whoami))
 }
 use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;

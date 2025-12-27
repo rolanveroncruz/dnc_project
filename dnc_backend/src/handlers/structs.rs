@@ -15,7 +15,7 @@ pub struct JwtConfig {
     pub decoding_key: DecodingKey,
     pub validation: Validation,
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AuthUser {
     pub claims: Claims,
 }

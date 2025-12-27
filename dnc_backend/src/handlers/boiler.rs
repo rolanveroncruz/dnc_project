@@ -1,5 +1,5 @@
 use axum::http::StatusCode;
-use axum::response::Html;
+use axum::response::{Html, Extension, IntoResponse};
 use serde::{ Serialize, Deserialize};
 
 pub async fn hello_world()->Html<&'static str>{
@@ -27,6 +27,16 @@ pub async fn test_posting_json(State(_state): State<AppState>, Json(payload): Js
     let combined_message = format!("Hi, {}! {}!", payload.name, payload.message);
     Json(TestJsonResponse{message: combined_message})
 }
-pub async fn whoami(user:  AuthUser)->String{
-    format!("Hello, email={}, role={}!", user.claims.email, user.claims.role_id)
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WhoAmIResponse{
+    pub email:String,
+    pub role_id: i32,
+}
+pub async fn whoami(Extension(user):  Extension<AuthUser>)->impl IntoResponse{
+    Json(WhoAmIResponse{
+        email: user.claims.email,
+        role_id: user.claims.role_id
+    })
 }
