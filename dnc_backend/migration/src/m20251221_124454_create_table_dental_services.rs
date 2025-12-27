@@ -51,6 +51,13 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(DentalService::RecordTooth)
                         .boolean()
+                        .default(false)
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(DentalService::Active)
+                        .boolean()
+                        .default(true)
+                        .not_null()
                     )
                     .col(ColumnDef::new(DentalService::LastModifiedBy)
                         .integer()
@@ -189,6 +196,7 @@ pub enum DentalService{
     Name,
     TypeId,
     RecordTooth,
+    Active, // instead of deleting, active = false effectively deletes it.
     LastModifiedBy,
     LastModifiedOn,
 }

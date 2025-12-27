@@ -1,6 +1,6 @@
 import {
   AfterViewInit, Component, Input, OnChanges, SimpleChanges,
-  ViewChild, ViewEncapsulation, effect, inject
+  ViewChild, ViewEncapsulation, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';

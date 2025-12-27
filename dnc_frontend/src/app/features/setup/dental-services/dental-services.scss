@@ -1,0 +1,12 @@
+.dental-services-container {
+  display: flex;            /* Enables Flexbox */
+  justify-content: center;   /* Centers horizontally */
+  align-items: flex-start;       /* Centers vertically */
+  min-height: 100vh;        /* Sets container height to 100% of the viewport height */
+  text-align: center;       /* Ensures text alignment inside the div */
+}
+
+/* Optional: Remove default margins from the h1 for perfect centering */
+.page-title h1 {
+  margin: 0;
+}

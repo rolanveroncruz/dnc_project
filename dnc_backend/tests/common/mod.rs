@@ -1,9 +1,7 @@
 // tests/common/mod.rs
-use tokio::sync::OnceCell;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
-static SERVER_ADDR: OnceCell<SocketAddr> = OnceCell::const_new();
 
 pub async fn setup_server() -> SocketAddr {
     let app = dnc_backend::build_app(dnc_backend::AppState::new().await);
