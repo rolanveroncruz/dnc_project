@@ -3,30 +3,50 @@
 // 1. Toolbar Layout
 .toolbar {
   display: flex;
-  flex-wrap: wrap; // Allows items to wrap on mobile
+  flex-wrap: nowrap; // Allows items to wrap on mobile
   gap: 16px;       // Spacing between inputs/buttons
   align-items: center; // Vertically align buttons with inputs
   margin-bottom: 16px;
   padding: 8px 0;
 
+  // Let flex items actually shrink
+  > * {min-width: 0;}
+
   // Search Field (Grow to fill space)
   .q {
-    flex: 1 1 250px; // Grow: 1, Shrink: 1, Min-width: 250px
-    width: 100%;
+    flex: 1 1 260px; // Grow: 1, Shrink: 1, Min-width: 250px
+    width: auto;
   }
 
   // Dropdowns & Sort (Fixed width logic)
   .filter {
-    flex: 0 1 180px; // Grow: 0, Shrink: 1, Basis: 180px
-    width: 100%;
+    flex: 0 1 140px; // Grow: 0, Shrink: 1, Basis: 180px
+    width: auto;
+  }
+  .filter.sort{
+    flex-basis: 130px;
   }
 
-  // Buttons (Alignment fixes)
-  button {
-    // Material form fields have ~22px of padding at bottom for hints/errors.
-    // This margin pushes the buttons up to align visually with the input box.
+  // Buttons: keep as one unbroken group and allow shrink
+  .btn-group{
+    display: inline-flex;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+    flex-wrap:nowrap;
+    align-items: center;
     margin-bottom: 22px;
-    height: 56px; // Matches standard Outline form-field height
+    button{
+      margin-bottom: 0;
+      height: 56px;
+      min-width: 0;
+      padding: 0 10px;
+      white-space: nowrap;
+    }
+  }
+
+  button {
+    margin-bottom: 0;
   }
 }
 
@@ -80,7 +100,11 @@
 
       // Active/Click Effect
       &:active {
-        background-color: #333333 !important;
+        background-color: #555555 !important;
+      }
+      &:focus{
+        outline: 2px solid #3f51b5;
+        outline-offset: -2px;
       }
     }
   }

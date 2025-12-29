@@ -19,12 +19,24 @@ impl MigrationTrait for Migration {
                         .not_null()
                     )
                     .col(string(Role::Description))
+                    .col(boolean(Role::Active).default(true).not_null())
+                    .col(ColumnDef::new(Role::LastModifiedBy)
+                        .string()
+                        .not_null()
+                        .default("system")
+                    )
+                    .col(ColumnDef::new(Role::LastModifiedOn)
+                        .timestamp()
+                        .not_null()
+                        .default(Expr::current_timestamp())
+                    )
                     .to_owned(),
             )
             .await?;
 
         // 2. Insert the Administrator Role
         Self::insert_role(manager, "Administrator", "Administrator Role").await?;
+        Self::insert_role(manager, "NoPerms", "No Permissions Role").await?;
 
         Ok(())
     }
@@ -47,10 +59,14 @@ impl Migration{
     }
 
 }
+
 #[derive(Iden)]
 pub enum Role{
     Table,
     Id,
     Name,
     Description,
+    Active,
+    LastModifiedBy,
+    LastModifiedOn,
 }

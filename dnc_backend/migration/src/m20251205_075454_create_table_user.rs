@@ -33,6 +33,21 @@ impl MigrationTrait for Migration {
                         .integer()
                         .not_null()
                     )
+                    .col(ColumnDef::new(User::Active)
+                    .boolean()
+                    .default(true)
+                    .not_null()
+                    )
+                    .col(ColumnDef::new(User::LastModifiedBy)
+                        .string()
+                        .not_null()
+                        .default("system")
+                    )
+                    .col(ColumnDef::new(User::LastModifiedOn)
+                        .timestamp()
+                        .not_null()
+                        .default(Expr::current_timestamp())
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("user_role_id_foreign_key")
@@ -44,6 +59,7 @@ impl MigrationTrait for Migration {
 
         // 2. Create the Admin user
         Self::add_user(manager, "admin", "admin@dnc.com.ph", "password", "Administrator").await?;
+        Self::add_user(manager, "noperms", "noperms@dnc.com.ph", "noperms", "NoPerms").await?;
 
         Ok(())
 
@@ -97,7 +113,7 @@ impl Migration {
     }
 }
 
-#[derive(DeriveIden)]
+#[derive(Iden)]
 pub enum User{
     Table,
     Id,
@@ -105,4 +121,7 @@ pub enum User{
     Email,
     Password,
     RoleId,
+    Active,
+    LastModifiedBy,
+    LastModifiedOn,
 }

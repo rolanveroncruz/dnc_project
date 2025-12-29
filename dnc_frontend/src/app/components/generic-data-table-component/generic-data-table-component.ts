@@ -1,6 +1,6 @@
 import {
   AfterViewInit, Component, Input, OnChanges, SimpleChanges,
-  ViewChild, ViewEncapsulation, inject
+  ViewChild, ViewEncapsulation, inject, EventEmitter, Output
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -31,6 +31,12 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn[] = [];
 
+  @Output() rowClicked = new EventEmitter<T>();
+
+  // New Configurable paginator inputs
+  @Input() pageSize= 15;
+  @Input() pageSizeOptions: number[] = [5, 10, 25, 50, 100];
+
   // Keys that should show as dropdown filters (e.g. ['role', 'status'])
   @Input() filterSelectKeys: string[] = [];
 
@@ -58,11 +64,19 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
       this.applySortFromToolbar();
     });
   }
+  onRowClicked(row: T) {
+    console.log("Row clicked:", row);
+    this.rowClicked.emit(row);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] ) {
       this.dataSource.data = this.data || [];
       this.generateFilterOptions(); // Recalculate unique values for dropdowns
+    }
+    if (changes['pageSize'] && this.paginator){
+      this.paginator.pageSize = this.pageSize;
+      this.paginator.firstPage();
     }
 
     if (changes['columnDefs']) {
@@ -81,6 +95,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+    this.paginator.pageSize = this.pageSize;
     this.setupFilterPredicate();
 
     setTimeout(() => {

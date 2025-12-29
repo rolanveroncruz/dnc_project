@@ -1,11 +1,12 @@
 use axum::{extract::{Query, State}, http::StatusCode, Json};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ColumnTrait,  Condition, EntityTrait, Order, PaginatorTrait,QueryFilter, QueryOrder};
+use sea_orm::{ColumnTrait,  Condition, EntityTrait, FromQueryResult, JoinType, Order,
+              PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
 use sea_orm::sea_query::extension::postgres::PgExpr;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
-use crate::entities::dental_service;
+use crate::entities::{dental_service, dental_service_type};
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
@@ -16,11 +17,23 @@ pub struct DentalServiceListQuery {
     pub base: ListQuery,
 }
 
+#[derive(Debug, Clone, Serialize, FromQueryResult)]
+pub struct DentalServiceRow {
+    pub id: i32,
+    pub name: String,
+    pub active: bool,
+    pub type_name: Option<String>, // LEFT JOIN => can be NULL
+    pub last_modified_on: Option<chrono::NaiveDateTime>, // adjust type to your column type
+}
+
+
+
+
 pub async fn get_dental_services(
     State(state): State<AppState>,
     user:AuthUser,
     Query(params): Query<DentalServiceListQuery>,
-) -> Result<Json<PageResponse<dental_service::Model>>, StatusCode>{
+) -> Result<Json<PageResponse<DentalServiceRow>>, StatusCode>{
     // 1. Permission check
     let has_permission = role_has_permission_by_data_object_name(
         &state.db,
@@ -44,9 +57,18 @@ pub async fn get_dental_services(
     let order = params.base.order.as_deref().unwrap_or("asc");
     println!("order: {}", order);
 
-    // 3. Build the query
+    // 3. Build the query (JOIN to dental_service_type)
     let mut query = dental_service::Entity::find()
+        .join(JoinType::LeftJoin, dental_service::Relation::DentalServiceType.def())
         .filter(dental_service::Column::Active.eq(active));
+
+    // 4. Safe sort mapping (never trust raw column names from the client!)
+    let sort_order = match order {
+        "asc" => Order::Asc,
+        "desc" => Order::Desc,
+        _ => return Err(StatusCode::BAD_REQUEST),
+    };
+
 
     // q=clean (search by name; using ILIKE for Postgres-ish case-insensitive search)
     if let Some(q) = params.base.q.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
@@ -55,20 +77,22 @@ pub async fn get_dental_services(
             Condition::any().add(Expr::col(dental_service::Column::Name).ilike(pattern)),);
     }
 
-    // 4. Safe sort mapping (never trust raw column names from the client!)
-    let sort_col = match sort {
-        "id" => dental_service::Column::Id,
-        "name" => dental_service::Column::Name,
-        "typeId" | "type_id" => dental_service::Column::TypeId,
-        "lastModifiedOn" | "last_modified_on" => dental_service::Column::LastModifiedOn,
+    query = match sort {
+        "id" => query.order_by(dental_service::Column::Id, sort_order),
+        "name" => query.order_by(dental_service::Column::Name, sort_order),
+        "typeId" | "type_id" => query.order_by( dental_service::Column::TypeId,sort_order),
+        "lastModifiedOn" | "last_modified_on" => query.order_by(dental_service::Column::LastModifiedOn, sort_order),
         _ => return Err(StatusCode::BAD_REQUEST),
     };
-    let sort_order = match order {
-        "asc" => Order::Asc,
-        "desc" => Order::Desc,
-        _ => return Err(StatusCode::BAD_REQUEST),
-    };
-    query = query.order_by(sort_col, sort_order);
+
+    // 5. Select only the columns we want + alias type name as 'type_name'
+    let query = query
+        .select_only()
+        .column(dental_service::Column::Id)
+        .column(dental_service::Column::Name)
+        .column(dental_service::Column::Active)
+        .column_as(dental_service_type::Column::Name, "type_name")
+        .into_model::<DentalServiceRow>();
 
     // 5. Paginate
     let paginator = query.paginate(&state.db, page_size);
@@ -94,7 +118,4 @@ pub async fn get_dental_services(
         total_items,
         total_pages,
     }))
-
-
-
 }
