@@ -1,5 +1,5 @@
 import {DestroyRef, Component, OnInit, signal, inject} from '@angular/core';
-import {DentalServicesService, RawDentalService } from '../../../api_services/dental-services-service';
+import {DentalServicesService, DentalServicesPageInfo } from '../../../api_services/dental-services-service';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -14,6 +14,8 @@ export interface DentalService {
   type_name: string;
   record_tooth: boolean;
   active: boolean;
+  last_modified_by: string;
+  last_modified_on: Date;
 }
 @Component({
   selector: 'app-setup-dental-services',
@@ -33,6 +35,8 @@ export class DentalServices implements OnInit{
     {key: 'id', label: 'ID'},
     {key: 'name', label: 'Name'},
     {key: 'type_name', label: 'Type'},
+    {key: 'last_modified_by', label: 'Last Modified By'},
+    {key: 'last_modified_on', label: 'Last Modified On'},
   ];
 
   openRowDialog(row:any){
@@ -55,10 +59,8 @@ export class DentalServices implements OnInit{
 
    ngOnInit(): void {
      console.log('Dental Services Component Initialized');
-     this.dentalServicesService.getDentalServices().subscribe(
-       res=>{
-         this.dentalServices.set(res.items);
-       });
+     this.load();
+
    }
    private load(){
       this.state.set('loading');

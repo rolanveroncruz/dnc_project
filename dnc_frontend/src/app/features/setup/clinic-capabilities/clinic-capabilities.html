@@ -1,4 +1,20 @@
-<div>
-  <app-generic-data-table [columnDefs]="columns" [data]="users"></app-generic-data-table>
+<div class="clinic-capabilities-container">
+  <div class="page-title">
+    <h1>Clinic Capabilities</h1>
+    @if (clinicCapabilities(); as ds){
+      @if (ds.length === 0) {
+        <p>No clinic capabilities found.</p>
+      } @else {
+        <app-generic-data-table
+          [columnDefs]="clinicCapabilitiesColumns"
+          [data]="ds"
+          [pageSize]="5"
+          [pageSizeOptions]="[5, 10]"
+        />
+      }
 
+    } @else {
+      <p>Loading...</p>
+    }
+  </div>
 </div>
