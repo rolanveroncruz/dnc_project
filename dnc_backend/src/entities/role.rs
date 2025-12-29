@@ -10,6 +10,9 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub description: String,
+    pub active: bool,
+    pub last_modified_by: String,
+    pub last_modified_on: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

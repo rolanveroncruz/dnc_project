@@ -12,7 +12,7 @@ pub struct Model {
     pub type_id: i32,
     pub record_tooth: bool,
     pub active: bool,
-    pub last_modified_by: Option<i32>,
+    pub last_modified_by: String,
     pub last_modified_on: DateTime,
 }
 
@@ -26,25 +26,11 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     DentalServiceType,
-    #[sea_orm(
-        belongs_to = "super::user::Entity",
-        from = "Column::LastModifiedBy",
-        to = "super::user::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Restrict"
-    )]
-    User,
 }
 
 impl Related<super::dental_service_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentalServiceType.def()
-    }
-}
-
-impl Related<super::user::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::User.def()
     }
 }
 

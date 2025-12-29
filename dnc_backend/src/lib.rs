@@ -11,7 +11,7 @@ use std::time::Duration;
 use http::{HeaderValue, Method, Request, Response};
 use http::request::Parts;
 use tower_http::cors::{CorsLayer, AllowOrigin};
-use handlers::get_dental_services;
+use handlers::{get_dental_services, get_clinic_capabilities};
 impl AppState {
     pub async fn new() -> Self {
         let the_db = db::init_db().await.unwrap();
@@ -34,6 +34,7 @@ fn protected_routes()->Router<AppState>{
         .route("/test_post", post(test_posting_json))
         .route("/whoami", get(whoami))
         .route("/dental_services", get(get_dental_services))
+        .route("/clinic_capabilities", get(get_clinic_capabilities))
 }
 use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
