@@ -5,8 +5,10 @@ mod structs;
 mod request_parts;
 mod middlewares;
 mod dental_services;
-pub use dental_services::{get_all_dental_services};
-pub use structs::{Claims, JwtConfig};
+mod helpers;
+
+pub use dental_services::{get_dental_services};
+pub use structs::{Claims, JwtConfig, AuthUser,  ListQuery , PageResponse };
 
 pub use user_roles_permissions::{LoginRequest, LoginResponse};
 

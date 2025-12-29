@@ -1,10 +1,9 @@
 use http::StatusCode;
 use dnc_backend::{LoginRequest, LoginResponse};
-use serde_json::Value;
 mod common;
 
 #[tokio::test]
-async fn get_all_dental_services(){
+async fn get_dental_services(){
     // 1. Get the running server address (starts if needed). Also, prepare a client.
     let addr = common::setup_server().await;
     let client = reqwest::Client::new();
@@ -28,14 +27,25 @@ async fn get_all_dental_services(){
 
 
     // 4. Get all dental services
+    let page_size = 5;
     let response = client
-        .get(format!("http://{}/api/dental_services", addr))
+        .get(format!("http://{}/api/dental_services?page=1&pageSize={page_size}", addr))
         .bearer_auth(&login.token)
         .send()
         .await
         .unwrap();
-    assert_eq!(response.status(), StatusCode::OK);
-    let dental_services_list:Vec<Value> = response.json().await.unwrap();
-    assert!(dental_services_list.len() > 0);
+    let status = response.status();
+    let bytes = response.bytes().await.unwrap();
+    let raw = String::from_utf8_lossy(&bytes);
+    println!("status= {status}");
+    println!("raw =  {raw}" );
+    assert!(status.is_success(), "request failed: {status} body={raw}");
+
+    let v:serde_json::Value = serde_json::from_slice(&bytes).expect("response is not valid JSON");
+    let items = v.get("items")
+        .and_then( |x| x.as_array())
+        .expect("response does not contain items array");
+
+    assert!(!items.is_empty(), "expected at least one item in the list");
 
 }
