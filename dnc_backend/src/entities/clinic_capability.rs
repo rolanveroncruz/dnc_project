@@ -11,7 +11,7 @@ pub struct Model {
     pub name: String,
     pub active: bool,
     pub last_modified_by: String,
-    pub last_modified_on: DateTime,
+    pub last_modified_on: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

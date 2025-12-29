@@ -23,7 +23,8 @@ pub struct DentalServiceRow {
     pub name: String,
     pub active: bool,
     pub type_name: Option<String>, // LEFT JOIN => can be NULL
-    pub last_modified_on: Option<chrono::NaiveDateTime>, // adjust type to your column type
+    pub last_modified_by: Option<String>,
+    pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
 }
 
 
@@ -92,6 +93,8 @@ pub async fn get_dental_services(
         .column(dental_service::Column::Name)
         .column(dental_service::Column::Active)
         .column_as(dental_service_type::Column::Name, "type_name")
+        .column_as(dental_service::Column::LastModifiedBy, "last_modified_by")
+        .column_as(dental_service::Column::LastModifiedOn, "last_modified_on")
         .into_model::<DentalServiceRow>();
 
     // 5. Paginate

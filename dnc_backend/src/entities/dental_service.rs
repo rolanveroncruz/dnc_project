@@ -13,7 +13,7 @@ pub struct Model {
     pub record_tooth: bool,
     pub active: bool,
     pub last_modified_by: String,
-    pub last_modified_on: DateTime,
+    pub last_modified_on: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

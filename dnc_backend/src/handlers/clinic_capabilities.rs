@@ -7,7 +7,7 @@ use sea_orm::{ Condition, EntityTrait, FromQueryResult,  Order,
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
-use crate::entities::{clinic_capability, dental_service };
+use crate::entities::{clinic_capability };
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
@@ -23,6 +23,8 @@ pub struct ClinicCapabilityRow {
     pub id: i32,
     pub name: String,
     pub active: bool,
+    pub last_modified_by: String,
+    pub last_modified_on: chrono::DateTime<chrono::Utc>
 }
 
 
@@ -38,7 +40,10 @@ pub async fn get_clinic_capabilities(
         "clinic_capability",
         PermissionActionEnum::Read,).
         await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            tracing::error!("Failed to check permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     if !has_permission{
         return Err(StatusCode::FORBIDDEN);
@@ -48,6 +53,7 @@ pub async fn get_clinic_capabilities(
     let page = params.base.page.unwrap_or(1).max(1);
     let page_size = params.base.page_size.unwrap_or(25).clamp(1, 200);
     let active = params.base.active.unwrap_or(true);
+    let page0:u64 = page.saturating_sub(1);
 
     let sort = params.base.sort.as_deref().unwrap_or("name");
     let order = params.base.order.as_deref().unwrap_or("asc");
@@ -69,7 +75,7 @@ pub async fn get_clinic_capabilities(
     if let Some(q) = params.base.q.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
         let pattern = format!("%{}%", q);
         query = query.filter(
-            Condition::any().add(Expr::col(dental_service::Column::Name).ilike(pattern)),);
+            Condition::any().add(Expr::col(clinic_capability::Column::Name).ilike(pattern)),);
     }
 
     query = match sort {
@@ -82,20 +88,31 @@ pub async fn get_clinic_capabilities(
         .into_model::<ClinicCapabilityRow>();
 
     let paginator = query.paginate(&state.db, page_size);
+
     let total_items = paginator
         .num_items()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| {
+            tracing::error!("Failed to count items in paginator");
+            StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
 
     let total_pages = paginator
         .num_pages()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| {
+            tracing::error!("Failed to count pages in paginator");
+            StatusCode::INTERNAL_SERVER_ERROR
+            })?;
 
     let items = paginator
-        .fetch_page(page-1)
+        .fetch_page(page0)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            tracing::error!("Failed to fetch page {page0} from paginator: {e:?}" );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     Ok(Json(PageResponse{
         items,

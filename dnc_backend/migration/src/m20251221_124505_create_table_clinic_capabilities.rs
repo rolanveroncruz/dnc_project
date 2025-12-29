@@ -32,14 +32,15 @@ impl MigrationTrait for Migration {
                         .default("system")
                     )
                     .col(ColumnDef::new(ClinicCapability::LastModifiedOn)
-                        .timestamp()
+                        .timestamp_with_time_zone()
                         .not_null()
                         .default(Expr::current_timestamp())
                     )
                     .to_owned()
             ).await?;
 
-        Self::insert_clinic_capabilities(manager, "Dental Services").await?;
+        Self::insert_clinic_capabilities(manager, "Dental Radiography (Panoramic)").await?;
+        Self::insert_clinic_capabilities(manager, "Dental Radiography (Periapical)").await?;
         Ok(())
     }
 
