@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { filter } from 'rxjs/operators';
 import {MatLine} from '@angular/material/core';
-import {LoginService, MenuActivationMap, User} from '../login.service';
+import {LoginService, MenuActivationMap, LoggedInUser} from '../login.service';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {DomSanitizer} from '@angular/platform-browser';
 
@@ -88,10 +88,10 @@ export class MainComponent implements OnInit {
       { label: 'Payments',  icon: 'payments',   route: '/billing/payments', disabled:true },
     ],
     setup: [
+      { label: 'Roles and Permissions',     icon: 'security',   route: '/main/setup/roles', disabled:true },
+      { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
       { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services', disabled:true},
       { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities', disabled:true },
-      { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
-      { label: 'Roles and Permissions',     icon: 'security',   route: '/main/setup/roles', disabled:true },
       { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos', disabled:true  },
       { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/dental-contracts', disabled:true },
       { label: 'Clinics',    icon: 'home',       route: '/main/setup/clinics', disabled:true },
@@ -100,7 +100,7 @@ export class MainComponent implements OnInit {
     ],
   };
   menu_activation_map: MenuActivationMap = {};
-  currentUser: User = {
+  currentUser: LoggedInUser = {
     email: "", name: "", role_name: "", user_id: 0
   }
   user_initials : string = "";

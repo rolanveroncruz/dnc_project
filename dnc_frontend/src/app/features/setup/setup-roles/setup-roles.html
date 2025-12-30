@@ -1,1 +1,56 @@
-<p>setup-roles works!</p>
+<mat-card class="setup-roles-container">
+  <div class="page-title">
+    <h1>Roles and Permissions</h1>
+  </div>
+
+  <div class="setup-roles-content">
+  <mat-card-header>
+  </mat-card-header>
+
+  <mat-card-content>
+    <mat-tab-group animationDuration="150ms">
+      <mat-tab label="Roles">
+        <div class="tab-body">
+          @if (roles(); as ds){
+            @if (ds.length === 0) {
+              <p>No clinic capabilities found.</p>
+            } @else {
+              <app-generic-data-table
+                [columnDefs]="roleColumns"
+                [data]="ds"
+                [pageSize]="5"
+                [pageSizeOptions]="[5, 10, 20, 50, 100]"
+              />
+            }
+
+          } @else {
+            <p>Loading...</p>
+          }
+
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Permissions">
+        <div class="tab-body">
+          @if (role_permissions(); as ds){
+            @if (ds.length === 0) {
+              <p>No clinic capabilities found.</p>
+            } @else {
+              <app-generic-data-table
+                [columnDefs]="role_permissionsColumns"
+                [data]="ds"
+                [pageSize]="20"
+                [pageSizeOptions]="[10, 20, 50,100]"
+              />
+            }
+
+          } @else {
+            <p>Loading...</p>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card-content>
+  </div>
+</mat-card>
+

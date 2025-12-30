@@ -1,6 +1,11 @@
-<div class="dental-services-container">
+<mat-card class="dental-services-container">
+  <mat-card-header>
+
   <div class="page-title">
     <h1>Dental Services</h1>
+  </div>
+  </mat-card-header>
+  <mat-card-content>
     @if (dentalServices(); as ds){
       @if (ds.length === 0) {
         <p>No dental services found.</p>
@@ -17,5 +22,5 @@
     } @else {
       <p>Loading...</p>
     }
-  </div>
-</div>
+  </mat-card-content>
+</mat-card>

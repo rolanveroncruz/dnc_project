@@ -1,10 +1,10 @@
 
 .clinic-capabilities-container {
-  display: flex;            /* Enables Flexbox */
-  justify-content: center;   /* Centers horizontally */
-  align-items: flex-start;       /* Centers vertically */
-  min-height: 100vh;        /* Sets container height to 100% of the viewport height */
+  justify-content: flex-start;   /* Centers horizontally */
   text-align: center;       /* Ensures text alignment inside the div */
+  width: 80%;
+  margin: 0 auto;
+
 }
 
 /* Optional: Remove default margins from the h1 for perfect centering */

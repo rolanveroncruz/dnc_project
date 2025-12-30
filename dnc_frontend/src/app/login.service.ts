@@ -9,7 +9,7 @@ export type MenuActivationMap = Record<string, string>;
 type PersistedAuth = {
   token: string;
   menuActivationMap: MenuActivationMap;
-  currentUser: User;
+  currentUser: LoggedInUser;
 }
 
 export interface LoginRequest{
@@ -26,7 +26,7 @@ export interface LoginResponse{
   token: string;
   menu_activation_map: MenuActivationMap;
 }
-export interface User{
+export interface LoggedInUser{
   user_id: number;
   name: string;
   email: string;
@@ -42,7 +42,7 @@ export class LoginService {
   private apiUrl = environment.apiUrl;
 
   // ---- state (signals) -------
-  readonly currentUser = signal<User>({
+  readonly currentUser = signal<LoggedInUser>({
     email: "",
     name: "",
     role_name: "",
@@ -72,7 +72,7 @@ export class LoginService {
         if (isValid){
           /* Successful Login()
            */
-          const user:User = {
+          const user:LoggedInUser = {
             user_id: response.user_id,
             name: response.name,
             email: response.email,
@@ -87,7 +87,7 @@ export class LoginService {
     )
   }
 
-  loginSuccess(token: string, menuActivationMap: MenuActivationMap, user:User){
+  loginSuccess(token: string, menuActivationMap: MenuActivationMap, user:LoggedInUser){
     this.currentUser.set(user);
     this.token.set(token);
     this.menuActivationMap.set(menuActivationMap);

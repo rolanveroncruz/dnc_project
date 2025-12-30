@@ -22,6 +22,7 @@ pub struct UserListQuery {
 pub struct UserRow {
     pub id: i32,
     pub name: String,
+    pub email: String,
     pub role: String,
     pub active: bool,
     pub last_modified_by: Option<String>,

@@ -3,13 +3,17 @@ import {GenericDataTableComponent} from '../../../components/generic-data-table-
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {ClinicCapabilitiesService, ClinicCapability} from '../../../api_services/clinic-capabilities-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {MatCard, MatCardContent, MatCardHeader} from '@angular/material/card';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
 @Component({
   selector: 'app-clinic-capabilities',
   imports: [
-    GenericDataTableComponent
+    GenericDataTableComponent,
+    MatCard,
+    MatCardHeader,
+    MatCardContent
   ],
   templateUrl: './clinic-capabilities.html',
   styleUrl: './clinic-capabilities.scss',
