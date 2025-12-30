@@ -46,7 +46,7 @@ pub async fn get_dental_services(
 
     if !has_permission{
         return Err(StatusCode::FORBIDDEN);
-    }
+    };
 
     // 2. Defaults + basic validation/clamping
     let page = params.base.page.unwrap_or(1).max(1);
