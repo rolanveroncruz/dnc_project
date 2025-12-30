@@ -91,7 +91,7 @@ export class MainComponent implements OnInit {
       { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services', disabled:true},
       { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities', disabled:true },
       { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
-      { label: 'Roles',     icon: 'security',   route: '/main/setup/roles', disabled:true },
+      { label: 'Roles and Permissions',     icon: 'security',   route: '/main/setup/roles', disabled:true },
       { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos', disabled:true  },
       { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/dental-contracts', disabled:true },
       { label: 'Clinics',    icon: 'home',       route: '/main/setup/clinics', disabled:true },
@@ -158,7 +158,7 @@ export class MainComponent implements OnInit {
     this.activate_item("dental_service", "Dental Services");
     this.activate_item("clinic_capability", "Clinic Capabilities");
     this.activate_item("user", "Users");
-    this.activate_item("role", "Roles");
+    this.activate_item("role", "Roles and Permissions");
     this.activate_item("hmo", "HMOs");
     this.activate_item("dental_contract", "Dental Contracts");
     this.activate_item("clinic", "Clinics");
