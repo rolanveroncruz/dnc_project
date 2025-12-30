@@ -14,7 +14,9 @@ use tower_http::cors::{CorsLayer, AllowOrigin};
 use handlers::{
     get_dental_services,
     get_clinic_capabilities,
-    get_users
+    get_users,
+    get_roles,
+    get_role_permissions
 };
 impl AppState {
     pub async fn new() -> Self {
@@ -27,10 +29,14 @@ impl AppState {
 use axum::{Router, routing::get, routing::post, middleware};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
-use handlers::user_roles_permissions::{ login_handler};
+use handlers::login::{ login_handler};
 use tower_http::trace::{TraceLayer };
 use tracing::Span;
 
+use jsonwebtoken::{Validation, Algorithm, DecodingKey};
+use handlers::JwtConfig;
+use std::sync::Arc;
+use handlers::{require_jwt};
 
 
 fn protected_routes()->Router<AppState>{
@@ -40,11 +46,9 @@ fn protected_routes()->Router<AppState>{
         .route("/dental_services", get(get_dental_services))
         .route("/clinic_capabilities", get(get_clinic_capabilities))
         .route("/users", get(get_users))
+        .route("/roles", get(get_roles))
+        .route("/role_permissions", get(get_role_permissions))
 }
-use jsonwebtoken::{Validation, Algorithm, DecodingKey};
-use handlers::JwtConfig;
-use std::sync::Arc;
-use handlers::{require_jwt};
 
 pub fn build_app(my_state:AppState) ->Router{
 
