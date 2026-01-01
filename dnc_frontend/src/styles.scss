@@ -37,3 +37,26 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+$avatar-size: 33px;
+
+mat-icon.avatar-icon,
+.mat-mdc-icon.avatar-icon,
+.mat-icon.avatar-icon {
+  --mdc-icon-size: #{$avatar-size};
+  --mat-icon-size: #{$avatar-size};
+
+  width: $avatar-size !important;
+  height: $avatar-size !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+mat-icon.avatar-icon > svg,
+.mat-mdc-icon.avatar-icon > svg,
+.mat-icon.avatar-icon > svg {
+  width: $avatar-size !important;
+  height: $avatar-size !important;
+}

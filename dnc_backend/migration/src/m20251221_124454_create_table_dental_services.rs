@@ -1,5 +1,4 @@
 use sea_orm_migration::{prelude::*, };
-use crate::m20251205_075454_create_table_user::User;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -51,13 +50,23 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(DentalService::RecordTooth)
                         .boolean()
+                        .default(false)
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(DentalService::Active)
+                        .boolean()
+                        .default(true)
+                        .not_null()
                     )
                     .col(ColumnDef::new(DentalService::LastModifiedBy)
-                        .integer()
+                        .string()
+                        .not_null()
+                        .default("system")
                     )
                     .col(ColumnDef::new(DentalService::LastModifiedOn)
-                        .timestamp()
+                        .timestamp_with_time_zone()
                         .not_null()
+                        .default(Expr::current_timestamp())
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -65,35 +74,29 @@ impl MigrationTrait for Migration {
                             .from(DentalService::Table, DentalService::TypeId)
                             .to(DentalServiceType::Table, DentalServiceType::Id)
                             .on_delete(ForeignKeyAction::Restrict)
-                    ).foreign_key(
-                        ForeignKey::create()
-                            .name("dental_service_last_modified_by_foreign_key")
-                            .from(DentalService::Table, DentalService::LastModifiedBy)
-                            .to(User::Table, User::Id)
-                            .on_delete(ForeignKeyAction::Restrict)
                     ).to_owned(),
             )
             .await?;
 
-        Self::create_dental_service(manager, "Cleaning / Oral Prophylaxis", "Basic", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Checkup/ Consultation", "Basic", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Simple Tooth Extraction", "Basic", true, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Temporary Fillings", "Basic", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Gum Treatment", "Basic", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Recementation of Jacket Crown", "Basic", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Adjustment of Dentures", "Basic", false, "admin@dnc.com.ph").await?;
+        Self::create_dental_service(manager, "Cleaning / Oral Prophylaxis", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Checkup/ Consultation", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Simple Tooth Extraction", "Basic", true, "system").await?;
+        Self::create_dental_service(manager, "Temporary Fillings", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Gum Treatment", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Recementation of Jacket Crown", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Adjustment of Dentures", "Basic", false, "system").await?;
 
-        Self::create_dental_service(manager, "Additional Cleaning / Oral Prophylaxis", "Special", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Permanent Fillings (per Tooth)", "Special", true, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Permanent Fillings (per Surface)", "Special", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Dental Radiography (Periapical)", "Special", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Dental Radiography (Panoramic)", "Special", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Desensitization", "Special", false, "admin@dnc.com.ph").await?;
+        Self::create_dental_service(manager, "Additional Cleaning / Oral Prophylaxis", "Special", false, "system").await?;
+        Self::create_dental_service(manager, "Permanent Fillings (per Tooth)", "Special", true, "system").await?;
+        Self::create_dental_service(manager, "Permanent Fillings (per Surface)", "Special", false, "system").await?;
+        Self::create_dental_service(manager, "Dental Radiography (Periapical)", "Special", false, "system").await?;
+        Self::create_dental_service(manager, "Dental Radiography (Panoramic)", "Special", false, "system").await?;
+        Self::create_dental_service(manager, "Desensitization", "Special", false, "system").await?;
 
-        Self::create_dental_service(manager, "Dentures", "High-End", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Odontectomy", "High-End", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Root Canal Treatment", "High-End", false, "admin@dnc.com.ph").await?;
-        Self::create_dental_service(manager, "Deep Scaling", "High-End", false, "admin@dnc.com.ph").await?;
+        Self::create_dental_service(manager, "Dentures", "High-End", false, "system").await?;
+        Self::create_dental_service(manager, "Odontectomy", "High-End", false, "system").await?;
+        Self::create_dental_service(manager, "Root Canal Treatment", "High-End", false, "system").await?;
+        Self::create_dental_service(manager, "Deep Scaling", "High-End", false, "system").await?;
 
         Ok(())
 
@@ -140,21 +143,7 @@ impl Migration {
             row.try_get ("", &DentalServiceType::Id.to_string())?
         };
 
-        // 2. Resolve User.id by email
-        let last_modified_by_user_id:i32 = {
-            let select = Query::select()
-                .column(User::Id)
-                .from(User::Table)
-                .and_where(Expr::col((User::Table, User::Email)).eq(last_modified_by))
-                .to_owned();
-
-            let row = db
-                .query_one(&select).await?
-                .ok_or_else( || DbErr::Custom("User '{last_modified_by}' not found".to_string()))?;
-
-            row.try_get ("", &User::Id.to_string())?
-        };
-        //3. Insert DentalService
+        //2. Insert DentalService
         let insert = Query::insert()
             .into_table(DentalService::Table)
             .columns([
@@ -168,7 +157,7 @@ impl Migration {
                 name.into(),
                 service_type_id.into(),
                 record_tooth.into(),
-                last_modified_by_user_id.into(),
+                last_modified_by.into(),
                 Utc::now().naive_utc().into()
             ])
             .to_owned();
@@ -189,6 +178,7 @@ pub enum DentalService{
     Name,
     TypeId,
     RecordTooth,
+    Active, // instead of deleting, active = false effectively deletes it.
     LastModifiedBy,
     LastModifiedOn,
 }

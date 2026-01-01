@@ -13,16 +13,35 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(ClinicCapability::Id)
                         .integer()
+                        .auto_increment()
                         .not_null()
                         .primary_key()
                     )
                     .col(ColumnDef::new(ClinicCapability::Name)
                         .string()
                         .not_null()
-                    ).to_owned()
+                    )
+                    .col(ColumnDef::new(ClinicCapability::Active)
+                        .boolean()
+                        .default(true)
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(ClinicCapability::LastModifiedBy)
+                        .string()
+                        .not_null()
+                        .default("system")
+                    )
+                    .col(ColumnDef::new(ClinicCapability::LastModifiedOn)
+                        .timestamp_with_time_zone()
+                        .not_null()
+                        .default(Expr::current_timestamp())
+                    )
+                    .to_owned()
             ).await?;
-        Ok(())
 
+        Self::insert_clinic_capabilities(manager, "Dental Radiography (Panoramic)").await?;
+        Self::insert_clinic_capabilities(manager, "Dental Radiography (Periapical)").await?;
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -32,9 +51,23 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 }
-#[derive(DeriveIden)]
+
+impl Migration {
+    async fn insert_clinic_capabilities(manager: &SchemaManager<'_>, capability: &str) -> Result<(), DbErr> {
+        let insert = Query::insert()
+            .into_table(ClinicCapability::Table)
+            .columns([ClinicCapability::Name])
+            .values_panic([capability.into()])
+            .to_owned();
+        manager.exec_stmt(insert).await
+    }
+}
+#[derive(Iden)]
 pub enum ClinicCapability{
     Table,
     Id,
     Name,
+    Active,
+    LastModifiedBy,
+    LastModifiedOn,
 }

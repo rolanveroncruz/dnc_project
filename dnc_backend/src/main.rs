@@ -17,6 +17,7 @@ async fn main()-> Result<(), Box<dyn Error>> {
     dotenv().ok(); // Load environment variables from .env file
 
     let database_url=std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    println!("Connecting to database: {}", database_url);
     let connection=sea_orm::Database::connect(&database_url).await?;
     Migrator::up(&connection, None)
         .await

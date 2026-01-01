@@ -5,14 +5,15 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatIconModule } from '@angular/material/icon';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { filter } from 'rxjs/operators';
 import {MatLine} from '@angular/material/core';
-import {LoginService, MenuActivationMap} from '../login.service';
+import {LoginService, MenuActivationMap, LoggedInUser} from '../login.service';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
+import {DomSanitizer} from '@angular/platform-browser';
 
 type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
@@ -53,10 +54,12 @@ interface SideNavItem {
 })
 export class MainComponent implements OnInit {
   isSidenavOpened = false;
-  canSideNavToggle = false;
+  canSideNavToggle = true;
   activeTopNav: TopNavKey = 'dashboard';
   private router= inject(Router);
   public loginService = inject(LoginService);
+  private iconRegistry = inject(MatIconRegistry);
+  private sanitizer = inject(DomSanitizer);
 
   topNavItems: TopNavItem[] = [
     { key: 'dashboard',  label: 'Dashboard',  icon: 'dashboard',     route: '/main/dashboard',    disabled:true},
@@ -85,10 +88,10 @@ export class MainComponent implements OnInit {
       { label: 'Payments',  icon: 'payments',   route: '/billing/payments', disabled:true },
     ],
     setup: [
+      { label: 'Roles and Permissions',     icon: 'security',   route: '/main/setup/roles', disabled:true },
+      { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
       { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services', disabled:true},
       { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities', disabled:true },
-      { label: 'Users',     icon: 'person',     route: '/main/setup/users', disabled:true},
-      { label: 'Roles',     icon: 'security',   route: '/main/setup/roles', disabled:true },
       { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos', disabled:true  },
       { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/dental-contracts', disabled:true },
       { label: 'Clinics',    icon: 'home',       route: '/main/setup/clinics', disabled:true },
@@ -97,8 +100,16 @@ export class MainComponent implements OnInit {
     ],
   };
   menu_activation_map: MenuActivationMap = {};
+  currentUser: LoggedInUser = {
+    email: "", name: "", role_name: "", user_id: 0
+  }
+  user_initials : string = "";
+  fullName : string = "";
 
   constructor() {
+    this.iconRegistry.addSvgIcon('account_circle',
+      this.sanitizer.bypassSecurityTrustResourceUrl('https://fonts.gstatic.com/s/i/materialicons/account_circle/v16/24px.svg'));
+
     // Keep activeTopNav in sync with the current URL
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
@@ -110,7 +121,21 @@ export class MainComponent implements OnInit {
     console.log("In MainComponent ngOnInit, IsLoggedIn:", this.loginService?.menuActivationMap());
     this.menu_activation_map = this.loginService?.menuActivationMap();
     console.log("In MainComponent ngOnInit, menu_activation_map:", this.menu_activation_map);
+    this.currentUser = this.loginService?.currentUser();
+    this.fullName = this.currentUser.name;
+    this.user_initials = this.getInitials();
+    console.log("In MainComponent ngOnInit, currentUser:", this.currentUser);
     this.configure_setup_menu();
+  }
+
+  getInitials(): string {
+    const parts = (this.fullName ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   logout(){
     this.loginService.logout();
@@ -133,7 +158,7 @@ export class MainComponent implements OnInit {
     this.activate_item("dental_service", "Dental Services");
     this.activate_item("clinic_capability", "Clinic Capabilities");
     this.activate_item("user", "Users");
-    this.activate_item("role", "Roles");
+    this.activate_item("role", "Roles and Permissions");
     this.activate_item("hmo", "HMOs");
     this.activate_item("dental_contract", "Dental Contracts");
     this.activate_item("clinic", "Clinics");

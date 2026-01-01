@@ -9,6 +9,7 @@ export type MenuActivationMap = Record<string, string>;
 type PersistedAuth = {
   token: string;
   menuActivationMap: MenuActivationMap;
+  currentUser: LoggedInUser;
 }
 
 export interface LoginRequest{
@@ -25,7 +26,12 @@ export interface LoginResponse{
   token: string;
   menu_activation_map: MenuActivationMap;
 }
-
+export interface LoggedInUser{
+  user_id: number;
+  name: string;
+  email: string;
+  role_name: string;
+}
 const AUTH_KEY = 'dnc_login_v1';
 
 @Injectable({
@@ -34,9 +40,14 @@ const AUTH_KEY = 'dnc_login_v1';
 export class LoginService {
   private readonly isBrowser:boolean;
   private apiUrl = environment.apiUrl;
-  currentUser: LoginResponse | undefined;
 
   // ---- state (signals) -------
+  readonly currentUser = signal<LoggedInUser>({
+    email: "",
+    name: "",
+    role_name: "",
+    user_id: 0
+  });
   readonly token =signal<string | null>(null);
   readonly menuActivationMap = signal<MenuActivationMap> ({});
 
@@ -61,7 +72,13 @@ export class LoginService {
         if (isValid){
           /* Successful Login()
            */
-          this.loginSuccess(response.token, response.menu_activation_map);
+          const user:LoggedInUser = {
+            user_id: response.user_id,
+            name: response.name,
+            email: response.email,
+            role_name: response.role_name,
+          }
+          this.loginSuccess(response.token, response.menu_activation_map, user);
 
         }else{
           console.log("In Service, Login Failed");
@@ -70,7 +87,8 @@ export class LoginService {
     )
   }
 
-  loginSuccess(token: string, menuActivationMap: MenuActivationMap){
+  loginSuccess(token: string, menuActivationMap: MenuActivationMap, user:LoggedInUser){
+    this.currentUser.set(user);
     this.token.set(token);
     this.menuActivationMap.set(menuActivationMap);
     this.persistToStorage();
@@ -97,6 +115,7 @@ export class LoginService {
   }
 
   logout(){
+    this.currentUser.set({email: "", name: "", role_name: "", user_id: 0});
     this.token.set(null);
     this.menuActivationMap.set({});
     this.clearStorage();
@@ -115,7 +134,8 @@ export class LoginService {
 
     const payLoad:PersistedAuth = {
       token,
-      menuActivationMap: this.menuActivationMap()
+      menuActivationMap: this.menuActivationMap(),
+      currentUser: this.currentUser()
     };
 
     localStorage.setItem(AUTH_KEY, JSON.stringify(payLoad));
@@ -135,6 +155,11 @@ export class LoginService {
         this.menuActivationMap.set(parsed.menuActivationMap);
       }else{
         this.menuActivationMap.set({});
+      }
+      if (parsed.currentUser && typeof parsed.currentUser === 'object'){
+        this.currentUser.set(parsed.currentUser);
+      }else{
+        this.currentUser.set({email: "", name: "", role_name: "", user_id: 0});
       }
     } catch {
       localStorage.removeItem(AUTH_KEY);

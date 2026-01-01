@@ -35,6 +35,21 @@ impl MigrationTrait for Migration {
                         .integer()
                         .not_null()
                     )
+                    .col(ColumnDef::new(RolePermission::Active)
+                        .boolean()
+                        .default(true)
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(RolePermission::LastModifiedBy)
+                    .string()
+                    .not_null()
+                    .default("system")
+                    )
+                    .col(ColumnDef::new(RolePermission::LastModifiedOn)
+                        .timestamp_with_time_zone()
+                        .not_null()
+                        .default(Expr::current_timestamp())
+                    )
                     .foreign_key(ForeignKey::create()
                         .name("role_permission_permission_id_foreign_key")
                         .from(RolePermission::Table, RolePermission::PermissionId)
@@ -145,4 +160,7 @@ enum RolePermission{
     Id,
     RoleId,
     PermissionId,
+    Active,
+    LastModifiedBy,
+    LastModifiedOn,
 }
