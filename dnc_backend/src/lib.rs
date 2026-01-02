@@ -7,8 +7,13 @@ pub struct AppState {
     pub db: DatabaseConnection,
 }
 
-use std::time::Duration;
-use http::{HeaderValue, Method, Request, Response};
+use axum::{Router, routing::get, routing::post, middleware};
+use sea_orm::DatabaseConnection;
+use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
+use handlers::login::{ login_handler};
+use tower_http::trace::{TraceLayer };
+
+use http::{HeaderValue, Method,};
 use http::request::Parts;
 use tower_http::cors::{CorsLayer, AllowOrigin};
 use handlers::{
@@ -18,6 +23,7 @@ use handlers::{
     get_roles,
     get_role_permissions
 };
+use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
 impl AppState {
     pub async fn new() -> Self {
         let the_db = db::init_db().await.unwrap();
@@ -25,13 +31,6 @@ impl AppState {
     }
 }
 
-
-use axum::{Router, routing::get, routing::post, middleware};
-use sea_orm::DatabaseConnection;
-use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
-use handlers::login::{ login_handler};
-use tower_http::trace::{TraceLayer };
-use tracing::Span;
 
 use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
@@ -94,25 +93,6 @@ pub fn build_app(my_state:AppState) ->Router{
         .route("/login", post(login_handler))
         .with_state(my_state)
         .layer(cors)
-        .layer(
-            TraceLayer::new_for_http()
-                .on_request(())
-                .make_span_with( |req: &Request<_>| {
-                    tracing::info_span!(
-                        "http_request",
-                        method = %req.method(),
-                        path = %req.uri().path(),
-                    )
-                })
-                .on_response( |res:&Response<_>, latency:Duration, span: &Span| {
-                    let status = res.status().as_u16();
-                    let latency_ms = latency.as_millis() as u64;
-                    tracing::info!(
-                        parent:span,
-                        status = status,
-                        latency_ms = latency_ms,
-                        "request_finished"
-                    );
-                },
-        ))
+        .layer( TraceLayer::new_for_http())
+        .layer(OtelAxumLayer::default())
 }

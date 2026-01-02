@@ -46,8 +46,10 @@ pub struct LoginResponse{
 }
 use crate::entities::{user, permission, data_object, role_permission};
 
-pub async fn login_handler(State(state): State<AppState>, Json(payload):Json<LoginRequest>)
-                           -> Result<Json<LoginResponse>,(StatusCode, String)>{
+pub async fn login_handler(
+    State(state): State<AppState>,
+    Json(payload):Json<LoginRequest>,
+) -> Result<Json<LoginResponse>,(StatusCode, String)>{
 
     // 1. Find the user by email
     let maybe_user = user::Entity::find()

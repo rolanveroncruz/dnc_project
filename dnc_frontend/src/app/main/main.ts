@@ -14,6 +14,7 @@ import {MatLine} from '@angular/material/core';
 import {LoginService, MenuActivationMap, LoggedInUser} from '../login.service';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {DomSanitizer} from '@angular/platform-browser';
+import {trace} from '@opentelemetry/api';
 
 type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
@@ -118,11 +119,15 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
+      const tracer = trace.getTracer('manual-tracer');
+      const span = tracer.startSpan('MainComponent.ngOnInit');
+      console.log('Manual span started!');
       this.menu_activation_map = this.loginService?.menuActivationMap();
       this.currentUser = this.loginService?.currentUser();
       this.fullName = this.currentUser.name;
       this.user_initials = this.getInitials();
       this.configure_setup_menu();
+      console.log("Manual span ended!");
   }
 
   getInitials(): string {
