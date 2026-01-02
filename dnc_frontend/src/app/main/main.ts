@@ -1,6 +1,6 @@
 // src/app/layout/shell.component.ts
-import {Component, inject, OnInit} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {Component, Inject, inject, OnInit, PLATFORM_ID} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -106,7 +106,7 @@ export class MainComponent implements OnInit {
   user_initials : string = "";
   fullName : string = "";
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object,) {
     this.iconRegistry.addSvgIcon('account_circle',
       this.sanitizer.bypassSecurityTrustResourceUrl('https://fonts.gstatic.com/s/i/materialicons/account_circle/v16/24px.svg'));
 
@@ -118,14 +118,11 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log("In MainComponent ngOnInit, IsLoggedIn:", this.loginService?.menuActivationMap());
-    this.menu_activation_map = this.loginService?.menuActivationMap();
-    console.log("In MainComponent ngOnInit, menu_activation_map:", this.menu_activation_map);
-    this.currentUser = this.loginService?.currentUser();
-    this.fullName = this.currentUser.name;
-    this.user_initials = this.getInitials();
-    console.log("In MainComponent ngOnInit, currentUser:", this.currentUser);
-    this.configure_setup_menu();
+      this.menu_activation_map = this.loginService?.menuActivationMap();
+      this.currentUser = this.loginService?.currentUser();
+      this.fullName = this.currentUser.name;
+      this.user_initials = this.getInitials();
+      this.configure_setup_menu();
   }
 
   getInitials(): string {
@@ -169,7 +166,6 @@ export class MainComponent implements OnInit {
 
   activate_item(menu_key:string, side_nav_key:string){
     const activated_item= menu_key in this.menu_activation_map;
-    console.log(`${side_nav_key} Activated? ${activated_item}`);
     this.activate_SideNav(side_nav_key, activated_item);
   }
 

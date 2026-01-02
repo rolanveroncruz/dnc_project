@@ -13,7 +13,6 @@ type LoadState = 'loading' | 'loaded' | 'error';
   imports: [
     MatCard,
     MatCardHeader,
-    MatCardTitle,
     MatCardContent,
     MatTabGroup,
     MatTab,
@@ -51,7 +50,6 @@ export class SetupRoles implements OnInit {
   constructor(private roles_and_permission_Service:RolesAndPermissionsService) {}
 
   ngOnInit(): void {
-    console.log('Setup Roles and Permissions Component Initialized');
     this.load();
     }
 
@@ -66,7 +64,7 @@ export class SetupRoles implements OnInit {
             this.roles_state.set('loaded');
           },
           error: (err) => {
-            console.log(err);
+            console.log("In SetupRoles:getRoles():", err);
             this.roles_errorMsg.set("Failed to load clinic capabilities");
             this.roles_state.set('error');
           }
@@ -80,7 +78,7 @@ export class SetupRoles implements OnInit {
             this.role_permissions_state.set('loaded');
           },
           error: (err) => {
-            console.log(err);
+            console.log("In SetupRoles():getRolePermissions():",err);
             this.role_permissions_errorMsg.set("Failed to load clinic capabilities");
             this.role_permissions_state.set('error');
           }

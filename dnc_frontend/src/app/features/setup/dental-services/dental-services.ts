@@ -62,7 +62,6 @@ export class DentalServices implements OnInit{
 
 
    ngOnInit(): void {
-     console.log('Dental Services Component Initialized');
      this.load();
 
    }
