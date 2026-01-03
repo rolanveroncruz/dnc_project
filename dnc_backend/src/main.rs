@@ -66,11 +66,11 @@ async fn main()-> Result<(), Box<dyn Error>> {
 
     // 3. Define the Layers
     let filter =EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,axum=debug,tower_http=debug"));
+        .unwrap_or_else(|_| EnvFilter::new("info,axum=debug,tower_http=debug,h2=off,hyper=off,tower=off"));
 
     let telemetry_layer = tracing_opentelemetry::layer()
         .with_tracer(tracer)
-        .with_filter(filter.clone());
+        .with_filter(tracing_subscriber::filter::LevelFilter::TRACE);
 
     let file_layer = tracing_subscriber::fmt::layer()
         .with_writer(non_blocking)
@@ -80,7 +80,7 @@ async fn main()-> Result<(), Box<dyn Error>> {
     let stdout_layer = tracing_subscriber::fmt::layer()
         .with_writer  (std::io::stdout)
         .with_ansi(true)
-        .with_filter(filter.clone());
+        .with_filter(filter);
 
     //4. ONE SINGLE INITIALIZATION
     tracing_subscriber::registry()
@@ -120,6 +120,5 @@ async fn main()-> Result<(), Box<dyn Error>> {
     axum::serve(listener, app)
         .await
         .unwrap();
-
     Ok(())
 }

@@ -11,7 +11,8 @@ use password_hash::{PasswordHash, PasswordVerifier};
 use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter,};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
+use opentelemetry::trace::TraceContextExt;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::handlers::structs::Claims;
 
 #[derive(Serialize, Deserialize)]
@@ -45,11 +46,19 @@ pub struct LoginResponse{
     menu_activation_map:MenuActivationMap,
 }
 use crate::entities::{user, permission, data_object, role_permission};
-
 pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload):Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>,(StatusCode, String)>{
+    let context = tracing::Span::current().context();
+    let span = context.span();
+    let span_context = span.span_context();
+    if span_context.is_valid(){
+        tracing::info!("SUCCESS: Rust is linked to Trace ID:{}", span_context.trace_id());
+    }else{
+        tracing::warn!("FAILURE: No valid Trace ID found");
+    }
+
 
     // 1. Find the user by email
     let maybe_user = user::Entity::find()

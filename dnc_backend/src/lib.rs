@@ -11,7 +11,6 @@ use axum::{Router, routing::get, routing::post, middleware};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::login::{ login_handler};
-use tower_http::trace::{TraceLayer };
 
 use http::{HeaderValue, Method,};
 use http::request::Parts;
@@ -23,7 +22,7 @@ use handlers::{
     get_roles,
     get_role_permissions
 };
-use axum_tracing_opentelemetry::middleware::OtelAxumLayer;
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 impl AppState {
     pub async fn new() -> Self {
         let the_db = db::init_db().await.unwrap();
@@ -93,6 +92,6 @@ pub fn build_app(my_state:AppState) ->Router{
         .route("/login", post(login_handler))
         .with_state(my_state)
         .layer(cors)
-        .layer( TraceLayer::new_for_http())
+        .layer(OtelInResponseLayer::default())
         .layer(OtelAxumLayer::default())
 }
