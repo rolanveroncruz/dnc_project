@@ -34,7 +34,6 @@ export class SetupUsers implements OnInit {
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
-    console.log('Setup Users Component Initialized');
     this.load();
   }
 
@@ -49,8 +48,8 @@ export class SetupUsers implements OnInit {
           this.state.set('loaded');
         },
         error: (err) => {
-          console.log(err);
-          this.errorMsg.set("Failed to load clinic capabilities");
+          console.log("In load(), failed to load users", err);
+          this.errorMsg.set("In load(), Failed to load users");
           this.state.set('error');
         }
       })

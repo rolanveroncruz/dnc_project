@@ -33,7 +33,6 @@ export class ClinicCapabilities implements OnInit{
   constructor(private clinicCapabilitiesService:ClinicCapabilitiesService){}
 
   ngOnInit(): void {
-    console.log('Clinic Capabilities Component Initialized');
     this.load();
   }
   private load(){
@@ -47,7 +46,7 @@ export class ClinicCapabilities implements OnInit{
           this.state.set('loaded');
         },
         error: (err) => {
-          console.log(err);
+          console.log("In clinic capabilities, in Load():", err);
           this.errorMsg.set("Failed to load clinic capabilities");
           this.state.set('error');
         }

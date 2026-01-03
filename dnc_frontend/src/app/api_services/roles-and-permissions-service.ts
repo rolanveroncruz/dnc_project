@@ -41,7 +41,6 @@ export interface RolePermission{
 export class RolesAndPermissionsService {
   private apiUrl = environment.apiUrl;
   constructor(private http: HttpClient, private LoginService:LoginService) {
-    console.log('RolesAndPermissionsService Constructing');
   }
 
   getRoles():Observable<RolePageInfo>{

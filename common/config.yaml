@@ -1,0 +1,46 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://localhost:3000"
+            - "http://127.0.0.1:3000"
+
+processors:
+  batch:
+    # Groups data together to send efficiently
+
+extensions:
+  basicauth/grafana:
+    client_auth:
+      username: ${GRAFANA_INSTANCE_ID}
+      password: ${GRAFANA_TOKEN}
+
+exporters:
+  # This prints your traces/logs/metrics to the terminal
+  debug:
+    verbosity: normal
+  otlphttp/grafana:
+    endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT}/otlp"
+    auth:
+      authenticator: basicauth/grafana
+
+service:
+  extensions: [basicauth/grafana]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/grafana]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/grafana]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp/grafana]
