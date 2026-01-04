@@ -12,10 +12,11 @@ use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter,};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use opentelemetry::trace::TraceContextExt;
+use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::handlers::structs::Claims;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
@@ -24,7 +25,7 @@ pub struct LoginRequest {
 /// This struct represents the information in the JWT token, which after encoding,
 /// becomes the token field in the LoginResponse struct.
 
-#[derive(Serialize, Deserialize,)]
+#[derive(Debug, Serialize, Deserialize,)]
 #[serde(rename_all = "lowercase")]
 pub enum MenuState {
     Enabled,
@@ -35,7 +36,7 @@ pub type MenuActivationMap = HashMap<String, MenuState>;
 
 
 use crate::AppState;
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct LoginResponse{
     user_id: i32,
     name: String,
@@ -46,6 +47,7 @@ pub struct LoginResponse{
     menu_activation_map:MenuActivationMap,
 }
 use crate::entities::{user, permission, data_object, role_permission};
+#[instrument(skip(state, payload), fields(user_email = %payload.email))]
 pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload):Json<LoginRequest>,
