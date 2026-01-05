@@ -15,8 +15,7 @@ export interface RolePageInfo{
 export interface Role{
   id: number;
   name: string;
-  email: string;
-  role: string;
+  active: boolean;
   last_modified_by: string;
   last_modified_on: Date;
 }
@@ -29,9 +28,10 @@ export interface RolePermissionPageInfo{
 }
 export interface RolePermission{
   id: number;
-  name: string;
-  email: string;
+  action: string;
+  active: boolean;
   role: string;
+  object: string;
   last_modified_by: string;
   last_modified_on: Date;
 }
