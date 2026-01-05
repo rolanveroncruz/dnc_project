@@ -55,7 +55,7 @@ pub async fn get_role_permissions(
 
     // 2. Defaults + basic validation/clamping
     let page = params.base.page.unwrap_or(1).max(1);
-    let page_size = params.base.page_size.unwrap_or(25).clamp(1, 200);
+    let page_size = params.base.page_size.unwrap_or(200).clamp(1, 200);
     let active = params.base.active.unwrap_or(true);
     let page0:u64 = page.saturating_sub(1);
 
