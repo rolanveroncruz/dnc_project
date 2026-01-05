@@ -44,3 +44,17 @@ pub struct PageResponse<T> {
     pub total_items: u64,
     pub total_pages: u64,
 }
+
+use axum::http::StatusCode;
+pub struct AppError(StatusCode, String);
+impl std::fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Status: {}  Message: {}", self.0, self.1)
+    }
+}
+
+impl axum::response::IntoResponse for AppError {
+    fn into_response(self) -> axum::response::Response {
+        (self.0, self.1).into_response()
+    }
+}

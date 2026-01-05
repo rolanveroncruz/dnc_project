@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use opentelemetry::trace::TraceContextExt;
 use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use crate::handlers::structs::Claims;
+use crate::handlers::structs::{Claims, };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LoginRequest {
@@ -47,7 +47,12 @@ pub struct LoginResponse{
     menu_activation_map:MenuActivationMap,
 }
 use crate::entities::{user, permission, data_object, role_permission};
-#[instrument(skip(state, payload), fields(user_email = %payload.email))]
+
+#[instrument(
+    skip(state, payload),
+    fields(user_email = %payload.email),
+    err(Debug)
+)]
 pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload):Json<LoginRequest>,
@@ -72,9 +77,12 @@ pub async fn login_handler(
         })?;
 
     let user = match maybe_user{
-        Some(u)=>u,
+        Some(u)=>{
+            tracing::info!("Found user: {:?}", u.email);
+            u
+        },
         None=>{
-            return Err((StatusCode::UNAUTHORIZED, "Invalid email or password".into()))
+            return Err((StatusCode::UNAUTHORIZED, "Invalid email or password".to_string()))
         }
     };
 
@@ -158,6 +166,7 @@ pub async fn login_handler(
         token,
         menu_activation_map,
     };
+    tracing::info!("Login successful");
 
     Ok(Json(response))
 

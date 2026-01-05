@@ -10,6 +10,7 @@ use crate::entities::{dental_service, dental_service_type};
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
+use tracing::instrument;
 
 #[derive(Debug, Deserialize)]
 pub struct DentalServiceListQuery {
@@ -30,6 +31,10 @@ pub struct DentalServiceRow {
 
 
 
+#[instrument(
+    skip(state),
+    err(Debug)
+)]
 pub async fn get_dental_services(
     State(state): State<AppState>,
     user:AuthUser,
@@ -113,6 +118,8 @@ pub async fn get_dental_services(
         .fetch_page(page-1)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    tracing::info!("user {} fetched page {} of {} dental services", user.claims.email, page, total_pages);
 
     Ok(Json(PageResponse{
         items,

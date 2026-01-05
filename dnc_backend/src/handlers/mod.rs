@@ -12,7 +12,7 @@ pub use api::clinic_capabilities::get_clinic_capabilities;
 pub use api::users::get_users;
 pub use api::roles::get_roles;
 pub use api::role_permission::get_role_permissions;
-pub use structs::{AuthUser, Claims, JwtConfig, ListQuery, PageResponse};
+pub use structs::{AuthUser, Claims, JwtConfig, ListQuery, PageResponse, AppError};
 
 pub use login::{LoginRequest, LoginResponse};
 
