@@ -4,6 +4,9 @@ import {TableColumn} from '../../../components/generic-data-table-component/tabl
 import {ClinicCapabilitiesService, ClinicCapability} from '../../../api_services/clinic-capabilities-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
+import {AddEditRoles} from '../setup-roles/add-edit-roles/add-edit-roles';
+import {MatDialog} from '@angular/material/dialog';
+import {AddEditClinicCapability} from './add-edit-clinic-capability/add-edit-clinic-capability';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -34,6 +37,8 @@ export class ClinicCapabilities implements OnInit{
   ];
   constructor(private clinicCapabilitiesService:ClinicCapabilitiesService){}
 
+  private dialog = inject(MatDialog);
+
   ngOnInit(): void {
     this.load();
   }
@@ -53,9 +58,20 @@ export class ClinicCapabilities implements OnInit{
           this.state.set('error');
         }
       })
-
-
   }
 
+  openRowDialog(row:any){
+    console.log("In openRoleRowDialog():",row);
+    const ref = this.dialog.open(AddEditClinicCapability, {
+      data:row,
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose : false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (!result) return;
+    });
+  }
 
 }

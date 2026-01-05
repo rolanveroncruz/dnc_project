@@ -5,6 +5,10 @@ import {Role, RolePermission, RolesAndPermissionsService} from '../../../api_ser
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
+import {AddEditDentalServices} from '../dental-services/add-edit-dental-services/add-edit-dental-services';
+import {MatDialog} from '@angular/material/dialog';
+import {AddEditRoles} from './add-edit-roles/add-edit-roles';
+import {AddEditRolePermissions} from './add-edit-role-permissions/add-edit-role-permissions';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 interface ModifiedRolePermission{
@@ -59,6 +63,7 @@ export class SetupRoles implements OnInit {
     {key: 'last_modified_by', label: 'Last Modified By'},
     {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'date'},
   ];
+  private dialog = inject(MatDialog);
 
   constructor(private roles_and_permission_Service:RolesAndPermissionsService) {}
 
@@ -120,6 +125,34 @@ export class SetupRoles implements OnInit {
       }
       return Array.from(map.values());
     }
+
+  openRoleRowDialog(row:any){
+    console.log("In openRoleRowDialog():",row);
+    const ref = this.dialog.open(AddEditRoles, {
+      data:row,
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose : false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (!result) return;
+    });
+  }
+
+  openRolePermissionRowDialog(row:any){
+    console.log("In openRoleRowDialog():",row);
+    const ref = this.dialog.open(AddEditRolePermissions, {
+      data:row,
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose : false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (!result) return;
+    });
+  }
 }
 function toValidDate(x: unknown): Date | undefined {
   const d =

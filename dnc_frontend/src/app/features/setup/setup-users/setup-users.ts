@@ -4,6 +4,9 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {MatCard, MatCardHeader, MatCardContent,MatCardTitle, MatCardSubtitle} from '@angular/material/card';
+import {AddEditRolePermissions} from '../setup-roles/add-edit-role-permissions/add-edit-role-permissions';
+import {MatDialog} from '@angular/material/dialog';
+import {AddEditUser} from './add-edit-user/add-edit-user';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 @Component({
@@ -35,6 +38,8 @@ export class SetupUsers implements OnInit {
   ];
   constructor(private userService: UserService) {}
 
+  private dialog = inject(MatDialog);
+
   ngOnInit(): void {
     this.load();
   }
@@ -55,5 +60,18 @@ export class SetupUsers implements OnInit {
           this.state.set('error');
         }
       })
+  }
+  openUserRowDialog(row:any){
+    console.log("In openRoleRowDialog():",row);
+    const ref = this.dialog.open(AddEditUser, {
+      data:row,
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose : false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (!result) return;
+    });
   }
 }
