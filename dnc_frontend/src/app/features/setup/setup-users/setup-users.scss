@@ -1,12 +1,14 @@
-.setup-users-container {
-  justify-content: flex-start;   /* Centers horizontally */
-  text-align: center;       /* Ensures text alignment inside the div */
-  width: 80%;
-  margin: 0 auto;
-
+mat-card-header.card-header-center {
+  justify-content: center;
 }
 
-/* Optional: Remove default margins from the h1 for perfect centering */
-.page-title h1 {
-  margin: 0;
+mat-card-header.card-header-center .mat-mdc-card-header-text {
+  text-align: center;
+  margin: 0; // removes default left margin that can offset centering
+}
+
+.setup-users-card .mat-mdc-card-title{
+  font-size:28px;
+  line-height: 1.2;
+  font-weight:700;
 }

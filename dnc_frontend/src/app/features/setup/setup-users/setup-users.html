@@ -1,13 +1,11 @@
-
-<mat-card class="setup-users-container">
-    <div class="setup-users-content">
-        <mat-card-header>
-
-            <div class="page-title">
-            <h1>Users</h1>
-            </div>
-        </mat-card-header>
-        <mat-card-content>
+<mat-card class="setup-users-card">
+  <mat-card-header class="card-header-center">
+    <div class="title-block">
+      <mat-card-title class="mat-headline-1">Users</mat-card-title>
+      <mat-card-subtitle>Manage users</mat-card-subtitle>
+    </div>
+  </mat-card-header>
+  <mat-card-content>
             @if (users(); as ds){
                 @if (ds.length === 0) {
                     <p>No clinic capabilities found.</p>
@@ -22,6 +20,5 @@
             } @else {
                 <p>Loading...</p>
             }
-        </mat-card-content>
-    </div>
+</mat-card-content>
 </mat-card>

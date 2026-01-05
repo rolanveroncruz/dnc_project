@@ -1,5 +1,5 @@
 import {Component, DestroyRef, inject, OnInit, signal, computed} from '@angular/core';
-import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from '@angular/material/card';
+import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {MatTab, MatTabGroup} from '@angular/material/tabs';
 import {Role, RolePermission, RolesAndPermissionsService} from '../../../api_services/roles-and-permissions-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -24,7 +24,9 @@ interface ModifiedRolePermission{
     MatCardContent,
     MatTabGroup,
     MatTab,
-    GenericDataTableComponent
+    GenericDataTableComponent,
+    MatCardTitle,
+    MatCardSubtitle
   ],
   templateUrl: './setup-roles.html',
   styleUrl: './setup-roles.scss',

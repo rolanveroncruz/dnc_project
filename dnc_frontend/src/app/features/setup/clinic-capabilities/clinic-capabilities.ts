@@ -3,7 +3,7 @@ import {GenericDataTableComponent} from '../../../components/generic-data-table-
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {ClinicCapabilitiesService, ClinicCapability} from '../../../api_services/clinic-capabilities-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {MatCard, MatCardContent, MatCardHeader} from '@angular/material/card';
+import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -13,7 +13,9 @@ type LoadState = 'loading' | 'loaded' | 'error';
     GenericDataTableComponent,
     MatCard,
     MatCardHeader,
-    MatCardContent
+    MatCardContent,
+    MatCardSubtitle,
+    MatCardTitle
   ],
   templateUrl: './clinic-capabilities.html',
   styleUrl: './clinic-capabilities.scss',

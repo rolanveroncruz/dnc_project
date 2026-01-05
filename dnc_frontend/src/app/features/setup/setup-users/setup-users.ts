@@ -3,7 +3,7 @@ import {User, UserService} from '../../../api_services/user-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {MatCard, MatCardHeader, MatCardContent} from '@angular/material/card';
+import {MatCard, MatCardHeader, MatCardContent,MatCardTitle, MatCardSubtitle} from '@angular/material/card';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 @Component({
@@ -12,7 +12,9 @@ type LoadState = 'loading' | 'loaded' | 'error';
     MatCard,
     MatCardHeader,
     MatCardContent,
-    GenericDataTableComponent
+    GenericDataTableComponent,
+    MatCardTitle,
+    MatCardSubtitle
   ],
   templateUrl: './setup-users.html',
   styleUrl: './setup-users.scss',

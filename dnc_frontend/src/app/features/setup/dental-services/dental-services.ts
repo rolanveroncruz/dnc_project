@@ -5,7 +5,7 @@ import {TableColumn} from '../../../components/generic-data-table-component/tabl
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatDialog} from '@angular/material/dialog';
 import {AddEditDentalServices} from './add-edit-dental-services/add-edit-dental-services';
-import {MatCard, MatCardContent, MatCardHeader} from '@angular/material/card';
+import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -25,6 +25,8 @@ export interface DentalService {
     MatCard,
     MatCardHeader,
     MatCardContent,
+    MatCardSubtitle,
+    MatCardTitle,
   ],
   templateUrl: './dental-services.html',
   styleUrl: './dental-services.scss',
