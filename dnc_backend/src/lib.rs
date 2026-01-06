@@ -35,9 +35,9 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
+use crate::handlers::get_data_objects;
 
-
-fn protected_routes()->Router<AppState>{
+fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
         .route("/whoami", get(whoami))
@@ -46,6 +46,7 @@ fn protected_routes()->Router<AppState>{
         .route("/users", get(get_users))
         .route("/roles", get(get_roles))
         .route("/role_permissions", get(get_role_permissions))
+        .route("/data_objects", get(get_data_objects))
 }
 
 pub fn build_app(my_state:AppState) ->Router{
