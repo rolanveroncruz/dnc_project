@@ -22,6 +22,7 @@ pub struct RoleListQuery {
 pub struct RoleRow {
     pub id: i32,
     pub name: String,
+    pub description: String,
     pub active: bool,
     pub last_modified_by: Option<String>,
     pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
