@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddEditRolePermissions } from './add-edit-role-permissions.dialog';
+import { RolesTabComponent } from './roles-tab-component';
 
-describe('AddEditRolePermissions', () => {
-  let component: AddEditRolePermissions;
-  let fixture: ComponentFixture<AddEditRolePermissions>;
+describe('RolesTabComponent', () => {
+  let component: RolesTabComponent;
+  let fixture: ComponentFixture<RolesTabComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AddEditRolePermissions]
+      imports: [RolesTabComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(AddEditRolePermissions);
+    fixture = TestBed.createComponent(RolesTabComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

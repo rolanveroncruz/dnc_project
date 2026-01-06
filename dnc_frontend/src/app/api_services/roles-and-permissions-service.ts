@@ -28,10 +28,24 @@ export interface RolePermissionPageInfo{
 }
 export interface RolePermission{
   id: number;
+
   action: string;
   active: boolean;
+  role_id: number;
   role: string;
+  object_id: number;
   object: string;
+  last_modified_by: string;
+  last_modified_on: Date;
+}
+export interface ModifiedRolePermission{
+  id: number;
+  actions: string[];
+  active: boolean;
+  role_id: number;
+  role_name: string;
+  object_id: number;
+  object_name: string;
   last_modified_by: string;
   last_modified_on: Date;
 }

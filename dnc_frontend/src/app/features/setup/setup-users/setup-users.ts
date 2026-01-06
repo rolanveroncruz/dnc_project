@@ -4,7 +4,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {MatCard, MatCardHeader, MatCardContent,MatCardTitle, MatCardSubtitle} from '@angular/material/card';
-import {AddEditRolePermissions} from '../setup-roles/add-edit-role-permissions/add-edit-role-permissions';
 import {MatDialog} from '@angular/material/dialog';
 import {AddEditUser} from './add-edit-user/add-edit-user';
 

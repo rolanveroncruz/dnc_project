@@ -1,0 +1,18 @@
+<div class="tab-body">
+  @if (role_permissions; as ds){
+    @if (ds.length === 0) {
+      <p>No clinic capabilities found.</p>
+    } @else {
+      <app-generic-data-table
+        [columnDefs]="role_permissionsColumns"
+        [data]="ds"
+        [pageSize]="20"
+        [pageSizeOptions]="[10, 20, 50,100]"
+        (rowClicked)="openRolePermissionRowDialog($event)"
+      />
+    }
+
+  } @else {
+    <p>Loading...</p>
+  }
+</div>
