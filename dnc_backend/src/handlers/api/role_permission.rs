@@ -20,7 +20,9 @@ pub struct RolePermissionListQuery {
 #[derive(Debug, Clone, Serialize, FromQueryResult)]
 pub struct RolePermissionRow {
     pub id: i32,
+    pub role_id: i32,
     pub role: String,
+    pub object_id: i32,
     pub object: String,
     pub action: String,
     pub active: bool,
@@ -97,7 +99,9 @@ pub async fn get_role_permissions(
     let query = query
         .select_only()
         .column(role_permission::Column::Id)
+        .column(role_permission::Column::RoleId)
         .column_as(role::Column::Name, "role")
+        .column_as(permission::Column::DataObjectId, "object_id")
         .column_as(data_object::Column::Name, "object")
         .column_as(permission::Column::Action, "action")
         .column(role_permission::Column::Active)
