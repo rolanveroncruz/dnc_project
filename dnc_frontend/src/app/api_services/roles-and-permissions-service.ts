@@ -3,7 +3,6 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login.service';
-import {UserPageInfo} from './user-service';
 
 export interface RolePageInfo{
   page: number;
@@ -15,6 +14,7 @@ export interface RolePageInfo{
 export interface Role{
   id: number;
   name: string;
+  description: string;
   active: boolean;
   last_modified_by: string;
   last_modified_on: Date;

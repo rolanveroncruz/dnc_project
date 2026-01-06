@@ -5,7 +5,6 @@ import {Role, RolePermission, RolesAndPermissionsService} from '../../../api_ser
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {AddEditDentalServices} from '../dental-services/add-edit-dental-services/add-edit-dental-services';
 import {MatDialog} from '@angular/material/dialog';
 import {AddEditRoles} from './add-edit-roles/add-edit-roles';
 import {AddEditRolePermissions} from './add-edit-role-permissions/add-edit-role-permissions';
@@ -52,6 +51,7 @@ export class SetupRoles implements OnInit {
   roleColumns: TableColumn[] = [
     {key: 'id', label: 'ID'},
     {key: 'name', label: 'Name'},
+    {key: 'description', label: 'Description'},
     {key: 'last_modified_by', label: 'Last Modified By'},
     {key: 'last_modified_on', label: 'Last Modified On'},
   ];
@@ -184,6 +184,7 @@ function processRoles(roles:Array<Role>):Role[]{
     const new_role:Role = {
       id: role.id,
       name: role.name,
+      description: role.description,
       active: role.active,
       last_modified_by: role.last_modified_by,
       last_modified_on: role.last_modified_on
