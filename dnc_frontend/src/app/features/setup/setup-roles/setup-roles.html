@@ -13,11 +13,11 @@
       [selectedIndex]="selectedTabIndex()"
       (selectedIndexChange)="onTabIndexChange($event)" >
       <mat-tab label="Roles">
-        <app-roles-tab-component [roles]="roles()"></app-roles-tab-component>
+        <app-roles-tab-component></app-roles-tab-component>
       </mat-tab>
 
       <mat-tab label="Permissions">
-        <app-role-permissions-tab-component [data_objects]="data_objects()" [roles]="roles()" [role_permissions]="modified_role_permissions()"></app-role-permissions-tab-component>
+        <app-role-permissions-tab-component ></app-role-permissions-tab-component>
       </mat-tab>
     </mat-tab-group>
   </mat-card-content>
