@@ -15,6 +15,7 @@ export interface User{
   id: number;
   name: string;
   email: string;
+  role_id: number;
   role: string;
   last_modified_by: string;
   last_modified_on: Date;
