@@ -1,34 +1,28 @@
-<div class="dialog-shell">
-  <!-- Header -->
-  <div class="dialog-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <mat-icon>admin_panel_settings</mat-icon>
-      </div>
-
-      <div class="header-text">
-        <div class="title">{{ title() }}</div>
-        <div class="subtitle">{{ subtitle() }}</div>
-      </div>
+<h2 mat-dialog-title class="dialog-title">
+  <div class="title-wrap">
+    <div class="title-text">
+      <div class="title">{{ title() }}</div>
+      <div class="subtitle">{{ subtitle() }}</div>
     </div>
 
-    <button mat-icon-button (click)="cancel()" aria-label="Close">
-      <mat-icon>close</mat-icon>
-    </button>
+    @if (hasChanges) {
+      <span class="status-chip">Unsaved changes</span>
+    }
   </div>
+</h2>
 
-  <mat-divider></mat-divider>
-
-  <!-- Content -->
-  <div class="dialog-content" [formGroup]="form">
-    <!-- Permission section -->
-    <div class="section">
-      <div class="section-title">Role Permission</div>
-      <div class="section-subtitle">Select the role, the data object, and allowed actions.</div>
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="grid">
+    <!-- LEFT: Editable -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Role permission</div>
+        <div class="panel-hint">Select a role, an object, and allowed actions.</div>
+      </div>
 
       <div class="grid-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Role</mat-label>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Role *</mat-label>
           <mat-select formControlName="role_id" required>
             @for (r of data.roles; track r.id) {
               <mat-option [value]="r.id">{{ r.name }}</mat-option>
@@ -39,13 +33,11 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Object</mat-label>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Object *</mat-label>
           <mat-select formControlName="data_object_id" required>
             @for (o of data.objects; track o.id) {
-              <mat-option [value]="o.id">
-                {{ o.label ?? o.name }}
-              </mat-option>
+              <mat-option [value]="o.id">{{ o.label ?? o.name }}</mat-option>
             }
           </mat-select>
           @if (objectCtrl.touched && objectCtrl.invalid) {
@@ -54,7 +46,7 @@
         </mat-form-field>
       </div>
 
-      <div class="actions-card" [formGroup]="actionsGroup">
+      <div class="actions-card" formGroupName="actions">
         <div class="actions-card-header">
           <div class="actions-title">Actions</div>
           <div class="actions-hint">Choose what this role can do for the selected object.</div>
@@ -66,51 +58,68 @@
           <mat-checkbox formControlName="update">Update</mat-checkbox>
         </div>
 
-        <div class="actions-warning" *ngIf="actionsGroup.value && !actionsGroup.value.create && !actionsGroup.value.read && !actionsGroup.value.update">
-          <mat-icon>info</mat-icon>
-          <span>Select at least one action.</span>
+        @if (!hasAnyAction) {
+          <div class="actions-warning">
+            <mat-icon aria-hidden="true">info</mat-icon>
+            <span>Select at least one action.</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- RIGHT: Readonly meta -->
+    <aside class="panel panel--meta">
+      <div class="panel-header">
+        <div class="panel-title">Audit</div>
+        <div class="panel-hint">Read-only information.</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Mode</div>
+        <div class="meta-value">{{ mode === 'add' ? 'Add' : 'Edit' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Permission ID</div>
+        <div class="meta-value mono">
+          @if (data.row?.id) { #{{ data.row?.id }} } @else { — }
         </div>
       </div>
-    </div>
 
-    <mat-divider></mat-divider>
-
-    <!-- Audit section -->
-    <div class="section">
-      <div class="section-title">Audit</div>
-      <div class="section-subtitle">Read-only system fields.</div>
-
-      <div class="grid-3">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>ID</mat-label>
-          <input matInput formControlName="id" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Last modified by</mat-label>
-          <input matInput formControlName="last_modified_by" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Last modified on</mat-label>
-          <input matInput formControlName="last_modified_on" />
-        </mat-form-field>
+      <div class="meta-row">
+        <div class="meta-label">Selected role</div>
+        <div class="meta-value">{{ selectedRoleName }}</div>
       </div>
-    </div>
-  </div>
 
-  <!-- Footer actions -->
-  <div class="dialog-actions">
-    <button mat-button (click)="cancel()">Cancel</button>
+      <div class="meta-row">
+        <div class="meta-label">Selected object</div>
+        <div class="meta-value">{{ selectedObjectLabel }}</div>
+      </div>
 
-    <button
-      mat-flat-button
-      color="primary"
-      (click)="save()"
-      [disabled]="form.invalid || (!actionsGroup.value?.create && !actionsGroup.value?.read && !actionsGroup.value?.update)"
-    >
-      <mat-icon>save</mat-icon>
-      Save
-    </button>
-  </div>
+      <div class="meta-row">
+        <div class="meta-label">Last modified by</div>
+        <div class="meta-value">{{ data.row?.last_modified_by ?? '—' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified on</div>
+        <div class="meta-value">
+          {{ data.row?.last_modified_on ? (data.row?.last_modified_on | date:'medium') : '—' }}
+        </div>
+      </div>
+    </aside>
+  </form>
+</div>
+
+<div mat-dialog-actions class="dialog-actions" align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+
+  <button
+    mat-flat-button
+    type="button"
+    (click)="save()"
+    [disabled]="form.invalid || !hasAnyAction || !hasChanges"
+  >
+    Save
+  </button>
 </div>

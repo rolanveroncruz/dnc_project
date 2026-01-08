@@ -1,11 +1,124 @@
-<h2 mat-dialog-title>Add/Edit Dental Services</h2>
+<!-- add-edit-dental-services.html -->
+<h2 mat-dialog-title class="dialog-title">
+  <div class="title-wrap">
+    <div class="title-text">
+      <div class="title">
+        {{ isEdit() ? 'Edit Dental Service' : 'New Dental Service' }}
+      </div>
+      <div class="subtitle">
+        Define the service name, type, and recording behavior.
+      </div>
+    </div>
 
-<div mat-dialog-content>
-  <pre>{{data|json}}</pre>
+    @if (hasChanges()) {
+      <span class="status-chip">Unsaved changes</span>
+    }
+  </div>
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="grid">
+    <!-- LEFT: Editable -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Dental service details</div>
+        <div class="panel-hint">Fields marked * are required.</div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Service name *</mat-label>
+        <input matInput formControlName="name" autocomplete="off" />
+        <mat-hint>Example: Cleaning, Extraction, Whitening</mat-hint>
+
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Name is required</mat-error>
+          }
+          @if (form.controls.name.hasError('maxlength')) {
+            <mat-error>Max 120 characters</mat-error>
+          }
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Service type *</mat-label>
+        <mat-select formControlName="type_id">
+          @for (opt of data.typeOptions; track opt.id) {
+            <mat-option [value]="opt.id">{{ opt.name }}</mat-option>
+          }
+        </mat-select>
+
+        @if (selectedTypeName()) {
+          <mat-hint>Selected: {{ selectedTypeName() }}</mat-hint>
+        }
+
+        @if (form.controls.type_id.invalid && form.controls.type_id.touched) {
+          <mat-error>Type is required</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="checks">
+        <mat-checkbox formControlName="record_tooth">
+          Record tooth / tooth mapping
+        </mat-checkbox>
+
+        <mat-checkbox formControlName="active">
+          Active
+        </mat-checkbox>
+      </div>
+
+      <!-- keep submit available for Enter key -->
+      <button type="submit" class="sr-only" aria-hidden="true" (click)="save()"></button>
+    </section>
+
+    <!-- RIGHT: Readonly meta -->
+    <aside class="panel panel--meta">
+      <div class="panel-header">
+        <div class="panel-title">Audit</div>
+        <div class="panel-hint">Read-only information.</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Service ID</div>
+        <div class="meta-value mono">
+          {{ data.service?.id ?? '—' }}
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified by</div>
+        <div class="meta-value">
+          {{ data.service?.last_modified_by ?? '—' }}
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified on</div>
+        <div class="meta-value">
+          {{ data.service?.last_modified_on ? (data.service!.last_modified_on | date:'medium') : '—' }}
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Notes</div>
+        <div class="meta-value">
+          ID and audit fields are system-controlled and cannot be edited.
+        </div>
+      </div>
+    </aside>
+  </form>
 </div>
 
+<div mat-dialog-actions class="dialog-actions" align="end">
+  <button mat-button type="button" (click)="close()">Cancel</button>
 
-<div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Cancel</button>
-  <button mat-button color="primary" (click)="save()">Save</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="form.invalid || !hasChanges()"
+  >
+    Save
+  </button>
 </div>

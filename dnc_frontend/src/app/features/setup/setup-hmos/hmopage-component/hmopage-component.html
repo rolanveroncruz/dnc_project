@@ -1,0 +1,182 @@
+<div class="page">
+  <!-- Header -->
+  <header class="page-title">
+    <div class="title-wrap">
+      <div class="title-text">
+        <div class="title">Edit HMO</div>
+        <div class="subtitle">Update HMO information and review audit details.</div>
+      </div>
+
+      <div class="title-actions">
+        @if (hasChanges()) {
+          <span class="status-chip">Unsaved changes</span>
+        }
+
+        <button mat-button type="button" (click)="resetChanges()" [disabled]="!hasChanges()">
+          Reset
+        </button>
+
+        <button
+          mat-flat-button
+          type="button"
+          (click)="save()"
+          [disabled]="form.invalid || !hasChanges()"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-content">
+    <!-- Top: 2-column layout -->
+    <form [formGroup]="form" class="grid">
+      <!-- LEFT: Editable -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">HMO details</div>
+          <div class="panel-hint">Fields marked * are required.</div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Short name *</mat-label>
+          <input matInput formControlName="short_name" autocomplete="off" />
+          @if (form.controls.short_name.invalid && form.controls.short_name.touched) {
+            <mat-error>Short name is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Long name</mat-label>
+          <input matInput formControlName="long_name" autocomplete="off" />
+          <mat-hint align="end">{{ (form.controls.long_name.value?.length ?? 0) }}/200</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Address</mat-label>
+          <textarea matInput formControlName="address" rows="4"></textarea>
+          <mat-hint align="end">{{ (form.controls.address.value?.length ?? 0) }}/500</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Tax account number</mat-label>
+          <input matInput formControlName="tax_account_number" autocomplete="off" />
+          <mat-hint align="end">{{ (form.controls.tax_account_number.value?.length ?? 0) }}/50</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Contact numbers</mat-label>
+          <textarea matInput formControlName="contact_nos" rows="3"></textarea>
+          <mat-hint align="end">{{ (form.controls.contact_nos.value?.length ?? 0) }}/200</mat-hint>
+        </mat-form-field>
+
+        <div class="toggle-row">
+          <mat-slide-toggle formControlName="active">Active</mat-slide-toggle>
+        </div>
+      </section>
+
+      <!-- RIGHT: Readonly meta -->
+      <aside class="panel panel--meta">
+        <div class="panel-header">
+          <div class="panel-title">Audit</div>
+          <div class="panel-hint">Read-only information.</div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-label">ID</div>
+          <div class="meta-value mono">
+            @if (hmo()?.id) { #{{ hmo()!.id }} } @else { — }
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-label">Last endorsement date</div>
+          <div class="meta-value">
+            @if (hmo()?.last_endorsement_date) {
+              {{ hmo()!.last_endorsement_date | date:'mediumDate' }}
+            } @else {
+              —
+            }
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-label">Last collection date</div>
+          <div class="meta-value">
+            @if (hmo()?.last_collection_date) {
+              {{ hmo()!.last_collection_date | date:'mediumDate' }}
+            } @else {
+              —
+            }
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-label">Last modified by</div>
+          <div class="meta-value">{{ hmo()?.last_modified_by ?? '—' }}</div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-label">Last modified on</div>
+          <div class="meta-value">
+            @if (hmo()?.last_modified_on) {
+              {{ hmo()!.last_modified_on | date:'medium' }}
+            } @else {
+              —
+            }
+          </div>
+        </div>
+      </aside>
+    </form>
+
+    <!-- Bottom: table spanning both columns -->
+    <section class="panel table-panel">
+      <div class="panel-header">
+        <div class="panel-title">Related information</div>
+        <div class="panel-hint">Lorem ipsum table (7 columns × 4 rows).</div>
+      </div>
+
+      <div class="table-wrap">
+        <table mat-table [dataSource]="loremRows" class="lorem-table">
+          <ng-container matColumnDef="c1">
+            <th mat-header-cell *matHeaderCellDef>Column 1</th>
+            <td mat-cell *matCellDef="let r">{{ r.c1 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c2">
+            <th mat-header-cell *matHeaderCellDef>Column 2</th>
+            <td mat-cell *matCellDef="let r">{{ r.c2 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c3">
+            <th mat-header-cell *matHeaderCellDef>Column 3</th>
+            <td mat-cell *matCellDef="let r">{{ r.c3 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c4">
+            <th mat-header-cell *matHeaderCellDef>Column 4</th>
+            <td mat-cell *matCellDef="let r">{{ r.c4 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c5">
+            <th mat-header-cell *matHeaderCellDef>Column 5</th>
+            <td mat-cell *matCellDef="let r">{{ r.c5 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c6">
+            <th mat-header-cell *matHeaderCellDef>Column 6</th>
+            <td mat-cell *matCellDef="let r">{{ r.c6 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="c7">
+            <th mat-header-cell *matHeaderCellDef>Column 7</th>
+            <td mat-cell *matCellDef="let r">{{ r.c7 }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="loremColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: loremColumns"></tr>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>

@@ -4,8 +4,10 @@ import {GenericDataTableComponent} from '../../../components/generic-data-table-
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatDialog} from '@angular/material/dialog';
-import {AddEditDentalServices} from './add-edit-dental-services/add-edit-dental-services';
+import {DentalServiceDialogComponent} from './add-edit-dental-services/add-edit-dental-services';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
+import {DentalServiceType, DentalServiceTypesService} from '../../../api_services/dental-service-types-service';
+import {DentalServiceDialogData} from './add-edit-dental-services/dental-service-dialog.models';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -35,6 +37,9 @@ export class DentalServices implements OnInit{
   state = signal<LoadState>('loading');
   dentalServices = signal<DentalService[] |null>(null);
   errorMsg = signal<string | null>(null);
+  dentalServiceTypes = signal<DentalServiceType[]>([]);
+
+
   private destroyRef = inject(DestroyRef);
   private dialog = inject(MatDialog);
   dentalServicesColumns: TableColumn[] = [
@@ -45,13 +50,21 @@ export class DentalServices implements OnInit{
     {key: 'last_modified_on', label: 'Last Modified On'},
   ];
 
-  openRowDialog(row:any){
-    const ref = this.dialog.open(AddEditDentalServices, {
-      data:row,
+  openEditDialog(row:any){
+    const data: DentalServiceDialogData={
+      mode: 'edit',
+      service: row,
+      typeOptions: this.dentalServiceTypes(),
+      currentUserName: 'test',
+    };
+    const ref = this.dialog.open(DentalServiceDialogComponent, {
+      data,
+      disableClose : true,
+      autoFocus: false,
       width: '720px',
-      maxWidth: '95vw',
-      disableClose : false,
+      maxWidth: '92vw',
     });
+
     ref.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
       if (!result) return;
@@ -60,14 +73,16 @@ export class DentalServices implements OnInit{
 
   constructor(
     private dentalServicesService: DentalServicesService,
+    private dentalServiceTypesService: DentalServiceTypesService,
   ){}
 
 
    ngOnInit(): void {
-     this.load();
+     this.load_dental_services();
+     this.load_dental_service_types();
 
    }
-   private load(){
+   private load_dental_services(){
       this.state.set('loading');
       this.errorMsg.set(null)
      this.dentalServicesService.getDentalServices()
@@ -83,5 +98,18 @@ export class DentalServices implements OnInit{
            this.state.set('error');
          }
        })
+   }
+   private load_dental_service_types(){
+    this.dentalServiceTypesService.getDentalServiceTypes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.dentalServiceTypes.set(res.items);
+        },
+        error: (err) => {
+          console.log("Failed to load dental service types",err);
+        }
+
+      })
    }
 }
