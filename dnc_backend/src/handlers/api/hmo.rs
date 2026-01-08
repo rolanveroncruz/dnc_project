@@ -135,3 +135,35 @@ pub async fn get_hmos(
         total_pages,
     }))
 }
+use axum::extract::Path;
+pub async fn get_hmo_by_id(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<i32>,
+) -> Result<Json<HMORow>, StatusCode> {
+    // permission check (same as list)
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "hmo",
+        PermissionActionEnum::Read,
+    )
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    let row = hmo::Entity::find()
+        .column_as(Expr::cust("NULL"), "last_endorsement_date")
+        .column_as(Expr::cust("NULL"), "last_collection_date")
+        .filter(hmo::Column::Id.eq(id))
+        .into_model::<HMORow>()
+        .one(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    Ok(Json(row))
+}

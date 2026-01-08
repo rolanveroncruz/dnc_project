@@ -35,7 +35,7 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, get_hmos};
+use crate::handlers::{get_data_objects, get_dental_service_types, get_hmos, get_hmo_by_id};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -49,6 +49,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/role_permissions", get(get_role_permissions))
         .route("/data_objects", get(get_data_objects))
         .route("/hmos", get(get_hmos))
+        .route("/hmos/{:id}", get(get_hmo_by_id))
 }
 
 pub fn build_app(my_state:AppState) ->Router{
