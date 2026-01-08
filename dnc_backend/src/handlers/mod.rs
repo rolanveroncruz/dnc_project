@@ -20,3 +20,4 @@ pub use login::{LoginRequest, LoginResponse};
 
 pub use middlewares::{inject_jwt_config, require_jwt};
 pub use boiler::WhoAmIResponse;
+pub use api::hmo::get_hmos;
