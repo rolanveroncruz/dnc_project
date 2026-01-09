@@ -7,9 +7,9 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_URL}:${DB_PORT}/${DB_NAME}
-      - PORT=3000
+      - BACKEND_PORT=54321
     ports:
-      - "3000:3000"
+      - "54321:54321"
     restart: always
 
   frontend:
@@ -20,3 +20,20 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    restart: no
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${GRAFANA_OTEL_ENDPOINT}
+      - GRAFANA_INSTANCE_ID=${GRAFANA_INSTANCE_ID}
+      - GRAFANA_TOKEN=${GRAFANA_TOKEN}
+    command: ["--config=/etc/otelcol-config.yaml"]
+    volumes:
+      - ./config.yaml:/etc/otelcol-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics (Collector's own health)
+      - "13133:13133" # Health check extension
