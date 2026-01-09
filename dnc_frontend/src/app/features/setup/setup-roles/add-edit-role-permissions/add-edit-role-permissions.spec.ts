@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddEditRolePermissions } from './add-edit-role-permissions';
+import { AddEditRolePermissions } from './add-edit-role-permissions.dialog';
 
 describe('AddEditRolePermissions', () => {
   let component: AddEditRolePermissions;

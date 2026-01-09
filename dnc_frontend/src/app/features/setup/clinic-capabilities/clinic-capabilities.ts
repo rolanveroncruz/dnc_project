@@ -4,7 +4,6 @@ import {TableColumn} from '../../../components/generic-data-table-component/tabl
 import {ClinicCapabilitiesService, ClinicCapability} from '../../../api_services/clinic-capabilities-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
-import {AddEditRoles} from '../setup-roles/add-edit-roles/add-edit-roles';
 import {MatDialog} from '@angular/material/dialog';
 import {AddEditClinicCapability} from './add-edit-clinic-capability/add-edit-clinic-capability';
 
@@ -33,7 +32,7 @@ export class ClinicCapabilities implements OnInit{
     {key: 'id', label: 'ID'},
     {key: 'name', label: 'Name'},
     {key: 'last_modified_by', label: 'Last Modified By'},
-    {key: 'last_modified_on', label: 'Last Modified On'},
+    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
   ];
   constructor(private clinicCapabilitiesService:ClinicCapabilitiesService){}
 

@@ -23,6 +23,7 @@ pub struct DentalServiceRow {
     pub id: i32,
     pub name: String,
     pub active: bool,
+    pub type_id: Option<i32>,
     pub type_name: Option<String>, // LEFT JOIN => can be NULL
     pub last_modified_by: Option<String>,
     pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
@@ -97,6 +98,7 @@ pub async fn get_dental_services(
         .column(dental_service::Column::Id)
         .column(dental_service::Column::Name)
         .column(dental_service::Column::Active)
+        .column_as(dental_service_type::Column::Id, "type_id")
         .column_as(dental_service_type::Column::Name, "type_name")
         .column_as(dental_service::Column::LastModifiedBy, "last_modified_by")
         .column_as(dental_service::Column::LastModifiedOn, "last_modified_on")

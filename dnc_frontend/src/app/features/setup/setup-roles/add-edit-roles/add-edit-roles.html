@@ -1,13 +1,85 @@
+<h2 mat-dialog-title class="dialog-title">
+  <div class="title-wrap">
+    <div class="title-text">
+      <div class="title">Edit Role</div>
+      <div class="subtitle">Update role name and description.</div>
+    </div>
 
-<h2 mat-dialog-title>Add/Edit Roles</h2>
+    @if(hasChanges){
+      <span class="status-chip" >Unsaved changes</span>
+    }
+  </div>
+</h2>
 
-<div mat-dialog-content>
-  <pre>{{data|json}}</pre>
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="grid">
+    <!-- LEFT: Editable -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Role details</div>
+        <div class="panel-hint">Fields marked * are required.</div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Name *</mat-label>
+        <input matInput formControlName="name" autocomplete="off" />
+        @if (form.controls.name.invalid && form.controls.name.touched){
+          <mat-error >
+            Role name is required.
+          </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="6"></textarea>
+        <mat-hint align="end">
+          {{ (form.controls.description.value?.length ?? 0) }}/500
+        </mat-hint>
+      </mat-form-field>
+    </section>
+
+    <!-- RIGHT: Readonly meta -->
+    <aside class="panel panel--meta">
+      <div class="panel-header">
+        <div class="panel-title">Audit</div>
+        <div class="panel-hint">Read-only information.</div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-label">ID</div>
+        <div class="meta-value">{{ data['id'] }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified by</div>
+        <div class="meta-value">{{ data?.last_modified_by ?? '—' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified on</div>
+        <div class="meta-value">{{ (data?.last_modified_on | date:'medium') ?? '—' }}</div>
+      </div>
+
+      <!-- Optional: show ID or other info if present -->
+      @if (data['id']){
+      <div class="meta-row">
+        <div class="meta-label">Role ID</div>
+        <div class="meta-value mono">#{{ this.data["id"] }}</div>
+      </div>
+      }
+    </aside>
+  </form>
 </div>
 
+<div mat-dialog-actions class="dialog-actions" align="end">
+  <button mat-button type="button" (click)="close()">Cancel</button>
 
-<div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Cancel</button>
-  <button mat-button color="primary" (click)="save()">Save</button>
+  <button
+    mat-flat-button
+    type="button"
+    (click)="save()"
+    [disabled]="form.invalid || !hasChanges"
+  >
+    Save
+  </button>
 </div>
-

@@ -13,6 +13,7 @@ import {ClinicCapabilities} from './features/setup/clinic-capabilities/clinic-ca
 import {SetupUsers} from './features/setup/setup-users/setup-users';
 import {SetupRoles} from './features/setup/setup-roles/setup-roles';
 import {SetupHMOs} from './features/setup/setup-hmos/setup-hmos';
+import {HMOPageComponent} from './features/setup/setup-hmos/hmopage-component/hmopage-component';
 import {SetupDentalContracts} from './features/setup/setup-dental-contracts/setup-dental-contracts';
 import {SetupClinics} from './features/setup/setup-clinics/setup-clinics';
 import {SetupDentists} from './features/setup/setup-dentists/setup-dentists';
@@ -42,6 +43,7 @@ export const routes: Routes = [
           { path: 'users', component: SetupUsers, title: 'Users'},
           { path: 'roles', component: SetupRoles, title: 'Roles'},
           { path: 'hmos', component: SetupHMOs, title: 'HMOs'},
+          { path: 'hmos/:id', component: HMOPageComponent , title: 'HMO'},
           { path: 'dental-contracts', component: SetupDentalContracts, title: 'Dental Contracts'},
           { path: 'clinics', component: SetupClinics, title: 'Clinics'},
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},

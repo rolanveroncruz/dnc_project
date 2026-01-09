@@ -2,7 +2,7 @@ import {Inject, Injectable, PLATFORM_ID, computed, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../environments/environment';
 import {isPlatformBrowser} from '@angular/common';
-import {Observable, tap} from 'rxjs';
+import {Observable, tap,catchError, throwError} from 'rxjs';
 
 export type MenuActivationMap = Record<string, string>;
 
@@ -65,6 +65,8 @@ export class LoginService {
   }
 
   login(email:string, password:string):Observable<LoginResponse>{
+    this.clearSessionState();
+
     const body: LoginRequest = {email, password};
     return this.httpClient.post<LoginResponse>(`${this.apiUrl}/login`, body).pipe(
       tap( response=> {
@@ -81,8 +83,13 @@ export class LoginService {
           this.loginSuccess(response.token, response.menu_activation_map, user);
 
         }else{
-          console.log("In Service, Login Failed");
+          this.clearSessionState();
+          console.log("In Service, Login Failed (invalid response)");
         }
+      })
+      ,catchError( err=> {
+        this.clearSessionState();
+        return throwError(()=>err);
       })
     )
   }
@@ -115,10 +122,7 @@ export class LoginService {
   }
 
   logout(){
-    this.currentUser.set({email: "", name: "", role_name: "", user_id: 0});
-    this.token.set(null);
-    this.menuActivationMap.set({});
-    this.clearStorage();
+    this.clearSessionState();
   }
  // ---------- persistence helpers ----------------------
   private clearStorage(){
@@ -165,7 +169,13 @@ export class LoginService {
       localStorage.removeItem(AUTH_KEY);
     }
   }
-
+  // CHANGE: central helper to wipe session (memory + storage)
+  private clearSessionState() {
+    this.currentUser.set({ email: "", name: "", role_name: "", user_id: 0 });
+    this.token.set(null);
+    this.menuActivationMap.set({});
+    this.clearStorage();
+  }
 }
 
 function looksLikeJwt(token: unknown): boolean{

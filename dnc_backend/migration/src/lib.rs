@@ -7,6 +7,7 @@ mod m20251205_075445_create_table_role_permission;
 mod m20251205_075454_create_table_user;
 mod m20251221_124454_create_table_dental_services;
 mod m20251221_124505_create_table_clinic_capabilities;
+mod m20260108_051749_create_table_hmo;
 
 pub struct Migrator;
 
@@ -21,6 +22,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251205_075454_create_table_user::Migration),
             Box::new(m20251221_124454_create_table_dental_services::Migration),
             Box::new(m20251221_124505_create_table_clinic_capabilities::Migration),
+            Box::new(m20260108_051749_create_table_hmo::Migration),
         ]
     }
 }

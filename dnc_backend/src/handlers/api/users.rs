@@ -24,6 +24,7 @@ pub struct UserRow {
     pub id: i32,
     pub name: String,
     pub email: String,
+    pub role_id: i32,
     pub role: String,
     pub active: bool,
     pub last_modified_by: Option<String>,
@@ -100,6 +101,7 @@ pub async fn get_users(
         .column(user::Column::Name)
         .column(user::Column::Active)
         .column(user::Column::Email)
+        .column_as(role::Column::Id, "role_id")
         .column_as(role::Column::Name, "role")
         .column_as(user::Column::LastModifiedBy, "last_modified_by")
         .column_as(user::Column::LastModifiedOn, "last_modified_on")

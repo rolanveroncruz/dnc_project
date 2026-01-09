@@ -9,11 +9,12 @@ export interface DentalServicesPageInfo{
   perSize: number;
   total_items: number;
   total_pages: number;
-  items: RawDentalService[];
+  items: DentalService[];
 }
-export interface RawDentalService {
+export interface DentalService {
   id: number;
   name: string;
+  type_id: number;
   type_name: string;
   record_tooth: boolean;
   active: boolean;
