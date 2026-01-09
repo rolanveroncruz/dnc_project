@@ -1,0 +1,85 @@
+<h2 mat-dialog-title class="dialog-title">
+  <div class="title-wrap">
+    <div class="title-text">
+      <div class="title">
+        {{ isEdit ? 'Edit Clinic Capability' : 'New Clinic Capability' }}
+      </div>
+      <div class="subtitle">
+        {{ isEdit ? 'Update capability name.' : 'Create a new clinic capability.' }}
+      </div>
+    </div>
+
+    @if (hasChanges()) {
+      <span class="status-chip">Unsaved changes</span>
+    }
+  </div>
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="grid">
+    <!-- LEFT: Editable -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Capability details</div>
+        <div class="panel-hint">Fields marked * are required.</div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Name *</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          autocomplete="off"
+          placeholder="e.g. X-ray, Orthodontics, Implant surgery"
+        />
+        <mat-hint>Short, clear name shown across the system</mat-hint>
+
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <mat-error>Name is required.</mat-error>
+        }
+      </mat-form-field>
+    </section>
+
+    <!-- RIGHT: Readonly meta -->
+    <aside class="panel panel--meta">
+      <div class="panel-header">
+        <div class="panel-title">Audit</div>
+        <div class="panel-hint">Read-only information.</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">ID</div>
+        <div class="meta-value">
+          @if (data.id) {
+            <span class="mono">#{{ data.id }}</span>
+          } @else {
+            —
+          }
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified by</div>
+        <div class="meta-value">{{ data?.last_modified_by ?? '—' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified on</div>
+        <div class="meta-value">{{ (data?.last_modified_on | date:'medium') ?? '—' }}</div>
+      </div>
+    </aside>
+  </form>
+</div>
+
+<div mat-dialog-actions class="dialog-actions" align="end">
+  <button mat-button type="button" (click)="close()">Cancel</button>
+
+  <button
+    mat-flat-button
+    type="button"
+    (click)="save()"
+    [disabled]="form.invalid || !hasChanges"
+  >
+    Save
+  </button>
+</div>

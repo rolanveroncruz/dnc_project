@@ -3,7 +3,6 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login.service';
-import {UserPageInfo} from './user-service';
 
 export interface RolePageInfo{
   page: number;
@@ -15,8 +14,8 @@ export interface RolePageInfo{
 export interface Role{
   id: number;
   name: string;
-  email: string;
-  role: string;
+  description: string;
+  active: boolean;
   last_modified_by: string;
   last_modified_on: Date;
 }
@@ -29,9 +28,24 @@ export interface RolePermissionPageInfo{
 }
 export interface RolePermission{
   id: number;
-  name: string;
-  email: string;
+
+  action: string;
+  active: boolean;
+  role_id: number;
   role: string;
+  object_id: number;
+  object: string;
+  last_modified_by: string;
+  last_modified_on: Date;
+}
+export interface ModifiedRolePermission{
+  id: number;
+  actions: string[];
+  active: boolean;
+  role_id: number;
+  role_name: string;
+  object_id: number;
+  object_name: string;
   last_modified_by: string;
   last_modified_on: Date;
 }

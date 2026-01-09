@@ -1,0 +1,121 @@
+<h2 mat-dialog-title class="dialog-title">
+  <div class="title-wrap">
+    <div class="title-text">
+      <div class="title">{{ isEdit ? 'Edit User' : 'New User' }}</div>
+      <div class="subtitle">Update identity and access for this account.</div>
+    </div>
+
+    @if (hasChanges) {
+      <span class="status-chip">Unsaved changes</span>
+    }
+  </div>
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="grid" (ngSubmit)="save()">
+    <!-- LEFT: Editable -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">User details</div>
+        <div class="panel-hint">Fields marked * are required.</div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Name *</mat-label>
+        <input matInput formControlName="name" autocomplete="off" (keydown.enter)="onEnter()" />
+        <mat-hint>Full name as it should appear in the system</mat-hint>
+
+        @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+          <mat-error>Name is required</mat-error>
+        }
+        @if (form.controls.name.hasError('maxlength') && form.controls.name.touched) {
+          <mat-error>Name is too long</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Email *</mat-label>
+        <input matInput formControlName="email" autocomplete="off" (keydown.enter)="onEnter()" />
+        <mat-hint>Used for login and notifications</mat-hint>
+
+        @if (form.controls.email.hasError('required') && form.controls.email.touched) {
+          <mat-error>Email is required</mat-error>
+        }
+        @if (form.controls.email.hasError('email') && form.controls.email.touched) {
+          <mat-error>Enter a valid email</mat-error>
+        }
+        @if (form.controls.email.hasError('maxlength') && form.controls.email.touched) {
+          <mat-error>Email is too long</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Role *</mat-label>
+        <mat-select formControlName="role_id">
+          @for (r of data.roles; track r.id) {
+            <mat-option [value]="r.id">{{ r.name }}</mat-option>
+          }
+        </mat-select>
+
+        @if (selectedRoleName) {
+          <mat-hint>Selected: {{ selectedRoleName }}</mat-hint>
+        }
+
+        @if (form.controls.role_id.hasError('required') && form.controls.role_id.touched) {
+          <mat-error>Role is required</mat-error>
+        }
+      </mat-form-field>
+    </section>
+
+    <!-- RIGHT: Readonly meta -->
+    <aside class="panel panel--meta">
+      <div class="panel-header">
+        <div class="panel-title">Audit</div>
+        <div class="panel-hint">Read-only information.</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">User ID</div>
+        <div class="meta-value mono">{{ data.user?.id ?? '—' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified by</div>
+        <div class="meta-value">{{ data.user?.last_modified_by ?? '—' }}</div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Last modified on</div>
+        <div class="meta-value">
+          {{ data.user?.last_modified_on ? (data.user!.last_modified_on | date:'medium') : '—' }}
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-label">Current role</div>
+        <div class="meta-value">{{ data.user?.role ?? (selectedRoleName || '—') }}</div>
+      </div>
+
+      @if (data.user?.id) {
+        <div class="meta-row">
+          <div class="meta-label">Record</div>
+          <div class="meta-value mono">#{{ data.user?.id }}</div>
+        </div>
+      }
+    </aside>
+  </form>
+</div>
+
+<div mat-dialog-actions class="dialog-actions" align="end">
+  <button mat-button type="button" (click)="close()">Cancel</button>
+
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="form.invalid || !hasChanges"
+  >
+    {{ isEdit ? 'Save' : 'Create user' }}
+  </button>
+</div>

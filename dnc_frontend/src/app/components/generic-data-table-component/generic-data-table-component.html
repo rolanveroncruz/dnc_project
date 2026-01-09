@@ -1,7 +1,7 @@
 <div class="toolbar" [formGroup]="form">
   <mat-form-field appearance="outline" class="q">
     <mat-label>Search</mat-label>
-    <input matInput placeholder="Search all columns..." formControlName="q" />
+    <input matInput placeholder="Search all columns..." formControlName="q"/>
     <button mat-icon-button matSuffix type="button" (click)="clearSearch()" *ngIf="form.value.q">
       <mat-icon>close</mat-icon>
     </button>
@@ -29,35 +29,42 @@
   </mat-form-field>
   <div class="btn-group">
 
-  <button mat-stroked-button type="button"
-          (click)="form.patchValue({ sortDir: 'asc' })"
-          [disabled]="form.value.sortDir === 'asc'">
-    Asc
-  </button>
-  <button mat-stroked-button type="button"
-          (click)="form.patchValue({ sortDir: 'desc' })"
-          [disabled]="form.value.sortDir === 'desc'">
-    Desc
-  </button>
+    <button mat-stroked-button type="button"
+            (click)="form.patchValue({ sortDir: 'asc' })"
+            [disabled]="form.value.sortDir === 'asc'">
+      Asc
+    </button>
+    <button mat-stroked-button type="button"
+            (click)="form.patchValue({ sortDir: 'desc' })"
+            [disabled]="form.value.sortDir === 'desc'">
+      Desc
+    </button>
 
-  <button mat-flat-button type="button" color="warn" (click)="resetAll()">Reset</button>
-</div>
+
+    <button mat-flat-button type="button" color="warn" (click)="resetAll()">Reset</button>
+
+    <span class="spacer"></span>
+        <button mat-flat-button color="primary" type="button" > <mat-icon>add</mat-icon>
+          Add
+        </button>
+  </div>
+<!--  End of class="btn-group"-->
 </div>
 
 <div class="table-wrap">
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
-    @for(col of columnDefs; track col.key){
+    @for (col of columnDefs; track col.key) {
 
       <ng-container [matColumnDef]="col.key">
         <th mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="col.sortable === false">
           {{ col.label }}
         </th>
         <td mat-cell *matCellDef="let row">
-          @if( col.key === 'last_modified_on'){
-            {{toDate(row[col.key]) |date: 'MMM d, y, h:mm a'}}
-          } @else {
-            {{ row[col.key] }}
-          }
+          <ng-container
+            [ngTemplateOutlet]="getCellTemplate(col)"
+            [ngTemplateOutletContext]="{$implicit: row, col: col}">
+          </ng-container>
+
         </td>
       </ng-container>
     }
@@ -78,5 +85,42 @@
     </tr>
   </table>
 
-  <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons />
+  <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons/>
 </div>
+
+<!-------------------->
+<!--Default Template-->
+<!-------------------->
+<ng-template #defaultCell let-row let-col="col">
+  {{ row[col.key] }}
+</ng-template>
+
+<!-------------------->
+<!----Date Template--->
+<!-------------------->
+<ng-template #dateCell let-row let-col="col">
+  {{ toDate(row[col.key]) | date:'MMM d, y' }}
+</ng-template>
+
+<!-------------------->
+<!----DateTime Template--->
+<!-------------------->
+<ng-template #datetimeCell let-row let-col="col">
+  {{ toDate(row[col.key]) | date:'MMM d, y, h:mm a' }}
+</ng-template>
+
+<!-------------------->
+<!---Chips Template--->
+<!-------------------->
+<ng-template #chipsCell let-row let-col="col">
+  <mat-chip-set class="tag-set" aria-label="Tags">
+    @for (tag of (row[col.key] ?? []); track tag) {
+      <mat-chip
+        class="tag-chip"
+        [ngClass]="chipClass(tag)"
+        (click)="$event.stopPropagation()">
+        {{ tag }}
+      </mat-chip>
+    }
+  </mat-chip-set>
+</ng-template>

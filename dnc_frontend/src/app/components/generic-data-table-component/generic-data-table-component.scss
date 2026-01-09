@@ -48,6 +48,7 @@
   button {
     margin-bottom: 0;
   }
+  .spacer {flex: 1 1 auto;}
 }
 
 // 2. Table Container & Scroll
@@ -125,4 +126,61 @@
 mat-paginator {
   border-top: 1px solid #e0e0e0;
   background: white;
+}
+.tag-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Target the actual rendered chip surface + label (MDC) */
+.tag-chip.mat-mdc-chip {
+  border-radius: 999px;
+  --mdc-chip-container-height: 26px;           /* height */
+  --mdc-chip-label-text-size: 12px;            /* font size */
+  --mdc-chip-label-text-weight: 600;           /* font weight */
+
+  background: rgba(0, 0, 0, 0.06);
+}
+/* Padding + letter spacing apply on the internal label */
+.tag-chip.mat-mdc-chip .mdc-evolution-chip__text-label {
+  padding: 0 10px;
+  letter-spacing: 0.2px;
+  line-height: 26px;
+}
+
+/* CREATE */
+.tag-chip.tag-create.mat-mdc-chip {
+  background: lightgreen; /* green-ish */
+  border-color: rgba(46, 125, 50, 0.35);
+}
+.tag-chip.tag-create.mat-mdc-chip .mdc-evolution-chip__text-label {
+  color: rgb(27, 94, 32);
+}
+
+/* READ */
+.tag-chip.tag-read.mat-mdc-chip {
+  background: lightblue; /* blue-ish */
+  border-color: rgba(21, 101, 192, 0.35);
+}
+.tag-chip.tag-read.mat-mdc-chip .mdc-evolution-chip__text-label {
+  color: rgb(13, 71, 161);
+}
+
+/* UPDATE */
+.tag-chip.tag-update.mat-mdc-chip {
+  background: lightsalmon; /* orange-ish */
+  border-color: rgba(239, 108, 0, 0.35);
+}
+.tag-chip.tag-update.mat-mdc-chip .mdc-evolution-chip__text-label {
+  color: rgb(230, 81, 0);
+}
+
+/* fallback */
+.tag-chip.tag-other.mat-mdc-chip {
+  background: rgba(0,0,0,0.06);
+}
+/* Optional hover */
+.tag-chip:hover {
+  background: rgba(0, 0, 0, 0.09);
 }

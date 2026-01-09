@@ -4,6 +4,7 @@ pub use super::clinic_capability::Entity as ClinicCapability;
 pub use super::data_object::Entity as DataObject;
 pub use super::dental_service::Entity as DentalService;
 pub use super::dental_service_type::Entity as DentalServiceType;
+pub use super::hmo::Entity as Hmo;
 pub use super::permission::Entity as Permission;
 pub use super::role::Entity as Role;
 pub use super::role_permission::Entity as RolePermission;

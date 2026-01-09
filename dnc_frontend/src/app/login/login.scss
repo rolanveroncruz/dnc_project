@@ -18,3 +18,51 @@
   display: flex;
   justify-content: flex-end;
 }
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  padding: 12px 14px;
+  margin: 0 0 14px;
+
+  border: 1px solid rgba(211, 47, 47, 0.35);
+  border-radius: 12px;
+
+  background: rgba(211, 47, 47, 0.08);
+  color: #b71c1c;
+
+  line-height: 1.35;
+  font-size: 14px;
+
+  mat-icon {
+    margin-top: 1px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+  }
+
+  span {
+    flex: 1 1 auto;
+    word-break: break-word;
+  }
+}
+
+/* Optional: subtle animation when it appears */
+@media (prefers-reduced-motion: no-preference) {
+  .error-banner {
+    animation: errorBannerIn 140ms ease-out;
+  }
+
+  @keyframes errorBannerIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

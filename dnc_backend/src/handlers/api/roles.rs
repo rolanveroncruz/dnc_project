@@ -10,6 +10,7 @@ use crate::entities::{role };
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
+use tracing::instrument;
 
 #[derive(Debug, Deserialize)]
 pub struct RoleListQuery {
@@ -21,11 +22,16 @@ pub struct RoleListQuery {
 pub struct RoleRow {
     pub id: i32,
     pub name: String,
+    pub description: String,
     pub active: bool,
     pub last_modified_by: Option<String>,
     pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
 }
 
+#[instrument(
+    skip(state),
+    err(Debug)
+)]
 pub async fn get_roles(
     State(state): State<AppState>,
     user:AuthUser,
@@ -115,6 +121,7 @@ pub async fn get_roles(
             tracing::error!("Failed to fetch page {page0} from paginator: {e:?}" );
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
+    tracing::info!("user {} fetched page {} of {} roles", user.claims.email, page, total_pages);
 
     Ok(Json(PageResponse{
         items,

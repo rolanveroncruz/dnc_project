@@ -1,0 +1,34 @@
+# dnc_backend/Dockerfile_backend
+
+#------------- Stage 1: Build-------------
+FROM rust:1.92-slim as builder
+WORKDIR /app
+
+#install system dependencies needed for compiling certain Rust crates
+RUN apt-get update && apt-get install -y pkg-config libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+
+#Copy source code
+COPY . .
+ARG OTEL_EXPORTER_OTLP_ENDPOINT
+ARG BACKEND_PORT
+ARG JWT_SECRET
+#Build for release
+RUN cargo build --release --locked
+
+
+
+#------------- Stage 2: RUN-------------
+FROM debian:bookworm-slim
+
+
+WORKDIR /app
+
+# Install runtime dependencies (libssl is required for most web servers)
+RUN apt-get update && apt-get install -y libssl3 ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Copy only the binary from the builder stage
+# Replace 'your_binary_name' with the actual name in your Cargo.toml
+COPY --from=builder /app/target/release/dnc_backend /usr/local/bin/app
+
+EXPOSE 3000
+CMD ["app"]

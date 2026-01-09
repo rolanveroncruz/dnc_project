@@ -1,53 +1,23 @@
-<mat-card class="setup-roles-container">
-  <div class="page-title">
-    <h1>Roles and Permissions</h1>
-  </div>
-
-  <div class="setup-roles-content">
-  <mat-card-header>
+<mat-card class="setup-roles-card">
+  <mat-card-header class="card-header-center">
+    <div class="title-block">
+      <mat-card-title class="mat-headline-1">Roles and Permissions</mat-card-title>
+      <mat-card-subtitle>Manage roles and related permissions.</mat-card-subtitle>
+    </div>
   </mat-card-header>
 
+  <div class="setup-roles-content">
   <mat-card-content>
-    <mat-tab-group animationDuration="150ms">
+    <mat-tab-group
+      animationDuration="150ms"
+      [selectedIndex]="selectedTabIndex()"
+      (selectedIndexChange)="onTabIndexChange($event)" >
       <mat-tab label="Roles">
-        <div class="tab-body">
-          @if (roles(); as ds){
-            @if (ds.length === 0) {
-              <p>No clinic capabilities found.</p>
-            } @else {
-              <app-generic-data-table
-                [columnDefs]="roleColumns"
-                [data]="ds"
-                [pageSize]="5"
-                [pageSizeOptions]="[5, 10, 20, 50, 100]"
-              />
-            }
-
-          } @else {
-            <p>Loading...</p>
-          }
-
-        </div>
+        <app-roles-tab-component></app-roles-tab-component>
       </mat-tab>
 
       <mat-tab label="Permissions">
-        <div class="tab-body">
-          @if (role_permissions(); as ds){
-            @if (ds.length === 0) {
-              <p>No clinic capabilities found.</p>
-            } @else {
-              <app-generic-data-table
-                [columnDefs]="role_permissionsColumns"
-                [data]="ds"
-                [pageSize]="20"
-                [pageSizeOptions]="[10, 20, 50,100]"
-              />
-            }
-
-          } @else {
-            <p>Loading...</p>
-          }
-        </div>
+        <app-role-permissions-tab-component ></app-role-permissions-tab-component>
       </mat-tab>
     </mat-tab-group>
   </mat-card-content>

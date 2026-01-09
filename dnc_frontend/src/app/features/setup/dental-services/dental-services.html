@@ -1,9 +1,10 @@
-<mat-card class="dental-services-container">
-  <mat-card-header>
+<mat-card class="dental-services-card">
+  <mat-card-header class="card-header-center">
+    <div class="title-block">
+      <mat-card-title class="mat-headline-1">Dental Services</mat-card-title>
+      <mat-card-subtitle>Manage Dental Services</mat-card-subtitle>
+    </div>
 
-  <div class="page-title">
-    <h1>Dental Services</h1>
-  </div>
   </mat-card-header>
   <mat-card-content>
     @if (dentalServices(); as ds){
@@ -15,7 +16,7 @@
           [data]="ds"
           [pageSize]="20"
           [pageSizeOptions]="[10, 20,25, 50, 100]"
-          (rowClicked)="openRowDialog($event)"
+          (rowClicked)="openEditDialog($event)"
         />
       }
 

@@ -17,11 +17,11 @@ use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_sdk::trace::{ BatchSpanProcessor};
 use migration::{Migrator, MigratorTrait};
 
-fn init_tracer() -> sdktrace::Tracer {
+fn init_tracer(otlp_endpoint: &str) -> sdktrace::Tracer {
     // 1. Configure the OLTP Exporter
     let exporter=SpanExporter::builder()
         .with_tonic()
-        .with_endpoint("http://localhost:4317")
+        .with_endpoint(otlp_endpoint.to_string())
         .build()
         .expect("Failed to create OTLP exporter");
 
@@ -57,8 +57,12 @@ use tracing_subscriber::layer::Layer;
 async fn main()-> Result<(), Box<dyn Error>> {
     dotenv().ok(); // Load environment variables from .env file
 
+
     // 1. Initialize the Tracer and get the telemetry layer
-    let tracer=init_tracer();
+    let otlp_endpoint=std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
+        .unwrap_or_else(|_| "http://localhost:4317".to_string());
+    let tracer=init_tracer(otlp_endpoint.as_str());
+    tracing::info!("Tracing initialized:{}. Console, File, and OpenTelemetry are active", otlp_endpoint);
 
     //2. Set up the File Appender
     let file_appender = tracing_appender::rolling::daily("logs/", "app.log");
@@ -99,7 +103,7 @@ async fn main()-> Result<(), Box<dyn Error>> {
         .await
         .expect("Failed to run migrations!!");
 
-    let port=std::env::var("PORT")
+    let port=std::env::var("BACKEND_PORT")
         .unwrap_or_else(|_| "3000".to_string())
         .parse::<u16>()
         .expect("PORT must be a valid u16");

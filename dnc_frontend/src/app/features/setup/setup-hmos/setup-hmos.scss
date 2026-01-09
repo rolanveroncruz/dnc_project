@@ -1,0 +1,14 @@
+mat-card-header.card-header-center {
+  justify-content: center;
+}
+
+mat-card-header.card-header-center .mat-mdc-card-header-text {
+  text-align: center;
+  margin: 0; // removes default left margin that can offset centering
+}
+
+.setup-hmos-card .mat-mdc-card-title{
+  font-size:28px;
+  line-height: 1.2;
+  font-weight:700;
+}

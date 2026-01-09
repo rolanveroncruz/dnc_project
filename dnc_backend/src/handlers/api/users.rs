@@ -11,6 +11,7 @@ use crate::entities::{user, role};
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
+use tracing::instrument;
 
 #[derive(Debug, Deserialize)]
 pub struct UserListQuery {
@@ -23,12 +24,17 @@ pub struct UserRow {
     pub id: i32,
     pub name: String,
     pub email: String,
+    pub role_id: i32,
     pub role: String,
     pub active: bool,
     pub last_modified_by: Option<String>,
     pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
 }
 
+#[instrument(
+    skip(state),
+    err(Debug)
+)]
 pub async fn get_users(
     State(state): State<AppState>,
     user:AuthUser,
@@ -95,6 +101,7 @@ pub async fn get_users(
         .column(user::Column::Name)
         .column(user::Column::Active)
         .column(user::Column::Email)
+        .column_as(role::Column::Id, "role_id")
         .column_as(role::Column::Name, "role")
         .column_as(user::Column::LastModifiedBy, "last_modified_by")
         .column_as(user::Column::LastModifiedOn, "last_modified_on")
@@ -127,6 +134,7 @@ pub async fn get_users(
             tracing::error!("Failed to fetch page {page0} from paginator: {e:?}" );
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
+    tracing::info!("user {} fetched page {} of {} users", user.claims.email, page, total_pages);
 
     Ok(Json(PageResponse{
         items,

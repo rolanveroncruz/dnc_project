@@ -1,18 +1,19 @@
 import {
   AfterViewInit, Component, Input, OnChanges, SimpleChanges,
-  ViewChild, ViewEncapsulation, inject, EventEmitter, Output
+  ViewChild, ViewEncapsulation, inject, EventEmitter, Output, TemplateRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatSort, MatSortModule} from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { TableColumn } from './table-interfaces'; // Import from where you defined it
+import { TableColumn } from './table-interfaces';
+import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from where you defined it
 
 @Component({
   selector: 'app-generic-data-table', // Renamed
@@ -20,13 +21,17 @@ import { TableColumn } from './table-interfaces'; // Import from where you defin
   imports: [
     CommonModule, ReactiveFormsModule, MatTableModule, MatSortModule,
     MatPaginatorModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule,
+    MatSelectModule, MatButtonModule, MatIconModule, MatChipSet, MatChip,
   ],
   templateUrl: './generic-data-table-component.html',
   styleUrls: ['./generic-data-table-component.scss'],
   encapsulation: ViewEncapsulation.None // Optional: helps with generic styles
 })
 export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
+  @ViewChild('defaultCell', { static: true }) defaultCell!: TemplateRef<any>;
+  @ViewChild('dateCell', { static: true }) dateCell!: TemplateRef<any>;
+  @ViewChild('datetimeCell', { static: true }) dateTimeCell!: TemplateRef<any>;
+  @ViewChild('chipsCell', { static: true }) chipsCell!: TemplateRef<any>;
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn[] = [];
@@ -71,7 +76,11 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] ) {
-      this.dataSource.data = this.data || [];
+      const idx = (this.data??[]).findIndex(x=>x==null);
+      if (idx !==-1){
+        console.error("Generic Data Table: data contains null/undefined at index", idx, this.data[idx]);
+      }
+      this.dataSource.data = (this.data || []).filter((x): x is T => x != null);
       this.generateFilterOptions(); // Recalculate unique values for dropdowns
     }
     if (changes['pageSize'] && this.paginator){
@@ -144,7 +153,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
       // 2. Check Specific Dropdown Filters
       const matchesFilters = Object.keys(specificFilters).every(key => {
         const requiredValue = specificFilters[key];
-        if (!requiredValue) return true; // Ignored if dropdown is empty
+        if (!requiredValue) return true; // Ignored if the dropdown is empty
         return String((data as any)[key]) === String(requiredValue);
       });
 
@@ -196,10 +205,29 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
       return isNaN(d.getTime()) ? null : d;
     }
     if (typeof value === "string") {
-      const normalized = value.includes(' ') ? value.replace('', 'T') : value;
+      const normalized = value.includes(' ') ? value.replace(' ', 'T') : value;
       const d = new Date(normalized);
       return isNaN(d.getTime()) ? null : d;
     }
     return null;
   }
+  getCellTemplate(col:TableColumn): TemplateRef<any>{
+
+    switch(col.cellTemplateKey){
+      case 'date': return this.dateCell;
+      case 'datetime': return this.dateTimeCell;
+      case 'chips': return this.chipsCell;
+      case 'default': return this.defaultCell;
+    }
+    return this.defaultCell;
+
+  }
+  chipClass( tag:unknown): string{
+    const t=String(tag).toLowerCase();
+    if (t=='create') return 'tag-create';
+    if (t=='read') return 'tag-read';
+    if (t=='update') return 'tag-update';
+    return 'tag-other';
+  }
 }
+

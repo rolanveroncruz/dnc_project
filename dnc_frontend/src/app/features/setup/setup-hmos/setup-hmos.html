@@ -1,1 +1,25 @@
-<p>setup-hmos works!</p>
+<mat-card class="setup-users-card">
+  <mat-card-header class="card-header-center">
+    <div class="title-block">
+      <mat-card-title class="mat-headline-1">HMOs</mat-card-title>
+      <mat-card-subtitle>Manage HMOs</mat-card-subtitle>
+    </div>
+  </mat-card-header>
+  <mat-card-content>
+    @if (hmos(); as ds){
+      @if (ds.length === 0) {
+        <p>No clinic capabilities found.</p>
+      } @else {
+        <app-generic-data-table
+          [columnDefs]="HMOColumns"
+          [data]="ds"
+          [pageSize]="20"
+          [pageSizeOptions]="[5, 10, 20]"
+          (rowClicked)="navigate_to_hmo_detail($event)"
+        />
+      }
+    } @else {
+      <p>Loading...</p>
+    }
+  </mat-card-content>
+</mat-card>

@@ -11,6 +11,7 @@ use crate::entities::{clinic_capability };
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
+use tracing::instrument;
 
 #[derive(Debug, Deserialize)]
 pub struct ClinicCapabilityListQuery {
@@ -27,7 +28,10 @@ pub struct ClinicCapabilityRow {
     pub last_modified_on: chrono::DateTime<chrono::Utc>
 }
 
-
+#[instrument(
+    skip(state),
+    err(Debug)
+)]
 pub async fn get_clinic_capabilities(
     State(state): State<AppState>,
     user:AuthUser,
@@ -113,6 +117,7 @@ pub async fn get_clinic_capabilities(
             tracing::error!("Failed to fetch page {page0} from paginator: {e:?}" );
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
+    tracing::info!("user {} fetched page {} of {} clinic capabilities", user.claims.email, page, total_pages);
 
     Ok(Json(PageResponse{
         items,

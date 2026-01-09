@@ -5,7 +5,15 @@
     </mat-card-header>
 
     <mat-card-content>
-      <form>
+      <form (ngSubmit)="handleSubmit()" novalidate>
+        <!----Error message-->
+        @if(errorMessage()){
+          <div class="error-banner" role="alert" aria-live="polite">
+            <mat-icon aria-hidden="true">error</mat-icon>
+            <span>{{errorMessage()}}</span>
+          </div>
+        }
+
         <!-- Email -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
@@ -43,8 +51,8 @@
 
         <!-- Submit button -->
         <div class="actions">
-          <button mat-raised-button color="primary" type="submit" (click)="handleSubmit()">
-            Login
+          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading()">
+            {{ isLoading() ? 'Logging in..':'Login' }}
           </button>
         </div>
       </form>

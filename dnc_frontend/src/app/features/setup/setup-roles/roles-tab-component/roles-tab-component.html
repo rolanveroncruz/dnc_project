@@ -1,0 +1,19 @@
+<div class="tab-body">
+  @if (roles(); as ds){
+    @if (ds.length === 0) {
+      <p>No roles found.</p>
+    } @else {
+      <app-generic-data-table
+        [columnDefs]="roleColumns"
+        [data]="ds"
+        [pageSize]="5"
+        [pageSizeOptions]="[5, 10, 20, 50, 100]"
+        (rowClicked)="openRoleRowDialog($event)"
+      />
+    }
+
+  } @else {
+    <p>Loading...</p>
+  }
+
+</div>
