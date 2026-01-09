@@ -99,6 +99,13 @@
 <!----Date Template--->
 <!-------------------->
 <ng-template #dateCell let-row let-col="col">
+  {{ toDate(row[col.key]) | date:'MMM d, y' }}
+</ng-template>
+
+<!-------------------->
+<!----DateTime Template--->
+<!-------------------->
+<ng-template #datetimeCell let-row let-col="col">
   {{ toDate(row[col.key]) | date:'MMM d, y, h:mm a' }}
 </ng-template>
 

@@ -3,9 +3,7 @@ import {GenericDataTableComponent} from "../../../components/generic-data-table-
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from "@angular/material/card";
 import {HMO, HMOService} from '../../../api_services/hmoservice';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {MatDialog} from '@angular/material/dialog';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {AddEditUserDialogComponent} from '../setup-users/add-edit-user/add-edit-user';
 import {Router} from '@angular/router';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -30,7 +28,6 @@ export class SetupHMOs implements OnInit{
   errorMsg = signal<string | null>(null);
   private destroyRef = inject(DestroyRef);
 
-  private dialog = inject(MatDialog);
 
   HMOColumns: TableColumn[] = [
     {key: 'id', label: 'ID'},
@@ -42,7 +39,7 @@ export class SetupHMOs implements OnInit{
     {key: 'last_endorsement_date', label: 'Last Endorsement Date'},
     {key: 'last_collection_date', label: 'Last Collection Date'},
     {key: 'last_modified_by', label: 'Last Modified By'},
-    {key: 'last_modified_on', label: 'Last Modified On'},
+    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'date'},
   ];
 
   constructor(private hmoService: HMOService, private router: Router) {

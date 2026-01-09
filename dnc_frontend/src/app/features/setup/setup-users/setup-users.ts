@@ -36,7 +36,7 @@ export class SetupUsers implements OnInit {
     {key: 'email', label: 'Email'},
     {key: 'role', label: 'Role'},
     {key: 'last_modified_by', label: 'Last Modified By'},
-    {key: 'last_modified_on', label: 'Last Modified On'},
+    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
   ];
   constructor(private userService: UserService, private roles_and_permission_Service: RolesAndPermissionsService) {}
 

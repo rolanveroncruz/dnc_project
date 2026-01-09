@@ -1,17 +1,28 @@
 import {Component, computed, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import {HMO, HMOService} from '../../../../api_services/hmoservice';
-import {ActivatedRoute, Route} from '@angular/router';
+import {ActivatedRoute } from '@angular/router';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {startWith} from 'rxjs';
 import {MatError, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatSlideToggle} from '@angular/material/slide-toggle';
 import {DatePipe} from '@angular/common';
-import {MatTable} from '@angular/material/table';
 import {MatTableModule} from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatButton} from '@angular/material/button';
-
+import {
+  GenericDataTableComponent
+} from '../../../../components/generic-data-table-component/generic-data-table-component';
+import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
+interface Endorsement{
+  id: number;
+  company: string;
+  additional_benefits: string;
+  date_start: string;
+  date_end: string;
+  created_by: string;
+  endorsed_by: string;
+}
 type HmoEditable = Pick<
   HMO,
   'short_name' | 'long_name' | 'address' | 'tax_account_number' | 'contact_nos' | 'active'
@@ -25,11 +36,11 @@ type HmoEditable = Pick<
     MatHint,
     MatSlideToggle,
     DatePipe,
-    MatTable,
     MatFormFieldModule,
     MatTableModule,
     MatButton,
     MatInput,
+    GenericDataTableComponent,
   ],
   templateUrl: './hmopage-component.html',
   styleUrl: './hmopage-component.scss',
@@ -40,6 +51,21 @@ export class HMOPageComponent implements OnInit{
   readonly hmo = signal<HMO|null>(null);
   id: number;
   private destroyRef = inject(DestroyRef);
+
+  endorsements: Endorsement[] = [
+    { id: 1, company: 'Petron Corp.', additional_benefits: '-', date_start: '2021-01-01', date_end: '2021-01-31', created_by: 'Mhenie', endorsed_by: 'Juan Dela Cruz'},
+    { id: 1, company: 'Golden Arches Corp.', additional_benefits: '-', date_start: '2021-01-01', date_end: '2021-01-31', created_by: 'Mhenie', endorsed_by: 'Juan Dela Cruz'},
+    { id: 1, company: 'Mercury Drug Inc.', additional_benefits: '-', date_start: '2021-01-01', date_end: '2021-01-31', created_by: 'Mhenie', endorsed_by: 'Juan Dela Cruz'},
+  ]
+  endorsementColumns: TableColumn[] = [
+    {key: 'id', label: 'ID'},
+    {key: 'company', label: 'Company'},
+    {key: 'additional_benefits', label: 'Additional Benefits'},
+    {key: 'date_start', label: 'Date Start', cellTemplateKey: 'date'},
+    {key: 'date_end', label: 'Date End', cellTemplateKey: 'date'},
+    {key: 'created_by', label: 'Created By' },
+    {key: 'endorsed_by', label: 'Endorsed By'},
+  ];
 
   readonly form = this.fb.group({
     short_name: ['', [Validators.required, Validators.maxLength(50)]],
@@ -78,14 +104,7 @@ export class HMOPageComponent implements OnInit{
     );
   });
   // 7 columns, 4 rows lorem table
-  readonly loremColumns = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'] as const;
 
-  readonly loremRows: Array<Record<(typeof this.loremColumns)[number], string>> = [
-    { c1: 'Lorem', c2: 'ipsum', c3: 'dolor', c4: 'sit', c5: 'amet', c6: 'consectetur', c7: 'adipiscing' },
-    { c1: 'Sed', c2: 'do', c3: 'eiusmod', c4: 'tempor', c5: 'incididunt', c6: 'ut', c7: 'labore' },
-    { c1: 'Et', c2: 'dolore', c3: 'magna', c4: 'aliqua', c5: 'ut', c6: 'enim', c7: 'ad' },
-    { c1: 'Minim', c2: 'veniam', c3: 'quis', c4: 'nostrud', c5: 'exercitation', c6: 'ullamco', c7: 'laboris' },
-  ];
 
   constructor(private hmoService: HMOService) {
     this.id = Number(this.route.snapshot.paramMap.get('id'))

@@ -1,4 +1,4 @@
-import {Component, computed, DestroyRef, inject, Input, OnInit, signal,} from '@angular/core';
+import {Component, computed, DestroyRef, inject,  OnInit, signal,} from '@angular/core';
 import {
   GenericDataTableComponent
 } from '../../../../components/generic-data-table-component/generic-data-table-component';
@@ -99,7 +99,7 @@ export class RolePermissionsTabComponent implements OnInit{
     {key: 'object_name', label: 'Object'},
     {key: 'actions', label: 'Action', cellTemplateKey: 'chips'},
     {key: 'last_modified_by', label: 'Last Modified By'},
-    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'date'},
+    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
   ];
 
   private dialog = inject(MatDialog);

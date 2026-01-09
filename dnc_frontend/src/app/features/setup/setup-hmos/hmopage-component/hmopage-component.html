@@ -132,50 +132,18 @@
     <!-- Bottom: table spanning both columns -->
     <section class="panel table-panel">
       <div class="panel-header">
-        <div class="panel-title">Related information</div>
+        <div class="panel-title">Endorsements</div>
         <div class="panel-hint">Lorem ipsum table (7 columns × 4 rows).</div>
       </div>
 
       <div class="table-wrap">
-        <table mat-table [dataSource]="loremRows" class="lorem-table">
-          <ng-container matColumnDef="c1">
-            <th mat-header-cell *matHeaderCellDef>Column 1</th>
-            <td mat-cell *matCellDef="let r">{{ r.c1 }}</td>
-          </ng-container>
+        <app-generic-data-table
+          [columnDefs]="endorsementColumns"
+          [data]="endorsements"
+          [pageSize]="20"
+          [pageSizeOptions]="[10, 20, 50,100]"
+        />
 
-          <ng-container matColumnDef="c2">
-            <th mat-header-cell *matHeaderCellDef>Column 2</th>
-            <td mat-cell *matCellDef="let r">{{ r.c2 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="c3">
-            <th mat-header-cell *matHeaderCellDef>Column 3</th>
-            <td mat-cell *matCellDef="let r">{{ r.c3 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="c4">
-            <th mat-header-cell *matHeaderCellDef>Column 4</th>
-            <td mat-cell *matCellDef="let r">{{ r.c4 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="c5">
-            <th mat-header-cell *matHeaderCellDef>Column 5</th>
-            <td mat-cell *matCellDef="let r">{{ r.c5 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="c6">
-            <th mat-header-cell *matHeaderCellDef>Column 6</th>
-            <td mat-cell *matCellDef="let r">{{ r.c6 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="c7">
-            <th mat-header-cell *matHeaderCellDef>Column 7</th>
-            <td mat-cell *matCellDef="let r">{{ r.c7 }}</td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="loremColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: loremColumns"></tr>
-        </table>
       </div>
     </section>
   </div>

@@ -47,7 +47,7 @@ export class DentalServices implements OnInit{
     {key: 'name', label: 'Name'},
     {key: 'type_name', label: 'Type'},
     {key: 'last_modified_by', label: 'Last Modified By'},
-    {key: 'last_modified_on', label: 'Last Modified On'},
+    {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
   ];
 
   openEditDialog(row:any){

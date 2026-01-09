@@ -30,6 +30,7 @@ import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from wher
 export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   @ViewChild('defaultCell', { static: true }) defaultCell!: TemplateRef<any>;
   @ViewChild('dateCell', { static: true }) dateCell!: TemplateRef<any>;
+  @ViewChild('datetimeCell', { static: true }) dateTimeCell!: TemplateRef<any>;
   @ViewChild('chipsCell', { static: true }) chipsCell!: TemplateRef<any>;
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
@@ -214,6 +215,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
 
     switch(col.cellTemplateKey){
       case 'date': return this.dateCell;
+      case 'datetime': return this.dateTimeCell;
       case 'chips': return this.chipsCell;
       case 'default': return this.defaultCell;
     }
