@@ -1,0 +1,11 @@
+# Rust artifacts
+**/target/
+
+# Node artifacts
+**/node_modules/
+**/dist/
+
+# Git and OS metadata
+.git
+dnc_backend/.gitignore
+.DS_Store
