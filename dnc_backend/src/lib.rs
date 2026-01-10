@@ -6,19 +6,19 @@ mod entities;
 pub struct AppState {
     pub db: DatabaseConnection,
 }
-
+use axum::{extract::Request, middleware::Next, response::Response};
 use axum::{Router, routing::{get,post,patch}, middleware};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::login::{ login_handler};
 
-use http::{HeaderValue, Method,};
+use http::{HeaderValue, HeaderName, Method,};
 use http::request::Parts;
 use tower_http::cors::{CorsLayer, AllowOrigin};
 use handlers::{
     get_dental_services,
     get_clinic_capabilities,
-    get_users,
+    get_users, post_user, patch_user,
     get_roles,create_role,patch_role,
     get_role_permissions
 };
@@ -45,6 +45,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/dental_service_types", get(get_dental_service_types))
         .route("/clinic_capabilities", get(get_clinic_capabilities))
         .route("/users", get(get_users))
+        .route("/users/", post(post_user))
+        .route("/users/{:id}", patch(patch_user))
         .route("/roles", get(get_roles))
         .route("/roles/", post(create_role))
         .route("/roles/{:id}", patch(patch_role))
@@ -54,13 +56,22 @@ fn protected_routes() ->Router<AppState>{
         .route("/hmos/{:id}", get(get_hmo_by_id))
 }
 
+async fn log_origin(req: Request, next: Next) -> Response {
+    if let Some(o) = req.headers().get(http::header::ORIGIN) {
+        tracing::info!("Origin: {:?}", o);
+    } else {
+        tracing::info!("Origin: <none>");
+    }
+    next.run(req).await
+}
+
 pub fn build_app(my_state:AppState) ->Router{
 
     // 1. Define CORS policy
     let allowed_hosts : Vec<String> = std::env::var("ALLOW_HOSTS")
         .unwrap_or_default()
         .split(",")
-        .map(|s| s.to_string())
+        .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
@@ -77,7 +88,13 @@ pub fn build_app(my_state:AppState) ->Router{
                             Method::PUT,
                             Method::OPTIONS,])
         // allow headers frontend sends
-        .allow_headers(vec![http::header::AUTHORIZATION, http::header::CONTENT_TYPE]);
+        .allow_headers(vec![
+            http::header::AUTHORIZATION,
+            http::header::CONTENT_TYPE,
+            HeaderName::from_static("traceparent"),
+            HeaderName::from_static("tracestate"),
+            HeaderName::from_static("baggage"),
+        ]);
 
     let mut validation = Validation::new(Algorithm::HS512);
     validation.validate_exp = true;
@@ -97,7 +114,8 @@ pub fn build_app(my_state:AppState) ->Router{
         .route("/healthcheck", get( healthcheck))
         .route("/login", post(login_handler))
         .with_state(my_state)
-        .layer(cors)
         .layer(OtelInResponseLayer::default())
         .layer(OtelAxumLayer::default())
+        .layer(middleware::from_fn(log_origin))
+        .layer(cors)
 }
