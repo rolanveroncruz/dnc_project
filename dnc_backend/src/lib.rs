@@ -47,7 +47,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/users", get(get_users))
         .route("/roles", get(get_roles))
         .route("/roles/", post(create_role))
-        .route("/roles/:id", patch(patch_role))
+        .route("/roles/{:id}", patch(patch_role))
         .route("/role_permissions", get(get_role_permissions))
         .route("/data_objects", get(get_data_objects))
         .route("/hmos", get(get_hmos))
