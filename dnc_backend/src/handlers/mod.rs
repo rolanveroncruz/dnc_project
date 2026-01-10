@@ -11,7 +11,7 @@ pub use api::dental_services::get_dental_services;
 pub use api::dental_service_type::get_dental_service_types;
 pub use api::clinic_capabilities::get_clinic_capabilities;
 pub use api::users::get_users;
-pub use api::roles::get_roles;
+pub use api::roles::{get_roles, create_role,patch_role};
 pub use api::role_permission::get_role_permissions;
 pub use api::data_objects::get_data_objects;
 pub use structs::{AuthUser, Claims, JwtConfig, ListQuery, PageResponse, AppError};

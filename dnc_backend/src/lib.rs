@@ -7,7 +7,7 @@ pub struct AppState {
     pub db: DatabaseConnection,
 }
 
-use axum::{Router, routing::get, routing::post, middleware};
+use axum::{Router, routing::{get,post,patch}, middleware};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::login::{ login_handler};
@@ -19,7 +19,7 @@ use handlers::{
     get_dental_services,
     get_clinic_capabilities,
     get_users,
-    get_roles,
+    get_roles,create_role,patch_role,
     get_role_permissions
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
@@ -46,6 +46,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/clinic_capabilities", get(get_clinic_capabilities))
         .route("/users", get(get_users))
         .route("/roles", get(get_roles))
+        .route("/roles/", post(create_role))
+        .route("/roles/:id", patch(patch_role))
         .route("/role_permissions", get(get_role_permissions))
         .route("/data_objects", get(get_data_objects))
         .route("/hmos", get(get_hmos))
