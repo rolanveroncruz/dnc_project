@@ -1,8 +1,8 @@
 <h2 mat-dialog-title class="dialog-title">
   <div class="title-wrap">
     <div class="title-text">
-      <div class="title">Edit Role</div>
-      <div class="subtitle">Update role name and description.</div>
+      <div class="title">{{ title() }}</div>
+      <div class="subtitle">{{ subtitle() }}</div>
     </div>
 
     @if(hasChanges){
@@ -39,6 +39,8 @@
       </mat-form-field>
     </section>
 
+    @if (isEdit()){
+
     <!-- RIGHT: Readonly meta -->
     <aside class="panel panel--meta">
       <div class="panel-header">
@@ -47,17 +49,17 @@
       </div>
       <div class="meta-row">
         <div class="meta-label">ID</div>
-        <div class="meta-value">{{ data['id'] }}</div>
+        <div class="meta-value">{{ data?.row?.id }}</div>
       </div>
 
       <div class="meta-row">
         <div class="meta-label">Last modified by</div>
-        <div class="meta-value">{{ data?.last_modified_by ?? '—' }}</div>
+        <div class="meta-value">{{ data?.row?.last_modified_by ?? '—' }}</div>
       </div>
 
       <div class="meta-row">
         <div class="meta-label">Last modified on</div>
-        <div class="meta-value">{{ (data?.last_modified_on | date:'medium') ?? '—' }}</div>
+        <div class="meta-value">{{ (data?.row?.last_modified_on | date:'medium') ?? '—' }}</div>
       </div>
 
       <!-- Optional: show ID or other info if present -->
@@ -68,6 +70,7 @@
       </div>
       }
     </aside>
+    }
   </form>
 </div>
 

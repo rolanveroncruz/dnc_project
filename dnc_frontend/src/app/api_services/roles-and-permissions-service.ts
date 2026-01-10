@@ -19,6 +19,11 @@ export interface Role{
   last_modified_by: string;
   last_modified_on: Date;
 }
+export interface NewOrPatchRole{
+  name: string;
+  description: string;
+  active?: boolean;
+}
 export interface RolePermissionPageInfo{
   page: number;
   perSize: number;
@@ -49,6 +54,7 @@ export interface ModifiedRolePermission{
   last_modified_by: string;
   last_modified_on: Date;
 }
+
 @Injectable({
   providedIn: 'root',
 })
@@ -61,7 +67,16 @@ export class RolesAndPermissionsService {
     let token = this.LoginService.token();
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<RolePageInfo>(`${this.apiUrl}/api/roles`, {headers});
-
+  }
+  postRole(newRole:NewOrPatchRole){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.post<Role>(`${this.apiUrl}/api/roles/`, newRole, {headers});
+  }
+  patchRole(roleId:number, newRole:NewOrPatchRole){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.patch<Role>(`${this.apiUrl}/api/roles/${roleId}`, newRole, {headers});
   }
   getRolePermissions(): Observable<RolePermissionPageInfo>{
     let token = this.LoginService.token();
