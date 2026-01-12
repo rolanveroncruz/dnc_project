@@ -17,7 +17,7 @@ use http::request::Parts;
 use tower_http::cors::{CorsLayer, AllowOrigin};
 use handlers::{
     get_dental_services,
-    get_clinic_capabilities,
+    get_clinic_capabilities, post_clinic_capability, patch_clinic_capability,
     get_users, post_user, patch_user,
     get_roles,create_role,patch_role,
     get_role_permissions
@@ -49,6 +49,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/dental_services/{:id}", patch(patch_dental_service))
         .route("/dental_service_types", get(get_dental_service_types))
         .route("/clinic_capabilities", get(get_clinic_capabilities))
+        .route("/clinic_capabilities/", post(post_clinic_capability))
+        .route("/clinic_capabilities/{:id}", patch(patch_clinic_capability))
         .route("/users", get(get_users))
         .route("/users/", post(post_user))
         .route("/users/{:id}", patch(patch_user))
