@@ -7,7 +7,7 @@ mod middlewares;
 mod helpers;
 mod api;
 
-pub use api::dental_services::get_dental_services;
+pub use api::dental_services::{get_dental_services, post_dental_service, patch_dental_service};
 pub use api::dental_service_type::get_dental_service_types;
 pub use api::clinic_capabilities::get_clinic_capabilities;
 pub use api::users::{get_users, post_user, patch_user};

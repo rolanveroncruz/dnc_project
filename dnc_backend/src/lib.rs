@@ -36,7 +36,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
 use crate::handlers::{get_data_objects,
-                      get_dental_service_types,
+                      get_dental_service_types, post_dental_service, patch_dental_service,
                       get_hmos, post_hmo, patch_hmo,
                       get_hmo_by_id};
 
@@ -45,6 +45,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/test_post", post(test_posting_json))
         .route("/whoami", get(whoami))
         .route("/dental_services", get(get_dental_services))
+        .route("/dental_services/", post(post_dental_service))
+        .route("/dental_services/{:id}", patch(patch_dental_service))
         .route("/dental_service_types", get(get_dental_service_types))
         .route("/clinic_capabilities", get(get_clinic_capabilities))
         .route("/users", get(get_users))

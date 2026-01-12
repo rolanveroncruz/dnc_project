@@ -2,7 +2,7 @@ use argon2::Argon2;
 use axum::{extract::{Query, Path, State}, http::StatusCode, Json};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ActiveModelTrait, ColumnTrait,  Condition, EntityTrait,IntoActiveModel, FromQueryResult, JoinType, Order,
+use sea_orm::{ActiveModelTrait, ColumnTrait,  Condition, EntityTrait, FromQueryResult, JoinType, Order,
               PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
@@ -31,7 +31,7 @@ pub struct UserRow {
     pub role: String,
     pub active: bool,
     pub last_modified_by: Option<String>,
-    pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
+    pub last_modified_on: chrono::DateTime<Utc>, // adjust type to your column type
 }
 
 #[instrument(

@@ -1,8 +1,9 @@
-use axum::{extract::{Query, State}, http::StatusCode, Json};
+use axum::{extract::{Query, Path, State}, http::StatusCode, Json};
+use chrono::{FixedOffset, Utc};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ColumnTrait,  Condition, EntityTrait, FromQueryResult, JoinType, Order,
-              PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, EntityTrait, FromQueryResult, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
+use sea_orm::prelude::DateTimeWithTimeZone;
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
@@ -131,3 +132,201 @@ pub async fn get_dental_services(
         total_pages,
     }))
 }
+
+fn now_tz_utc() -> DateTimeWithTimeZone {
+    // SeaORM's DateTimeWithTimeZone is chrono::DateTime<FixedOffset>
+    Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())
+}
+
+/* ----------------------------- POST: create ----------------------------- */
+
+#[derive(Debug, Deserialize)]
+pub struct CreateDentalServiceRequest {
+    pub name: String,
+    pub type_id: i32,
+    pub record_tooth: bool,
+    // optional; default true if omitted
+    pub active: Option<bool>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DentalServiceResponse {
+    pub id: i32,
+    pub name: String,
+    pub type_id: i32,
+    pub record_tooth: bool,
+    pub active: bool,
+    pub last_modified_by: String,
+    pub last_modified_on: DateTimeWithTimeZone,
+}
+
+impl From<dental_service::Model> for DentalServiceResponse {
+    fn from(m: dental_service::Model) -> Self {
+        Self {
+            id: m.id,
+            name: m.name,
+            type_id: m.type_id,
+            record_tooth: m.record_tooth,
+            active: m.active,
+            last_modified_by: m.last_modified_by,
+            last_modified_on: m.last_modified_on,
+        }
+    }
+}
+
+#[instrument(skip(state), err(Debug))]
+pub async fn post_dental_service(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<CreateDentalServiceRequest>,
+) -> Result<(StatusCode, Json<DentalServiceResponse>), StatusCode> {
+    // 1) Permission check
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "dental_service",
+        PermissionActionEnum::Create,
+    )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    // 2) Basic validation
+    let name = payload.name.trim();
+    if name.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    if payload.type_id <= 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // 3) Insert
+    let now = now_tz_utc();
+    // Adjust this to whatever you store (email/name). I’m using email-like field name.
+    let actor = user.claims.email.clone();
+
+    let am = dental_service::ActiveModel {
+        name: Set(name.to_string()),
+        type_id: Set(payload.type_id),
+        record_tooth: Set(payload.record_tooth),
+        active: Set(payload.active.unwrap_or(true)),
+        last_modified_by: Set(actor),
+        last_modified_on: Set(now),
+        ..Default::default() // id stays NotSet (auto-increment)
+    };
+
+    let created = dental_service::Entity::insert(am)
+        .exec_with_returning(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to insert dental_service: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    Ok((StatusCode::CREATED, Json(created.into())))
+}
+
+/* ----------------------------- PATCH: update ---------------------------- */
+
+#[derive(Debug, Deserialize)]
+pub struct PatchDentalServiceRequest {
+    pub name: Option<String>,
+    pub type_id: Option<i32>,
+    pub record_tooth: Option<bool>,
+    pub active: Option<bool>,
+}
+
+#[instrument(skip(state), err(Debug))]
+pub async fn patch_dental_service(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<i32>,
+    Json(payload): Json<PatchDentalServiceRequest>,
+) -> Result<Json<DentalServiceResponse>, StatusCode> {
+    // 1) Permission check
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "dental_service",
+        PermissionActionEnum::Update,
+    )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    if id <= 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+
+    // 2) Fetch existing
+
+    let existing = dental_service::Entity::find_by_id(id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to load dental_service {id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    // 3) Apply patch (start from existing ActiveModel so unchanged fields remain)
+    let mut am: dental_service::ActiveModel = existing.into();
+
+    // If they sent nothing, treat as bad request (optional but usually desired)
+    let sent_any = payload.name.is_some()
+        || payload.type_id.is_some()
+        || payload.record_tooth.is_some()
+        || payload.active.is_some();
+    if !sent_any {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    if let Some(name) = payload.name {
+        let trimmed = name.trim().to_string();
+        if trimmed.is_empty() {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+        am.name = Set(trimmed);
+    }
+
+    if let Some(type_id) = payload.type_id {
+        if type_id <= 0 {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+        am.type_id = Set(type_id);
+    }
+
+    if let Some(record_tooth) = payload.record_tooth {
+        am.record_tooth = Set(record_tooth);
+    }
+
+    if let Some(active) = payload.active {
+        am.active = Set(active);
+    }
+
+
+    // 4) Update audit fields
+    am.last_modified_by = Set(user.claims.email.clone());
+    am.last_modified_on = Set(now_tz_utc());
+
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to update dental_service {id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(updated.into()))
+}
+
