@@ -35,7 +35,7 @@ export class SetupHMOs implements OnInit{
     {key: 'long_name', label: 'Long Name'},
     {key: 'address', label: 'Address'},
     {key: 'tax_account_number', label: 'TIN'},
-    {key: 'contact_numbers', label: 'Contact Numbers'},
+    {key: 'contact_nos', label: 'Contact Numbers'},
     {key: 'last_endorsement_date', label: 'Last Endorsement Date'},
     {key: 'last_collection_date', label: 'Last Collection Date'},
     {key: 'last_modified_by', label: 'Last Modified By'},
@@ -66,8 +66,12 @@ export class SetupHMOs implements OnInit{
         }
       })
   }
-  navigate_to_hmo_detail(hmo:HMO){
+  navigate_to_edit_hmo_detail(hmo:HMO){
     this.router.navigate(['/main/setup/hmos/', hmo.id]).then();
+  }
+
+  navigate_to_post_new_hmo(){
+    this.router.navigate(['/main/setup/hmos/new']).then();
   }
 
 }

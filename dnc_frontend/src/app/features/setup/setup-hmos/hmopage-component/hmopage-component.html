@@ -3,8 +3,8 @@
   <header class="page-title">
     <div class="title-wrap">
       <div class="title-text">
-        <div class="title">Edit HMO</div>
-        <div class="subtitle">Update HMO information and review audit details.</div>
+        <div class="title">{{ title() }}</div>
+        <div class="subtitle">{{ subtitle() }}</div>
       </div>
 
       <div class="title-actions">
@@ -130,6 +130,8 @@
     </form>
 
     <!-- Bottom: table spanning both columns -->
+    @if (!isPostingNew){
+
     <section class="panel table-panel">
       <div class="panel-header">
         <div class="panel-title">Endorsements</div>
@@ -146,5 +148,6 @@
 
       </div>
     </section>
+    }
   </div>
 </div>

@@ -53,9 +53,11 @@
     <button mat-flat-button type="button" color="warn" (click)="resetAll()">Reset</button>
 
     <span class="spacer"></span>
-        <button mat-flat-button color="primary" type="button" (click)="onAddClicked()"> <mat-icon>add</mat-icon>
-          Add
-        </button>
+    @if (showAddButton){
+      <button mat-flat-button color="primary" type="button" (click)="onAddClicked()"> <mat-icon>add</mat-icon>
+        Add
+      </button>
+    }
   </div>
 <!--  End of class="btn-group"-->
 </div>

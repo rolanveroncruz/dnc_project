@@ -1,4 +1,4 @@
-<mat-card class="setup-users-card">
+<mat-card class="setup-hmo-card">
   <mat-card-header class="card-header-center">
     <div class="title-block">
       <mat-card-title class="mat-headline-1">HMOs</mat-card-title>
@@ -15,7 +15,8 @@
           [data]="ds"
           [pageSize]="20"
           [pageSizeOptions]="[5, 10, 20]"
-          (rowClicked)="navigate_to_hmo_detail($event)"
+          (rowClicked)="navigate_to_edit_hmo_detail($event)"
+          (addClicked)="navigate_to_post_new_hmo()"
         />
       }
     } @else {

@@ -44,6 +44,7 @@ export const routes: Routes = [
           { path: 'roles', component: SetupRoles, title: 'Roles'},
           { path: 'hmos', component: SetupHMOs, title: 'HMOs'},
           { path: 'hmos/:id', component: HMOPageComponent , title: 'HMO'},
+          { path: 'hmos/new', component: HMOPageComponent , title: 'HMO'},
           { path: 'dental-contracts', component: SetupDentalContracts, title: 'Dental Contracts'},
           { path: 'clinics', component: SetupClinics, title: 'Clinics'},
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
