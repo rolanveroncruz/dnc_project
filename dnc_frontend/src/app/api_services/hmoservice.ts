@@ -3,7 +3,6 @@ import {environment} from '../../environments/environment';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {LoginService} from '../login.service';
-import {DataObjectsPageInfo} from './data-objects-service';
 
 export interface HMOPageInfo{
   page: number;
@@ -43,6 +42,16 @@ export class HMOService {
     let token = this.LoginService.token();
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<HMO>(`${this.apiUrl}/api/hmos/${id}`, {headers});
+  }
+  postHMO(hmo:HMO){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.post<HMO>(`${this.apiUrl}/api/hmos/`, hmo, {headers});
+  }
+  patchHMO(hmoId:number, hmo:HMO){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.patch<HMO>(`${this.apiUrl}/api/hmos/${hmoId}`, hmo, {headers});
   }
 
 }
