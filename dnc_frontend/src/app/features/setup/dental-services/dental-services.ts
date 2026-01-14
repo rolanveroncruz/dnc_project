@@ -1,5 +1,5 @@
 import {DestroyRef, Component, OnInit, signal, inject} from '@angular/core';
-import {DentalServicesService, DentalServicesPageInfo } from '../../../api_services/dental-services-service';
+import {DentalServicesService}  from '../../../api_services/dental-services-service';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -50,7 +50,7 @@ export class DentalServices implements OnInit{
     {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
   ];
 
-  openEditDialog(row:any){
+  openEditDentalServiceDialog(row:any){
     const data: DentalServiceDialogData={
       mode: 'edit',
       service: row,
@@ -68,6 +68,35 @@ export class DentalServices implements OnInit{
     ref.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
       if (!result) return;
+      this.dentalServicesService.patchDentalService(row.id, result.payload)
+        .subscribe({
+          next: (patched)=>{
+            console.log(`In editDentalService ${patched} updated:`);
+            this.load_dental_services();
+          },
+          error: (err)=>{console.log(err);}
+        });
+    });
+  }
+  openNewDentalServiceDialog(){
+    const data: DentalServiceDialogData={
+      mode: 'create',
+      typeOptions: this.dentalServiceTypes(),
+      currentUserName: 'test',
+    };
+    const ref = this.dialog.open(DentalServiceDialogComponent, {
+      data,
+      disableClose : true,
+      autoFocus: false,
+      width: '720px',
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      if (!result) return;
+      this.dentalServicesService.postDentalService(result.payload)
+        .subscribe({
+          next: (inserted)=>{console.log(`In newDentalService ${inserted} inserted:`);this.load_dental_services();},
+        })
     });
   }
 

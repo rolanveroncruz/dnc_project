@@ -1,5 +1,5 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {Role, RolesAndPermissionsService} from '../../../../api_services/roles-and-permissions-service';
+import {Role, RolesAndPermissionsService, NewOrPatchRole} from '../../../../api_services/roles-and-permissions-service';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 import {
   GenericDataTableComponent
@@ -19,7 +19,7 @@ type LoadState = 'loading' | 'loaded' | 'error';
   templateUrl: './roles-tab-component.html',
   styleUrl: './roles-tab-component.scss',
 })
-export class RolesTabComponent implements OnInit{
+export class RolesTabComponent implements OnInit {
 
   roles_state = signal<LoadState>('loading');
   roles = signal<Role[] | null>(null);
@@ -34,11 +34,13 @@ export class RolesTabComponent implements OnInit{
   ];
 
   private dialog = inject(MatDialog);
-  constructor(private roles_and_permission_Service: RolesAndPermissionsService) { }
+
+  constructor(private roles_and_permission_Service: RolesAndPermissionsService) {
+  }
 
   ngOnInit(): void {
     this.load_roles();
-    }
+  }
 
   load_roles() {
     console.log("In load_roles()");
@@ -49,7 +51,7 @@ export class RolesTabComponent implements OnInit{
         next: (res) => {
           this.roles.set(processRoles(res.items));
           this.roles_state.set('loaded');
-          console.log("In load(), roles:",this.roles());
+          console.log("In load(), roles:", this.roles());
         },
         error: (err) => {
           console.log("In SetupRoles:getRoles():", err);
@@ -57,20 +59,60 @@ export class RolesTabComponent implements OnInit{
         }
       });
   }
-  openRoleRowDialog(row:any){
-    console.log("In openRoleRowDialog():",row);
+
+  editRoleRowDialog(row: any) {
+    console.log("In openRoleRowDialog():", row);
     const ref = this.dialog.open(AddEditRoles, {
-      data:row,
+      data: {mode:'edit', row:row },
       width: '720px',
       maxWidth: '95vw',
-      disableClose : false,
+      disableClose: false,
     });
     ref.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
+      console.log('The dialog was closed with result:', result);
       if (!result) return;
+      // Update database
+      let patchRole :NewOrPatchRole={
+        name:result.name,
+        description:result.description,
+        active:result.active,
+      }
+      this.roles_and_permission_Service.patchRole(row.id,patchRole)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((r)=>{
+          console.log(`In editRole ${r} updated:`);
+          this.load_roles();
+        })
     });
   }
+
+  newRoleDialog() {
+    const ref = this.dialog.open(AddEditRoles, {
+      data: {mode: 'create'},
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose: false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed with result:',result);
+      if (!result) return;
+      // Insert into database
+      let newRole :NewOrPatchRole={
+        name:result.name,
+        description:result.description,
+      }
+      this.roles_and_permission_Service.postRole(newRole)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((r)=>{
+          console.log(`In newRole ${r} inserted:`);
+          this.load_roles();
+        })
+    })
+  }
 }
+
+
+
 function processRoles(roles:Array<Role>):Role[] {
   let result: Role[] = []
   for (const role of roles) {

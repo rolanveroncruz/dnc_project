@@ -1,5 +1,5 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {User, UserService} from '../../../api_services/user-service';
+import {NewOrPatchUser, User, UserService} from '../../../api_services/user-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
@@ -87,13 +87,28 @@ export class SetupUsers implements OnInit {
       maxWidth: '95vw',
       data:{
         mode: 'create',
-        roles: this.roles,
+        roles: this.roles(),
       },
     });
 
     ref.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
       if (!result) return;
+
+      // Post New User to database
+      const new_user:NewOrPatchUser = {
+        name: result.payload.name,
+        password: result.payload.password,
+        email: result.payload.email,
+        role_id: result.payload.role_id,
+      }
+      console.log(`Posting, new_user: `, new_user);
+      this.userService.postUser(new_user)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((r)=>{
+          console.log(`In newUser ${r} inserted:`);
+          this.load_users();
+        })
     })
   }
   openEditUserDialog(row:any){
@@ -108,8 +123,21 @@ export class SetupUsers implements OnInit {
       },
     });
     ref.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
+      console.log(`The dialog was closed with result`, result);
       if (!result) return;
+      const patchUser:NewOrPatchUser = {
+        name: result.payload.name,
+        password: result.payload.password ? result.payload.password : null,
+        email: result.payload.email,
+        role_id: result.payload.role_id,
+      }
+      console.log(`Patching, patchUser: `, patchUser);
+      this.userService.patchUser(row.id, patchUser)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((r)=>{
+          console.log(`In editUser ${r} updated:`);
+          this.load_users();
+        })
     });
   }
 }

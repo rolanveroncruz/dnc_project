@@ -6,20 +6,20 @@ mod entities;
 pub struct AppState {
     pub db: DatabaseConnection,
 }
-
-use axum::{Router, routing::get, routing::post, middleware};
+use axum::{extract::Request, middleware::Next, response::Response};
+use axum::{Router, routing::{get,post,patch}, middleware};
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::login::{ login_handler};
 
-use http::{HeaderValue, Method,};
+use http::{HeaderValue, HeaderName, Method,};
 use http::request::Parts;
 use tower_http::cors::{CorsLayer, AllowOrigin};
 use handlers::{
     get_dental_services,
-    get_clinic_capabilities,
-    get_users,
-    get_roles,
+    get_clinic_capabilities, post_clinic_capability, patch_clinic_capability,
+    get_users, post_user, patch_user,
+    get_roles,create_role,patch_role,
     get_role_permissions
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
@@ -35,21 +35,43 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, get_hmos, get_hmo_by_id};
+use crate::handlers::{get_data_objects,
+                      get_dental_service_types, post_dental_service, patch_dental_service,
+                      get_hmos, post_hmo, patch_hmo,
+                      get_hmo_by_id};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
         .route("/whoami", get(whoami))
         .route("/dental_services", get(get_dental_services))
+        .route("/dental_services/", post(post_dental_service))
+        .route("/dental_services/{:id}", patch(patch_dental_service))
         .route("/dental_service_types", get(get_dental_service_types))
         .route("/clinic_capabilities", get(get_clinic_capabilities))
+        .route("/clinic_capabilities/", post(post_clinic_capability))
+        .route("/clinic_capabilities/{:id}", patch(patch_clinic_capability))
         .route("/users", get(get_users))
+        .route("/users/", post(post_user))
+        .route("/users/{:id}", patch(patch_user))
         .route("/roles", get(get_roles))
+        .route("/roles/", post(create_role))
+        .route("/roles/{:id}", patch(patch_role))
         .route("/role_permissions", get(get_role_permissions))
         .route("/data_objects", get(get_data_objects))
         .route("/hmos", get(get_hmos))
         .route("/hmos/{:id}", get(get_hmo_by_id))
+        .route("/hmos/{:id}", patch(patch_hmo))
+        .route("/hmos/", post(post_hmo))
+}
+
+async fn log_origin(req: Request, next: Next) -> Response {
+    if let Some(o) = req.headers().get(http::header::ORIGIN) {
+        tracing::info!("Origin: {:?}", o);
+    } else {
+        tracing::info!("Origin: <none>");
+    }
+    next.run(req).await
 }
 
 pub fn build_app(my_state:AppState) ->Router{
@@ -58,7 +80,7 @@ pub fn build_app(my_state:AppState) ->Router{
     let allowed_hosts : Vec<String> = std::env::var("ALLOW_HOSTS")
         .unwrap_or_default()
         .split(",")
-        .map(|s| s.to_string())
+        .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
@@ -75,7 +97,13 @@ pub fn build_app(my_state:AppState) ->Router{
                             Method::PUT,
                             Method::OPTIONS,])
         // allow headers frontend sends
-        .allow_headers(vec![http::header::AUTHORIZATION, http::header::CONTENT_TYPE]);
+        .allow_headers(vec![
+            http::header::AUTHORIZATION,
+            http::header::CONTENT_TYPE,
+            HeaderName::from_static("traceparent"),
+            HeaderName::from_static("tracestate"),
+            HeaderName::from_static("baggage"),
+        ]);
 
     let mut validation = Validation::new(Algorithm::HS512);
     validation.validate_exp = true;
@@ -95,7 +123,8 @@ pub fn build_app(my_state:AppState) ->Router{
         .route("/healthcheck", get( healthcheck))
         .route("/login", post(login_handler))
         .with_state(my_state)
-        .layer(cors)
         .layer(OtelInResponseLayer::default())
         .layer(OtelAxumLayer::default())
+        .layer(middleware::from_fn(log_origin))
+        .layer(cors)
 }

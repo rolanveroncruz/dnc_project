@@ -33,5 +33,15 @@ export class DentalServicesService {
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<DentalServicesPageInfo>(`${this.apiUrl}/api/dental_services?`, {headers});
   }
+  postDentalService(dentalService:DentalService){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.post<DentalService>(`${this.apiUrl}/api/dental_services/`, dentalService, {headers});
+  }
+  patchDentalService(dentalServiceId:number, dentalService:DentalService){
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.patch<DentalService>(`${this.apiUrl}/api/dental_services/${dentalServiceId}`, dentalService, {headers});
+  }
 }
 

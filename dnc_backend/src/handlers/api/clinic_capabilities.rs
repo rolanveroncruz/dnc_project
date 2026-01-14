@@ -1,9 +1,10 @@
 use sea_orm::ColumnTrait;
-use axum::{extract::{Query, State}, http::StatusCode, Json};
+use axum::{extract::{Query, Path, State}, http::StatusCode, Json};
+use chrono::{FixedOffset, Utc};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ Condition, EntityTrait, FromQueryResult,  Order,
-              PaginatorTrait, QueryFilter, QueryOrder, };
+use sea_orm::{ ActiveModelTrait, Condition, EntityTrait, FromQueryResult,  Order,
+              PaginatorTrait, QueryFilter, QueryOrder, Set };
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
@@ -129,4 +130,153 @@ pub async fn get_clinic_capabilities(
 }
 
 
+fn now_utc_fixed() -> sea_orm::prelude::DateTimeWithTimeZone {
+    // DateTimeWithTimeZone is typically chrono::DateTime<FixedOffset>
+    Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())
+}
 
+fn normalize_name(name: &str) -> Option<String> {
+    let s = name.trim();
+    if s.is_empty() {
+        return None;
+    }
+    // optional: clamp length
+    Some(s.to_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateClinicCapabilityPayload {
+    pub id: i32,              // because auto_increment = false
+    pub name: String,
+    pub active: Option<bool>, // default true
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PatchClinicCapabilityPayload {
+    pub name: Option<String>,
+    pub active: Option<bool>,
+}
+
+/// POST /clinic_capabilities
+#[instrument(skip(state), err(Debug))]
+pub async fn post_clinic_capability(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<CreateClinicCapabilityPayload>,
+) -> Result<(StatusCode, Json<clinic_capability::Model>), StatusCode> {
+    // 1) Permission check (optional; remove if you don't use RBAC here)
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "clinic_capability",
+        PermissionActionEnum::Create,
+    )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    // 2) Validate
+    if payload.id <= 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let name = normalize_name(&payload.name).ok_or(StatusCode::BAD_REQUEST)?;
+    let active = payload.active.unwrap_or(true);
+
+    // 3) Conflict if ID already exists
+    let existing = clinic_capability::Entity::find_by_id(payload.id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("DB error (find_by_id): {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    if existing.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    // 4) Insert
+    let now = now_utc_fixed();
+    let last_modified_by = user.claims.email.clone(); // adjust if your claims field differs
+
+    let am = clinic_capability::ActiveModel {
+        id: Set(payload.id),
+        name: Set(name),
+        active: Set(active),
+        last_modified_by: Set(last_modified_by),
+        last_modified_on: Set(now),
+    };
+
+    let created = am.insert(&state.db).await.map_err(|e| {
+        tracing::error!("DB error (insert clinic_capability): {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok((StatusCode::CREATED, Json(created)))
+}
+
+/// PATCH /clinic_capabilities/:id
+#[instrument(skip(state), err(Debug))]
+pub async fn patch_clinic_capability(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<i32>,
+    Json(payload): Json<PatchClinicCapabilityPayload>,
+) -> Result<Json<clinic_capability::Model>, StatusCode> {
+    // 1) Permission check (optional; remove if you don't use RBAC here)
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "clinic_capability",
+        PermissionActionEnum::Update,
+    )
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    if id <= 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // 2) Load existing
+    let model = clinic_capability::Entity::find_by_id(id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("DB error (find_by_id): {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    // 3) Apply patch
+    let mut am: clinic_capability::ActiveModel = model.into();
+
+    if let Some(name) = payload.name.as_deref() {
+        let name = normalize_name(name).ok_or(StatusCode::BAD_REQUEST)?;
+        am.name = Set(name);
+    }
+    if let Some(active) = payload.active {
+        am.active = Set(active);
+    }
+
+    // Always bump audit fields on patch
+    am.last_modified_by = Set(user.claims.email.clone()); // adjust if needed
+    am.last_modified_on = Set(now_utc_fixed());
+
+    // 4) Update
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("DB error (update clinic_capability): {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(updated))
+}

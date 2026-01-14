@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import {environment} from '../../environments/environment';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {EMPTY, Observable} from 'rxjs';
 import {LoginService} from '../login.service';
-import {DataObjectsPageInfo} from './data-objects-service';
 
 export interface HMOPageInfo{
   page: number;
@@ -12,6 +11,10 @@ export interface HMOPageInfo{
   total_pages: number;
   items: HMO[];
 }
+export type HMOEditable = Pick<
+  HMO,
+  'short_name' | 'long_name' | 'address' | 'tax_account_number' | 'contact_nos' | 'active'
+>;
 export interface HMO{
   id: number;
   short_name: string;
@@ -43,6 +46,19 @@ export class HMOService {
     let token = this.LoginService.token();
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<HMO>(`${this.apiUrl}/api/hmos/${id}`, {headers});
+  }
+  postHMO(hmo:HMOEditable){
+    console.log("In HMO Service, Post HMO:", hmo);
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.post<HMO>(`${this.apiUrl}/api/hmos/`, hmo, {headers});
+  }
+  patchHMO(hmoId:number|null, hmo:HMOEditable){
+    console.log("In HMO Service, Patch HMO:", hmo);
+    if (hmoId === null) return EMPTY;
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.patch<HMO>(`${this.apiUrl}/api/hmos/${hmoId}`, hmo, {headers});
   }
 
 }

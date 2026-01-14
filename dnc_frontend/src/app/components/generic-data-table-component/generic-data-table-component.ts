@@ -35,8 +35,10 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn[] = [];
+  @Input() showAddButton = true;
 
   @Output() rowClicked = new EventEmitter<T>();
+  @Output() addClicked = new EventEmitter<void>();
 
   // New Configurable paginator inputs
   @Input() pageSize= 15;
@@ -72,6 +74,9 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   onRowClicked(row: T) {
     console.log("Row clicked:", row);
     this.rowClicked.emit(row);
+  }
+  onAddClicked() {
+    this.addClicked.emit();
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -2,29 +2,38 @@
   <mat-form-field appearance="outline" class="q">
     <mat-label>Search</mat-label>
     <input matInput placeholder="Search all columns..." formControlName="q"/>
-    <button mat-icon-button matSuffix type="button" (click)="clearSearch()" *ngIf="form.value.q">
-      <mat-icon>close</mat-icon>
-    </button>
+    @if (form.value.q){
+      <button mat-icon-button matSuffix type="button" (click)="clearSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+
+    }
   </mat-form-field>
 
   <ng-container formGroupName="filters">
-    <mat-form-field appearance="outline" class="filter" *ngFor="let key of filterSelectKeys">
-      <mat-label>{{ key | titlecase }}</mat-label>
-      <mat-select [formControlName]="key">
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let opt of filterOptions[key]" [value]="opt">
-          {{ opt }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    @for(key of filterSelectKeys; track key) {
+      <mat-form-field appearance="outline" class="filter">
+        <mat-label>{{ key | titlecase }}</mat-label>
+        <mat-select [formControlName]="key">
+          <mat-option value="">All</mat-option>
+          @for(opt of filterOptions[key]; track opt) {
+            <mat-option  [value]="opt">
+              {{ opt }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
   </ng-container>
 
   <mat-form-field appearance="outline" class="filter">
     <mat-label>Sort by</mat-label>
     <mat-select formControlName="sortBy">
-      <mat-option *ngFor="let col of columnDefs" [value]="col.key">
-        {{ col.label }}
-      </mat-option>
+      @for(col of columnDefs; track col.key) {
+        <mat-option [value]="col.key">
+          {{ col.label }}
+        </mat-option>
+      }
     </mat-select>
   </mat-form-field>
   <div class="btn-group">
@@ -44,9 +53,11 @@
     <button mat-flat-button type="button" color="warn" (click)="resetAll()">Reset</button>
 
     <span class="spacer"></span>
-        <button mat-flat-button color="primary" type="button" > <mat-icon>add</mat-icon>
-          Add
-        </button>
+    @if (showAddButton){
+      <button mat-flat-button color="primary" type="button" (click)="onAddClicked()"> <mat-icon>add</mat-icon>
+        Add
+      </button>
+    }
   </div>
 <!--  End of class="btn-group"-->
 </div>

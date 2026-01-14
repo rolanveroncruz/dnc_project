@@ -20,6 +20,7 @@
         <div class="panel-hint">Fields marked * are required.</div>
       </div>
 
+      <!----------- Name ---------->
       <mat-form-field appearance="outline" class="full">
         <mat-label>Name *</mat-label>
         <input matInput formControlName="name" autocomplete="off" (keydown.enter)="onEnter()" />
@@ -33,6 +34,7 @@
         }
       </mat-form-field>
 
+      <!----------- Email---------->
       <mat-form-field appearance="outline" class="full">
         <mat-label>Email *</mat-label>
         <input matInput formControlName="email" autocomplete="off" (keydown.enter)="onEnter()" />
@@ -49,6 +51,43 @@
         }
       </mat-form-field>
 
+      <!-----------Password ---------->
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>{{ isEdit ? 'New password (optional)' : 'Password *' }}</mat-label>
+
+        <input
+          matInput
+          formControlName="password"
+          [type]="hidePassword ? 'password' : 'text'"
+          autocomplete="new-password"
+          (keydown.enter)="onEnter()"
+        />
+
+        <!-- ADD: eye toggle -->
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
+        >
+          <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+
+        <mat-hint>
+          {{ isEdit ? 'Leave blank to keep the current password' : 'Minimum 8 characters' }}
+        </mat-hint>
+
+        @if (form.controls.password.hasError('required') && form.controls.password.touched) {
+          <mat-error>Password is required</mat-error>
+        }
+        @if (form.controls.password.hasError('minlength') && form.controls.password.touched) {
+          <mat-error>Password must be at least 8 characters</mat-error>
+        }
+      </mat-form-field>
+
+
+      <!----------- Role---------->
       <mat-form-field appearance="outline" class="full">
         <mat-label>Role *</mat-label>
         <mat-select formControlName="role_id">
