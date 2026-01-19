@@ -26,11 +26,19 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     DentalServiceType,
+    #[sea_orm(has_many = "super::dentist_contract_service_rates::Entity")]
+    DentistContractServiceRates,
 }
 
 impl Related<super::dental_service_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentalServiceType.def()
+    }
+}
+
+impl Related<super::dentist_contract_service_rates::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistContractServiceRates.def()
     }
 }
 

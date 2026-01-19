@@ -6,6 +6,8 @@ pub mod clinic_capability;
 pub mod data_object;
 pub mod dental_service;
 pub mod dental_service_type;
+pub mod dentist_contract;
+pub mod dentist_contract_service_rates;
 pub mod hmo;
 pub mod permission;
 pub mod role;
