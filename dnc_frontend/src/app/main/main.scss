@@ -32,6 +32,10 @@
   position: sticky;
   top: 0;
   z-index: 2;
+
+  /* make sure toolbar behaves as flex row */
+  display: flex;
+  align-items: center;
 }
 
 .toolbar-menu-button {
@@ -78,44 +82,13 @@
   background: rgba(25, 118, 210, 0.08);
 }
 
-
 .disabled-item {
   pointer-events: none;
   opacity: 0.15;
   cursor: default;
 }
-.user-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-align: left;
-  padding: 4px 8px;
-  height: 48px;
-}
 
-.user-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.user-name {
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.user-email {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.chevron {
-  font-size: 20px;
-}
-.layout-toolbar {
-  display: flex;         // make sure toolbar behaves as flex row
-  align-items: center;   // vertically center everything in the toolbar
-}
+/* ---------- User/Profile button (toolbar right) ---------- */
 
 .toolbar-right {
   display: flex;
@@ -124,26 +97,24 @@
   margin-left: 8px;
 }
 
-/* Your existing user-button class is good; add these tweaks */
 .user-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 48px;          // keep it within toolbar height
+  text-align: left;
+  height: 48px;
   padding: 0 8px;
   line-height: 1;
 }
 
-/* Prevent text from pushing height */
 .user-text {
   display: flex;
   flex-direction: column;
   justify-content: center;
   line-height: 1.1;
-  margin-top: 2px;       // tiny nudge if needed
+  margin-top: 2px; // tiny nudge if needed
 }
 
-/* Keep it compact */
 .user-name {
   font-weight: 500;
   font-size: 13px;
@@ -152,6 +123,7 @@
 .user-email {
   font-size: 11px;
   opacity: 0.75;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .chevron {
@@ -160,8 +132,9 @@
   height: 20px;
   line-height: 20px;
 }
+
 .user-menu-header {
-  padding: 8px 16px;        // matches Material spacing
+  padding: 8px 16px; // matches Material spacing
   font-size: 13px;
   line-height: 1.4;
 }
@@ -174,6 +147,7 @@
   font-size: 12px;
   opacity: 0.7;
 }
+
 .avatar {
   width: 30px;
   height: 30px;
@@ -186,9 +160,84 @@
   font-size: 20px;
   line-height: 1;
 
-  // pick colors you like (or tie into your theme)
   background: lightblue;
   color: #111827;
 
   user-select: none;
+}
+
+/* =========================================================
+   SIDENAV: wrap + no ellipsis + hanging indent + no icon clipping
+   HTML must be:
+   <span matLine class="sidenav-label">{{ item.label }}</span>
+   ========================================================= */
+
+:host ::ng-deep .layout-sidenav .mat-mdc-nav-list,
+:host ::ng-deep .layout-sidenav .mdc-list {
+  overflow: visible !important;
+}
+
+/* allow the whole item to grow taller when text wraps */
+:host ::ng-deep .layout-sidenav .mat-mdc-list-item {
+  height: auto !important;
+  min-height: 48px;
+  overflow: visible !important;
+
+  /* IMPORTANT: keep icon and text side-by-side */
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+}
+
+/* Icon column + anti-clipping */
+:host ::ng-deep .layout-sidenav .mat-mdc-list-item .mdc-list-item__start {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+
+  overflow: visible !important;
+  padding-left: 4px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Text column */
+:host ::ng-deep .layout-sidenav .mat-mdc-list-item .mdc-list-item__content {
+  flex: 1 1 auto;
+  min-width: 0; /* critical for wrapping in flex */
+  overflow: visible !important;
+
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Wrap/no-ellipsis */
+:host ::ng-deep .layout-sidenav .mat-mdc-list-item .mdc-list-item__primary-text {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+/* Hanging indent ONLY for the label text (keeps beside icon) */
+:host ::ng-deep .layout-sidenav .sidenav-label {
+  display: inline-block;  /* NOT block */
+  max-width: 100%;
+
+  padding-left: 40px;     /* indent wrapped line(s) */
+  text-indent: -40px;     /* keep first line aligned */
+}
+
+/* ensure the icon itself isn't clipped */
+:host ::ng-deep .layout-sidenav mat-icon[matListIcon] {
+  overflow: visible !important;
+}
+
+:host ::ng-deep .layout-sidenav mat-icon[matListIcon] svg {
+  overflow: visible !important;
 }
