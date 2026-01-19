@@ -16,7 +16,7 @@
 </h2>
 
 <div mat-dialog-content class="dialog-content">
-  <form [formGroup]="form" class="grid">
+  <form id="capForm" [formGroup]="form" class="grid" (ngSubmit)="save()">
     <!-- LEFT: Editable -->
     <section class="panel">
       <div class="panel-header">
@@ -33,11 +33,14 @@
           placeholder="e.g. X-ray, Orthodontics, Implant surgery"
         />
         <mat-hint>Short, clear name shown across the system</mat-hint>
-
-        @if (form.controls.name.invalid && form.controls.name.touched) {
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
           <mat-error>Name is required.</mat-error>
         }
+        @if (form.controls.name.touched && form.controls.name.hasError('maxlength')) {
+          <mat-error>Max 120 characters.</mat-error>
+        }
       </mat-form-field>
+
     </section>
 
     <!-- RIGHT: Readonly meta -->
@@ -60,25 +63,25 @@
 
       <div class="meta-row">
         <div class="meta-label">Last modified by</div>
-        <div class="meta-value">{{ data?.last_modified_by ?? '—' }}</div>
+        <div class="meta-value">{{ data.last_modified_by ?? '—' }}</div>
       </div>
 
       <div class="meta-row">
         <div class="meta-label">Last modified on</div>
-        <div class="meta-value">{{ (data?.last_modified_on | date:'medium') ?? '—' }}</div>
+        <div class="meta-value">{{ (data.last_modified_on | date:'medium') ?? '—' }}</div>
       </div>
     </aside>
   </form>
 </div>
 
 <div mat-dialog-actions class="dialog-actions" align="end">
-  <button mat-button type="button" (click)="close()">Cancel</button>
+  <button mat-button type="submit" form="capForm" (click)="close()">Cancel</button>
 
   <button
     mat-flat-button
-    type="button"
-    (click)="save()"
-    [disabled]="form.invalid || !hasChanges"
+    type="submit"
+    form="capForm"
+    [disabled]="saveDisabled()"
   >
     Save
   </button>

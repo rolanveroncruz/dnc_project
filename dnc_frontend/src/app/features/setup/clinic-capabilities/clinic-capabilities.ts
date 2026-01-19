@@ -11,6 +11,7 @@ type LoadState = 'loading' | 'loaded' | 'error';
 
 @Component({
   selector: 'app-clinic-capabilities',
+  standalone: true,
   imports: [
     GenericDataTableComponent,
     MatCard,
@@ -39,9 +40,9 @@ export class ClinicCapabilities implements OnInit{
   private dialog = inject(MatDialog);
 
   ngOnInit(): void {
-    this.load();
+    this.load_clinic_capabilities();
   }
-  private load(){
+  private load_clinic_capabilities(){
     this.state.set('loading');
     this.errorMsg.set(null)
     this.clinicCapabilitiesService.getClinicCapabilities()
@@ -59,18 +60,45 @@ export class ClinicCapabilities implements OnInit{
       })
   }
 
-  openRowDialog(row:any){
-    console.log("In openRoleRowDialog():",row);
+  openEditDialog(row:any) {
+    console.log("In openRoleRowDialog():", row);
     const ref = this.dialog.open(AddEditClinicCapability, {
-      data:row,
+      data: {
+        id: row.id,
+        name: row.name,
+        last_modified_by: row.last_modified_by,
+        last_modified_on: row.last_modified_on,
+
+      },
+      width: '720px',
+      maxWidth: '95vw',
+      disableClose: false,
+    });
+    ref.afterClosed().subscribe(result => {
+      console.log('The dialog was closed with result:', result);
+      if (!result) return;
+      this.clinicCapabilitiesService.patchClinicCapability(row.id, result.payload).subscribe(
+        (patched)=>{console.log(`In openEditDialog(), updated clinic capability with id ${patched.id}`);this.load_clinic_capabilities();},
+        (err)=>{console.log(err);}
+      )
+    });
+  }
+
+ openNewDialog(){
+    const ref = this.dialog.open(AddEditClinicCapability, {
+      data:{},
       width: '720px',
       maxWidth: '95vw',
       disableClose : false,
     });
     ref.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
+      console.log('In openNewDialog(), the dialog was closed with result:', result);
       if (!result) return;
-    });
-  }
+      this.clinicCapabilitiesService.postClinicCapability( result.payload ).subscribe(
+        (inserted)=>{console.log(`In openNewDialog(), inserted clinic capability with id ${inserted.id}`);this.load_clinic_capabilities();},
+        (err)=>{console.log(err);}
+      )
+    })
+ }
 
 }
