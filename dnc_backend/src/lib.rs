@@ -36,10 +36,7 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects,
-                      get_dental_service_types, post_dental_service, patch_dental_service,
-                      get_hmos, post_hmo, patch_hmo,
-                      get_hmo_by_id};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -66,6 +63,9 @@ fn protected_routes() ->Router<AppState>{
         .route("/hmos/", post(post_hmo))
         .route("/dentist_contracts",get(get_all_dentist_contracts))
         .route("/dentist_contracts/{:id}",get(get_dentist_contract))
+        .route("/dentist_contracts/",post(post_dentist_contract))
+        .route("/dentist_contracts/{:id}",patch(patch_dentist_contract))
+        .route("/dentist_contracts/{:id}/rates",patch(patch_dentist_contract_rates))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
