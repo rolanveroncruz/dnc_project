@@ -1,0 +1,116 @@
+<mat-card class="dentist-contracts-card">
+  <mat-card-header class="card-header-center">
+    <div class="title-block">
+      <mat-card-title class="mat-headline-1">Dentist Service Contracts</mat-card-title>
+      <mat-card-subtitle>Manage the Contract Types with Affiliate Dentists</mat-card-subtitle>
+    </div>
+
+      @if (hasChanges()){
+        <span class="status-chip">Unsaved changes</span>
+      }
+      @if (isCreateMode()){
+        <span class="mode-chip"> Creating new</span>
+      }
+  </mat-card-header>
+
+  <mat-card-content class="dentist-contracts-content">
+
+    <!-- Contract picker + create -->
+    <div class="contract-picker-row">
+      <mat-form-field appearance="outline" class="contract-select">
+        <mat-label>Contract</mat-label>
+        <mat-select
+          [value]="selectedContractId()"
+          (selectionChange)="onSelectContract($event.value)"
+          [disabled]="isBusy()">
+
+          <mat-option [value]="NEW_CONTRACT_SENTINEL">
+            ➕ Create new contract…
+          </mat-option>
+
+          <mat-divider></mat-divider>
+
+          @for (c of contracts(); track c.id) {
+            <mat-option [value]="c.id">{{ c.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-stroked-button type="button"
+              (click)="startCreate()"
+              [disabled]="isBusy() || isCreateMode()">
+        New
+      </button>
+    </div>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+    <!-- Name + description -->
+    <form class="contract-form" [formGroup]="contractForm">
+      <div class="form-grid">
+        <mat-form-field appearance="outline" class="name-field">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" [disabled]="isBusy()" />
+          @if (contractForm.controls.name.invalid && contractForm.controls.name.touched) {
+            <mat-error>Name is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="desc-field">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="3" formControlName="description" [disabled]="isBusy()"></textarea>
+        </mat-form-field>
+      </div>
+    </form>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+
+    <!----- Tabs ----->
+      <mat-tab-group
+        animationDuration="150ms"
+        [selectedIndex]="selectedTabIndex()"
+        (selectedIndexChange)="onTabIndexChange($event)" >
+        <mat-tab label="Basic Services">
+          <app-basic-services-tab-component
+            [services]="basicServices()"
+            [ratesGroup]="ratesGroup"
+            [disabled]="isBusy()">
+
+          </app-basic-services-tab-component>
+        </mat-tab>
+
+        <mat-tab label="Special Services">
+          <app-special-services-tab-component
+            [services]="specialServices()"
+            [ratesGroup]="ratesGroup"
+            [disabled]="isBusy()">
+          </app-special-services-tab-component>
+        </mat-tab>
+      </mat-tab-group>
+
+    <!-- Sticky Save/Cancel -->
+    <div class="sticky-actions">
+      <div class="left">
+        @if (saveError()) { <span class="error-text">{{ saveError() }}</span> }
+      </div>
+
+      <div class="right">
+        <button mat-button type="button"
+                (click)="cancelEdits()"
+                [disabled]="isBusy() || !hasChanges()">
+          Cancel
+        </button>
+
+        <button mat-flat-button color="primary" type="button"
+                (click)="save()"
+                [disabled]="isBusy() || !canSave()">
+          {{ isCreateMode() ? 'Create' : 'Save' }}
+        </button>
+      </div>
+    </div>
+
+
+    </mat-card-content>
+</mat-card>
+

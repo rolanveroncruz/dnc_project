@@ -1,19 +1,12 @@
-import {Component, DestroyRef, inject, OnInit, signal, computed,} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {MatTab, MatTabGroup} from '@angular/material/tabs';
 
 
-import {
-  ModifiedRolePermission,
-  Role,
-  RolePermission,
-  RolesAndPermissionsService
-} from '../../../api_services/roles-and-permissions-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, ParamMap, Router} from '@angular/router';
 import {RolesTabComponent} from './roles-tab-component/roles-tab-component';
 import {RolePermissionsTabComponent} from './role-permissions-tab-component/role-permissions-tab-component';
-import {DataObject, DataObjectsService} from '../../../api_services/data-objects-service';
 
 
 @Component({
@@ -31,6 +24,7 @@ import {DataObject, DataObjectsService} from '../../../api_services/data-objects
   ],
   templateUrl: './setup-roles.html',
   styleUrl: './setup-roles.scss',
+  standalone: true
 })
 
 export class SetupRoles implements OnInit {
@@ -53,10 +47,7 @@ export class SetupRoles implements OnInit {
 
   private destroyRef = inject(DestroyRef);
 
-  constructor(
-    private roles_and_permission_Service: RolesAndPermissionsService,
-    private dataObjectsService: DataObjectsService,) {
-  }
+  constructor(){}
 
   ngOnInit(): void {
     this.route.queryParamMap

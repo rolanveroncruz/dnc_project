@@ -18,6 +18,7 @@ type LoadState = 'loading' | 'loaded' | 'error';
   ],
   templateUrl: './roles-tab-component.html',
   styleUrl: './roles-tab-component.scss',
+  standalone: true
 })
 export class RolesTabComponent implements OnInit {
 
