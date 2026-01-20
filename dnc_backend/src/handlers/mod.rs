@@ -21,3 +21,4 @@ pub use login::{LoginRequest, LoginResponse};
 pub use middlewares::{inject_jwt_config, require_jwt};
 pub use boiler::WhoAmIResponse;
 pub use api::hmo::{get_hmos, get_hmo_by_id, post_hmo, patch_hmo};
+pub use api::dentist_contracts::{get_all_dentist_contracts, get_dentist_contract};

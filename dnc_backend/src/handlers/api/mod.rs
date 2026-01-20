@@ -6,3 +6,4 @@ pub mod role_permission;
 pub mod data_objects;
 pub mod dental_service_type;
 pub mod hmo;
+pub mod dentist_contracts;

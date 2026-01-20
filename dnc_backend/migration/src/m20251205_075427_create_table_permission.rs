@@ -87,7 +87,7 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration {
-    async fn add_all_permissions(manager: &SchemaManager<'_>, resource_name: &str)->Result<(), DbErr>{
+    pub async fn add_all_permissions(manager: &SchemaManager<'_>, resource_name: &str)->Result<(), DbErr>{
         Self::add_permission(manager, resource_name, "create").await?;
         Self::add_permission(manager, resource_name, "read").await?;
         Self::add_permission(manager, resource_name, "update").await?;

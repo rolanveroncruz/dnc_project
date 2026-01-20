@@ -20,7 +20,8 @@ use handlers::{
     get_clinic_capabilities, post_clinic_capability, patch_clinic_capability,
     get_users, post_user, patch_user,
     get_roles,create_role,patch_role,
-    get_role_permissions
+    get_role_permissions,
+    get_all_dentist_contracts, get_dentist_contract,
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 impl AppState {
@@ -63,6 +64,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/hmos/{:id}", get(get_hmo_by_id))
         .route("/hmos/{:id}", patch(patch_hmo))
         .route("/hmos/", post(post_hmo))
+        .route("/dentist_contracts",get(get_all_dentist_contracts))
+        .route("/dentist_contracts/{:id}",get(get_dentist_contract))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {

@@ -85,7 +85,7 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration {
-    async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
+    pub async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
         let permissions = vec!["create", "read", "update" ];
         for permission in permissions{
             Self::insert_role_permission(manager, role_name, resource_name, permission).await?;

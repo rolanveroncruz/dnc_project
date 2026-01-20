@@ -84,7 +84,7 @@ impl MigrationTrait for Migration {
     }
 }
 impl Migration {
-    async fn add_dataobject(manager: &SchemaManager<'_>, name: &str, description: &str)->Result<(), DbErr>{
+    pub async fn add_dataobject(manager: &SchemaManager<'_>, name: &str, description: &str)->Result<(), DbErr>{
         // 1. Create Insert Statement
         let insert = Query::insert()
             .into_table(DataObject::Table)
