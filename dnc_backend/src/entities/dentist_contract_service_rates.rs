@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub dentist_contract_id: Option<i32>,
-    pub service_id: Option<i32>,
+    pub dentist_contract_id: i32,
+    pub service_id: i32,
     #[sea_orm(column_type = "Float")]
     pub rate: f32,
 }
