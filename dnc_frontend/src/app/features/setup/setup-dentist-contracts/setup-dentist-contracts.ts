@@ -1,4 +1,4 @@
-import {Component, computed, DestroyRef, inject, signal} from '@angular/core';
+import {Component, computed, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent} from '@angular/material/card';
 import {MatDivider} from '@angular/material/list';
@@ -10,8 +10,10 @@ import {MatButton} from '@angular/material/button';
 
 import {BasicServicesTabComponent} from './basic-services-tab-component/basic-services-tab-component';
 import {SpecialServicesTabComponent} from './special-services-tab-component/special-services-tab-component';
+import {DentalServicesService} from '../../../api_services/dental-services-service';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
-type ServiceType = 'basic' | 'special';
+type ServiceType = 'Basic' | 'Special' | 'High-End';
 
 export interface DentalService {
   id: number;
@@ -60,7 +62,7 @@ export interface DentistContractDetails {
   templateUrl: './setup-dentist-contracts.html',
   styleUrl: './setup-dentist-contracts.scss',
 })
-export class SetupDentistContracts {
+export class SetupDentistContracts implements OnInit{
   readonly NEW_CONTRACT_SENTINEL=1;
   private fb = inject(NonNullableFormBuilder);
   private destroyRef = inject(DestroyRef);
@@ -96,19 +98,42 @@ export class SetupDentistContracts {
 
   // --- derived lists for tabs
   readonly basicServices = computed(() =>
-    this.services().filter(s => s.type === 'basic' && s.active)
+    this.services().filter(s => s.type === 'Basic' && s.active)
   );
 
   readonly specialServices = computed(() =>
-    this.services().filter(s => s.type === 'special' && s.active)
+    this.services().filter(s => s.type === 'Special' && s.active)
   );
 
-  constructor() {
+  constructor(private dentalServicesService:DentalServicesService) {
     // TODO: load contracts list + services list from backend
     // this.loadContracts();
     // this.loadServices();
     this.rebuildRatesControls();
   }
+
+  ngOnInit(): void {
+    this.dentalServicesService.getDentalServices()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: value => {
+          console.log("In ngOnInit():", value);
+          let services:DentalService[] = [];
+          for (const s of value.items) {
+            services.push({
+              id: s.id,
+              name: s.name,
+              type: s.type_name === 'Basic' ? 'Basic' : s.type_name === 'Special' ? 'Special' : 'High-End',
+              active: s.active});
+          }
+          this.services.set(services);
+          this.rebuildRatesControls();
+        },
+        error: err => {
+
+        }
+      })
+    }
 
   onTabIndexChange(index: number) {
     this.selectedTabIndex.set(index);

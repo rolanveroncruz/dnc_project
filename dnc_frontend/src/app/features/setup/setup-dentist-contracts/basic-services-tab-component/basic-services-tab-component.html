@@ -1,9 +1,11 @@
+@if (ratesGroup && services.length){
+
 <div class="rates-grid" [formGroup]="ratesGroup">
   @for (s of services; track s.id) {
     <div class="row">
       <div class="service-name">{{ s.name }}</div>
 
-      <mat-form-field appearance="outline" class="rate-field">
+      <mat-form-field appearance="outline" class="rate-field" subscriptSizing="dynamic">
         <mat-label>Rate</mat-label>
         <input
           matInput
@@ -20,3 +22,4 @@
     </div>
   }
 </div>
+}

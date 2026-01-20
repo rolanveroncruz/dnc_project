@@ -50,3 +50,20 @@ mat-card-header.card-header-center .mat-mdc-card-header-text {
   border-radius: 999px;
   font-size: 12px;
 }
+.contract-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* ~half / half */
+  gap: 12px;
+  align-items: start;
+}
+
+.contract-fields mat-form-field {
+  width: 100%;
+}
+
+/* ✅ On narrow screens, stack them */
+@media (max-width: 900px) {
+  .contract-fields {
+    grid-template-columns: 1fr;
+  }
+}

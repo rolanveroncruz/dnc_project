@@ -5,12 +5,12 @@
       <mat-card-subtitle>Manage the Contract Types with Affiliate Dentists</mat-card-subtitle>
     </div>
 
-      @if (hasChanges()){
-        <span class="status-chip">Unsaved changes</span>
-      }
-      @if (isCreateMode()){
-        <span class="mode-chip"> Creating new</span>
-      }
+    @if (hasChanges()) {
+      <span class="status-chip">Unsaved changes</span>
+    }
+    @if (isCreateMode()) {
+      <span class="mode-chip"> Creating new</span>
+    }
   </mat-card-header>
 
   <mat-card-content class="dentist-contracts-content">
@@ -46,53 +46,52 @@
     <mat-divider class="section-divider"></mat-divider>
 
     <!-- Name + description -->
-    <form class="contract-form" [formGroup]="contractForm">
-      <div class="form-grid">
-        <mat-form-field appearance="outline" class="name-field">
-          <mat-label>Name</mat-label>
-          <input matInput formControlName="name" [disabled]="isBusy()" />
-          @if (contractForm.controls.name.invalid && contractForm.controls.name.touched) {
-            <mat-error>Name is required.</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="desc-field">
-          <mat-label>Description</mat-label>
-          <textarea matInput rows="3" formControlName="description" [disabled]="isBusy()"></textarea>
-        </mat-form-field>
-      </div>
-    </form>
+    <div class="contract-fields" [formGroup]="contractForm">
+      <mat-form-field appearance="outline" class="name-field">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" [disabled]="isBusy()"/>
+        @if (contractForm.controls.name.invalid && contractForm.controls.name.touched) {
+          <mat-error>Name is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="desc-field">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="3" formControlName="description" [disabled]="isBusy()"></textarea>
+      </mat-form-field>
+    </div>
 
     <mat-divider class="section-divider"></mat-divider>
 
 
     <!----- Tabs ----->
-      <mat-tab-group
-        animationDuration="150ms"
-        [selectedIndex]="selectedTabIndex()"
-        (selectedIndexChange)="onTabIndexChange($event)" >
-        <mat-tab label="Basic Services">
-          <app-basic-services-tab-component
-            [services]="basicServices()"
-            [ratesGroup]="ratesGroup"
-            [disabled]="isBusy()">
+    <mat-tab-group
+      animationDuration="150ms"
+      [selectedIndex]="selectedTabIndex()"
+      (selectedIndexChange)="onTabIndexChange($event)">
+      <mat-tab label="Basic Services">
+        <app-basic-services-tab-component
+          [services]="basicServices()"
+          [ratesGroup]="ratesGroup"
+          [disabled]="isBusy()">
 
-          </app-basic-services-tab-component>
-        </mat-tab>
+        </app-basic-services-tab-component>
+      </mat-tab>
 
-        <mat-tab label="Special Services">
-          <app-special-services-tab-component
-            [services]="specialServices()"
-            [ratesGroup]="ratesGroup"
-            [disabled]="isBusy()">
-          </app-special-services-tab-component>
-        </mat-tab>
-      </mat-tab-group>
+      <mat-tab label="Special Services">
+        <app-special-services-tab-component
+          [services]="specialServices()"
+          [ratesGroup]="ratesGroup"
+          [disabled]="isBusy()">
+        </app-special-services-tab-component>
+      </mat-tab>
+    </mat-tab-group>
 
     <!-- Sticky Save/Cancel -->
     <div class="sticky-actions">
       <div class="left">
-        @if (saveError()) { <span class="error-text">{{ saveError() }}</span> }
+        @if (saveError()) {
+          <span class="error-text">{{ saveError() }}</span>
+        }
       </div>
 
       <div class="right">
@@ -111,6 +110,6 @@
     </div>
 
 
-    </mat-card-content>
+  </mat-card-content>
 </mat-card>
 
