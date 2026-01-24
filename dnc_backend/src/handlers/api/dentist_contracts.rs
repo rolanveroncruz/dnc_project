@@ -3,8 +3,8 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseTransaction, DbErr,
-              EntityTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseTransaction, DbErr, EntityTrait,
+              ActiveValue::NotSet, QueryFilter, QueryOrder, Set, TransactionTrait};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
 
@@ -117,7 +117,7 @@ pub async fn get_dentist_contract(
     Path(id): Path<i32>,
 ) -> Result<Json<DentistContractWithRates>, StatusCode> {
     // 1) Permission check
-    // CHANGE THIS: set correct data_object name if needed
+    // CHANGE THIS: set the correct data_object name if needed
     let has_permission = role_has_permission_by_data_object_name(
         &state.db,
         user.claims.role_id,
@@ -185,6 +185,8 @@ pub async fn get_dentist_contract(
         rates,
     }))
 }
+
+
 /*
  * POST and PATCh DTOs.
  */
@@ -194,7 +196,7 @@ pub struct CreateDentistContractRequest {
     pub description: String,
     pub active: bool,
 
-    // Optional: create initial rates in same request
+    // Optional: create initial rates in the same request
     pub rates: Option<Vec<UpsertDentistContractRateRequest>>,
 }
 
@@ -243,7 +245,7 @@ async fn replace_all_rates(
         }
 
         let am = dentist_contract_service_rates::ActiveModel {
-            id: Set(0), // ignored by auto-increment; safe with SeaORM
+            id: NotSet, // ignored by auto-increment; safe with SeaORM
             dentist_contract_id: Set(dentist_contract_id),
             service_id: Set(r.service_id),
             rate: Set(r.rate),
@@ -295,7 +297,7 @@ pub async fn post_dentist_contract(
 
     // 1) Insert contract
     let contract_am = dentist_contract::ActiveModel {
-        id: Set(0), // ignored if auto-increment
+        id: NotSet, // ignored if auto-increment
         name: Set(payload.name),
         description: Set(payload.description),
         active: Set(payload.active),
@@ -304,7 +306,7 @@ pub async fn post_dentist_contract(
         last_modified_by: Set(user.claims.email.clone()),
 
         // CHANGE THIS: if you already have a "now()" helper, use it.
-        last_modified_on: Set(chrono::Utc::now().into()),
+        last_modified_on: NotSet,
     };
 
     let contract_model = contract_am.insert(&tx).await.map_err(|e| {
@@ -394,7 +396,7 @@ pub async fn patch_dentist_contract(
     }
 
     // Always update audit fields on patch
-    // CHANGE THIS: pick correct user field
+    // CHANGE THIS: pick the correct user field
     am.last_modified_by = Set(user.claims.email.clone());
     am.last_modified_on = Set(chrono::Utc::now().into());
 
@@ -416,7 +418,7 @@ pub async fn patch_dentist_contract(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // 4) Return updated object (contract + rates + service_name)
+    // 4) Return the updated object (contract + rates + service_name)
     get_dentist_contract(State(state), user, Path(id)).await
 }
 
@@ -458,7 +460,7 @@ pub async fn patch_dentist_contract_rates(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // Ensure contract exists (otherwise you’d be inserting orphan rows)
+    // Ensure the contract exists (otherwise you’d be inserting orphan rows)
     let exists = dentist_contract::Entity::find_by_id(id)
         .one(&tx)
         .await
@@ -490,7 +492,7 @@ pub async fn patch_dentist_contract_rates(
             .ok_or(StatusCode::NOT_FOUND)?
             .into();
 
-    // CHANGE THIS: pick correct user field
+    // CHANGE THIS: pick the correct user field
     am.last_modified_by = Set(user.claims.email.clone());
     am.last_modified_on = Set(chrono::Utc::now().into());
 
