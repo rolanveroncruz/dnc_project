@@ -28,3 +28,7 @@ pub use api::city::get_cities;
 pub use api::state::get_states;
 pub use api::region::get_regions;
 pub use api::dental_clinic::{get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic};
+pub use api::clinic_capabilities_list::{get_clinic_capabilities_for_clinic,
+                                        add_clinic_capability_to_clinic,
+                                        remove_clinic_capability_from_clinic,
+                                        set_clinic_capabilities_for_clinic};

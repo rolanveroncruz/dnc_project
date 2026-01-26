@@ -40,7 +40,10 @@ use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_se
                       get_hmos, post_hmo, patch_hmo, get_hmo_by_id,
                       post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates,
                       get_cities, get_states, get_regions,
-                      get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic
+                      get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic,
+                      get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic,
+                      remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic
+
 };
 
 fn protected_routes() ->Router<AppState>{
@@ -78,6 +81,11 @@ fn protected_routes() ->Router<AppState>{
         .route("/dental/_clinics/{:id}", get(get_dental_clinic_by_id))
         .route("/dental/_clinics/", post(post_dental_clinic))
         .route("/dental/_clinics/{:id}", patch(patch_dental_clinic))
+        .route("/dental/_clinics/{:clinic_id}/capabilities", get(get_clinic_capabilities_for_clinic))
+        .route("/dental/_clinics/{:clinic_id}/capabilities/", post(add_clinic_capability_to_clinic))
+        .route("/dental/_clinics/{:clinic_id}/capabilities/{:capability_id}", patch(remove_clinic_capability_from_clinic))
+        .route("/dental/_clinics/{:clinic_id}/capabilities", patch(set_clinic_capabilities_for_clinic))
+
 
 
 }

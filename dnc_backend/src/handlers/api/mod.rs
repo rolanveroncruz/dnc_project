@@ -11,3 +11,4 @@ pub mod city;
 pub mod state;
 pub mod region;
 pub mod dental_clinic;
+pub mod clinic_capabilities_list;
