@@ -17,7 +17,7 @@ use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::entities::{clinic_capabilities_list, clinic_capability};
 
 /// Returned row for a clinic's assigned capabilities.
-/// Includes the junction row + the related capability (if it exists).
+/// Includes the junction row and the related capability (if it exists).
 #[derive(Debug, Serialize)]
 pub struct ClinicCapabilityLinkRow {
     pub id: i32,
@@ -226,7 +226,7 @@ pub async fn set_clinic_capabilities_for_clinic(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // 1) Remove all existing links for clinic
+    // 1) Remove all existing links for a clinic
     clinic_capabilities_list::Entity::delete_many()
         .filter(clinic_capabilities_list::Column::ClinicId.eq(clinic_id))
         .exec(&txn)
@@ -237,7 +237,7 @@ pub async fn set_clinic_capabilities_for_clinic(
         })?;
 
     // 2) Insert new links
-    // (Dedup to avoid accidental duplicates in request body)
+    // (Dedup to avoid accidental duplicates in the request body)
     let mut ids = body.capability_ids;
     ids.sort_unstable();
     ids.dedup();
