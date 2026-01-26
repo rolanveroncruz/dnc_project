@@ -24,3 +24,7 @@ pub use api::hmo::{get_hmos, get_hmo_by_id, post_hmo, patch_hmo};
 pub use api::dentist_contracts::{get_all_dentist_contracts, get_dentist_contract,
                                  post_dentist_contract, patch_dentist_contract,
                                  patch_dentist_contract_rates};
+pub use api::city::get_cities;
+pub use api::state::get_states;
+pub use api::region::get_regions;
+pub use api::dental_clinic::{get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic};

@@ -7,3 +7,7 @@ pub mod data_objects;
 pub mod dental_service_type;
 pub mod hmo;
 pub mod dentist_contracts;
+pub mod city;
+pub mod state;
+pub mod region;
+pub mod dental_clinic;
