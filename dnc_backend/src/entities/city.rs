@@ -9,17 +9,32 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
+    pub state_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::dental_clinic::Entity")]
     DentalClinic,
+    #[sea_orm(
+        belongs_to = "super::state::Entity",
+        from = "Column::StateId",
+        to = "super::state::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    State,
 }
 
 impl Related<super::dental_clinic::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentalClinic.def()
+    }
+}
+
+impl Related<super::state::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::State.def()
     }
 }
 
