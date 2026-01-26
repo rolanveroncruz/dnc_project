@@ -11,6 +11,7 @@ mod m20260108_051749_create_table_hmo;
 mod m20260119_112338_create_table_dentist_contract;
 mod m20260119_112532_create_table_dentist_contract_service_rates;
 mod m20260119_131647_add_dentist_contract_permission_and_role_permissions;
+mod m20260126_063012_create_tables_dental_clinic;
 
 pub struct Migrator;
 
@@ -29,6 +30,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260119_112338_create_table_dentist_contract::Migration),
             Box::new(m20260119_112532_create_table_dentist_contract_service_rates::Migration),
             Box::new(m20260119_131647_add_dentist_contract_permission_and_role_permissions::Migration),
+            Box::new(m20260126_063012_create_tables_dental_clinic::Migration),
         ]
     }
 }

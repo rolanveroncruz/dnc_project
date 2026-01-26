@@ -4,25 +4,22 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "clinic_capability")]
+#[sea_orm(table_name = "region")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
-    pub active: bool,
-    pub last_modified_by: String,
-    pub last_modified_on: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::clinic_capabilities_list::Entity")]
-    ClinicCapabilitiesList,
+    #[sea_orm(has_many = "super::dental_clinic::Entity")]
+    DentalClinic,
 }
 
-impl Related<super::clinic_capabilities_list::Entity> for Entity {
+impl Related<super::dental_clinic::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::ClinicCapabilitiesList.def()
+        Relation::DentalClinic.def()
     }
 }
 

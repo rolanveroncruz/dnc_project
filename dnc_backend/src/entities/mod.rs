@@ -2,15 +2,20 @@
 #![allow(dead_code, unused_imports)]
 pub mod prelude;
 
+pub mod city;
+pub mod clinic_capabilities_list;
 pub mod clinic_capability;
 pub mod data_object;
+pub mod dental_clinic;
 pub mod dental_service;
 pub mod dental_service_type;
 pub mod dentist_contract;
 pub mod dentist_contract_service_rates;
 pub mod hmo;
 pub mod permission;
+pub mod region;
 pub mod role;
 pub mod role_permission;
 pub mod sea_orm_active_enums;
+pub mod state;
 pub mod user;
