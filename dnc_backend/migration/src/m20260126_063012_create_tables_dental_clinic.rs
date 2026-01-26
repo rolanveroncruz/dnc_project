@@ -9,9 +9,9 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        Self::create_table_city(manager).await?;
-        Self::create_table_state(manager).await?;
         Self::create_table_region(manager).await?;
+        Self::create_table_state(manager).await?;
+        Self::create_table_city(manager).await?;
         Self::create_table_dental_clinic(manager).await?;
         Self::create_table_clinic_capabilities_list(manager).await?;
         Ok(())
@@ -19,13 +19,13 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(City::Table).to_owned())
+            .drop_table(Table::drop().table(Region::Table).to_owned())
             .await?;
         manager
             .drop_table(Table::drop().table(State::Table).to_owned())
             .await?;
         manager
-            .drop_table(Table::drop().table(Region::Table).to_owned())
+            .drop_table(Table::drop().table(City::Table).to_owned())
             .await?;
         manager
             .drop_table(Table::drop().table(DentalClinic::Table).to_owned())
@@ -38,42 +38,9 @@ impl MigrationTrait for Migration {
     }
 }
 impl Migration {
-    async fn create_table_city(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table(City::Table)
-                    .if_not_exists()
-                    .col(
-                        ColumnDef::new(City::Id)
-                            .integer()
-                            .auto_increment()
-                            .not_null()
-                            .primary_key(),
-                    )
-                    .col(ColumnDef::new(City::Name).string().not_null()
-                    )
-                    .to_owned()
-            ).await
-    }
-    async fn create_table_state(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table(State::Table)
-                    .if_not_exists()
-                    .col(
-                        ColumnDef::new(State::Id)
-                            .integer()
-                            .auto_increment()
-                            .not_null()
-                            .primary_key(),
-                    )
-                    .col(ColumnDef::new(State::Name).string().not_null())
-                    .to_owned(),
-            )
-            .await
-    }
+
+
+
     async fn create_table_region(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -92,6 +59,66 @@ impl Migration {
             )
             .await
     }
+
+
+    async fn create_table_state(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(State::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(State::Id)
+                            .integer()
+                            .auto_increment()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(State::Name).string().not_null())
+                    .col(ColumnDef::new(State::RegionId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("state_region_id_foreign_key")
+                        .from(State::Table, State::RegionId)
+                        .to(Region::Table, Region::Id)
+                    )
+                    .to_owned(),
+            )
+            .await
+    }
+
+
+    async fn create_table_city(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(City::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(City::Id)
+                            .integer()
+                            .auto_increment()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(City::Name).string().not_null()
+                    )
+                    .col(ColumnDef::new(City::StateId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("city_state_id_foreign_key")
+                        .from(City::Table, City::StateId)
+                        .to(State::Table, State::Id)
+                    )
+                    .to_owned()
+            ).await
+    }
+
+
     async fn create_table_dental_clinic(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -113,12 +140,6 @@ impl Migration {
                         .not_null()
                     )
                     .col(ColumnDef::new(DentalClinic::CityId)
-                    .integer()
-                    )
-                    .col(ColumnDef::new(DentalClinic::StateId)
-                    .integer()
-                    )
-                    .col(ColumnDef::new(DentalClinic::RegionId)
                     .integer()
                     )
                     .col(ColumnDef::new(DentalClinic::Remarks)
@@ -146,18 +167,12 @@ impl Migration {
                         .from(DentalClinic::Table, DentalClinic::CityId)
                         .to(City::Table, City::Id)
                     )
-                    .foreign_key(ForeignKey::create()
-                        .name("dental_clinic_state_id_foreign_key")
-                        .from(DentalClinic::Table, DentalClinic::StateId)
-                        .to(State::Table, State::Id)
-                    )
-                    .foreign_key(ForeignKey::create()
-                        .name("dental_clinic_region_id_foreign_key")
-                        .from(DentalClinic::Table, DentalClinic::RegionId)
-                        .to(Region::Table, Region::Id))
                     .to_owned()
             ).await
     }
+
+
+
 
 
     async fn create_table_clinic_capabilities_list(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
@@ -195,24 +210,30 @@ impl Migration {
     }
 }
 
+
 #[derive(Iden)]
-pub enum City {
+pub enum Region {
     Table,
     Id,
     Name,
 }
+
 
 #[derive(Iden)]
 pub enum State {
     Table,
     Id,
     Name,
+    RegionId,
 }
+
+
 #[derive(Iden)]
-pub enum Region {
+pub enum City {
     Table,
     Id,
     Name,
+    StateId,
 }
 #[derive(Iden)]
 pub enum ClinicCapabilitiesList {
@@ -229,8 +250,6 @@ pub enum DentalClinic {
     Name,
     Address,
     CityId,
-    StateId,
-    RegionId,
     Remarks,
     ContactNumbers,
     Active,
