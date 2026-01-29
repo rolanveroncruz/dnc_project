@@ -65,10 +65,6 @@ impl MigrationTrait for Migration {
         Self::add_dataobject(manager, "role", "permission Data Object").await?;
         Self::add_dataobject(manager, "role_permission", "role_permission Data Object").await?;
         Self::add_dataobject(manager, "hmo", "hmo Data Object").await?;
-        Self::add_dataobject(manager, "dental_contract", "dental_contract Data Object").await?;
-        Self::add_dataobject(manager, "clinic", "clinic Data Object").await?;
-        Self::add_dataobject(manager, "dentist", "dentist Data Object").await?;
-        Self::add_dataobject(manager, "endorsement", "endorsement Data Object").await?;
 
         Ok(())
     }

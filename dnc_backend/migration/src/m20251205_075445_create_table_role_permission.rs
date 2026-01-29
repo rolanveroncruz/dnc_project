@@ -68,10 +68,6 @@ impl MigrationTrait for Migration {
         Self::insert_role_all_permissions(manager, "Administrator", "role").await?;
         Self::insert_role_all_permissions(manager, "Administrator", "role_permission").await?;
         Self::insert_role_all_permissions(manager, "Administrator", "hmo").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "dental_contract").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "clinic").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "dentist").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "endorsement").await?;
 
         Ok(())
     }
@@ -86,7 +82,7 @@ impl MigrationTrait for Migration {
 
 impl Migration {
     pub async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
-        let permissions = vec!["create", "read", "update" ];
+        let permissions = vec!["create", "read", "update", "delete" ];
         for permission in permissions{
             Self::insert_role_permission(manager, role_name, resource_name, permission).await?;
         }

@@ -23,7 +23,8 @@ impl MigrationTrait for Migration {
                     .values([
                         PermissionAction::Create,
                         PermissionAction::Read,
-                        PermissionAction::Update
+                        PermissionAction::Update,
+                        PermissionAction::Delete,
                     ]).to_owned(),
             )
             .await?;
@@ -69,10 +70,6 @@ impl MigrationTrait for Migration {
         Self::add_all_permissions(manager, "role").await?;
         Self::add_all_permissions(manager, "role_permission").await?;
         Self::add_all_permissions(manager, "hmo").await?;
-        Self::add_all_permissions(manager, "dental_contract").await?;
-        Self::add_all_permissions(manager, "clinic").await?;
-        Self::add_all_permissions(manager, "dentist").await?;
-        Self::add_all_permissions(manager, "endorsement").await?;
 
         Ok(())
     }
@@ -91,6 +88,7 @@ impl Migration {
         Self::add_permission(manager, resource_name, "create").await?;
         Self::add_permission(manager, resource_name, "read").await?;
         Self::add_permission(manager, resource_name, "update").await?;
+        Self::add_permission(manager, resource_name, "delete").await?;
         Ok(())
     }
     async fn add_permission(manager: &SchemaManager<'_>, resource_name: &str, action_val: &str)->Result<(), DbErr>{
@@ -124,6 +122,8 @@ pub enum PermissionAction{
     Read,
     #[sea_orm(iden="update")]
     Update,
+    #[sea_orm(iden="delete")]
+    Delete,
 }
 
 #[derive(Iden)]

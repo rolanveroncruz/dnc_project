@@ -12,6 +12,11 @@ impl MigrationTrait for Migration {
         DataObjectMigration::add_dataobject(manager, "dentist_contract", "dentist_contract Data Object").await?;
         PermissionMigration::add_all_permissions(manager, "dentist_contract").await?;
         RolePermissionMigration::insert_role_all_permissions(manager, "Administrator", "dentist_contract").await?;
+
+        DataObjectMigration::add_dataobject(manager, "dentist_contract_service_rates", "dentist_contract Data Object").await?;
+        PermissionMigration::add_all_permissions(manager, "dentist_contract_service_rates").await?;
+        RolePermissionMigration::insert_role_all_permissions(manager, "Administrator", "dentist_contract_service_rates").await?;
+
         Ok(())
 
     }
