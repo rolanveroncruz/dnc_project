@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, };
+use sea_orm_migration::{prelude::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -22,6 +22,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DentistContract::Name)
                         .string()
                         .not_null()
+                        .unique_key()
                     )
                     .col(ColumnDef::new(DentistContract::Description)
                         .string()
