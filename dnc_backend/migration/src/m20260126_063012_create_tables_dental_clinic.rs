@@ -142,6 +142,9 @@ impl Migration {
                     .col(ColumnDef::new(DentalClinic::CityId)
                     .integer()
                     )
+                    .col(ColumnDef::new(DentalClinic::ZipCode)
+                        .string()
+                    )
                     .col(ColumnDef::new(DentalClinic::Remarks)
                         .string()
                     )
@@ -250,6 +253,7 @@ pub enum DentalClinic {
     Name,
     Address,
     CityId,
+    ZipCode,
     Remarks,
     ContactNumbers,
     Active,
