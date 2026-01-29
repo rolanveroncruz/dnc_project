@@ -8,9 +8,13 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub name: String,
+    #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub address: String,
+    #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub city_id: Option<i32>,
+    #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub zip_code: Option<String>,
     pub remarks: Option<String>,
     pub contact_numbers: Option<String>,
