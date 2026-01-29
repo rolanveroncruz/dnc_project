@@ -181,6 +181,9 @@ impl Migration {
                     .col(ColumnDef::new(DentalClinic::ContactNumbers)
                         .string()
                     )
+                    .col(ColumnDef::new(DentalClinic::Schedule)
+                        .string()
+                    )
                     .col(ColumnDef::new(DentalClinic::Active)
                         .boolean()
                         .default(true)
@@ -280,8 +283,9 @@ pub enum DentalClinic {
     Address,
     CityId,
     ZipCode,
-    Remarks,
+    Schedule,
     ContactNumbers,
+    Remarks,
     Active,
     LastModifiedBy,
     LastModifiedOn,
