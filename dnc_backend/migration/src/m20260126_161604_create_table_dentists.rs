@@ -19,20 +19,22 @@ impl MigrationTrait for Migration {
         Self::insert_dentist_history_seed(manager).await?;
         Self::insert_tax_type_seed(manager).await?;
         Self::insert_tax_classification_seed(manager).await?;
-
         Self::create_dentist_permissions_and_role_permission_set(manager).await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(DentistClinic::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(Dentist::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(TaxClassification::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(TaxType::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(DentistHistory::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(DentistStatus::Table).to_owned()).await?;
+        Self::drop_dentist_clinic_table(manager).await?;
+        Self::drop_dentist_table(manager).await?;
+        Self::drop_tax_classification_table(manager).await?;
+        Self::drop_tax_type_table(manager).await?;
+        Self::drop_dentist_history_table(manager).await?;
+        Self::drop_dentist_status_table(manager).await?;
+
         Ok(())
     }
+
+
 }
 
 impl Migration{
@@ -56,7 +58,10 @@ impl Migration{
 
         Ok(())
     }
-
+    pub async fn drop_dentist_status_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(DentistStatus::Table).to_owned()).await?;
+        Ok(())
+    }
     pub async fn insert_dentist_status_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .exec_stmt(
@@ -72,6 +77,7 @@ impl Migration{
             .await?;
         Ok(())
     }
+
 
     pub async fn create_dentist_history_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -93,6 +99,10 @@ impl Migration{
         Ok(())
     }
 
+    pub async fn drop_dentist_history_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(DentistHistory::Table).to_owned()).await?;
+        Ok(())
+    }
     pub async fn insert_dentist_history_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .exec_stmt(
@@ -105,6 +115,7 @@ impl Migration{
             ).await?;
         Ok(())
     }
+
 
     pub async fn create_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -125,7 +136,10 @@ impl Migration{
             ).await?;
         Ok(())
     }
-
+    pub async fn drop_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(TaxType::Table).to_owned()).await?;
+        Ok(())
+    }
     pub async fn insert_tax_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .exec_stmt(
@@ -138,6 +152,7 @@ impl Migration{
             ).await?;
         Ok(())
     }
+
 
     pub async fn create_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -158,7 +173,10 @@ impl Migration{
             ).await?;
         Ok(())
     }
-
+    pub async fn drop_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(TaxClassification::Table).to_owned()).await?;
+        Ok(())
+    }
     pub async fn insert_tax_classification_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .exec_stmt(
@@ -172,6 +190,7 @@ impl Migration{
             ).await?;
         Ok(())
     }
+
 
     pub async fn create_dentist_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -287,6 +306,10 @@ impl Migration{
             ).await?;
         Ok(())
     }
+    pub async fn drop_dentist_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(Dentist::Table).to_owned()).await?;
+        Ok(())
+    }
 
     pub async fn create_dentist_clinic_table(manager: &SchemaManager<'_>) ->Result<(), DbErr>{
         manager
@@ -326,6 +349,11 @@ impl Migration{
             ).await?;
         Ok(())
     }
+    pub async fn drop_dentist_clinic_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(DentistClinic::Table).to_owned()).await?;
+        Ok(())
+    }
+
 
     pub async fn create_dentist_permissions_and_role_permission_set(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         crate::m20251205_063628_create_table_dataobject::Migration::add_dataobject(manager, "dentist", "dentist Data Object").await?;

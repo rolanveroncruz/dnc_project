@@ -21,7 +21,14 @@ impl MigrationTrait for Migration {
 
     }
 
-    async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        RolePermissionMigration::del_role_all_permissions(manager, "Administrator", "dentist_contract_service_rates").await?;
+        PermissionMigration::del_all_permissions(manager, "dentist_contract_service_rates").await?;
+        DataObjectMigration::delete_dataobject(manager, "dentist_contract_service_rates").await?;
+        
+        RolePermissionMigration::del_role_all_permissions(manager, "Administrator", "dentist_contract").await?;
+        PermissionMigration::del_all_permissions(manager, "dentist_contract").await?;
+        DataObjectMigration::delete_dataobject(manager, "dentist_contract").await?;
         Ok(())
     }
 }

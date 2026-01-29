@@ -19,27 +19,25 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Region::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(State::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(City::Table).to_owned())
+            .drop_table(Table::drop().table(ClinicCapabilitiesList::Table).to_owned())
             .await?;
         manager
             .drop_table(Table::drop().table(DentalClinic::Table).to_owned())
             .await?;
         manager
-            .drop_table(Table::drop().table(ClinicCapabilitiesList::Table).to_owned())
+            .drop_table(Table::drop().table(City::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Province::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Region::Table).to_owned())
             .await?;
 
         Ok(())
     }
 }
 impl Migration {
-
-
 
     async fn create_table_region(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -54,41 +52,58 @@ impl Migration {
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Region::Name).string().not_null())
+                    .col(ColumnDef::new(Region::Name)
+                        .string()
+                        .not_null()
+                    )
+                    .index(Index::create()
+                        .name("region_name_index")
+                        .table(Region::Table)
+                        .col(Region::Name)
+                        .unique()
+                    )
                     .to_owned(),
             )
             .await
     }
 
-
     async fn create_table_state(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
-                    .table(State::Table)
+                    .table(Province::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(State::Id)
+                        ColumnDef::new(Province::Id)
                             .integer()
                             .auto_increment()
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(State::Name).string().not_null())
-                    .col(ColumnDef::new(State::RegionId)
+                    .col(ColumnDef::new(Province::Name)
+                        .string()
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(Province::RegionId)
                         .integer()
                         .not_null()
                     )
+                    .index(Index::create()
+                        .name("province_name_region_id_index")
+                        .table(Province::Table)
+                        .col(Province::Name)
+                        .col(Province::RegionId)
+                        .unique()
+                    )
                     .foreign_key(ForeignKey::create()
                         .name("state_region_id_foreign_key")
-                        .from(State::Table, State::RegionId)
+                        .from(Province::Table, Province::RegionId)
                         .to(Region::Table, Region::Id)
                     )
                     .to_owned(),
             )
             .await
     }
-
 
     async fn create_table_city(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -105,19 +120,31 @@ impl Migration {
                     )
                     .col(ColumnDef::new(City::Name).string().not_null()
                     )
-                    .col(ColumnDef::new(City::StateId)
+                    .index(Index::create()
+                        .name("city_name_index")
+                        .table(City::Table)
+                        .col(City::Name)
+                        .unique()
+                    )
+                    .col(ColumnDef::new(City::ProvinceId)
                         .integer()
                         .not_null()
                     )
                     .foreign_key(ForeignKey::create()
                         .name("city_state_id_foreign_key")
-                        .from(City::Table, City::StateId)
-                        .to(State::Table, State::Id)
+                        .from(City::Table, City::ProvinceId)
+                        .to(Province::Table, Province::Id)
+                    )
+                    .index(Index::create()
+                        .name("city_name_province_id_index")
+                        .table(City::Table)
+                        .col(City::Name)
+                        .col(City::ProvinceId)
+                        .unique()
                     )
                     .to_owned()
             ).await
     }
-
 
     async fn create_table_dental_clinic(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -174,10 +201,6 @@ impl Migration {
             ).await
     }
 
-
-
-
-
     async fn create_table_clinic_capabilities_list(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -223,7 +246,7 @@ pub enum Region {
 
 
 #[derive(Iden)]
-pub enum State {
+pub enum Province{
     Table,
     Id,
     Name,
@@ -236,7 +259,7 @@ pub enum City {
     Table,
     Id,
     Name,
-    StateId,
+    ProvinceId,
 }
 #[derive(Iden)]
 pub enum ClinicCapabilitiesList {

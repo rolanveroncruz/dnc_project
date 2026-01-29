@@ -88,6 +88,13 @@ impl Migration {
         }
         Ok(())
     }
+    pub async fn del_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
+        let permissions = vec!["create", "read", "update", "delete" ];
+        for permission in permissions {
+            Self::del_role_permission(manager, role_name, resource_name, permission).await?;
+        }
+        Ok(())
+    }
     async fn insert_role_permission(manager:&SchemaManager<'_>, role_name:&str, resource_name:&str, permission_action_name:&str)->Result<(), DbErr>{
         println!("Inserting {} permission for role: {} and resource: {}", permission_action_name, role_name, resource_name);
         let insert = Query::insert()
@@ -147,6 +154,49 @@ impl Migration {
         Ok(())
 
 
+    }
+
+    async fn del_role_permission( manager:&SchemaManager<'_>, role_name:&str, resource_name:&str, permission_action_name:&str) -> Result<(), DbErr> {
+        println!(
+            "Deleting {} permission for role: {} and resource: {}",
+            permission_action_name, role_name, resource_name
+        );
+
+        // Subquery for RoleId
+        let role_id_subq = Query::select()
+            .column(Role::Id)
+            .from(Role::Table)
+            .and_where(Expr::col(Role::Name).eq(role_name))
+            .limit(1)
+            .to_owned();
+
+        // Subquery for PermissionId (resource + action)
+        let permission_id_subq = Query::select()
+            .column((Permission::Table, Permission::Id))
+            .from(Permission::Table)
+            .join(
+                JoinType::InnerJoin,
+                DataObject::Table,
+                Expr::col((Permission::Table, Permission::DataObjectId))
+                    .equals((DataObject::Table, DataObject::Id)),
+            )
+            .and_where(Expr::col(DataObject::Name).eq(resource_name))
+            .and_where(
+                Expr::col(Permission::Action).eq(
+                    Expr::val(permission_action_name).cast_as(PermissionAction::EnumName),
+                ),
+            )
+            .limit(1)
+            .to_owned();
+
+        let delete = Query::delete()
+            .from_table(RolePermission::Table)
+            .and_where(Expr::col(RolePermission::RoleId).in_subquery(role_id_subq))
+            .and_where(Expr::col(RolePermission::PermissionId).in_subquery(permission_id_subq))
+            .to_owned();
+
+        manager.exec_stmt(delete).await?;
+        Ok(())
     }
 
 }

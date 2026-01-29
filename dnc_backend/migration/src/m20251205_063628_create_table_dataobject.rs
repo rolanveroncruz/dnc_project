@@ -99,6 +99,24 @@ impl Migration {
         Ok(())
 
     }
+
+    pub async fn delete_dataobject(manager: &SchemaManager<'_>, name: &str)->Result<(), DbErr>{
+        // 1. Create Delete Statement
+        let delete = Query::delete()
+            .from_table(DataObject::Table)
+            .and_where(Expr::col(DataObject::Name).eq(name))
+            .to_owned();
+
+        // 2. Force Postgres formatting
+        let sql = delete.to_string(PostgresQueryBuilder);
+
+        // 3. Execute
+        manager
+            .get_connection()
+            .execute_unprepared(&sql)
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(DeriveIden)]

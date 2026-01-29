@@ -110,6 +110,38 @@ impl Migration {
 
     }
 
+    pub async fn del_all_permissions(manager: &SchemaManager<'_>, resource_name: &str)->Result<(), DbErr>{
+
+        Self::del_permission(manager, resource_name, "create").await?;
+        Self::del_permission(manager, resource_name, "read").await?;
+        Self::del_permission(manager, resource_name, "update").await?;
+        Self::del_permission(manager, resource_name, "delete").await?;
+        Ok(())
+    }
+    async fn del_permission( manager: &SchemaManager<'_>, resource_name: &str, action_val: &str, ) -> Result<(), DbErr> {
+        // subquery: SELECT id FROM data_object WHERE name = :resource_name
+        let data_object_id_subq = Query::select()
+            .column(DataObject::Id)
+            .from(DataObject::Table)
+            .and_where(Expr::col((DataObject::Table, DataObject::Name)).eq(resource_name))
+            .to_owned();
+
+        // DELETE FROM permission
+        // WHERE data_object_id IN (subquery)
+        //   AND action = CAST(:action_val AS permission_action_enum)
+        let delete = Query::delete()
+            .from_table(Permission::Table)
+            .and_where(Expr::col(Permission::DataObjectId).in_subquery(data_object_id_subq))
+            .and_where(
+                Expr::col(Permission::Action).eq(
+                    Expr::val(action_val).cast_as(PermissionAction::EnumName)
+                )
+            )
+            .to_owned();
+
+        manager.exec_stmt(delete).await
+    }
+
 }
 
 #[derive(DeriveIden)]
