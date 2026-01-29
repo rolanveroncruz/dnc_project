@@ -18,6 +18,7 @@ pub struct Model {
     pub zip_code: Option<String>,
     pub remarks: Option<String>,
     pub contact_numbers: Option<String>,
+    pub email: Option<String>,
     pub schedule: Option<String>,
     pub active: Option<bool>,
     pub last_modified_by: String,
