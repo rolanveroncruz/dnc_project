@@ -125,7 +125,7 @@ impl Migration {
                         .not_null()
                     )
                     .foreign_key(ForeignKey::create()
-                        .name("city_state_id_foreign_key")
+                        .name("city_province_id_foreign_key")
                         .from(City::Table, City::ProvinceId)
                         .to(Province::Table, Province::Id)
                     )
