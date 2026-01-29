@@ -33,3 +33,4 @@ tracing-appender = "0.2.4"
 reqwest = { version = "0.12.26", features = ["json"] }
 serde_json = "1.0.148"
 serde_with="3.16.1"
+calamine = "0.32.0"
