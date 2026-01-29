@@ -10,7 +10,7 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         DataObjectMigration::add_dataobject(manager, "region", "region Data Object").await?;
-        DataObjectMigration::add_dataobject(manager, "state", "state Data Object").await?;
+        DataObjectMigration::add_dataobject(manager, "province", "province Data Object").await?;
         DataObjectMigration::add_dataobject(manager, "city", "city Data Object").await?;
         DataObjectMigration::add_dataobject(manager, "dental_clinic", "dental_clinic Data Object").await?;
         DataObjectMigration::add_dataobject(manager, "clinic_capabilities_list", "clinic_capabilities_list Data Object").await?;
