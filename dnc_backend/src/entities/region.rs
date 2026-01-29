@@ -8,18 +8,19 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    #[sea_orm(unique)]
     pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::state::Entity")]
-    State,
+    #[sea_orm(has_many = "super::province::Entity")]
+    Province,
 }
 
-impl Related<super::state::Entity> for Entity {
+impl Related<super::province::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::State.def()
+        Relation::Province.def()
     }
 }
 

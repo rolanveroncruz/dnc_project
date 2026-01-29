@@ -4,39 +4,39 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "city")]
+#[sea_orm(table_name = "province")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
+    #[sea_orm(unique_key = "province_name_region_id_index")]
     pub name: String,
-    #[sea_orm(unique_key = "city_name_province_id_index")]
-    pub province_id: i32,
+    #[sea_orm(unique_key = "province_name_region_id_index")]
+    pub region_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::dental_clinic::Entity")]
-    DentalClinic,
+    #[sea_orm(has_many = "super::city::Entity")]
+    City,
     #[sea_orm(
-        belongs_to = "super::province::Entity",
-        from = "Column::ProvinceId",
-        to = "super::province::Column::Id",
+        belongs_to = "super::region::Entity",
+        from = "Column::RegionId",
+        to = "super::region::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Province,
+    Region,
 }
 
-impl Related<super::dental_clinic::Entity> for Entity {
+impl Related<super::city::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::DentalClinic.def()
+        Relation::City.def()
     }
 }
 
-impl Related<super::province::Entity> for Entity {
+impl Related<super::region::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Province.def()
+        Relation::Region.def()
     }
 }
 

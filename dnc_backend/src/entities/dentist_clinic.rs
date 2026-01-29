@@ -4,28 +4,34 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "city")]
+#[sea_orm(table_name = "dentist_clinic")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique)]
-    pub name: String,
-    #[sea_orm(unique_key = "city_name_province_id_index")]
-    pub province_id: i32,
+    pub dentist_id: i32,
+    pub clinic_id: Option<i32>,
+    pub position: Option<String>,
+    pub schedule: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::dental_clinic::Entity")]
-    DentalClinic,
     #[sea_orm(
-        belongs_to = "super::province::Entity",
-        from = "Column::ProvinceId",
-        to = "super::province::Column::Id",
+        belongs_to = "super::dental_clinic::Entity",
+        from = "Column::ClinicId",
+        to = "super::dental_clinic::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Province,
+    DentalClinic,
+    #[sea_orm(
+        belongs_to = "super::dentist::Entity",
+        from = "Column::DentistId",
+        to = "super::dentist::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Dentist,
 }
 
 impl Related<super::dental_clinic::Entity> for Entity {
@@ -34,9 +40,9 @@ impl Related<super::dental_clinic::Entity> for Entity {
     }
 }
 
-impl Related<super::province::Entity> for Entity {
+impl Related<super::dentist::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Province.def()
+        Relation::Dentist.def()
     }
 }
 

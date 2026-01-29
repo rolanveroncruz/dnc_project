@@ -11,6 +11,7 @@ pub struct Model {
     pub name: String,
     pub address: String,
     pub city_id: Option<i32>,
+    pub zip_code: Option<String>,
     pub remarks: Option<String>,
     pub contact_numbers: Option<String>,
     pub active: Option<bool>,
@@ -30,6 +31,8 @@ pub enum Relation {
     City,
     #[sea_orm(has_many = "super::clinic_capabilities_list::Entity")]
     ClinicCapabilitiesList,
+    #[sea_orm(has_many = "super::dentist_clinic::Entity")]
+    DentistClinic,
 }
 
 impl Related<super::city::Entity> for Entity {
@@ -41,6 +44,12 @@ impl Related<super::city::Entity> for Entity {
 impl Related<super::clinic_capabilities_list::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::ClinicCapabilitiesList.def()
+    }
+}
+
+impl Related<super::dentist_clinic::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistClinic.def()
     }
 }
 
