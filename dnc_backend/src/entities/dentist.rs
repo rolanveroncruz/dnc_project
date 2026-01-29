@@ -10,7 +10,7 @@ pub struct Model {
     pub id: i32,
     pub last_name: String,
     pub given_name: String,
-    pub middle_initial: String,
+    pub middle_name: Option<String>,
     pub email: Option<String>,
     #[sea_orm(column_type = "Float")]
     pub retainer_fee: f32,

@@ -214,10 +214,8 @@ impl Migration{
                         .not_null()
                         .default(" ")
                     )
-                    .col(ColumnDef::new(Dentist::MiddleInitial)
+                    .col(ColumnDef::new(Dentist::MiddleName)
                         .string()
-                        .not_null()
-                        .default(" ")
                     )
                     .col(ColumnDef::new(Dentist::Email)
                         .string()
@@ -398,7 +396,7 @@ pub enum Dentist {
     Id,
     LastName,
     GivenName,
-    MiddleInitial,
+    MiddleName,
     Email,
     RetainerFee,
     DentistStatusId,
