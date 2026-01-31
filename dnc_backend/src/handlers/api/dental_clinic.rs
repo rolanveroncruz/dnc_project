@@ -3,21 +3,34 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use chrono::{FixedOffset, Utc};
+use chrono::Utc;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, PaginatorTrait,
-    QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
+    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    Set,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::handlers::{ListQuery, PageResponse};
-use crate::handlers::helpers::role_has_permission_by_data_object_name;
-use crate::handlers::structs::AuthUser;
-use crate::entities::sea_orm_active_enums::PermissionActionEnum;
+use crate::entities::dental_clinic;
 
-use crate::entities::{city, dental_clinic, region, state};
+//
+// ---- List response (paging)
+//
+
+#[derive(Debug, Deserialize)]
+pub struct ListQuery {
+    pub page: Option<u64>,      // 1-based
+    pub page_size: Option<u64>, // clamp server-side
+}
+
+#[derive(Debug, Serialize)]
+pub struct PageResponse<T> {
+    pub page: u64,       // 1-based
+    pub page_size: u64,
+    pub total: u64,
+    pub items: Vec<T>,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct DentalClinicListQuery {
@@ -26,312 +39,268 @@ pub struct DentalClinicListQuery {
 
     // Optional filters
     pub city_id: Option<i32>,
-    pub state_id: Option<i32>,  // via join city -> state
-    pub region_id: Option<i32>, // via join city -> state -> region
     pub active: Option<bool>,
+    pub name_like: Option<String>,
 }
-
-#[derive(Debug, Clone, Serialize, FromQueryResult)]
-pub struct DentalClinicRow {
-    pub id: i32,
-    pub name: String,
-    pub address: String,
-    pub city_id: Option<i32>,
-    pub remarks: Option<String>,
-    pub contact_numbers: Option<String>,
-    pub active: Option<bool>,
-    pub last_modified_by: String,
-    pub last_modified_on: sea_orm::entity::prelude::DateTimeWithTimeZone,
-
-    // Expanded fields (nullable because city_id is nullable)
-    pub city_name: Option<String>,
-    pub state_id: Option<i32>,
-    pub state_name: Option<String>,
-    pub region_id: Option<i32>,
-    pub region_name: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreateDentalClinicRequest {
-    pub name: String,
-    pub address: String,
-    pub city_id: Option<i32>,
-    pub remarks: Option<String>,
-    pub contact_numbers: Option<String>,
-    pub active: Option<bool>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PatchDentalClinicRequest {
-    pub name: Option<String>,
-    pub address: Option<String>,
-    pub city_id: Option<i32>,
-    pub remarks: Option<String>,
-    pub contact_numbers: Option<String>,
-    pub active: Option<bool>,
-}
-
-fn now_utc_tz() -> sea_orm::entity::prelude::DateTimeWithTimeZone {
-    // DateTimeWithTimeZone is chrono::DateTime<FixedOffset>
-    Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())
-}
+//////////////
+//
+// get_dental_clinics
+//
+//////////////
 
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dental_clinics(
     State(state): State<AppState>,
-    _user: AuthUser, // NOTE: no permission check for GET
     Query(params): Query<DentalClinicListQuery>,
-) -> Result<Json<PageResponse<DentalClinicRow>>, StatusCode> {
+) -> Result<Json<PageResponse<dental_clinic::Model>>, StatusCode> {
     let page = params.base.page.unwrap_or(1).max(1);
-    let page_size = params.base.page_size.unwrap_or(25).clamp(1, 200);
-    let page0: u64 = page.saturating_sub(1);
+    let page_size = params.base.page_size.unwrap_or(650).clamp(1, 1000);
+    let page0 = page.saturating_sub(1);
 
-    // Base query + joins for expanded fields
-    let mut q = dental_clinic::Entity::find()
-        .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
-        .join(JoinType::LeftJoin, city::Relation::State.def())
-        .join(JoinType::LeftJoin, state::Relation::Region.def())
-        .select_only()
-        .columns([
-            dental_clinic::Column::Id,
-            dental_clinic::Column::Name,
-            dental_clinic::Column::Address,
-            dental_clinic::Column::CityId,
-            dental_clinic::Column::Remarks,
-            dental_clinic::Column::ContactNumbers,
-            dental_clinic::Column::Active,
-            dental_clinic::Column::LastModifiedBy,
-            dental_clinic::Column::LastModifiedOn,
-        ])
-        // Expanded columns
-        .column_as(city::Column::Name, "city_name")
-        .column_as(state::Column::Id, "state_id")
-        .column_as(state::Column::Name, "state_name")
-        .column_as(region::Column::Id, "region_id")
-        .column_as(region::Column::Name, "region_name")
-        .order_by_asc(dental_clinic::Column::Name);
+    let mut q = dental_clinic::Entity::find().order_by_asc(dental_clinic::Column::Name);
 
-    // Filters
     if let Some(city_id) = params.city_id {
         q = q.filter(dental_clinic::Column::CityId.eq(city_id));
     }
     if let Some(active) = params.active {
         q = q.filter(dental_clinic::Column::Active.eq(active));
     }
-    if let Some(state_id) = params.state_id {
-        q = q.filter(state::Column::Id.eq(state_id));
-    }
-    if let Some(region_id) = params.region_id {
-        q = q.filter(region::Column::Id.eq(region_id));
+    if let Some(name_like) = params.name_like.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        // ILIKE requires Postgres; if you're using another DB, switch to .contains() or LIKE.
+        q = q.filter(dental_clinic::Column::Name.contains(name_like));
     }
 
-    let q = q.into_model::<DentalClinicRow>();
     let paginator = q.paginate(&state.db, page_size);
 
-    let total_items = paginator.num_items().await.map_err(|e| {
-        tracing::error!("Failed to count dental clinics: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    let total_pages = paginator.num_pages().await.map_err(|e| {
-        tracing::error!("Failed to count dental clinic pages: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    let total = paginator
+        .num_items()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to count dental clinics: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
-    let items = paginator.fetch_page(page0).await.map_err(|e| {
-        tracing::error!("Failed to fetch dental clinics: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    let items = paginator
+        .fetch_page(page0)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch dental clinics page={page} size={page_size}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     Ok(Json(PageResponse {
         page,
         page_size,
-        total_items,
-        total_pages,
+        total,
         items,
     }))
 }
 
+
+//////////////
+//
+// get_dental_clinic_by_id
+//
+//////////////
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dental_clinic_by_id(
     State(state): State<AppState>,
-    _user: AuthUser, // NOTE: no permission check for GET
     Path(id): Path<i32>,
-) -> Result<Json<DentalClinicRow>, StatusCode> {
-    let row = dental_clinic::Entity::find()
-        .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
-        .join(JoinType::LeftJoin, city::Relation::State.def())
-        .join(JoinType::LeftJoin, state::Relation::Region.def())
-        .select_only()
-        .columns([
-            dental_clinic::Column::Id,
-            dental_clinic::Column::Name,
-            dental_clinic::Column::Address,
-            dental_clinic::Column::CityId,
-            dental_clinic::Column::Remarks,
-            dental_clinic::Column::ContactNumbers,
-            dental_clinic::Column::Active,
-            dental_clinic::Column::LastModifiedBy,
-            dental_clinic::Column::LastModifiedOn,
-        ])
-        .column_as(city::Column::Name, "city_name")
-        .column_as(state::Column::Id, "state_id")
-        .column_as(state::Column::Name, "state_name")
-        .column_as(region::Column::Id, "region_id")
-        .column_as(region::Column::Name, "region_name")
-        .filter(dental_clinic::Column::Id.eq(id))
-        .into_model::<DentalClinicRow>()
+) -> Result<Json<dental_clinic::Model>, StatusCode> {
+    let row = dental_clinic::Entity::find_by_id(id)
         .one(&state.db)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to get dental clinic by id={id}: {e:?}");
+            tracing::error!("Failed to fetch dental clinic {id}: {e:?}");
             StatusCode::INTERNAL_SERVER_ERROR
-        })?
-        .ok_or(StatusCode::NOT_FOUND)?;
+        })?;
 
-    Ok(Json(row))
+    match row {
+        Some(model) => Ok(Json(model)),
+        None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+
+
+
+//
+// ---- POST: create clinic
+//
+
+#[derive(Debug, Deserialize)]
+pub struct CreateDentalClinicBody {
+    pub name: String,
+    pub address: String,
+    pub city_id: Option<i32>,
+    pub zip_code: Option<String>,
+    pub remarks: Option<String>,
+    pub contact_numbers: Option<String>,
+    pub email: Option<String>,
+    pub schedule: Option<String>,
+    pub active: Option<bool>,
+    pub last_modified_by: String,
 }
 
 #[instrument(skip(state), err(Debug))]
-pub async fn post_dental_clinic(
+pub async fn create_dental_clinic(
     State(state): State<AppState>,
-    user: AuthUser,
-    Json(payload): Json<CreateDentalClinicRequest>,
-) -> Result<Json<DentalClinicRow>, StatusCode> {
-    // KEEP: permission check for POST
-    let has_permission = role_has_permission_by_data_object_name(
-        &state.db,
-        user.claims.role_id,
-        "dental_clinic",
-        PermissionActionEnum::Create,
-    )
+    Json(body): Json<CreateDentalClinicBody>,
+) -> Result<Json<dental_clinic::Model>, StatusCode> {
+    let name = body.name.trim();
+    let address = body.address.trim();
+
+    if name.is_empty() || address.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Optional: application-level uniqueness guard (name+address+city_id+zip_code)
+    let mut dupe_q = dental_clinic::Entity::find()
+        .filter(dental_clinic::Column::Name.eq(name))
+        .filter(dental_clinic::Column::Address.eq(address));
+
+    match body.city_id {
+        Some(cid) => dupe_q = dupe_q.filter(dental_clinic::Column::CityId.eq(cid)),
+        None => dupe_q = dupe_q.filter(dental_clinic::Column::CityId.is_null()),
+    }
+
+    match body.zip_code.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        Some(z) => dupe_q = dupe_q.filter(dental_clinic::Column::ZipCode.eq(z)),
+        None => dupe_q = dupe_q.filter(dental_clinic::Column::ZipCode.is_null()),
+    }
+
+    let dupe = dupe_q
+        .one(&state.db)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to check permission: {e:?}");
+            tracing::error!("Failed to check duplicate dental clinic: {e:?}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-    if !has_permission {
-        return Err(StatusCode::FORBIDDEN);
+
+    if dupe.is_some() {
+        return Err(StatusCode::CONFLICT);
     }
 
-    // Validate city_id if provided
-    if let Some(city_id) = payload.city_id {
-        let exists = city::Entity::find_by_id(city_id)
-            .one(&state.db)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to validate city_id={city_id}: {e:?}");
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?
-            .is_some();
+    let now = Utc::now().into();
 
-        if !exists {
-            return Err(StatusCode::BAD_REQUEST);
-        }
-    }
+    let am = dental_clinic::ActiveModel {
+        name: Set(name.to_string()),
+        address: Set(address.to_string()),
+        city_id: Set(body.city_id),
+        zip_code: Set(body.zip_code.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        remarks: Set(body.remarks),
+        contact_numbers: Set(body.contact_numbers),
+        email: Set(body.email),
+        schedule: Set(body.schedule),
+        active: Set(body.active),
+        last_modified_by: Set(body.last_modified_by),
+        last_modified_on: Set(now),
+        ..Default::default()
+    };
 
-    let now = now_utc_tz();
+    let created = am
+        .insert(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to create dental clinic: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
-    let mut am: dental_clinic::ActiveModel = Default::default();
-    am.name = Set(payload.name);
-    am.address = Set(payload.address);
-    am.city_id = Set(payload.city_id);
-    am.remarks = Set(payload.remarks);
-    am.contact_numbers = Set(payload.contact_numbers);
-    am.active = Set(payload.active);
+    Ok(Json(created))
+}
 
-    // CHANGE THIS: pick the correct field from your AuthUser claims
-    // Examples: user.claims.email.clone(), user.claims.name.clone(), user.claims.username.clone()
-    am.last_modified_by = Set(user.claims.email.clone());
-    am.last_modified_on = Set(now);
+//
+// ---- PATCH: partial update
+//
 
-    let created = am.insert(&state.db).await.map_err(|e| {
-        tracing::error!("Failed to insert dental clinic: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-
-    // Return expanded row
-    get_dental_clinic_by_id(State(state), user, Path(created.id)).await
+#[derive(Debug, Deserialize)]
+pub struct PatchDentalClinicBody {
+    pub name: Option<String>,
+    pub address: Option<String>,
+    pub city_id: Option<Option<i32>>, // Some(None)=explicitly null it; None=don't change
+    pub zip_code: Option<Option<String>>,
+    pub remarks: Option<Option<String>>,
+    pub contact_numbers: Option<Option<String>>,
+    pub email: Option<Option<String>>,
+    pub schedule: Option<Option<String>>,
+    pub active: Option<Option<bool>>,
+    pub last_modified_by: String,
 }
 
 #[instrument(skip(state), err(Debug))]
 pub async fn patch_dental_clinic(
     State(state): State<AppState>,
-    user: AuthUser,
     Path(id): Path<i32>,
-    Json(payload): Json<PatchDentalClinicRequest>,
-) -> Result<Json<DentalClinicRow>, StatusCode> {
-    // KEEP: permission check for PATCH
-    let has_permission = role_has_permission_by_data_object_name(
-        &state.db,
-        user.claims.role_id,
-        "dental_clinic",
-        PermissionActionEnum::Update,
-    )
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to check permission: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    if !has_permission {
-        return Err(StatusCode::FORBIDDEN);
-    }
-
-    // Validate city_id if changing it
-    if let Some(city_id) = payload.city_id {
-        let exists = city::Entity::find_by_id(city_id)
-            .one(&state.db)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to validate new city_id={city_id}: {e:?}");
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?
-            .is_some();
-
-        if !exists {
-            return Err(StatusCode::BAD_REQUEST);
-        }
-    }
-
-    let model = dental_clinic::Entity::find_by_id(id)
+    Json(body): Json<PatchDentalClinicBody>,
+) -> Result<Json<dental_clinic::Model>, StatusCode> {
+    let existing = dental_clinic::Entity::find_by_id(id)
         .one(&state.db)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to find dental clinic id={id}: {e:?}");
+            tracing::error!("Failed to fetch dental clinic {id}: {e:?}");
             StatusCode::INTERNAL_SERVER_ERROR
-        })?
-        .ok_or(StatusCode::NOT_FOUND)?;
+        })?;
 
-    let now = now_utc_tz();
+    let Some(existing) = existing else {
+        return Err(StatusCode::NOT_FOUND);
+    };
 
-    let mut am: dental_clinic::ActiveModel = model.into();
+    let mut am: dental_clinic::ActiveModel = existing.into();
 
-    if let Some(name) = payload.name {
+    if let Some(name) = body.name {
+        let name = name.trim().to_string();
+        if name.is_empty() {
+            return Err(StatusCode::BAD_REQUEST);
+        }
         am.name = Set(name);
     }
-    if let Some(address) = payload.address {
+
+    if let Some(address) = body.address {
+        let address = address.trim().to_string();
+        if address.is_empty() {
+            return Err(StatusCode::BAD_REQUEST);
+        }
         am.address = Set(address);
     }
-    if let Some(city_id) = payload.city_id {
-        am.city_id = Set(Some(city_id)); // NOTE: this PATCH cannot clear city_id to NULL
-    }
-    if let Some(remarks) = payload.remarks {
-        am.remarks = Set(Some(remarks));
-    }
-    if let Some(contact_numbers) = payload.contact_numbers {
-        am.contact_numbers = Set(Some(contact_numbers));
-    }
-    if let Some(active) = payload.active {
-        am.active = Set(Some(active));
+
+    if let Some(city_id) = body.city_id {
+        am.city_id = Set(city_id);
     }
 
-    // CHANGE THIS: pick the correct field from your AuthUser claims
-    am.last_modified_by = Set(user.claims.email.clone());
-    am.last_modified_on = Set(now);
+    if let Some(zip_code) = body.zip_code {
+        am.zip_code = Set(
+            zip_code
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty()),
+        );
+    }
 
-    am.update(&state.db).await.map_err(|e| {
-        tracing::error!("Failed to update dental clinic id={id}: {e:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    if let Some(v) = body.remarks {
+        am.remarks = Set(v);
+    }
+    if let Some(v) = body.contact_numbers {
+        am.contact_numbers = Set(v);
+    }
+    if let Some(v) = body.email {
+        am.email = Set(v);
+    }
+    if let Some(v) = body.schedule {
+        am.schedule = Set(v);
+    }
+    if let Some(v) = body.active {
+        am.active = Set(v);
+    }
 
-    get_dental_clinic_by_id(State(state), user, Path(id)).await
+    am.last_modified_by = Set(body.last_modified_by);
+    am.last_modified_on = Set(Utc::now().into());
+
+    let updated = am
+        .update(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to patch dental clinic {id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    Ok(Json(updated))
 }

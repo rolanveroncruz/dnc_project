@@ -36,7 +36,14 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates, get_cities, get_states, get_regions, get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic, get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic, get_city_by_id, post_city, patch_city, get_state_by_id, post_state, patch_state, get_region_by_id, post_region, patch_region};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service,
+                      get_hmos, post_hmo, patch_hmo, get_hmo_by_id,
+                      post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates,
+                      get_regions, get_provinces, get_cities_by_province, get_cities,
+                      get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic,
+                      get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic,
+                      // get_city_by_id, post_city, patch_city, get_state_by_id, post_state, patch_state,
+                      get_region_by_id, post_region, patch_region};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -67,22 +74,17 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentist_contracts/{:id}",patch(patch_dentist_contract))
         .route("/dentist_contracts/{:id}/rates",patch(patch_dentist_contract_rates))
         .route("/cities", get(get_cities))
-        .route("/cities/{:id}", get(get_city_by_id))
-        .route("/cities/", post(post_city))
-        .route("/cities/{:id}", patch(patch_city))
-        .route("/states", get(get_states))
-        .route("/states/{:id}", get(get_state_by_id))
-        .route("/states/", post(post_state))
-        .route("/states/{:id}", patch(patch_state))
+        .route("/provinces", get(get_provinces))
+        .route("/provinces/{:province_id}/cities", get(get_cities_by_province))
         .route("/regions", get(get_regions))
         .route("/regions/{:id}", get(get_region_by_id))
         .route("/regions/", post(post_region))
         .route("/regions/{:id}", patch(patch_region))
-        .route("/dental/_clinics/", get(get_dental_clinics))
-        .route("/dental/_clinics/{:id}", get(get_dental_clinic_by_id))
-        .route("/dental/_clinics/", post(post_dental_clinic))
-        .route("/dental/_clinics/{:id}", patch(patch_dental_clinic))
-        .route("/dental/_clinics/{:clinic_id}/capabilities", get(get_clinic_capabilities_for_clinic))
+        .route("/dental_clinics/", get(get_dental_clinics))
+        .route("/dental_clinics/{:id}", get(get_dental_clinic_by_id))
+        .route("/dental_clinics/", post(create_dental_clinic))
+        .route("/dental_clinics/{:id}", patch(patch_dental_clinic))
+        .route("/dental_clinics/{:clinic_id}/capabilities", get(get_clinic_capabilities_for_clinic))
         .route("/dental/_clinics/{:clinic_id}/capabilities/", post(add_clinic_capability_to_clinic))
         .route("/dental/_clinics/{:clinic_id}/capabilities/{:capability_id}", patch(remove_clinic_capability_from_clinic))
         .route("/dental/_clinics/{:clinic_id}/capabilities", patch(set_clinic_capabilities_for_clinic))

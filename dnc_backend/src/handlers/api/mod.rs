@@ -8,7 +8,7 @@ pub mod dental_service_type;
 pub mod hmo;
 pub mod dentist_contracts;
 pub mod city;
-pub mod state;
+pub mod province;
 pub mod region;
 pub mod dental_clinic;
 pub mod clinic_capabilities_list;

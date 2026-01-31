@@ -25,9 +25,9 @@ pub use api::dentist_contracts::{get_all_dentist_contracts, get_dentist_contract
                                  post_dentist_contract, patch_dentist_contract,
                                  patch_dentist_contract_rates};
 pub use api::region::{get_regions, get_region_by_id, post_region, patch_region};
-pub use api::state::{get_states, get_state_by_id, post_state, patch_state};
-pub use api::city::{get_cities, get_city_by_id, post_city, patch_city};
-pub use api::dental_clinic::{get_dental_clinics, get_dental_clinic_by_id, post_dental_clinic, patch_dental_clinic};
+pub use api::province::{get_provinces, get_cities_by_province};
+pub use api::city::{get_cities};
+pub use api::dental_clinic::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
 pub use api::clinic_capabilities_list::{get_clinic_capabilities_for_clinic,
                                         add_clinic_capability_to_clinic,
                                         remove_clinic_capability_from_clinic,
