@@ -1,6 +1,6 @@
 // src/app/layout/shell.component.ts
 import {Component, Inject, inject, OnInit, PLATFORM_ID} from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';

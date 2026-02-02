@@ -1,0 +1,178 @@
+.clinic-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 64px); // adjust if your topbar differs
+  box-sizing: border-box;
+  overflow: hidden; // prevent outer horizontal cut
+}
+
+.top-card {
+  flex: 0 0 52%;
+  min-height: 360px;          // was 420
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;          // IMPORTANT: keep header fixed, body scrolls
+}
+
+.bottom-card {
+  flex: 1 1 auto;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ✅ Make the card body scroll instead of being cut */
+:host ::ng-deep .top-card .mat-mdc-card-content {
+  overflow: auto;
+  min-height: 0;
+  padding-top: 12px;
+}
+
+/* LAYOUT */
+.top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;   // was 12
+}
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 8px;   // was 12
+}
+
+/* Right: capabilities scroll area */
+.capabilities-block {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 140px; // ensure list area exists
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.capabilities-list {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;   // denser
+}
+
+.capability-item {
+  margin-left: 2px;
+}
+
+.capabilities-empty {
+  opacity: 0.65;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* Right bottom block */
+.right-bottom {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; // denser
+}
+
+.field {
+  width: 100%;
+}
+
+.toggle {
+  margin-top: 2px;
+}
+
+.bottom-content {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.dentists-placeholder {
+  height: 100%;
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  opacity: 0.65;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.error {
+  margin-top: 12px;
+  color: #b00020;
+}
+
+/* ✅ Density adjustments for Material fields & checkboxes */
+:host ::ng-deep .mat-mdc-form-field {
+  font-size: 13px;
+}
+
+:host ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 38px;          // smaller than default
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+:host ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+:host ::ng-deep .mat-mdc-checkbox .mdc-form-field {
+  font-size: 13px;
+}
+
+:host ::ng-deep .mat-mdc-checkbox .mdc-label {
+  line-height: 18px;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 900px) {
+  .clinic-page {
+    height: auto;
+    overflow: visible;
+  }
+
+  .top-card {
+    flex: 0 0 auto;
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -19,7 +19,7 @@ import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endor
 import {authGuard} from './auth-guard';
 import {SetupDentistContracts} from './features/setup/setup-dentist-contracts/setup-dentist-contracts';
 import {
-  SetupDentalClinicComponent
+  SetupDentalClinicsComponent
 } from './features/setup/setup-dental-clinics-component/setup-dental-clinics-component';
 import {
   DentalClinicComponent
@@ -51,7 +51,7 @@ export const routes: Routes = [
           { path: 'hmos/:id', component: HMOPageComponent , title: 'HMO'},
           { path: 'hmos/new', component: HMOPageComponent , title: 'HMO'},
           { path: 'dentist-contracts', component:SetupDentistContracts, title: 'Dentist Contracts'},
-          { path: 'dental-clinics', component: SetupDentalClinicComponent, title: 'All Clinics'},
+          { path: 'dental-clinics', component: SetupDentalClinicsComponent, title: 'All Clinics'},
           { path: 'dental-clinics/:id', component: DentalClinicComponent, title: 'Dental Clinic'},
           { path: 'dental-clinics/new', component: DentalClinicComponent, title: 'Dental Clinic'},
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
