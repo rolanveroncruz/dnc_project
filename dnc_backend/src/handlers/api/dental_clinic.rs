@@ -1,18 +1,19 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
-    Json,
 };
 use chrono::Utc;
+use sea_orm::prelude::DateTimeWithTimeZone;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-    Set,
+    ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, PaginatorTrait,
+    QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::dental_clinic;
+use crate::entities::{city, dental_clinic, province};
 
 //
 // ---- List response (paging)
@@ -26,7 +27,7 @@ pub struct ListQuery {
 
 #[derive(Debug, Serialize)]
 pub struct PageResponse<T> {
-    pub page: u64,       // 1-based
+    pub page: u64, // 1-based
     pub page_size: u64,
     pub total: u64,
     pub items: Vec<T>,
@@ -42,6 +43,31 @@ pub struct DentalClinicListQuery {
     pub active: Option<bool>,
     pub name_like: Option<String>,
 }
+
+#[derive(Debug, Serialize, FromQueryResult)]
+pub struct DentalClinicRow {
+    // ---- dental_clinic columns
+    pub id: i32,
+    pub name: String,
+    pub address: String,
+    pub city_id: Option<i32>,
+    pub zip_code: Option<String>,
+    pub remarks: Option<String>,
+    pub contact_numbers: Option<String>,
+    pub email: Option<String>,
+    pub schedule: Option<String>,
+    pub active: Option<bool>,
+    pub last_modified_by: String,
+    pub last_modified_on: DateTimeWithTimeZone,
+
+    // ---- joined fields
+    pub city_name: Option<String>,
+    pub province_id: Option<i32>,
+    pub province_name: Option<String>,
+    pub region_id: Option<i32>,
+    pub region_name: Option<String>,
+}
+
 //////////////
 //
 // get_dental_clinics
@@ -52,12 +78,16 @@ pub struct DentalClinicListQuery {
 pub async fn get_dental_clinics(
     State(state): State<AppState>,
     Query(params): Query<DentalClinicListQuery>,
-) -> Result<Json<PageResponse<dental_clinic::Model>>, StatusCode> {
+) -> Result<Json<PageResponse<DentalClinicRow>>, StatusCode> {
     let page = params.base.page.unwrap_or(1).max(1);
     let page_size = params.base.page_size.unwrap_or(650).clamp(1, 1000);
     let page0 = page.saturating_sub(1);
 
-    let mut q = dental_clinic::Entity::find().order_by_asc(dental_clinic::Column::Name);
+    let mut q = dental_clinic::Entity::find()
+        .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
+        .join(JoinType::LeftJoin, city::Relation::Province.def())
+        .join(JoinType::LeftJoin, province::Relation::Region.def())
+        .order_by_asc(dental_clinic::Column::Name);
 
     if let Some(city_id) = params.city_id {
         q = q.filter(dental_clinic::Column::CityId.eq(city_id));
@@ -65,28 +95,51 @@ pub async fn get_dental_clinics(
     if let Some(active) = params.active {
         q = q.filter(dental_clinic::Column::Active.eq(active));
     }
-    if let Some(name_like) = params.name_like.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+    if let Some(name_like) = params
+        .name_like
+        .as_ref()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+    {
         // ILIKE requires Postgres; if you're using another DB, switch to .contains() or LIKE.
         q = q.filter(dental_clinic::Column::Name.contains(name_like));
     }
 
+    let q = q
+        .select_only()
+        .columns([
+            dental_clinic::Column::Id,
+            dental_clinic::Column::Name,
+            dental_clinic::Column::Address,
+            dental_clinic::Column::CityId,
+            dental_clinic::Column::ZipCode,
+            dental_clinic::Column::Remarks,
+            dental_clinic::Column::ContactNumbers,
+            dental_clinic::Column::Email,
+            dental_clinic::Column::Schedule,
+            dental_clinic::Column::Active,
+            dental_clinic::Column::LastModifiedBy,
+            dental_clinic::Column::LastModifiedOn,
+        ])
+        .column_as(city::Column::Name, "city_name")
+        .column_as(province::Column::Id, "province_id")
+        .column_as(province::Column::Name, "province_name")
+        .column_as(province::Column::RegionId, "region_id")
+        .column_as(province::Column::Name, "region_name")
+        .order_by_asc(dental_clinic::Column::Name)
+        .into_model::<DentalClinicRow>();
+
     let paginator = q.paginate(&state.db, page_size);
 
-    let total = paginator
-        .num_items()
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to count dental clinics: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let total = paginator.num_items().await.map_err(|e| {
+        tracing::error!("Failed to count dental clinics: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
-    let items = paginator
-        .fetch_page(page0)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to fetch dental clinics page={page} size={page_size}: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let items = paginator.fetch_page(page0).await.map_err(|e| {
+        tracing::error!("Failed to fetch dental clinics page={page} size={page_size}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     Ok(Json(PageResponse {
         page,
@@ -95,7 +148,6 @@ pub async fn get_dental_clinics(
         items,
     }))
 }
-
 
 //////////////
 //
@@ -120,9 +172,6 @@ pub async fn get_dental_clinic_by_id(
         None => Err(StatusCode::NOT_FOUND),
     }
 }
-
-
-
 
 //
 // ---- POST: create clinic
@@ -164,18 +213,20 @@ pub async fn create_dental_clinic(
         None => dupe_q = dupe_q.filter(dental_clinic::Column::CityId.is_null()),
     }
 
-    match body.zip_code.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+    match body
+        .zip_code
+        .as_ref()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+    {
         Some(z) => dupe_q = dupe_q.filter(dental_clinic::Column::ZipCode.eq(z)),
         None => dupe_q = dupe_q.filter(dental_clinic::Column::ZipCode.is_null()),
     }
 
-    let dupe = dupe_q
-        .one(&state.db)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to check duplicate dental clinic: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let dupe = dupe_q.one(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to check duplicate dental clinic: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     if dupe.is_some() {
         return Err(StatusCode::CONFLICT);
@@ -187,7 +238,10 @@ pub async fn create_dental_clinic(
         name: Set(name.to_string()),
         address: Set(address.to_string()),
         city_id: Set(body.city_id),
-        zip_code: Set(body.zip_code.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        zip_code: Set(body
+            .zip_code
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())),
         remarks: Set(body.remarks),
         contact_numbers: Set(body.contact_numbers),
         email: Set(body.email),
@@ -198,13 +252,10 @@ pub async fn create_dental_clinic(
         ..Default::default()
     };
 
-    let created = am
-        .insert(&state.db)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to create dental clinic: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let created = am.insert(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to create dental clinic: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     Ok(Json(created))
 }
@@ -268,11 +319,9 @@ pub async fn patch_dental_clinic(
     }
 
     if let Some(zip_code) = body.zip_code {
-        am.zip_code = Set(
-            zip_code
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty()),
-        );
+        am.zip_code = Set(zip_code
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty()));
     }
 
     if let Some(v) = body.remarks {
@@ -294,13 +343,10 @@ pub async fn patch_dental_clinic(
     am.last_modified_by = Set(body.last_modified_by);
     am.last_modified_on = Set(Utc::now().into());
 
-    let updated = am
-        .update(&state.db)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to patch dental clinic {id}: {e:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to patch dental clinic {id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     Ok(Json(updated))
 }
