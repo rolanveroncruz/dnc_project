@@ -141,3 +141,13 @@
     }
   </mat-chip-set>
 </ng-template>
+<!-------------------------->
+<!--- Check or X Template --->
+<!-------------------------->
+<ng-template #checkCell let-row let-col="col">
+  @if (row[col.key]) {
+    <mat-icon class="bool-icon bool-true" (click)="$event.stopPropagation()">check_circle</mat-icon>
+  } @else {
+    <mat-icon class="bool-icon bool-false" (click)="$event.stopPropagation()">cancel</mat-icon>
+  }
+</ng-template>

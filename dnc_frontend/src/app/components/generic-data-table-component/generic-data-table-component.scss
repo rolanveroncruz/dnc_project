@@ -184,3 +184,18 @@ mat-paginator {
 .tag-chip:hover {
   background: rgba(0, 0, 0, 0.09);
 }
+.bool-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  vertical-align: middle;
+}
+
+.bool-true {
+  color: #2e7d32; // green
+}
+
+.bool-false {
+  color: #c62828; // red
+}

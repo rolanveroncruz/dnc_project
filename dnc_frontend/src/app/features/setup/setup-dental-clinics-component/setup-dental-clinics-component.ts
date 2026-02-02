@@ -24,6 +24,8 @@ export type DentalClinicRow = {
 
   last_modified_by?: string;
   last_modified_on?: string; // or DateTime string
+  hasPanoramic?: boolean;
+  hasPeriapical?: boolean;
 };
 
 @Component({
@@ -53,8 +55,9 @@ export class SetupDentalClinicsComponent implements OnInit{
     { key: 'city_name', label: 'City' },
     { key: 'province_name', label: 'Province' },
     { key: 'region_name', label: 'Region' },
-    { key: 'active', label: 'Active' },
-    { key: 'last_modified_on', label: 'Last Modified',cellTemplateKey: 'date' },
+    { key: 'contact_numbers', label: 'Contact' },
+    { key: 'hasPanoramic', label: 'Panoramic Radio', cellTemplateKey: 'check'},
+    { key: 'hasPeriapical', label: 'Periapical Radio', cellTemplateKey: 'check'},
   ];
 
   /**
@@ -65,7 +68,10 @@ export class SetupDentalClinicsComponent implements OnInit{
     this.dentalClinicsService.getDentalClinics(params).pipe(
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
-      next: res => this.dentalClinics.set(res.items),
+      next: res => {
+        console.log(`clinics: ${res.items}`);
+        this.dentalClinics.set(res.items)
+      },
       error: err => console.error(err),
     });
   };

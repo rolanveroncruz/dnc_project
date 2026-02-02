@@ -60,6 +60,9 @@ export interface CreateDentalClinicBody {
   schedule?: string | null;
   active?: boolean | null;
   last_modified_by: string; // required by your API
+  hasPanoramic?: boolean;
+  hasPeriapical?: boolean;
+
 }
 
 /**
