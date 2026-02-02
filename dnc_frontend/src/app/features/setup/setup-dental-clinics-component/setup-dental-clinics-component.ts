@@ -74,7 +74,7 @@ export class SetupDentalClinicsComponent implements OnInit{
 
   onRowClicked(row: DentalClinicRow) {
     // Route example: /setup/dental-clinics/:id
-    this.router.navigate(['/setup/dental-clinics', row.id]).then();
+    this.router.navigate(['/main/setup/dental-clinics', row.id]).then();
   }
 
   onNewClinic() {
