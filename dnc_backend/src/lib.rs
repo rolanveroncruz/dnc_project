@@ -36,14 +36,7 @@ use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service,
-                      get_hmos, post_hmo, patch_hmo, get_hmo_by_id,
-                      post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates,
-                      get_regions, get_provinces, get_cities_by_province, get_cities,
-                      get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic,
-                      get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic,
-                      // get_city_by_id, post_city, patch_city, get_state_by_id, post_state, patch_state,
-                      get_region_by_id, post_region, patch_region};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities, get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic, get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic, get_region_by_id, post_region, patch_region };
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()

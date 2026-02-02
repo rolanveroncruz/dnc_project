@@ -6,14 +6,17 @@ use axum::{
 use chrono::Utc;
 use sea_orm::prelude::DateTimeWithTimeZone;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, PaginatorTrait,
+    ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType , PaginatorTrait,
     QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::{city, dental_clinic, province};
+use crate::entities::{city, dental_clinic, province, region,
+                      clinic_capability, clinic_capabilities_list };
+
+use std::collections::HashMap;
 
 //
 // ---- List response (paging)
@@ -43,6 +46,29 @@ pub struct DentalClinicListQuery {
     pub active: Option<bool>,
     pub name_like: Option<String>,
 }
+#[derive(Debug, FromQueryResult)]
+pub struct DentalClinicRowDb {
+    // ---- dental_clinic columns
+    pub id: i32,
+    pub name: String,
+    pub address: String,
+    pub city_id: Option<i32>,
+    pub zip_code: Option<String>,
+    pub remarks: Option<String>,
+    pub contact_numbers: Option<String>,
+    pub email: Option<String>,
+    pub schedule: Option<String>,
+    pub active: Option<bool>,
+    pub last_modified_by: String,
+    pub last_modified_on: DateTimeWithTimeZone,
+
+    // ---- joined fields
+    pub city_name: Option<String>,
+    pub province_id: Option<i32>,
+    pub province_name: Option<String>,
+    pub region_id: Option<i32>,
+    pub region_name: Option<String>,
+}
 
 #[derive(Debug, Serialize, FromQueryResult)]
 pub struct DentalClinicRow {
@@ -66,6 +92,43 @@ pub struct DentalClinicRow {
     pub province_name: Option<String>,
     pub region_id: Option<i32>,
     pub region_name: Option<String>,
+
+    //---- clinic capabilities
+    #[serde(rename="hasPanoramic")]
+    pub has_panoramic: bool,
+
+    #[serde(rename="hasPeriapical")]
+    pub has_periapical: bool,
+}
+impl From<DentalClinicRowDb> for DentalClinicRow {
+    fn from(db: DentalClinicRowDb) -> Self {
+        Self {
+            id: db.id,
+            name: db.name,
+            address: db.address,
+            city_id: db.city_id,
+            zip_code: db.zip_code,
+            remarks: db.remarks,
+            contact_numbers: db.contact_numbers,
+            email: db.email,
+            schedule: db.schedule,
+            active: db.active,
+            last_modified_by: db.last_modified_by,
+            last_modified_on: db.last_modified_on,
+            city_name: db.city_name,
+            province_id: db.province_id,
+            province_name: db.province_name,
+            region_id: db.region_id,
+            region_name: db.region_name,
+            has_panoramic: false,
+            has_periapical: false,
+        }
+    }
+}
+#[derive(Debug, FromQueryResult)]
+struct ClinicCapRow {
+    pub clinic_id: i32,
+    pub capability_name: String,
 }
 
 //////////////
@@ -79,7 +142,7 @@ pub async fn get_dental_clinics(
     State(state): State<AppState>,
     Query(params): Query<DentalClinicListQuery>,
 ) -> Result<Json<PageResponse<DentalClinicRow>>, StatusCode> {
-    let page = params.base.page.unwrap_or(1).max(1);
+    let page = params.base.page.unwrap_or(1).clamp(1, u64::MAX);
     let page_size = params.base.page_size.unwrap_or(650).clamp(1, 1000);
     let page0 = page.saturating_sub(1);
 
@@ -101,7 +164,6 @@ pub async fn get_dental_clinics(
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
     {
-        // ILIKE requires Postgres; if you're using another DB, switch to .contains() or LIKE.
         q = q.filter(dental_clinic::Column::Name.contains(name_like));
     }
 
@@ -125,9 +187,10 @@ pub async fn get_dental_clinics(
         .column_as(province::Column::Id, "province_id")
         .column_as(province::Column::Name, "province_name")
         .column_as(province::Column::RegionId, "region_id")
-        .column_as(province::Column::Name, "region_name")
+        .column_as(region::Column::Name, "region_name")
+
         .order_by_asc(dental_clinic::Column::Name)
-        .into_model::<DentalClinicRow>();
+        .into_model::<DentalClinicRowDb>();
 
     let paginator = q.paginate(&state.db, page_size);
 
@@ -136,10 +199,62 @@ pub async fn get_dental_clinics(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    let items = paginator.fetch_page(page0).await.map_err(|e| {
+    let items_db = paginator.fetch_page(page0).await.map_err(|e| {
         tracing::error!("Failed to fetch dental clinics page={page} size={page_size}: {e:?}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
+
+    // ---- build initial API rows (default flags = false)
+    let mut items: Vec<DentalClinicRow> = items_db.into_iter().map(Into::into).collect();
+
+    // ---- fetch capabilities for only these clinics
+    let clinic_ids: Vec<i32> = items.iter().map(|r| r.id).collect();
+
+    if !clinic_ids.is_empty() {
+        let caps = clinic_capabilities_list::Entity::find()
+            .join(
+                JoinType::InnerJoin,
+                clinic_capabilities_list::Relation::ClinicCapability.def(),
+            )
+            .filter(clinic_capabilities_list::Column::ClinicId.is_in(clinic_ids.clone()))
+            .filter(
+                clinic_capability::Column::Name.is_in([
+                    "Dental Radiography (Panoramic)".to_string(),
+                    "Dental Radiography (Periapical)".to_string(),
+                ]),
+            )
+            .select_only()
+            .column(clinic_capabilities_list::Column::ClinicId)
+            .column_as(clinic_capability::Column::Name, "capability_name")
+            .into_model::<ClinicCapRow>()
+            .all(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch clinic capabilities for page: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
+        // Map: clinic_id -> (has_panoramic, has_periapical)
+        let mut flags: HashMap<i32, (bool, bool)> = HashMap::new();
+        for c in caps {
+            let entry = flags.entry(c.clinic_id).or_insert((false, false));
+            match c.capability_name.as_str() {
+                "Dental Radiography (Panoramic)" => entry.0 = true,
+                "Dental Radiography (Periapical)" => entry.1 = true,
+                _ => {}
+            }
+        }
+
+        // Apply flags
+        for r in &mut items {
+            if let Some((pano, peri)) = flags.get(&r.id) {
+                r.has_panoramic = *pano;
+                r.has_periapical = *peri;
+            }
+        }
+    }
+
+
 
     Ok(Json(PageResponse {
         page,
@@ -158,8 +273,33 @@ pub async fn get_dental_clinics(
 pub async fn get_dental_clinic_by_id(
     State(state): State<AppState>,
     Path(id): Path<i32>,
-) -> Result<Json<dental_clinic::Model>, StatusCode> {
-    let row = dental_clinic::Entity::find_by_id(id)
+) -> Result<Json<DentalClinicRow>, StatusCode> {
+    let row = dental_clinic::Entity::find()
+        .filter(dental_clinic::Column::Id.eq(id))
+        .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
+        .join(JoinType::LeftJoin, city::Relation::Province.def())
+        .join(JoinType::LeftJoin, province::Relation::Region.def())
+        .select_only()
+        .columns([
+            dental_clinic::Column::Id,
+            dental_clinic::Column::Name,
+            dental_clinic::Column::Address,
+            dental_clinic::Column::CityId,
+            dental_clinic::Column::ZipCode,
+            dental_clinic::Column::Remarks,
+            dental_clinic::Column::ContactNumbers,
+            dental_clinic::Column::Email,
+            dental_clinic::Column::Schedule,
+            dental_clinic::Column::Active,
+            dental_clinic::Column::LastModifiedBy,
+            dental_clinic::Column::LastModifiedOn,
+        ])
+        .column_as(city::Column::Name, "city_name")
+        .column_as(province::Column::Id, "province_id")
+        .column_as(province::Column::Name, "province_name")
+        .column_as(province::Column::RegionId, "region_id")
+        .column_as(province::Column::Name, "region_name")
+        .into_model::<DentalClinicRow>()
         .one(&state.db)
         .await
         .map_err(|e| {
