@@ -19,16 +19,17 @@ import {
 } from '../../../../api_services/dental-clinic-service';
 
 import { RegionService } from '../../../../api_services/region-service';
-import { StateService } from '../../../../api_services/state-service';
+import {Province, ProvincesService} from '../../../../api_services/provinces-service';
 import { CityService } from '../../../../api_services/city-service';
 import { ClinicCapabilitiesService, ClinicCapability } from '../../../../api_services/clinic-capabilities-service';
 import {MatCheckbox} from '@angular/material/checkbox';
+import {MatDivider} from '@angular/material/list';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
 type RegionRow = { id: number; name: string };
-type StateRow = { id: number; name: string; region_id?: number | null };
-type CityRow = { id: number; name: string; state_id?: number | null };
+type ProvinceRow = { id: number; name: string; region_id?: number | null };
+type CityRow = { id: number; name: string; province_id?: number | null };
 
 @Component({
   selector: 'app-dental-clinic',
@@ -40,7 +41,7 @@ type CityRow = { id: number; name: string; state_id?: number | null };
     MatSelect, MatOption,
     MatSlideToggle,
     MatButton,
-    MatProgressBar, MatCheckbox,
+    MatProgressBar, MatCheckbox, MatDivider,
   ],
   templateUrl: './dental-clinic-component.html',
   styleUrl: './dental-clinic-component.scss',
@@ -52,7 +53,7 @@ export class DentalClinicComponent implements OnInit {
 
   private readonly dentalClinicService = inject(DentalClinicService);
   private readonly regionsService = inject(RegionService);
-  private readonly statesService = inject(StateService);
+  private readonly provincesService = inject(ProvincesService);
   private readonly citiesService = inject(CityService);
   private readonly clinicCapabilitiesService = inject(ClinicCapabilitiesService);
 
@@ -65,24 +66,24 @@ export class DentalClinicComponent implements OnInit {
   readonly pageSubtitle = computed(() => this.isCreate() ? 'Create a new clinic record' : `Clinic ID: ${this.clinicId()}`);
 
   readonly regions = signal<RegionRow[]>([]);
-  readonly states = signal<StateRow[]>([]);
+  readonly provinces = signal<Province[]>([]);
   readonly cities = signal<CityRow[]>([]);
 
   readonly selectedRegionId = signal<number | null>(null);
-  readonly selectedStateId = signal<number | null>(null);
+  readonly selectedProvinceId = signal<number | null>(null);
 
-  readonly filteredStates = computed(() => {
+  readonly filteredProvinces = computed(() => {
     const rid = this.selectedRegionId();
-    const all = this.states();
+    const all = this.provinces();
     if (!rid) return all;
     return all.filter(s => (s.region_id ?? null) === rid);
   });
 
   readonly filteredCities = computed(() => {
-    const sid = this.selectedStateId();
+    const sid = this.selectedProvinceId();
     const all = this.cities();
     if (!sid) return all;
-    return all.filter(c => (c.state_id ?? null) === sid);
+    return all.filter(c => (c.province_id?? null) === sid);
   });
 
   readonly clinicCapabilities = signal<ClinicCapability[] | null>(null);
@@ -98,7 +99,7 @@ export class DentalClinicComponent implements OnInit {
 
     // UI helpers (NOT in backend API; we derive them from city_id)
     region_id: new FormControl<number | null>(null),
-    state_id: new FormControl<number | null>(null),
+    province_id: new FormControl<number | null>(null),
 
     // Backend field
     city_id: new FormControl<number | null>(null),
@@ -122,15 +123,15 @@ export class DentalClinicComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(v => {
         this.selectedRegionId.set(v ?? null);
-        this.form.controls.state_id.setValue(null);
+        this.form.controls.province_id.setValue(null);
         this.form.controls.city_id.setValue(null);
-        this.selectedStateId.set(null);
+        this.selectedProvinceId.set(null);
       });
 
-    this.form.controls.state_id.valueChanges
+    this.form.controls.province_id.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(v => {
-        this.selectedStateId.set(v ?? null);
+        this.selectedProvinceId.set(v ?? null);
         this.form.controls.city_id.setValue(null);
       });
 
@@ -138,10 +139,10 @@ export class DentalClinicComponent implements OnInit {
     effect(() => {
       const cityId = this.loadedCityIdFromApi();
       const cities = this.cities();
-      const states = this.states();
-      if (!cityId || cities.length === 0 || states.length === 0) return;
+      const provinces = this.provinces();
+      if (!cityId || cities.length === 0 || provinces.length === 0) return;
 
-      this.applyRegionStateFromCityId(cityId);
+      this.applyRegionProvinceFromCityId(cityId);
     });
   }
 
@@ -185,13 +186,18 @@ export class DentalClinicComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: res => this.regions.set(res.items), error: () => {} });
 
-    this.statesService.getStates({})
+    this.provincesService.getProvinces({})
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: res => this.states.set(res.items), error: () => {} });
+      .subscribe({ next: res => this.provinces.set(res.items), error: () => {} });
 
     this.citiesService.getCities({})
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: res => this.cities.set(res.items), error: () => {} });
+      .subscribe({
+        next: res => {
+          this.cities.set(res.items);
+
+        },
+        error: () => {} });
   }
 
   private loadClinic(id: number) {
@@ -227,20 +233,21 @@ export class DentalClinicComponent implements OnInit {
   }
 
   // CHANGED: derive state_id + region_id from city_id using lookup tables
-  private applyRegionStateFromCityId(cityId: number) {
+  private applyRegionProvinceFromCityId(cityId: number) {
     const city = this.cities().find(c => c.id === cityId);
-    const stateId = city?.state_id ?? null;
+    const provinceId = city?.province_id ?? null;
 
-    const state = stateId != null ? this.states().find(s => s.id === stateId) : null;
-    const regionId = state?.region_id ?? null;
+    const province = provinceId!= null ? this.provinces().find(s => s.id === provinceId) : null;
+    const regionId = province?.region_id ?? null;
 
     // Patch UI helpers
-    this.form.controls.state_id.setValue(stateId);
-    this.form.controls.region_id.setValue(regionId);
+    this.form.controls.region_id.setValue(regionId, {emitEvent:false});
+    this.form.controls.province_id.setValue(provinceId, {emitEvent:false});
+    this.form.controls.city_id.setValue(cityId, {emitEvent:false});
 
     // Keep computed filters in sync
-    this.selectedStateId.set(stateId);
     this.selectedRegionId.set(regionId);
+    this.selectedProvinceId.set(provinceId);
   }
 
   onBack() {

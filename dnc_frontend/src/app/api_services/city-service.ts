@@ -1,8 +1,9 @@
 // src/app/api_services/city-service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import {LoginService} from '../login.service';
 
 export interface PageResponse<T> {
   page: number;
@@ -31,13 +32,19 @@ export interface PatchCityRequest {
 @Injectable({ providedIn: 'root' })
 export class CityService {
   private readonly http = inject(HttpClient);
+  private readonly loginService = inject(LoginService);
 
   // backend routes:
   // GET    /api/cities?page=&page_size=&state_id=&region_id=
   // GET    /api/cities/:id
   // POST   /api/cities
   // PATCH  /api/cities/:id
-  private readonly baseUrl = `${environment.apiUrl}/cities`;
+  private readonly baseUrl = `${environment.apiUrl}/api/cities`;
+
+  private authHeaders(): HttpHeaders {
+    const token = this.loginService.token?.() ?? '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
 
   getCities(opts?: {
     page?: number;
@@ -54,15 +61,15 @@ export class CityService {
     if (opts?.stateId != null) params = params.set('state_id', String(opts.stateId));
     if (opts?.regionId != null) params = params.set('region_id', String(opts.regionId));
 
-    return this.http.get<PageResponse<CityRow>>(this.baseUrl, { params });
+    return this.http.get<PageResponse<CityRow>>(this.baseUrl, { headers: this.authHeaders(), params: params });
   }
 
   getCityById(id: number): Observable<CityRow> {
-    return this.http.get<CityRow>(`${this.baseUrl}/${id}`);
+    return this.http.get<CityRow>(`${this.baseUrl}/${id}`, { headers: this.authHeaders() });
   }
 
   createCity(payload: CreateCityRequest): Observable<CityRow> {
-    return this.http.post<CityRow>(this.baseUrl, payload);
+    return this.http.post<CityRow>(this.baseUrl, payload, { headers: this.authHeaders() });
   }
 
   patchCity(id: number, payload: PatchCityRequest): Observable<CityRow> {

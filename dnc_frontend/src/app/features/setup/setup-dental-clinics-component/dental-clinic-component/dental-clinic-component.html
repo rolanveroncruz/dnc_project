@@ -1,6 +1,6 @@
 <div class="clinic-page">
-  <!-- TOP HALF -->
-  <mat-card class="top-card">
+  <mat-card class="clinic-card">
+    <!-- HEADER -->
     <mat-card-header class="top-header">
       <div class="title-block">
         <mat-card-title class="mat-headline-2">{{ pageTitle() }}</mat-card-title>
@@ -25,11 +25,11 @@
     }
 
     @if (loadState() !== 'loading') {
-      <mat-card-content>
-        <form class="top-grid" [formGroup]="form">
-
-          <!-- LEFT SIDE -->
-          <div class="left-col">
+      <mat-card-content class="card-body">
+        <!-- DETAILS -->
+        <form class="details-grid" [formGroup]="form">
+          <!-- COL 1: Name -->
+          <div class="col col-1">
             <mat-form-field appearance="outline" class="field">
               <mat-label>Name</mat-label>
               <input matInput formControlName="name" />
@@ -39,6 +39,15 @@
               <mat-label>Address</mat-label>
               <textarea matInput rows="4" formControlName="address"></textarea>
             </mat-form-field>
+            <mat-form-field appearance="outline" class="field">
+              <mat-label>Contact Numbers</mat-label>
+              <input matInput formControlName="contact_numbers" />
+            </mat-form-field>
+            <!-- (Optional future fields can go here: email, schedule, etc.) -->
+          </div>
+
+          <!-- COL 2: Address + Region/State/City -->
+          <div class="col col-2">
 
             <mat-form-field appearance="outline" class="field">
               <mat-label>Region</mat-label>
@@ -51,10 +60,10 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="field">
-              <mat-label>State</mat-label>
-              <mat-select formControlName="state_id">
+              <mat-label>Province</mat-label>
+              <mat-select formControlName="province_id">
                 <mat-option [value]="null">—</mat-option>
-                @for (s of filteredStates(); track s.id) {
+                @for (s of filteredProvinces(); track s.id) {
                   <mat-option [value]="s.id">{{ s.name }}</mat-option>
                 }
               </mat-select>
@@ -71,16 +80,15 @@
             </mat-form-field>
           </div>
 
-          <!-- RIGHT SIDE -->
-          <div class="right-col">
+          <!-- COL 3: Contact Numbers + Capabilities + Remarks + Active -->
+          <div class="col col-3">
+
             <div class="capabilities-block">
               <div class="section-title">Clinic Capabilities</div>
 
               <div class="capabilities-list">
                 @for (cap of clinicCapabilities(); track cap.id) {
-                  <mat-checkbox
-                    class="capability-item"
-                    [checked]="true">
+                  <mat-checkbox class="capability-item" [checked]="true">
                     {{ cap.name }}
                   </mat-checkbox>
                 }
@@ -93,23 +101,15 @@
               </div>
             </div>
 
-            <div class="right-bottom">
-              <mat-form-field appearance="outline" class="field">
-                <mat-label>Remarks</mat-label>
-                <textarea matInput rows="4" formControlName="remarks"></textarea>
-              </mat-form-field>
+            <mat-form-field appearance="outline" class="field">
+              <mat-label>Remarks</mat-label>
+              <textarea matInput rows="4" formControlName="remarks"></textarea>
+            </mat-form-field>
 
-              <mat-form-field appearance="outline" class="field">
-                <mat-label>Contact Numbers</mat-label>
-                <input matInput formControlName="contact_numbers" />
-              </mat-form-field>
-
-              <mat-slide-toggle class="toggle" formControlName="active">
-                Active
-              </mat-slide-toggle>
-            </div>
+            <mat-slide-toggle class="toggle" formControlName="active">
+              Active
+            </mat-slide-toggle>
           </div>
-
         </form>
 
         @if (loadState() === 'error') {
@@ -117,21 +117,28 @@
             Failed to load or save this clinic.
           </div>
         }
+
+        <!-- DENTISTS (same card, bottom area) -->
+        <mat-divider class="section-divider"></mat-divider>
+
+        <div class="dentists-section">
+          <div class="dentists-header">
+            <div class="dentists-title">
+              <div class="mat-headline-4">Dentists</div>
+              <div class="mat-body-2 dentists-subtitle">Assigned dentists will appear here</div>
+            </div>
+
+            <!-- Optional future action button -->
+            <!-- <button mat-stroked-button type="button">Assign Dentist</button> -->
+          </div>
+
+          <div class="dentists-content">
+            <div class="dentists-placeholder">
+              Dentists table goes here.
+            </div>
+          </div>
+        </div>
       </mat-card-content>
     }
-  </mat-card>
-
-  <!-- BOTTOM HALF -->
-  <mat-card class="bottom-card">
-    <mat-card-header>
-      <mat-card-title class="mat-headline-4">Dentists</mat-card-title>
-      <mat-card-subtitle>Assigned dentists will appear here</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content class="bottom-content">
-      <div class="dentists-placeholder">
-        Dentists table goes here.
-      </div>
-    </mat-card-content>
   </mat-card>
 </div>

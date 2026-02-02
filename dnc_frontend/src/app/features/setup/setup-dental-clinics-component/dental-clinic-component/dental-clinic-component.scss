@@ -1,27 +1,17 @@
 .clinic-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   padding: 16px;
   height: calc(100vh - 64px); // adjust if your topbar differs
   box-sizing: border-box;
-  overflow: hidden; // prevent outer horizontal cut
-}
-
-.top-card {
-  flex: 0 0 52%;
-  min-height: 360px;          // was 420
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;          // IMPORTANT: keep header fixed, body scrolls
-}
-
-.bottom-card {
-  flex: 1 1 auto;
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
+}
+
+.clinic-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // header fixed, body scrolls
 }
 
 .top-header {
@@ -42,39 +32,35 @@
 }
 
 /* ✅ Make the card body scroll instead of being cut */
-:host ::ng-deep .top-card .mat-mdc-card-content {
+.card-body {
   overflow: auto;
   min-height: 0;
   padding-top: 12px;
 }
 
-/* LAYOUT */
-.top-grid {
+/* ---- DETAILS GRID (3 columns) ---- */
+.details-grid {
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
+  grid-template-columns: 1fr 1.15fr 1.2fr;
   gap: 16px;
   align-items: start;
 }
 
-.left-col {
+.col {
   display: flex;
   flex-direction: column;
-  gap: 8px;   // was 12
+  gap: 8px;
 }
 
-.right-col {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  gap: 8px;   // was 12
+.field {
+  width: 100%;
 }
 
-/* Right: capabilities scroll area */
+/* Capabilities: scroll inside column */
 .capabilities-block {
-  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 140px; // ensure list area exists
+  min-height: 140px;
 }
 
 .section-title {
@@ -83,12 +69,12 @@
 }
 
 .capabilities-list {
-  flex: 1 1 auto;
+  max-height: 220px; // keeps it from eating the whole page
   overflow: auto;
   padding-right: 6px;
   display: flex;
   flex-direction: column;
-  gap: 2px;   // denser
+  gap: 2px;
 }
 
 .capability-item {
@@ -101,40 +87,49 @@
   padding: 8px 0;
 }
 
-/* Right bottom block */
-.right-bottom {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px; // denser
-}
-
-.field {
-  width: 100%;
-}
-
 .toggle {
   margin-top: 2px;
-}
-
-.bottom-content {
-  flex: 1 1 auto;
-  overflow: auto;
-}
-
-.dentists-placeholder {
-  height: 100%;
-  min-height: 140px;
-  display: grid;
-  place-items: center;
-  opacity: 0.65;
-  border: 1px dashed rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
 }
 
 .error {
   margin-top: 12px;
   color: #b00020;
+}
+
+/* ---- DENTISTS SECTION (same card, bottom) ---- */
+.section-divider {
+  margin: 16px 0;
+}
+
+.dentists-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dentists-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dentists-subtitle {
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.dentists-content {
+  overflow: auto;
+}
+
+.dentists-placeholder {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  opacity: 0.65;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
 }
 
 /* ✅ Density adjustments for Material fields & checkboxes */
@@ -143,7 +138,7 @@
 }
 
 :host ::ng-deep .mat-mdc-form-field-infix {
-  min-height: 38px;          // smaller than default
+  min-height: 38px;
   padding-top: 6px;
   padding-bottom: 6px;
 }
@@ -168,11 +163,19 @@
     overflow: visible;
   }
 
-  .top-card {
-    flex: 0 0 auto;
+  .clinic-card {
+    overflow: visible;
   }
 
-  .top-grid {
+  .card-body {
+    overflow: visible;
+  }
+
+  .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .capabilities-list {
+    max-height: none;
   }
 }

@@ -1,96 +1,151 @@
 // src/app/api_services/dental-clinic-service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
+import {catchError, Observable, throwError} from 'rxjs';
+
+// Adjust this import path to your project
 import { environment } from '../../environments/environment';
+import {LoginService} from '../login.service';
+
+//
+// ---- Types that mirror your Rust structs
+//
+
+export interface ListQuery {
+  page?: number;       // 1-based
+  page_size?: number;  // server clamps
+}
 
 export interface PageResponse<T> {
-  page: number;
+  page: number;       // 1-based
   page_size: number;
-  total_items: number;
-  total_pages: number;
+  total: number;
   items: T[];
 }
 
-// Matches your DentalClinicRow (including expanded fields)
-export interface DentalClinicRow {
+export interface DentalClinic {
   id: number;
   name: string;
   address: string;
   city_id: number | null;
+  zip_code: string | null;
   remarks: string | null;
   contact_numbers: string | null;
+  email: string | null;
+  schedule: string | null;
   active: boolean | null;
   last_modified_by: string;
-  last_modified_on: string; // ISO string from backend
-
-  // expanded fields
-  city_name: string | null;
-  state_id: number | null;
-  state_name: string | null;
-  region_id: number | null;
-  region_name: string | null;
+  last_modified_on: string; // ISO datetime string (DateTimeWithTimeZone)
 }
 
-export interface CreateDentalClinicRequest {
+export interface DentalClinicListQuery extends ListQuery {
+  city_id?: number;
+  active?: boolean;
+  name_like?: string;
+}
+
+export interface CreateDentalClinicBody {
   name: string;
   address: string;
   city_id?: number | null;
+  city_name?: string | null;
+  province_id?: number | null;
+  province_name?: string | null;
+  region_id?: number | null;
+  region_name?: string | null;
+  zip_code?: string | null;
   remarks?: string | null;
   contact_numbers?: string | null;
+  email?: string | null;
+  schedule?: string | null;
   active?: boolean | null;
+  last_modified_by: string; // required by your API
 }
 
-export interface PatchDentalClinicRequest {
-  name?: string | null;
-  address?: string | null;
+/**
+ * PATCH semantics:
+ * - Omit a field => don't change
+ * - Include field as null => explicitly set to null (for nullable columns)
+ * - Include field as value => set to that value
+ *
+ * This maps nicely to your Rust `Option<Option<T>>`.
+ */
+export interface PatchDentalClinicBody {
+  name?: string;
+  address?: string;
+
   city_id?: number | null;
+  zip_code?: string | null;
   remarks?: string | null;
   contact_numbers?: string | null;
+  email?: string | null;
+  schedule?: string | null;
   active?: boolean | null;
+
+  last_modified_by: string; // required by your API
 }
 
 @Injectable({ providedIn: 'root' })
 export class DentalClinicService {
   private readonly http = inject(HttpClient);
+  private readonly loginService = inject(LoginService);
 
-  // backend routes:
-  // GET    /api/dental-clinics?page=&page_size=&city_id=&state_id=&region_id=&active=
-  // GET    /api/dental-clinics/:id
-  // POST   /api/dental-clinics
-  // PATCH  /api/dental-clinics/:id
-  private readonly baseUrl = `${environment.apiUrl}/dental-clinics`;
+  // Example: environment.apiBaseUrl = 'http://localhost:3000'
+  private readonly baseUrl = environment.apiUrl;
 
-  getDentalClinics(opts?: {
-    page?: number;
-    pageSize?: number;
-    cityId?: number;
-    stateId?: number;
-    regionId?: number;
-    active?: boolean;
-  }): Observable<PageResponse<DentalClinicRow>> {
-    let params = new HttpParams();
-
-    if (opts?.page != null) params = params.set('page', String(opts.page));
-    if (opts?.pageSize != null) params = params.set('page_size', String(opts.pageSize));
-
-    if (opts?.cityId != null) params = params.set('city_id', String(opts.cityId));
-    if (opts?.stateId != null) params = params.set('state_id', String(opts.stateId));
-    if (opts?.regionId != null) params = params.set('region_id', String(opts.regionId));
-    if (opts?.active != null) params = params.set('active', String(opts.active));
-
-    return this.http.get<PageResponse<DentalClinicRow>>(this.baseUrl, { params });
+  // Adjust if your backend uses a different path
+  private readonly API_PATH = '/api/dental_clinics';
+  private authHeaders(): HttpHeaders {
+    const token = this.loginService.token?.() ?? '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+  private handleError(err: unknown) {
+    return throwError(() => err);
   }
 
-  getDentalClinicById(id: number): Observable<DentalClinicRow> {
-    return this.http.get<DentalClinicRow>(`${this.baseUrl}/${id}`);
+  //
+  // ---- GET: list (paged)
+  //
+  getDentalClinics(params: DentalClinicListQuery = {}): Observable<PageResponse<DentalClinic>> {
+    const url = `${this.baseUrl}${this.API_PATH}/`;
+
+    let httpParams = new HttpParams();
+
+    if (params.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params.page_size != null) httpParams = httpParams.set('page_size', String(params.page_size));
+
+    if (params.city_id != null) httpParams = httpParams.set('city_id', String(params.city_id));
+    if (params.active != null) httpParams = httpParams.set('active', String(params.active));
+    if (params.name_like != null && params.name_like.trim().length > 0) {
+      httpParams = httpParams.set('name_like', params.name_like.trim());
+    }
+
+    return this.http.get<PageResponse<DentalClinic>>(url, { params: httpParams, headers: this.authHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
-  createDentalClinic(payload: CreateDentalClinicRequest): Observable<DentalClinicRow> {
-    return this.http.post<DentalClinicRow>(this.baseUrl, payload);
+  //
+  // ---- GET: by id
+  //
+  getDentalClinicById(id: number): Observable<DentalClinic> {
+    const url = `${this.baseUrl}${this.API_PATH}/${encodeURIComponent(id)}`;
+    return this.http.get<DentalClinic>(url, { headers: this.authHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
-  patchDentalClinic(id: number, payload: PatchDentalClinicRequest): Observable<DentalClinicRow> {
-    return this.http.patch<DentalClinicRow>(`${this.baseUrl}/${id}`, payload);
+  //
+  // ---- POST: create
+  //
+  createDentalClinic(body: CreateDentalClinicBody): Observable<DentalClinic> {
+    const url = `${this.baseUrl}${this.API_PATH}`;
+    return this.http.post<DentalClinic>(url, body);
+  }
+
+  //
+  // ---- PATCH: partial update
+  //
+  patchDentalClinic(id: number, body: PatchDentalClinicBody): Observable<DentalClinic> {
+    const url = `${this.baseUrl}${this.API_PATH}/${encodeURIComponent(id)}`;
+    return this.http.patch<DentalClinic>(url, body);
   }
 }
