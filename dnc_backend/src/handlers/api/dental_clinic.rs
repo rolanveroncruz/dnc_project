@@ -46,7 +46,7 @@ pub struct DentalClinicListQuery {
     pub active: Option<bool>,
     pub name_like: Option<String>,
 }
-#[derive(Debug, FromQueryResult)]
+#[derive(Debug, Serialize, FromQueryResult)]
 pub struct DentalClinicRowDb {
     // ---- dental_clinic columns
     pub id: i32,
@@ -269,11 +269,12 @@ pub async fn get_dental_clinics(
 // get_dental_clinic_by_id
 //
 //////////////
+
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dental_clinic_by_id(
     State(state): State<AppState>,
     Path(id): Path<i32>,
-) -> Result<Json<DentalClinicRow>, StatusCode> {
+) -> Result<Json<DentalClinicRowDb>, StatusCode> {
     let row = dental_clinic::Entity::find()
         .filter(dental_clinic::Column::Id.eq(id))
         .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
@@ -298,8 +299,8 @@ pub async fn get_dental_clinic_by_id(
         .column_as(province::Column::Id, "province_id")
         .column_as(province::Column::Name, "province_name")
         .column_as(province::Column::RegionId, "region_id")
-        .column_as(province::Column::Name, "region_name")
-        .into_model::<DentalClinicRow>()
+        .column_as(region::Column::Name, "region_name")
+        .into_model::<DentalClinicRowDb>()
         .one(&state.db)
         .await
         .map_err(|e| {
@@ -312,6 +313,9 @@ pub async fn get_dental_clinic_by_id(
         None => Err(StatusCode::NOT_FOUND),
     }
 }
+
+
+
 
 //
 // ---- POST: create clinic
