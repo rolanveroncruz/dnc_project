@@ -69,7 +69,6 @@ export class SetupDentalClinicsComponent implements OnInit{
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: res => {
-        console.log(`clinics: ${res.items}`);
         this.dentalClinics.set(res.items)
       },
       error: err => console.error(err),

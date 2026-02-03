@@ -1,144 +1,177 @@
 <div class="clinic-page">
-  <mat-card class="clinic-card">
-    <!-- HEADER -->
-    <mat-card-header class="top-header">
-      <div class="title-block">
-        <mat-card-title class="mat-headline-2">{{ pageTitle() }}</mat-card-title>
+    <mat-card class="clinic-card">
+        <!-- HEADER -->
+        <mat-card-header class="top-header">
+            <div class="title-block">
+                <mat-card-title class="mat-headline-2  title-row">
+                    {{ pageTitle() }}
+                    @if (hasUnsavedChanges()) {
+                        <span class="unsaved-pill">Unsaved changes</span>
+                    }
+                </mat-card-title>
+
+                @if (loadState() !== 'loading') {
+                    <mat-card-subtitle>
+                        {{ pageSubtitle() }}
+                    </mat-card-subtitle>
+                }
+            </div>
+
+            <div class="header-actions">
+                <button
+                    mat-button type="button"
+                    (click)="onDiscardChanges()"
+                    [disabled]="!hasUnsavedChanges() || loadState() === 'loading'">
+                    Discard Changes
+                </button>
+                <button
+                    mat-flat-button
+                    type="button"
+                    (click)="onSave()"
+                    [disabled]="!hasUnsavedChanges() || loadState() === 'loading'">
+                    {{ isCreate() ? 'Create' : 'Save' }}
+                </button>
+            </div>
+        </mat-card-header>
+
+        @if (loadState() === 'loading') {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
 
         @if (loadState() !== 'loading') {
-          <mat-card-subtitle>
-            {{ pageSubtitle() }}
-          </mat-card-subtitle>
+            <mat-card-content class="card-body">
+                <!-- DETAILS -->
+                <form class="details-grid" [formGroup]="form">
+                    <!-- COL 1: Name -->
+                    <div class="col col-1">
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Name</mat-label>
+                            <input matInput formControlName="name"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Address</mat-label>
+                            <textarea matInput rows="4" formControlName="address"></textarea>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Contact Numbers</mat-label>
+                            <input matInput formControlName="contact_numbers"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Email</mat-label>
+                            <input matInput type="email" formControlName="email" />
+                        </mat-form-field>
+
+
+                    </div>
+
+                    <!-- COL 2: Address + Region/State/City -->
+                    <div class="col col-2">
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Region</mat-label>
+                            <mat-select formControlName="region_id">
+                                <mat-option [value]="null">—</mat-option>
+                                @for (r of regions(); track r.id) {
+                                    <mat-option [value]="r.id">{{ r.name }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Province</mat-label>
+                            <mat-select formControlName="province_id">
+                                <mat-option [value]="null">—</mat-option>
+                                @for (s of filteredProvinces(); track s.id) {
+                                    <mat-option [value]="s.id">{{ s.name }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>City</mat-label>
+                            <mat-select formControlName="city_id">
+                                <mat-option [value]="null">—</mat-option>
+                                @for (c of filteredCities(); track c.id) {
+                                    <mat-option [value]="c.id">{{ c.name }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Zip Code</mat-label>
+                            <input matInput formControlName="zip_code" />
+                        </mat-form-field>
+                    </div>
+
+                    <!-- COL 3: Contact Numbers + Capabilities + Remarks + Active -->
+                    <div class="col col-3">
+
+                        <div class="capabilities-block">
+                            <div class="section-title">Clinic Capabilities</div>
+
+                            <div class="capabilities-list">
+                                @for (cap of clinicCapabilities(); track cap.id) {
+                                    <mat-checkbox
+                                        class="capability-item"
+                                        [checked]="isCapabilityChecked(cap.id)"
+                                        (change)="onToggleCapability(cap.id, $event.checked)">
+                                        {{ cap.name }}
+                                    </mat-checkbox>
+                                }
+
+                                @if (clinicCapabilities()?.length === 0) {
+                                    <div class="capabilities-empty">
+                                        No capabilities loaded.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Schedule</mat-label>
+                            <textarea matInput rows="3" formControlName="schedule"></textarea>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Remarks</mat-label>
+                            <textarea matInput rows="4" formControlName="remarks"></textarea>
+                        </mat-form-field>
+
+                        <mat-slide-toggle class="toggle" formControlName="active">
+                            Active
+                        </mat-slide-toggle>
+                    </div>
+                </form>
+
+                @if (loadState() === 'error') {
+                    <div class="error">
+                        Failed to load or save this clinic.
+                    </div>
+                }
+
+
+                <!-- DENTISTS (same card, bottom area) -->
+                <mat-divider class="section-divider"></mat-divider>
+
+                <div class="dentists-section">
+                    <div class="dentists-header">
+                        <div class="dentists-title">
+                            <div class="mat-headline-4">Dentists</div>
+                            <div class="mat-body-2 dentists-subtitle">Assigned dentists will appear here</div>
+                        </div>
+
+                        <!-- Optional future action button -->
+                        <!-- <button mat-stroked-button type="button">Assign Dentist</button> -->
+                    </div>
+
+                    <div class="dentists-content">
+                        <div class="dentists-placeholder">
+                            Dentists table goes here.
+                        </div>
+                    </div>
+                </div>
+            </mat-card-content>
         }
-      </div>
-
-      <div class="header-actions">
-        <button mat-button type="button" (click)="onBack()">Back</button>
-        <button mat-flat-button type="button" (click)="onSave()">
-          {{ isCreate() ? 'Create' : 'Save' }}
-        </button>
-      </div>
-    </mat-card-header>
-
-    @if (loadState() === 'loading') {
-      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-    }
-
-    @if (loadState() !== 'loading') {
-      <mat-card-content class="card-body">
-        <!-- DETAILS -->
-        <form class="details-grid" [formGroup]="form">
-          <!-- COL 1: Name -->
-          <div class="col col-1">
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Address</mat-label>
-              <textarea matInput rows="4" formControlName="address"></textarea>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Contact Numbers</mat-label>
-              <input matInput formControlName="contact_numbers" />
-            </mat-form-field>
-            <!-- (Optional future fields can go here: email, schedule, etc.) -->
-          </div>
-
-          <!-- COL 2: Address + Region/State/City -->
-          <div class="col col-2">
-
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Region</mat-label>
-              <mat-select formControlName="region_id">
-                <mat-option [value]="null">—</mat-option>
-                @for (r of regions(); track r.id) {
-                  <mat-option [value]="r.id">{{ r.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Province</mat-label>
-              <mat-select formControlName="province_id">
-                <mat-option [value]="null">—</mat-option>
-                @for (s of filteredProvinces(); track s.id) {
-                  <mat-option [value]="s.id">{{ s.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>City</mat-label>
-              <mat-select formControlName="city_id">
-                <mat-option [value]="null">—</mat-option>
-                @for (c of filteredCities(); track c.id) {
-                  <mat-option [value]="c.id">{{ c.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <!-- COL 3: Contact Numbers + Capabilities + Remarks + Active -->
-          <div class="col col-3">
-
-            <div class="capabilities-block">
-              <div class="section-title">Clinic Capabilities</div>
-
-              <div class="capabilities-list">
-                @for (cap of clinicCapabilities(); track cap.id) {
-                  <mat-checkbox class="capability-item" [checked]="true">
-                    {{ cap.name }}
-                  </mat-checkbox>
-                }
-
-                @if (clinicCapabilities()?.length === 0) {
-                  <div class="capabilities-empty">
-                    No capabilities loaded.
-                  </div>
-                }
-              </div>
-            </div>
-
-            <mat-form-field appearance="outline" class="field">
-              <mat-label>Remarks</mat-label>
-              <textarea matInput rows="4" formControlName="remarks"></textarea>
-            </mat-form-field>
-
-            <mat-slide-toggle class="toggle" formControlName="active">
-              Active
-            </mat-slide-toggle>
-          </div>
-        </form>
-
-        @if (loadState() === 'error') {
-          <div class="error">
-            Failed to load or save this clinic.
-          </div>
-        }
-
-        <!-- DENTISTS (same card, bottom area) -->
-        <mat-divider class="section-divider"></mat-divider>
-
-        <div class="dentists-section">
-          <div class="dentists-header">
-            <div class="dentists-title">
-              <div class="mat-headline-4">Dentists</div>
-              <div class="mat-body-2 dentists-subtitle">Assigned dentists will appear here</div>
-            </div>
-
-            <!-- Optional future action button -->
-            <!-- <button mat-stroked-button type="button">Assign Dentist</button> -->
-          </div>
-
-          <div class="dentists-content">
-            <div class="dentists-placeholder">
-              Dentists table goes here.
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    }
-  </mat-card>
+    </mat-card>
 </div>
