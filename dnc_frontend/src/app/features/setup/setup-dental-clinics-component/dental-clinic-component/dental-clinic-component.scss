@@ -194,3 +194,17 @@
   background: rgba(255, 193, 7, 0.18); /* amber-ish */
   border: 1px solid rgba(255, 193, 7, 0.55);
 }
+.dentists-title{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+.dentists-headline {
+    font-size: 25px !important;   // try 26–32
+    font-weight: 400 !important;  // bold
+    line-height: 1.1;
+    letter-spacing: -0.3px;
+    margin: 0;         // just in case it inherits any margins
+    width: 100%;
+    text-align: center;
+}

@@ -157,8 +157,7 @@
                 <div class="dentists-section">
                     <div class="dentists-header">
                         <div class="dentists-title">
-                            <div class="mat-headline-4">Dentists</div>
-                            <div class="mat-body-2 dentists-subtitle">Assigned dentists will appear here</div>
+                            <div class="mat-headline-4 dentists-headline">Dentists</div>
                         </div>
 
                         <!-- Optional future action button -->
@@ -172,6 +171,7 @@
                                     <p>No Dentists found.</p>
                                 } @else {
                                     <app-generic-data-table
+                                        [showHeaderFilters]="false"
                                         [columnDefs]="dentist_clinic_columns"
                                         [data]="ds"
                                         [pageSize]="20"

@@ -103,6 +103,7 @@
                                     <p>No Dentists found.</p>
                                 } @else {
                                     <app-generic-data-table
+                                        [showHeaderFilters]="false"
                                         [columnDefs]="dentist_clinic_columns"
                                         [data]="ds"
                                         [pageSize]="20"

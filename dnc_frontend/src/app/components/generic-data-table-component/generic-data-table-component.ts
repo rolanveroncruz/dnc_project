@@ -37,6 +37,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn[] = [];
   @Input() showAddButton = true;
+  @Input() showHeaderFilters=true;
 
   @Output() rowClicked = new EventEmitter<T>();
   @Output() addClicked = new EventEmitter<void>();
