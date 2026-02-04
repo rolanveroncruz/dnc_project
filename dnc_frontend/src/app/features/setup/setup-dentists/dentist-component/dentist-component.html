@@ -1,0 +1,205 @@
+<mat-card class="dentist-card">
+    <mat-card-header>
+        <mat-card-title>
+            {{ isEditMode() ? 'Edit Dentist' : 'Create Dentist' }}
+        </mat-card-title>
+        <mat-card-subtitle *ngIf="isEditMode()">
+            ID: {{ dentistId() }}
+        </mat-card-subtitle>
+
+        <div class="spacer"></div>
+
+        <div class="header-actions">
+            <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">
+                Cancel
+            </button>
+
+            <button mat-flat-button color="primary" type="button"
+                    (click)="save()"
+                    [disabled]="saving() || loading()">
+                <mat-icon>save</mat-icon>
+                Save
+            </button>
+        </div>
+    </mat-card-header>
+
+    <mat-progress-bar *ngIf="loading() || saving()" mode="indeterminate"></mat-progress-bar>
+
+    <mat-card-content [formGroup]="form">
+        <!-- Top part: 4 columns -->
+        <section class="top-grid">
+            <!-- Column 1: last_name + email -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Last name</mat-label>
+                    <input matInput formControlName="last_name" />
+                    <mat-error *ngIf="form.get('last_name')?.hasError('required')">Required</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" />
+                    <mat-error *ngIf="form.get('email')?.hasError('email')">Invalid email</mat-error>
+                </mat-form-field>
+            </div>
+
+            <!-- Column 2: given_name -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Given name</mat-label>
+                    <input matInput formControlName="given_name" />
+                    <mat-error *ngIf="form.get('given_name')?.hasError('required')">Required</mat-error>
+                </mat-form-field>
+            </div>
+
+            <!-- Column 3: middle_name -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Middle name</mat-label>
+                    <input matInput formControlName="middle_name" />
+                </mat-form-field>
+            </div>
+
+            <!-- Column 4: dentist_history_name, dentist_status_name, retainer_fee -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Dentist History</mat-label>
+                    <mat-select formControlName="dentist_history_id">
+                        <mat-option [value]="null">None</mat-option>
+                        <mat-option *ngFor="let o of histories()" [value]="o.id">{{ o.name }}</mat-option>
+                    </mat-select>
+                    <mat-hint *ngIf="form.value.dentist_history_id">
+                        Selected: {{ lookupName(histories(), form.value.dentist_history_id) }}
+                    </mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Dentist Status</mat-label>
+                    <mat-select formControlName="dentist_status_id">
+                        <mat-option [value]="null">None</mat-option>
+                        <mat-option *ngFor="let o of statuses()" [value]="o.id">{{ o.name }}</mat-option>
+                    </mat-select>
+                    <mat-hint *ngIf="form.value.dentist_status_id">
+                        Selected: {{ lookupName(statuses(), form.value.dentist_status_id) }}
+                    </mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Retainer fee</mat-label>
+                    <input matInput type="number" formControlName="retainer_fee" />
+                    <mat-error *ngIf="form.get('retainer_fee')?.hasError('min')">Must be ≥ 0</mat-error>
+                </mat-form-field>
+            </div>
+        </section>
+
+        <!-- Bottom part: Tabs -->
+        <section class="tabs-section">
+            <mat-tab-group>
+                <!-- Clinics tab -->
+                <mat-tab label="Clinics">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            Clinics UI goes here (e.g., assigned clinics + add/remove).
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- Accreditation tab -->
+                <mat-tab label="Accreditation">
+                    <div class="tab-grid tab-pad">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Dentist Contract</mat-label>
+                            <mat-select formControlName="accre_dentist_contract_id">
+                                <mat-option [value]="null">None</mat-option>
+                                <mat-option *ngFor="let o of contracts()" [value]="o.id">{{ o.name }}</mat-option>
+                            </mat-select>
+                            <mat-hint *ngIf="form.value.accre_dentist_contract_id">
+                                Selected: {{ lookupName(contracts(), form.value.accre_dentist_contract_id) }}
+                            </mat-hint>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Document code</mat-label>
+                            <input matInput formControlName="accre_document_code" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Accreditation date</mat-label>
+                            <input matInput [matDatepicker]="accDate" formControlName="accreditation_date" />
+                            <mat-datepicker-toggle matIconSuffix [for]="accDate"></mat-datepicker-toggle>
+                            <mat-datepicker #accDate></mat-datepicker>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Contract sent date</mat-label>
+                            <input matInput [matDatepicker]="sentDate" formControlName="accre_contract_sent_date" />
+                            <mat-datepicker-toggle matIconSuffix [for]="sentDate"></mat-datepicker-toggle>
+                            <mat-datepicker #sentDate></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </mat-tab>
+
+                <!-- HMO relations tab -->
+                <mat-tab label="HMO relations">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            HMO relations UI goes here (e.g., linked HMOs + rules/coverage).
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- Accounting tab -->
+                <mat-tab label="Accounting">
+                    <div class="tab-grid tab-pad">
+                        <mat-form-field appearance="outline">
+                            <mat-label>TIN</mat-label>
+                            <input matInput formControlName="acc_tin" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Bank name</mat-label>
+                            <input matInput formControlName="acc_bank_name" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Account name</mat-label>
+                            <input matInput formControlName="acc_account_name" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Account number</mat-label>
+                            <input matInput formControlName="acc_account_number" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Tax type</mat-label>
+                            <mat-select formControlName="acc_tax_type_id">
+                                <mat-option [value]="null">None</mat-option>
+                                <mat-option *ngFor="let o of taxTypes()" [value]="o.id">{{ o.name }}</mat-option>
+                            </mat-select>
+                            <mat-hint *ngIf="form.value.acc_tax_type_id">
+                                Selected: {{ lookupName(taxTypes(), form.value.acc_tax_type_id) }}
+                            </mat-hint>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Tax classification</mat-label>
+                            <mat-select formControlName="acc_tax_classification_id">
+                                <mat-option [value]="null">None</mat-option>
+                                <mat-option *ngFor="let o of taxClassifications()" [value]="o.id">{{ o.name }}</mat-option>
+                            </mat-select>
+                            <mat-hint *ngIf="form.value.acc_tax_classification_id">
+                                Selected: {{ lookupName(taxClassifications(), form.value.acc_tax_classification_id) }}
+                            </mat-hint>
+                        </mat-form-field>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+
+            <div class="dirty-row" *ngIf="isDirty()">
+                <mat-icon>info</mat-icon>
+                You have unsaved changes.
+            </div>
+        </section>
+    </mat-card-content>
+</mat-card>

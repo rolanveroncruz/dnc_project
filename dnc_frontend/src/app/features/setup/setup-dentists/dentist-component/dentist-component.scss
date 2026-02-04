@@ -1,0 +1,75 @@
+:host {
+    display: block;
+    width: 100%;
+}
+
+.dentist-card {
+    width: 100%;
+}
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.top-grid {
+    display: grid;
+    gap: 14px;
+    margin-top: 12px;
+
+    /* 4 columns on wide screens */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    @media (max-width: 1200px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tabs-section {
+    margin-top: 14px;
+}
+
+.tab-pad {
+    padding: 14px 6px 6px;
+}
+
+.tab-grid {
+    display: grid;
+    gap: 14px;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.placeholder {
+    padding: 14px;
+    border: 1px dashed rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    opacity: 0.85;
+}
+
+.dirty-row {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    opacity: 0.85;
+}

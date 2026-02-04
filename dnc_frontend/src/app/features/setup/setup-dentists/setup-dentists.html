@@ -1,1 +1,27 @@
-<p>setup-dentists works!</p>
+<mat-card class="setup-card">
+    <mat-card-header class="card-header-center">
+        <div class="title-block">
+            <mat-card-title class="mat-headline-1">Dental Clinics</mat-card-title>
+            <mat-card-subtitle>Manage clinics and view details</mat-card-subtitle>
+        </div>
+        <div class="header-actions">
+            <button mat-flat-button type="button" (click)="onNewDentist()">
+                New Clinic
+            </button>
+        </div>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (dentists(); as ds){
+            @if (ds.length === 0) {
+                <p>No clinics found.</p>
+            } @else {
+                <app-generic-data-table
+                    [columnDefs]="columns"
+                    [data]="ds"
+                    (rowClicked)="onRowClicked($event)">
+                </app-generic-data-table>
+            }
+        }
+    </mat-card-content>
+</mat-card>

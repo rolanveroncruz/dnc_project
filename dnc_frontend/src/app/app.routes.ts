@@ -24,6 +24,7 @@ import {
 import {
   DentalClinicComponent
 } from './features/setup/setup-dental-clinics-component/dental-clinic-component/dental-clinic-component';
+import {DentistComponent} from './features/setup/setup-dentists/dentist-component/dentist-component';
 
 export const routes: Routes = [
   {
@@ -55,6 +56,8 @@ export const routes: Routes = [
           { path: 'dental-clinics/:id', component: DentalClinicComponent, title: 'Dental Clinic'},
           { path: 'dental-clinics/new', component: DentalClinicComponent, title: 'Dental Clinic'},
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
+          { path: 'dentists/new', component: DentistComponent, title: 'Dentists'},
+          { path: 'dentists/:id', component: DentistComponent, title: 'Dentists'},
           { path: 'endorsements', component: SetupEndorsements, title: 'Endorsements'},
 
          ]
