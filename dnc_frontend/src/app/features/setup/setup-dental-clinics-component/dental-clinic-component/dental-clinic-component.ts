@@ -29,9 +29,7 @@ import {
     ClinicCapabilityLinkRow
 } from '../../../../api_services/clinic-capabilities-list-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
-import {
-    GenericDataTableComponent
-} from '../../../../components/generic-data-table-component/generic-data-table-component';
+import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -49,7 +47,7 @@ type CityRow = { id: number; name: string; province_id?: number | null };
         MatSelect, MatOption,
         MatSlideToggle,
         MatButton,
-        MatProgressBar, MatCheckbox, MatDivider, GenericDataTableComponent,
+        MatProgressBar, MatCheckbox, MatDivider, DataTableWithSelectComponent,
     ],
     templateUrl: './dental-clinic-component.html',
     styleUrl: './dental-clinic-component.scss',
@@ -480,4 +478,9 @@ export class DentalClinicComponent implements OnInit {
     onClickDentist(row: DentistClinicWithNames) {
         this.openDentistInNewTab(row.dentist_id);
     }
+    rowId = (r:any)=>r.id;
+    selectedRow:any |null = null;
+    onAdd(){}
+    onEdit(row:any){}
+    onDelete(row:any){}
 }

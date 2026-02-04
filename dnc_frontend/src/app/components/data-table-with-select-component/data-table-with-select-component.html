@@ -3,7 +3,7 @@
         <mat-form-field appearance="outline" class="q">
             <mat-label>Search</mat-label>
             <input matInput placeholder="Search all columns..." formControlName="q"/>
-            @if (form.value.q){
+            @if (form.value.q) {
                 <button mat-icon-button matSuffix type="button" (click)="clearSearch()">
                     <mat-icon>close</mat-icon>
                 </button>
@@ -11,13 +11,13 @@
             }
         </mat-form-field>
         <ng-container formGroupName="filters">
-            @for(key of filterSelectKeys; track key) {
+            @for (key of filterSelectKeys; track key) {
                 <mat-form-field appearance="outline" class="filter">
                     <mat-label>{{ key | titlecase }}</mat-label>
                     <mat-select [formControlName]="key">
                         <mat-option value="">All</mat-option>
-                        @for(opt of filterOptions[key]; track opt) {
-                            <mat-option  [value]="opt">
+                        @for (opt of filterOptions[key]; track opt) {
+                            <mat-option [value]="opt">
                                 {{ opt }}
                             </mat-option>
                         }
@@ -28,7 +28,7 @@
         <mat-form-field appearance="outline" class="filter">
             <mat-label>Sort by</mat-label>
             <mat-select formControlName="sortBy">
-                @for(col of columnDefs; track col.key) {
+                @for (col of columnDefs; track col.key) {
                     <mat-option [value]="col.key">
                         {{ col.label }}
                     </mat-option>
@@ -52,8 +52,9 @@
             <button mat-flat-button type="button" color="warn" (click)="resetAll()">Reset</button>
 
             <span class="spacer"></span>
-            @if (showAddButton){
-                <button mat-flat-button color="primary" type="button" (click)="onAddClicked()"> <mat-icon>add</mat-icon>
+            @if (showAddButton) {
+                <button mat-flat-button color="primary" type="button" (click)="onAddClicked()">
+                    <mat-icon>add</mat-icon>
                     Add
                 </button>
             }
@@ -63,6 +64,22 @@
 }
 <div class="table-wrap">
     <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
+        <ng-container matColumnDef="_select">
+            <th mat-header-cell *matHeaderCellDef class="select-col"></th>
+            <td mat-cell *matCellDef="let row" class="select-col" (click)="$event.stopPropagation()">
+                @if (selectionMode === 'radio') {
+                    <mat-radio-button
+                        [checked]="isSelected(row)"
+                        (change)="setSelected(row)">
+                    </mat-radio-button>
+                } @else {
+                    <mat-checkbox
+                        [checked]="isSelected(row)"
+                        (change)="setSelected(row)">
+                    </mat-checkbox>
+                }
+            </td>
+        </ng-container>
         @for (col of columnDefs; track col.key) {
 
             <ng-container [matColumnDef]="col.key">
@@ -96,6 +113,34 @@
     </table>
 
     <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons/>
+    @if (showFooterActions) {
+        <div class="table-footer-actions">
+            <button mat-flat-button color="primary" type="button" (click)="onAddClicked()">
+                <mat-icon>add</mat-icon>
+                Add
+            </button>
+
+            @if (showEditButton) {
+                <button mat-stroked-button type="button"
+                        (click)="onEditClicked()"
+                        [disabled]="!getSelectedRow()">
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                </button>
+            }
+
+            @if (showDeleteButton) {
+                <button mat-flat-button color="warn" type="button"
+                        (click)="onDeleteClicked()"
+                        [disabled]="!getSelectedRow()">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                </button>
+            }
+        </div>
+    }
+
+
 </div>
 
 <!-------------------->
@@ -119,12 +164,6 @@
     {{ toDate(row[col.key]) | date:'MMM d, y, h:mm a' }}
 </ng-template>
 
-<!-------------------->
-<!----Date Template--->
-<!-------------------->
-<ng-template #dateCell let-row let-col="col">
-    {{ toDate(row[col.key]) | date:'MMM d, y' }}
-</ng-template>
 <!-------------------->
 <!---Chips Template--->
 <!-------------------->

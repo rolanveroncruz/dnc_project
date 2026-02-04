@@ -208,3 +208,41 @@
     width: 100%;
     text-align: center;
 }
+/* =========================
+   Gentle vertical tightening
+   ========================= */
+
+/* 1) Slightly less page padding */
+.clinic-page {
+    padding: 14px; /* was 16px */
+}
+
+/* 2) Slightly less gap between columns/fields */
+.details-grid {
+    gap: 14px; /* was 16px */
+}
+.col {
+    gap: 7px; /* was 8px */
+}
+
+/* 3) Slightly less space around the divider */
+.section-divider {
+    margin: 12px 0 !important; /* was 16px 0 */
+}
+
+/* 4) Dentists placeholder: small reduction (often fixes the tiny scroll) */
+.dentists-placeholder {
+    min-height: 150px; /* was 180px */
+}
+
+/* 5) Very small Material form-field height reduction */
+:host ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 36px !important;  /* was 38px */
+    padding-top: 5px !important;  /* was 6px */
+    padding-bottom: 5px !important;
+}
+
+/* Optional: shave a tiny bit from capabilities max height (only 10px) */
+.capabilities-list {
+    max-height: 210px; /* was 220px */
+}

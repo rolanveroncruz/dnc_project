@@ -198,3 +198,12 @@ mat-paginator {
     color: #c62828; // red
     font-size:16px;
 }
+.table-footer-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 4px 0;
+}
+.select-col {
+    width: 56px;
+}

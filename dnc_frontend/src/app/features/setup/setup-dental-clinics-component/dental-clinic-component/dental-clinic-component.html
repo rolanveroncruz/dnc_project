@@ -166,18 +166,26 @@
 
                     <div class="dentists-content">
                         <div class="dentists-placeholder">
-                            @if (dentistClinics(); as ds){
+                            @let ds = dentistClinics();
+                            @if (ds){
                                 @if (ds.length === 0) {
                                     <p>No Dentists found.</p>
                                 } @else {
-                                    <app-generic-data-table
-                                        [showHeaderFilters]="false"
-                                        [columnDefs]="dentist_clinic_columns"
+                                    <app-data-table-with-select
                                         [data]="ds"
+                                        [columnDefs]="dentist_clinic_columns"
+                                        [filterSelectKeys]="['status']"
+                                        selectionMode="radio"
+                                        [getRowId]="rowId"
+                                        (selectionChange)="selectedRow = $event"
+                                        (addClicked)="onAdd()"
+                                        (editClicked)="onEdit($event)"
+                                        (deleteClicked)="onDelete($event)"
+                                        [showHeaderFilters]="false"
                                         [pageSize]="20"
                                         [pageSizeOptions]="[10, 20, 50,100]"
-                                        (rowClicked)="onClickDentist($event)"
-                                    />
+                                        (rowClicked)="onClickDentist($event)">
+                                    </app-data-table-with-select>
                                 }
 
                             } @else {

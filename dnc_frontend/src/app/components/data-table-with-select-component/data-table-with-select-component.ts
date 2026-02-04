@@ -14,17 +14,21 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TableColumn } from '../generic-data-table-component/table-interfaces';
 import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from where you defined it
+import { MatRadioModule} from '@angular/material/radio';
+import { MatCheckboxModule} from '@angular/material/checkbox';
 
 @Component({
-    selector: 'app-generic-data-table', // Renamed
+    selector: 'app-data-table-with-select', // Renamed
     standalone: true,
     imports: [
         CommonModule, ReactiveFormsModule, MatTableModule, MatSortModule,
         MatPaginatorModule, MatFormFieldModule, MatInputModule,
-        MatSelectModule, MatButtonModule, MatIconModule, MatChipSet, MatChip,
+        MatSelectModule, MatButtonModule, MatIconModule,
+        MatChipSet, MatChip,
+        MatRadioModule, MatCheckboxModule,
     ],
     templateUrl: './data-table-with-select-component.html',
-    styleUrls: ['./generic-data-table-component.scss'],
+    styleUrls: ['./data-table-with-select-component.scss'],
     encapsulation: ViewEncapsulation.None // Optional: helps with generic styles
 })
 export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges {
@@ -48,6 +52,62 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
 
     // Keys that should show as dropdown filters (e.g. ['role', 'status'])
     @Input() filterSelectKeys: string[] = [];
+
+    // -----SELECTION CONFIGURATION----------
+    @Input() selectionMode: 'radio' | 'checkbox' = 'radio';
+    @Input() getRowId: (row: T) => string | number = (row: any) => row?.id ?? row; // override if no id
+    @Input() selectedId: string | number | null = null; // allow parent to control selection
+
+    @Output() selectedIdChange = new EventEmitter<string | number | null>();
+    @Output() selectionChange = new EventEmitter<T | null>();
+
+    // Internal helper
+    isSelected(row: T): boolean {
+        return this.selectedId != null && this.getRowId(row) === this.selectedId;
+    }
+    setSelected(row: T | null): void {
+        const nextId = row ? this.getRowId(row) : null;
+
+        // toggle behavior for checkbox UI (optional)
+        if (this.selectionMode === 'checkbox' && this.selectedId === nextId) {
+            this.selectedId = null;
+            this.selectedIdChange.emit(null);
+            this.selectionChange.emit(null);
+            return;
+        }
+
+        this.selectedId = nextId;
+        this.selectedIdChange.emit(this.selectedId);
+        this.selectionChange.emit(row);
+    }
+
+    getSelectedRow(): T | null {
+        if (this.selectedId == null) return null;
+        return (this.dataSource.data || []).find(r => this.getRowId(r) === this.selectedId) ?? null;
+    }
+    // ------ Footer buttons
+    @Input() showFooterActions = true;
+    @Input() showEditButton = true;
+    @Input() showDeleteButton = true;
+
+    @Output() editClicked = new EventEmitter<T>();
+    @Output() deleteClicked = new EventEmitter<T>();
+
+    onEditClicked(): void{
+        const row = this.getSelectedRow();
+        if (!row) return;
+        this.editClicked.emit(row);
+    }
+
+    onDeleteClicked(): void{
+        const row = this.getSelectedRow();
+        if (!row) return;
+        this.deleteClicked.emit(row);
+    }
+
+
+
+
 
     // --- STATE ---
     dataSource = new MatTableDataSource<T>([]);
@@ -74,7 +134,7 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
         });
     }
     onRowClicked(row: T) {
-        console.log("Row clicked:", row);
+        this.setSelected(row);
         this.rowClicked.emit(row);
     }
     onAddClicked() {
@@ -89,6 +149,16 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
             }
             this.dataSource.data = (this.data || []).filter((x): x is T => x != null);
             this.generateFilterOptions(); // Recalculate unique values for dropdowns
+
+            console.log('[DT] dataSource.data length:', this.dataSource.data.length);
+            console.log('[DT] current filter string:', this.dataSource.filter);
+            console.log('[DT] filteredData length:', this.dataSource.filteredData.length);
+
+
+            if (this.selectedId != null){
+                const stillExists = this.dataSource.data.some(r=>this.getRowId(r)===this.selectedId);
+                if (!stillExists) this.setSelected(null)
+            }
         }
         if (changes['pageSize'] && this.paginator){
             this.paginator.pageSize = this.pageSize;
@@ -96,7 +166,8 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
         }
 
         if (changes['columnDefs']) {
-            this.displayedColumns = this.columnDefs.map(c => c.key);
+            const base = this.columnDefs.map(c => c.key);
+            this.displayedColumns = ['_select', ...base];
             // Set default sort by first column if not set
             if (!this.form.get('sortBy')?.value && this.columnDefs.length > 0) {
                 this.form.patchValue({ sortBy: this.columnDefs[0].key }, { emitEvent: false });
@@ -112,7 +183,10 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
         this.paginator.pageSize = this.pageSize;
+
         this.setupFilterPredicate();
+
+        this.applyFilter();
 
         setTimeout(() => {
             this.applySortFromToolbar();
@@ -147,7 +221,13 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
 
     private setupFilterPredicate() {
         this.dataSource.filterPredicate = (data: T, filterJson: string) => {
-            const f = JSON.parse(filterJson);
+            if (!filterJson) return true;
+            let f: any;
+            try{
+                f = JSON.parse(filterJson);
+            }catch{
+                return true;
+            }
             const searchText = (f.q || '').toLowerCase();
             const specificFilters = f.filters || {};
 
