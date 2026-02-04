@@ -23,6 +23,12 @@ import {
     TaxType
 } from '../../../../api_services/dentist-lookups-service';
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
+import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
+import {DentistClinicsService} from '../../../../dentist-clinics-service';
+import {
+    GenericDataTableComponent
+} from '../../../../components/generic-data-table-component/generic-data-table-component';
+import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 
 /** Matches your API response shape */
 export interface DentistWithLookups {
@@ -85,6 +91,7 @@ interface LookupOption {
 
         MatDatepickerModule,
         MatNativeDateModule,
+        GenericDataTableComponent,
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],
@@ -97,6 +104,7 @@ export class DentistComponent {
     private readonly dentistService = inject(DentistService);
     private readonly dentistContractsService = inject(DentistContractsService);
     private readonly dentistLookupService = inject(DentistLookupsService);
+    private readonly dentistClinicService = inject(DentistClinicService);
 
     // ---- State
     readonly loading = signal(false);
@@ -112,6 +120,7 @@ export class DentistComponent {
     readonly contracts = signal<DentistContractRow[]>([]);
     readonly taxTypes = signal<TaxType[]>([]);
     readonly taxClassifications = signal<TaxClassification[]>([]);
+    readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
 
     // ---- Form
     readonly form: FormGroup = this.fb.group({
@@ -147,6 +156,12 @@ export class DentistComponent {
         if (!this.loaded()) return false;
         return JSON.stringify(this.initialSnapshot) !== JSON.stringify(this.form.getRawValue());
     });
+
+    dentist_clinic_columns: TableColumn[] = [
+        {key: 'clinic_name', label: 'Clinic Name'},
+        {key: 'position', label: 'Position'},
+        {key: 'schedule', label: 'Schedule'},
+    ];
 
     constructor() {
         // Load lookups immediately
@@ -241,6 +256,17 @@ export class DentistComponent {
                     // You can route away or show a toast/snackbar
                 },
             });
+
+        this.dentistClinicService.getClinicsForDentistId(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (dentist_clinics: DentistClinicWithNames[]) => {
+                    this.dentistClinics.set(dentist_clinics);
+                },
+                error: (error) => {
+                    console.log(`error: ${error}`);
+                }
+        });
     }
 
     save() {
@@ -308,4 +334,19 @@ export class DentistComponent {
         if (!id) return '';
         return list.find(x => x.id === id)?.name ?? '';
     }
+
+
+    openClinicInNewTab(clinicId: number|null) {
+        if (!clinicId) return;
+        const tree = this.router.createUrlTree(['/main/setup/dental-clinics/', clinicId]);
+        const url = this.router.serializeUrl(tree);
+
+        // If you use HashLocationStrategy, url already includes '#/...'
+        // If you use PathLocationStrategy and you want absolute, see Option B.
+        window.open(url, '_blank', 'noopener');
+    }
+    onClickClinic(row: DentistClinicWithNames) {
+        this.openClinicInNewTab(row.clinic_id);
+    }
+
 }

@@ -28,6 +28,11 @@ import {
     ClinicCapabilitiesListService,
     ClinicCapabilityLinkRow
 } from '../../../../api_services/clinic-capabilities-list-service';
+import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
+import {
+    GenericDataTableComponent
+} from '../../../../components/generic-data-table-component/generic-data-table-component';
+import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -44,7 +49,7 @@ type CityRow = { id: number; name: string; province_id?: number | null };
         MatSelect, MatOption,
         MatSlideToggle,
         MatButton,
-        MatProgressBar, MatCheckbox, MatDivider,
+        MatProgressBar, MatCheckbox, MatDivider, GenericDataTableComponent,
     ],
     templateUrl: './dental-clinic-component.html',
     styleUrl: './dental-clinic-component.scss',
@@ -55,6 +60,7 @@ export class DentalClinicComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
 
     private readonly dentalClinicService = inject(DentalClinicService);
+    private readonly dentistClinicService = inject(DentistClinicService);
     private readonly regionsService = inject(RegionService);
     private readonly provincesService = inject(ProvincesService);
     private readonly citiesService = inject(CityService);
@@ -96,6 +102,7 @@ export class DentalClinicComponent implements OnInit {
 
     readonly clinicCapabilities = signal<ClinicCapability[] | null>(null);
     readonly clinicCapabilitiesList = signal<ClinicCapabilityLinkRow[] | null>(null);
+    readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
 
     // CHANGED: keep the last API-loaded city_id so we can derive region/state once lookups arrive
     private readonly loadedCityIdFromApi = signal<number | null>(null);
@@ -121,6 +128,13 @@ export class DentalClinicComponent implements OnInit {
         remarks: new FormControl<string>(''),
         active: new FormControl<boolean>(true, {nonNullable: true}),
     });
+
+    dentist_clinic_columns: TableColumn[] = [
+        {key: 'last_name', label: 'Last Name'},
+        {key: 'given_name', label: 'Given Name'},
+        {key: 'position', label: 'Position',},
+        {key: 'schedule', label: 'Schedule'},
+    ];
     private readonly initialFormValue = signal<ReturnType<typeof this.form.getRawValue> | null>(null)
 
     constructor() {
@@ -293,6 +307,15 @@ export class DentalClinicComponent implements OnInit {
                 },
                 error: () => console.log("Error in clinic capabilities"),
             });
+
+        this.dentistClinicService.getDentistsForClinicId(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (dentist_clinics: DentistClinicWithNames[]) => {
+                    this.dentistClinics.set(dentist_clinics);
+                },
+                error: () => console.log("Error in dentist clinics"),
+            })
     }
 
     // CHANGED: derive state_id + region_id from city_id using lookup tables
@@ -446,4 +469,15 @@ export class DentalClinicComponent implements OnInit {
         return this.form.controls.capability_ids.value.includes(capId);
     }
 
+    openDentistInNewTab(dentistId: number) {
+        const tree = this.router.createUrlTree(['/main/setup/dentists', dentistId]);
+        const url = this.router.serializeUrl(tree);
+
+        // If you use HashLocationStrategy, url already includes '#/...'
+        // If you use PathLocationStrategy and you want absolute, see Option B.
+        window.open(url, '_blank', 'noopener');
+    }
+    onClickDentist(row: DentistClinicWithNames) {
+        this.openDentistInNewTab(row.dentist_id);
+    }
 }

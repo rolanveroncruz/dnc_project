@@ -98,9 +98,23 @@
                 <!-- Clinics tab -->
                 <mat-tab label="Clinics">
                     <div class="tab-pad">
-                        <div class="placeholder">
-                            Clinics UI goes here (e.g., assigned clinics + add/remove).
-                        </div>
+                            @if (dentistClinics(); as ds){
+                                @if (ds.length === 0) {
+                                    <p>No Dentists found.</p>
+                                } @else {
+                                    <app-generic-data-table
+                                        [columnDefs]="dentist_clinic_columns"
+                                        [data]="ds"
+                                        [pageSize]="20"
+                                        [pageSizeOptions]="[10, 20, 50,100]"
+                                        (rowClicked)="onClickClinic($event)"
+                                    />
+                                }
+
+                            } @else {
+                                <p>Loading...</p>
+                            }
+
                     </div>
                 </mat-tab>
 

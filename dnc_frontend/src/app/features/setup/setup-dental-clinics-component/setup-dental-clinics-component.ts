@@ -8,6 +8,7 @@ import {DentalClinicService} from '../../../api_services/dental-clinic-service';
 // If you have a shared PageResponse/ListQuery type, import them; otherwise keep as `any`.
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
+import {DentistClinicWithNames} from '../../../api_services/dentist-clinic-service';
 
 export type DentalClinicRow = {
   id: number;
