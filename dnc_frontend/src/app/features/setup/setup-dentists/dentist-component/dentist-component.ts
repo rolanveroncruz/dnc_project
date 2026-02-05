@@ -27,6 +27,8 @@ import {DentistClinicService, DentistClinicWithNames} from '../../../../api_serv
 import {DentistClinicsService} from '../../../../dentist-clinics-service';
 import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
+import {DentistHMORelationsService} from '../../../../api_services/dentist-hmorelations-service';
+import {MatListOption, MatSelectionList} from '@angular/material/list';
 
 /** Matches your API response shape */
 export interface DentistWithLookups {
@@ -89,7 +91,9 @@ interface LookupOption {
 
         MatDatepickerModule,
         MatNativeDateModule,
-        DataTableWithSelectComponent
+        DataTableWithSelectComponent,
+        MatSelectionList,
+        MatListOption
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],
@@ -103,6 +107,7 @@ export class DentistComponent {
     private readonly dentistContractsService = inject(DentistContractsService);
     private readonly dentistLookupService = inject(DentistLookupsService);
     private readonly dentistClinicService = inject(DentistClinicService);
+    private readonly dentistHMORelations = inject(DentistHMORelationsService)
 
     // ---- State
     readonly loading = signal(false);
@@ -119,6 +124,10 @@ export class DentistComponent {
     readonly taxTypes = signal<TaxType[]>([]);
     readonly taxClassifications = signal<TaxClassification[]>([]);
     readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
+    readonly exclusiveToHmos = signal<string[]>([]);
+    readonly exceptForHmos = signal<string[]>([]);
+    readonly exclusiveToCompanies = signal<string[]>([]);
+    readonly exceptForCompanies = signal<string[]>([]);
 
     // ---- Form
     readonly form: FormGroup = this.fb.group({
@@ -265,6 +274,25 @@ export class DentistComponent {
                     console.log(`error: ${error}`);
                 }
         });
+
+        this.dentistHMORelations.getExclusiveToHmos(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (exclusiveToHmos: string[]) => {
+                    this.exclusiveToHmos.set(exclusiveToHmos);
+                },
+                error: (error) => {
+                    console.log(`error: ${error}`);
+                }
+            })
+
+        this.dentistHMORelations.getExceptForHmos(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (exceptForHmos: string[]) => {
+                    this.exceptForHmos.set(exceptForHmos);
+                },
+            })
     }
 
     save() {
@@ -347,4 +375,13 @@ export class DentistComponent {
         this.openClinicInNewTab(row.clinic_id);
     }
 
+addExclusiveToHmo() {}
+removeExclusiveToHmo() {};
+addExceptForHmo() {}
+removeExceptForHmo() {}
+addExclusiveToCompany(){}
+removeExclusiveToCompany(){}
+addExceptForCompany(){}
+removeExceptForCompany(){}
 }
+

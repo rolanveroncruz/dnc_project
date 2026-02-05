@@ -179,8 +179,109 @@
                 <!-- HMO relations tab -->
                 <mat-tab label="HMO relations">
                     <div class="tab-pad">
-                        <div class="placeholder">
-                            HMO relations UI goes here (e.g., linked HMOs + rules/coverage).
+
+                        <div class="hmo-grid">
+
+                            <!-- Exclusive to HMO -->
+                            <mat-card class="hmo-card">
+                                <mat-card-title class="hmo-title">Exclusive to HMO</mat-card-title>
+
+                                <div class="hmo-row">
+                                    <mat-selection-list [multiple]="false" class="hmo-list">
+                                        @for (item of exclusiveToHmos().slice(0, 4); track item) {
+                                            <mat-list-option [value]="item">
+                                                {{ item }}
+                                            </mat-list-option>
+                                        }
+                                    </mat-selection-list>
+
+                                    <div class="hmo-actions">
+                                        <button mat-flat-button type="button" (click)="addExclusiveToHmo()">
+                                            Add
+                                        </button>
+                                        <button mat-button type="button" (click)="removeExclusiveToHmo()"
+                                                [disabled]="exclusiveToHmos.length === 0">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </mat-card>
+
+                            <!-- Exclusive to Company -->
+                            <mat-card class="hmo-card">
+                                <mat-card-title class="hmo-title">Exclusive to Company</mat-card-title>
+
+                                <div class="hmo-row">
+                                    <mat-selection-list [multiple]="false" class="hmo-list">
+                                        @for (item of exclusiveToCompanies().slice(0, 4); track item) {
+                                            <mat-list-option [value]="item">
+                                                {{ item }}
+                                            </mat-list-option>
+                                        }
+                                    </mat-selection-list>
+
+                                    <div class="hmo-actions">
+                                        <button mat-flat-button type="button" (click)="addExclusiveToCompany()">
+                                            Add
+                                        </button>
+                                        <button mat-button type="button" (click)="removeExclusiveToCompany()"
+                                                [disabled]="exclusiveToCompanies().length === 0">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </mat-card>
+
+                            <!-- Except HMO -->
+                            <mat-card class="hmo-card">
+                                <mat-card-title class="hmo-title">Except HMO</mat-card-title>
+
+                                <div class="hmo-row">
+                                    <mat-selection-list [multiple]="false" class="hmo-list">
+                                        @for (item of exceptForHmos().slice(0, 4); track item) {
+                                            <mat-list-option [value]="item">
+                                                {{ item }}
+                                            </mat-list-option>
+                                        }
+                                    </mat-selection-list>
+
+                                    <div class="hmo-actions">
+                                        <button mat-flat-button type="button" (click)="addExceptForHmo()">
+                                            Add
+                                        </button>
+                                        <button mat-button type="button" (click)="removeExceptForHmo()"
+                                                [disabled]="exceptForHmos().length === 0">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </mat-card>
+
+                            <!-- Except Company -->
+                            <mat-card class="hmo-card">
+                                <mat-card-title class="hmo-title">Except Company</mat-card-title>
+
+                                <div class="hmo-row">
+                                    <mat-selection-list [multiple]="false" class="hmo-list">
+                                        @for (item of exceptForCompanies().slice(0, 4); track item) {
+                                            <mat-list-option [value]="item">
+                                                {{ item }}
+                                            </mat-list-option>
+                                        }
+                                    </mat-selection-list>
+
+                                    <div class="hmo-actions">
+                                        <button mat-flat-button type="button" (click)="addExceptForCompany()">
+                                            Add
+                                        </button>
+                                        <button mat-button type="button" (click)="removeExceptForCompany()"
+                                                [disabled]="exceptForCompanies().length === 0">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </mat-card>
+
                         </div>
                     </div>
                 </mat-tab>
