@@ -12,6 +12,7 @@ pub use super::dentist_clinic::Entity as DentistClinic;
 pub use super::dentist_contract::Entity as DentistContract;
 pub use super::dentist_contract_service_rates::Entity as DentistContractServiceRates;
 pub use super::dentist_history::Entity as DentistHistory;
+pub use super::dentist_hmo_relations::Entity as DentistHmoRelations;
 pub use super::dentist_status::Entity as DentistStatus;
 pub use super::hmo::Entity as Hmo;
 pub use super::permission::Entity as Permission;

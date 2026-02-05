@@ -50,6 +50,8 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     DentistHistory,
+    #[sea_orm(has_many = "super::dentist_hmo_relations::Entity")]
+    DentistHmoRelations,
     #[sea_orm(
         belongs_to = "super::dentist_status::Entity",
         from = "Column::DentistStatusId",
@@ -91,6 +93,12 @@ impl Related<super::dentist_contract::Entity> for Entity {
 impl Related<super::dentist_history::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistHistory.def()
+    }
+}
+
+impl Related<super::dentist_hmo_relations::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistHmoRelations.def()
     }
 }
 

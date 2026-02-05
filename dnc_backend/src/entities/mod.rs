@@ -15,6 +15,7 @@ pub mod dentist_clinic;
 pub mod dentist_contract;
 pub mod dentist_contract_service_rates;
 pub mod dentist_history;
+pub mod dentist_hmo_relations;
 pub mod dentist_status;
 pub mod hmo;
 pub mod permission;
