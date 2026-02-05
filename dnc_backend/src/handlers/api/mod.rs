@@ -18,3 +18,4 @@ pub mod dentist_history;
 pub mod dentist_status;
 pub mod tax_classification;
 pub mod tax_type;
+mod dentist_hmo_relations;
