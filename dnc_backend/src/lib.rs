@@ -48,6 +48,7 @@ use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_se
                       get_all_dentist_status,
                       get_all_tax_classifications,
                       get_all_tax_types,
+                      get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id
 };
 
 fn protected_routes() ->Router<AppState>{
@@ -103,10 +104,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentist_statuses/", get(get_all_dentist_status))
         .route("/tax_classifications/", get(get_all_tax_classifications))
         .route("/tax_types/", get(get_all_tax_types))
-
-
-
-
+        .route("/dentists/{:dentist_id}/hmos/exclusive", get(get_exclusive_to_hmos_from_dentist_id))
+        .route("/dentists/{:dentist_id}/hmos/except", get(get_not_hmos_from_dentist_id))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
