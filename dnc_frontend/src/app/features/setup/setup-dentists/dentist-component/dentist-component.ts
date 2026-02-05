@@ -25,9 +25,7 @@ import {
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
 import {DentistClinicsService} from '../../../../dentist-clinics-service';
-import {
-    GenericDataTableComponent
-} from '../../../../components/generic-data-table-component/generic-data-table-component';
+import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 
 /** Matches your API response shape */
@@ -91,7 +89,7 @@ interface LookupOption {
 
         MatDatepickerModule,
         MatNativeDateModule,
-        GenericDataTableComponent,
+        DataTableWithSelectComponent
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],

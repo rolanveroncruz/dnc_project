@@ -3,10 +3,11 @@
         <mat-card-title>
             {{ isEditMode() ? 'Edit Dentist' : 'Create Dentist' }}
         </mat-card-title>
-        <mat-card-subtitle *ngIf="isEditMode()">
-            ID: {{ dentistId() }}
-        </mat-card-subtitle>
-
+        @if (isEditMode()) {
+            <mat-card-subtitle>
+                ID: {{ dentistId() }}
+            </mat-card-subtitle>
+        }
         <div class="spacer"></div>
 
         <div class="header-actions">
@@ -22,9 +23,9 @@
             </button>
         </div>
     </mat-card-header>
-
-    <mat-progress-bar *ngIf="loading() || saving()" mode="indeterminate"></mat-progress-bar>
-
+    @if (loading() || saving()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
     <mat-card-content [formGroup]="form">
         <!-- Top part: 4 columns -->
         <section class="top-grid">
@@ -33,13 +34,17 @@
                 <mat-form-field appearance="outline">
                     <mat-label>Last name</mat-label>
                     <input matInput formControlName="last_name" />
-                    <mat-error *ngIf="form.get('last_name')?.hasError('required')">Required</mat-error>
+                    @if (form.get('email')?.hasError('required')) {
+                    <mat-error>Required</mat-error>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Email</mat-label>
                     <input matInput formControlName="email" />
-                    <mat-error *ngIf="form.get('email')?.hasError('email')">Invalid email</mat-error>
+                    @if (form.get('email')?.hasError('email')){
+                        <mat-error> Invalid email </mat-error>
+                    }
                 </mat-form-field>
             </div>
 
@@ -48,7 +53,9 @@
                 <mat-form-field appearance="outline">
                     <mat-label>Given name</mat-label>
                     <input matInput formControlName="given_name" />
-                    <mat-error *ngIf="form.get('given_name')?.hasError('required')">Required</mat-error>
+                    @if (form.get('given_name')?.hasError('required')){
+                        <mat-error >Required</mat-error>
+                    }
                 </mat-form-field>
             </div>
 
@@ -66,28 +73,39 @@
                     <mat-label>Dentist History</mat-label>
                     <mat-select formControlName="dentist_history_id">
                         <mat-option [value]="null">None</mat-option>
-                        <mat-option *ngFor="let o of histories()" [value]="o.id">{{ o.name }}</mat-option>
+                        @for(o of histories(); track o.id){
+                        <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                        }
                     </mat-select>
-                    <mat-hint *ngIf="form.value.dentist_history_id">
+                    @if ( form.value.dentist_history_id) {
+                    <mat-hint>
                         Selected: {{ lookupName(histories(), form.value.dentist_history_id) }}
                     </mat-hint>
+
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Dentist Status</mat-label>
                     <mat-select formControlName="dentist_status_id">
                         <mat-option [value]="null">None</mat-option>
-                        <mat-option *ngFor="let o of statuses()" [value]="o.id">{{ o.name }}</mat-option>
+                        @for ( o of statuses(); track o.id) {
+                        <mat-option  [value]="o.id">{{ o.name }}</mat-option>
+                        }
                     </mat-select>
-                    <mat-hint *ngIf="form.value.dentist_status_id">
-                        Selected: {{ lookupName(statuses(), form.value.dentist_status_id) }}
-                    </mat-hint>
+                    @if ( form.value.dentist_status_id){
+                        <mat-hint>
+                            Selected: {{ lookupName(statuses(), form.value.dentist_status_id) }}
+                        </mat-hint>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Retainer fee</mat-label>
                     <input matInput type="number" formControlName="retainer_fee" />
-                    <mat-error *ngIf="form.get('retainer_fee')?.hasError('min')">Must be ≥ 0</mat-error>
+                    @if (form.get('retainer_fee')?.hasError('min')){
+                        <mat-error>Must be ≥ 0</mat-error>
+                    }
                 </mat-form-field>
             </div>
         </section>
@@ -102,7 +120,7 @@
                                 @if (ds.length === 0) {
                                     <p>No Dentists found.</p>
                                 } @else {
-                                    <app-generic-data-table
+                                    <app-data-table-with-select
                                         [showHeaderFilters]="false"
                                         [columnDefs]="dentist_clinic_columns"
                                         [data]="ds"
@@ -126,11 +144,15 @@
                             <mat-label>Dentist Contract</mat-label>
                             <mat-select formControlName="accre_dentist_contract_id">
                                 <mat-option [value]="null">None</mat-option>
-                                <mat-option *ngFor="let o of contracts()" [value]="o.id">{{ o.name }}</mat-option>
+                                @for(o of contracts(); track o.id){
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
                             </mat-select>
-                            <mat-hint *ngIf="form.value.accre_dentist_contract_id">
-                                Selected: {{ lookupName(contracts(), form.value.accre_dentist_contract_id) }}
-                            </mat-hint>
+                            @if (form.value.accre_dentist_contract_id) {
+                                <mat-hint>
+                                    Selected: {{ lookupName(contracts(), form.value.accre_dentist_contract_id) }}
+                                </mat-hint>
+                            }
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
@@ -190,31 +212,41 @@
                             <mat-label>Tax type</mat-label>
                             <mat-select formControlName="acc_tax_type_id">
                                 <mat-option [value]="null">None</mat-option>
-                                <mat-option *ngFor="let o of taxTypes()" [value]="o.id">{{ o.name }}</mat-option>
+                                @for( o of taxTypes(); track o.id){
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
                             </mat-select>
-                            <mat-hint *ngIf="form.value.acc_tax_type_id">
+                            @if (form.value.acc_tax_type_id){
+                            <mat-hint>
                                 Selected: {{ lookupName(taxTypes(), form.value.acc_tax_type_id) }}
                             </mat-hint>
+                            }
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
                             <mat-label>Tax classification</mat-label>
                             <mat-select formControlName="acc_tax_classification_id">
                                 <mat-option [value]="null">None</mat-option>
-                                <mat-option *ngFor="let o of taxClassifications()" [value]="o.id">{{ o.name }}</mat-option>
+                                @for(o of  taxClassifications(); track o.id){
+                                <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
                             </mat-select>
-                            <mat-hint *ngIf="form.value.acc_tax_classification_id">
+                            @if (form.value.acc_tax_classification_id){
+                            <mat-hint >
                                 Selected: {{ lookupName(taxClassifications(), form.value.acc_tax_classification_id) }}
                             </mat-hint>
+                            }
                         </mat-form-field>
                     </div>
                 </mat-tab>
             </mat-tab-group>
 
-            <div class="dirty-row" *ngIf="isDirty()">
+            @if (isDirty()){
+            <div class="dirty-row">
                 <mat-icon>info</mat-icon>
                 You have unsaved changes.
             </div>
+            }
         </section>
     </mat-card-content>
 </mat-card>
