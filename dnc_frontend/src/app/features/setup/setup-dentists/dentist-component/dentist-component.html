@@ -121,11 +121,12 @@
                                     <p>No Dentists found.</p>
                                 } @else {
                                     <app-data-table-with-select
-                                        [selectionMode]="'checkbox'"
+                                        [data]="ds"
+                                        [columnDefs]="dentist_clinic_columns"
+                                        [filterSelectKeys]="['status']"
+                                        selectionMode="checkbox"
                                         [showEditButton]="false"
                                         [showHeaderFilters]="false"
-                                        [columnDefs]="dentist_clinic_columns"
-                                        [data]="ds"
                                         [pageSize]="20"
                                         [pageSizeOptions]="[10, 20, 50,100]"
                                         (rowClicked)="onClickClinic($event)"

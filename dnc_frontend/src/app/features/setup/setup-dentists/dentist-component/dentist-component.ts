@@ -1,20 +1,20 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {Component, DestroyRef, computed, effect, inject, signal} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CommonModule} from '@angular/common';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatIconModule } from '@angular/material/icon';
+import {MatCardModule} from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatButtonModule} from '@angular/material/button';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatIconModule} from '@angular/material/icon';
 
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
 import {DentistService} from '../../../../api_services/dentist-service';
 import {
     DentistHistory,
@@ -24,14 +24,20 @@ import {
 } from '../../../../api_services/dentist-lookups-service';
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
-import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
+import {
+    DataTableWithSelectComponent
+} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 import {DentistHMORelationsService} from '../../../../api_services/dentist-hmorelations-service';
 import {MatListOption, MatSelectionList} from '@angular/material/list';
 import {MatDialog} from '@angular/material/dialog';
-import{ AddClinicOrDentistDialogComponent,
-AddClinicOrDentistDialogData,
-AddClinicOrDentistDialogResult } from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
+import {
+    AddClinicOrDentistDialogComponent,
+    AddClinicOrDentistDialogData,
+    AddClinicOrDentistDialogResult
+} from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
+import {firstValueFrom, map} from 'rxjs';
+import {DentalClinicService} from '../../../../api_services/dental-clinic-service';
 
 /** Matches your API response shape */
 export interface DentistWithLookups {
@@ -61,6 +67,11 @@ export interface DentistWithLookups {
     dentist_status_name: string | null;
     tax_type_name: string | null;
     tax_classification_name: string | null;
+}
+
+export interface DentistOrClinicWithIdAndName {
+    id: number;
+    name: string;
 }
 
 /** Simple lookup option */
@@ -111,6 +122,7 @@ export class DentistComponent {
     private readonly dentistLookupService = inject(DentistLookupsService);
     private readonly dentistClinicService = inject(DentistClinicService);
     private readonly dentistHMORelations = inject(DentistHMORelationsService)
+    private readonly dentalClinicService = inject(DentalClinicService);
     readonly dialog = inject(MatDialog);
 
     // ---- State
@@ -202,7 +214,7 @@ export class DentistComponent {
     private loadLookups() {
         this.dentistLookupService.getAllDentistStatuses()
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((rows: DentistStatus[]) =>{
+            .subscribe((rows: DentistStatus[]) => {
                 console.log(`rows: ${rows}`);
                 this.statuses.set(rows ?? []);
             });
@@ -213,7 +225,7 @@ export class DentistComponent {
 
         this.dentistContractsService.getAll()
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((rows:DentistContractRow []) => this.contracts.set(rows ?? []));
+            .subscribe((rows: DentistContractRow []) => this.contracts.set(rows ?? []));
 
         this.dentistLookupService.getAllTaxTypes()
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -277,7 +289,7 @@ export class DentistComponent {
                 error: (error) => {
                     console.log(`error: ${error}`);
                 }
-        });
+            });
 
         this.dentistHMORelations.getExclusiveToHmos(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -356,7 +368,7 @@ export class DentistComponent {
 
     cancel() {
         // Typical behavior: back to list
-        this.router.navigate(['../'], { relativeTo: this.route });
+        this.router.navigate(['../'], {relativeTo: this.route});
     }
 
     // Helpers for showing the *_name conceptually
@@ -366,7 +378,7 @@ export class DentistComponent {
     }
 
 
-    openClinicInNewTab(clinicId: number|null) {
+    openClinicInNewTab(clinicId: number | null) {
         if (!clinicId) return;
         const tree = this.router.createUrlTree(['/main/setup/dental-clinics/', clinicId]);
         const url = this.router.serializeUrl(tree);
@@ -382,22 +394,24 @@ export class DentistComponent {
         // this.openClinicInNewTab(row.clinic_id);
     }
 
-    openNewClinicDialog() {
+    async openNewClinicDialog() {
+        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        const res = await firstValueFrom(this.dentalClinicService.getDentalClinics());
+        the_clinics = res.items.map(c=>({id:c.id, name:`${c.name}-(${c.address})`}));
+
 
         const data: AddClinicOrDentistDialogData = {
             mode: 'clinic',
-            options: [
-                {id:1, name: 'Smile City Clinic'},
-                {id:2, name: 'Bright Dental Center'}
-            ]
+            options: the_clinics
         };
 
         const ref = this.dialog.open<
             AddClinicOrDentistDialogComponent,
             AddClinicOrDentistDialogData,
             AddClinicOrDentistDialogResult | null>
-            (AddClinicOrDentistDialogComponent,
-            { width:'860px',
+        (AddClinicOrDentistDialogComponent,
+            {
+                width: '860px',
                 maxWidth: '95vw',
                 data
             });
@@ -405,18 +419,34 @@ export class DentistComponent {
         ref.afterClosed().subscribe(result => {
             if (!result) return;
             // result is AddClinicOrDentistDialogResult.
-            console.log(`result: ${result}`);
+            // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
+            console.log("result:", result);
         })
 
     }
 
-addExclusiveToHmo() {}
-removeExclusiveToHmo() {};
-addExceptForHmo() {}
-removeExceptForHmo() {}
-addExclusiveToCompany(){}
-removeExclusiveToCompany(){}
-addExceptForCompany(){}
-removeExceptForCompany(){}
+    addExclusiveToHmo() {
+    }
+
+    removeExclusiveToHmo() {
+    };
+
+    addExceptForHmo() {
+    }
+
+    removeExceptForHmo() {
+    }
+
+    addExclusiveToCompany() {
+    }
+
+    removeExclusiveToCompany() {
+    }
+
+    addExceptForCompany() {
+    }
+
+    removeExceptForCompany() {
+    }
 }
 

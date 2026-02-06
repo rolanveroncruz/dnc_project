@@ -7,14 +7,31 @@
         <!-- LEFT: Selection list -->
         <section class="list-pane">
             <div class="pane-title">{{ listLabel() }}</div>
+            <!-- ✅ ADD: Filter/Search bar -->
+            <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Search</mat-label>
+                <input matInput [formControl]="filterCtrl" placeholder="Type to filter..." />
+
+                @if (filterCtrl.value) {
+                    <button mat-icon-button matSuffix type="button" (click)="clearFilter()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                } @else {
+                    <mat-icon matSuffix>search</mat-icon>
+                }
+            </mat-form-field>
+
 
             @if (data.options.length === 0) {
-                <div class="empty">
-                    No items available.
-                </div>
-            } @else {
+                <div class="empty"> No items available. </div>
+            } @else if(filteredOptions().length === 0) {
+                <div class="empty"> No items available. </div>
+            } @else{
+
+                <div class="selection-wrap">
+
                 <mat-selection-list [multiple]="false" class="selection">
-                    @for (opt of data.options; track opt.id) {
+                    @for (opt of filteredOptions(); track opt.id) {
                         <mat-list-option
                             [selected]="selectedId() === opt.id"
                             (click)="onSelectionChange(opt.id)">
@@ -22,6 +39,7 @@
                         </mat-list-option>
                     }
                 </mat-selection-list>
+                </div>
             }
         </section>
 

@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-
+import { map, startWith } from 'rxjs';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
@@ -59,6 +59,14 @@ export class AddClinicOrDentistDialogComponent {
         position: [this.data.initialPosition ?? '', []],
         schedule: [this.data.initialSchedule ?? '', []],
     });
+    readonly filterCtrl = this.fb.nonNullable.control('');
+    readonly filterText = signal('');
+    readonly filteredOptions = computed(() => {
+        const q = this.filterText().trim().toLowerCase();
+        if (!q) return this.data.options;
+        return this.data.options.filter(o => o.name.toLowerCase().includes(q));
+    });
+
 
     readonly title = computed(() => {
         if (this.data.title?.trim()) return this.data.title.trim();
@@ -76,6 +84,16 @@ export class AddClinicOrDentistDialogComponent {
     });
 
     readonly canSave = computed(() => !!this.selectedOption());
+
+    constructor() {
+        this.filterCtrl.valueChanges
+            .pipe(startWith(this.filterCtrl.value))
+            .subscribe(v => this.filterText.set(v ?? ''));
+    }
+    clearFilter() {
+        this.filterCtrl.setValue('');
+    }
+
 
     onSelectionChange(id: number) {
         this.selectedId.set(id);

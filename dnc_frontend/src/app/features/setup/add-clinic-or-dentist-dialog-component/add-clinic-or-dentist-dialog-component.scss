@@ -12,7 +12,8 @@
 
 .grid {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 1fr 1fr;
+
     gap: 16px;
     align-items: start;
 
@@ -23,6 +24,7 @@
 
 .list-pane,
 .form-pane {
+    min-width: 0;
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 14px;
     padding: 12px;
@@ -36,10 +38,25 @@
 }
 
 .selection {
-    max-height: 320px;
-    overflow: auto;
+    max-height: none;
+    overflow: visible;
+    white-space: normal;
     border-radius: 10px;
 }
+/* ✅ ADD: this is where horizontal + vertical scrolling actually happens */
+.selection-wrap {
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 10px;
+
+    /* critical: prevent wrapping so width can exceed container */
+    white-space: nowrap;
+
+    /* optional: keeps scrollbar from overlaying content on some OS/browser combos */
+    padding-bottom: 2px;
+}
+
 
 .empty {
     font-size: 13px;
@@ -77,4 +94,37 @@
 
 .actions {
     padding-top: 8px;
+}
+/* ✅ ADD */
+.filter-field {
+    width: 100%;
+    margin-bottom: 10px;
+}
+/* ✅ ADD: keep long text on one line so horizontal scroll appears */
+.option-text {
+    white-space: nowrap;
+    display: inline-block;
+    min-width: max-content; /* ensures it can extend wider than container */
+    padding-right: 12px;     /* a little breathing room */
+}
+
+/* ✅ ADD: ensure list option doesn’t force wrapping */
+::ng-deep .mat-mdc-list-item__primary-text {
+    white-space: nowrap;
+}
+/* ✅ ADD: force MDC list text to stay on one line */
+::ng-deep .mat-mdc-list-option .mdc-list-item__primary-text {
+    white-space: nowrap;
+}
+/* ✅ ADD: make the option’s internal container not clamp width */
+::ng-deep .selection-wrap .mat-mdc-list-option {
+    width: max-content;   /* allows it to become wider than the container */
+    min-width: 100%;      /* but still fill the container when short */
+}
+
+/* ✅ CHANGE/KEEP: keep the text unwrapped */
+.option-text {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 12px;
 }

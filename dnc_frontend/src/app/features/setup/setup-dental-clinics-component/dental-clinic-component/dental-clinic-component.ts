@@ -31,6 +31,15 @@ import {
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
 import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
+import {firstValueFrom} from 'rxjs';
+import {
+    AddClinicOrDentistDialogComponent,
+    AddClinicOrDentistDialogData, AddClinicOrDentistDialogResult
+} from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
+import { DentistOrClinicWithIdAndName }from "../../setup-dentists/dentist-component/dentist-component";
+import {MatDialog} from '@angular/material/dialog';
+import {DentistService} from '../../../../api_services/dentist-service';
+
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -64,7 +73,9 @@ export class DentalClinicComponent implements OnInit {
     private readonly citiesService = inject(CityService);
     private readonly clinicCapabilitiesService = inject(ClinicCapabilitiesService);
     private readonly clinicCapabilitiesListService = inject(ClinicCapabilitiesListService);
+    private readonly dentistService = inject(DentistService);
 
+    private readonly dialog = inject(MatDialog);
     readonly loadState = signal<LoadState>('loading');
     // ✅ UNSAVED CHANGES INDICATOR
     // True when the form has been modified since last load/save.
@@ -480,7 +491,37 @@ export class DentalClinicComponent implements OnInit {
     }
     rowId = (r:any)=>r.id;
     selectedRow:any |null = null;
-    onAdd(){}
-    onEdit(row:any){}
+
+
+    async onAddClinic(){
+
+        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        const res = await firstValueFrom(this.dentistService.getAllDentists());
+        the_clinics = res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
+
+
+        const data: AddClinicOrDentistDialogData = {
+            mode: 'clinic',
+            options: the_clinics
+        };
+
+        const ref = this.dialog.open<
+            AddClinicOrDentistDialogComponent,
+            AddClinicOrDentistDialogData,
+            AddClinicOrDentistDialogResult | null>
+        (AddClinicOrDentistDialogComponent,
+            {
+                width: '860px',
+                maxWidth: '95vw',
+                data
+            });
+
+        ref.afterClosed().subscribe(result => {
+            if (!result) return;
+            // result is AddClinicOrDentistDialogResult.
+            // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
+            console.log("result:", result);
+        })
+    }
     onDelete(row:any){}
 }
