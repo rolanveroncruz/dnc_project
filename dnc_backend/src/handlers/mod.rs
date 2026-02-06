@@ -39,4 +39,10 @@ pub use api::dentist_history::{get_all_dentist_histories};
 pub use api::dentist_status::{get_all_dentist_status};
 pub use api::tax_classification::get_all_tax_classifications;
 pub use api::tax_type::get_all_tax_types;
-pub use api::dentist_hmo_relations::{get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id};
+pub use api::dentist_hmo_relations::{get_exclusive_to_hmos_from_dentist_id, 
+                                     add_exclusive_to_hmo,
+                                     remove_exclusive_to_hmo,
+                                     get_not_hmos_from_dentist_id,
+                                     add_except_for_hmo,
+                                     remove_except_for_hmo,
+};
