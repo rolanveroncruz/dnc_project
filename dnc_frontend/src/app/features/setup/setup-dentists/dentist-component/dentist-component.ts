@@ -24,11 +24,14 @@ import {
 } from '../../../../api_services/dentist-lookups-service';
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
-import {DentistClinicsService} from '../../../../dentist-clinics-service';
 import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 import {DentistHMORelationsService} from '../../../../api_services/dentist-hmorelations-service';
 import {MatListOption, MatSelectionList} from '@angular/material/list';
+import {MatDialog} from '@angular/material/dialog';
+import{ AddClinicOrDentistDialogComponent,
+AddClinicOrDentistDialogData,
+AddClinicOrDentistDialogResult } from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
 
 /** Matches your API response shape */
 export interface DentistWithLookups {
@@ -108,6 +111,7 @@ export class DentistComponent {
     private readonly dentistLookupService = inject(DentistLookupsService);
     private readonly dentistClinicService = inject(DentistClinicService);
     private readonly dentistHMORelations = inject(DentistHMORelationsService)
+    readonly dialog = inject(MatDialog);
 
     // ---- State
     readonly loading = signal(false);
@@ -371,8 +375,39 @@ export class DentistComponent {
         // If you use PathLocationStrategy and you want absolute, see Option B.
         window.open(url, '_blank', 'noopener');
     }
+
+    // onClickClinic responds to a click on  row in the clinic table.
+    //  it basically opens a new tab with the clinic's detail page.'
     onClickClinic(row: DentistClinicWithNames) {
-        this.openClinicInNewTab(row.clinic_id);
+        // this.openClinicInNewTab(row.clinic_id);
+    }
+
+    openNewClinicDialog() {
+
+        const data: AddClinicOrDentistDialogData = {
+            mode: 'clinic',
+            options: [
+                {id:1, name: 'Smile City Clinic'},
+                {id:2, name: 'Bright Dental Center'}
+            ]
+        };
+
+        const ref = this.dialog.open<
+            AddClinicOrDentistDialogComponent,
+            AddClinicOrDentistDialogData,
+            AddClinicOrDentistDialogResult | null>
+            (AddClinicOrDentistDialogComponent,
+            { width:'860px',
+                maxWidth: '95vw',
+                data
+            });
+
+        ref.afterClosed().subscribe(result => {
+            if (!result) return;
+            // result is AddClinicOrDentistDialogResult.
+            console.log(`result: ${result}`);
+        })
+
     }
 
 addExclusiveToHmo() {}

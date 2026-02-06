@@ -1,0 +1,80 @@
+:host {
+    display: block;
+}
+
+.title {
+    margin: 0;
+}
+
+.content {
+    padding-top: 4px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+    align-items: start;
+
+    @media (max-width: 860px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.list-pane,
+.form-pane {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.pane-title {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.selection {
+    max-height: 320px;
+    overflow: auto;
+    border-radius: 10px;
+}
+
+.empty {
+    font-size: 13px;
+    opacity: 0.7;
+    padding: 10px 4px;
+}
+
+.field {
+    width: 100%;
+}
+
+.preview {
+    margin-top: 8px;
+    min-height: 32px;
+}
+
+.hint {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.chipline {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    font-size: 12px;
+}
+
+.actions {
+    padding-top: 8px;
+}

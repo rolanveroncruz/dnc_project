@@ -69,7 +69,7 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
         const nextId = row ? this.getRowId(row) : null;
 
         // toggle behavior for checkbox UI (optional)
-        if (this.selectionMode === 'checkbox' && this.selectedId === nextId) {
+        if (this.selectedId!=null && nextId!==null && this.selectedId === nextId) {
             this.selectedId = null;
             this.selectedIdChange.emit(null);
             this.selectionChange.emit(null);
@@ -87,7 +87,7 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
     }
     // ------ Footer buttons
     @Input() showFooterActions = true;
-    @Input() showEditButton = true;
+    @Input() showEditButton = false;
     @Input() showDeleteButton = true;
 
     @Output() editClicked = new EventEmitter<T>();
