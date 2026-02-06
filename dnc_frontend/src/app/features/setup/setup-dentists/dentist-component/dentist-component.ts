@@ -280,16 +280,7 @@ export class DentistComponent {
                 },
             });
 
-        this.dentistClinicService.getClinicsForDentistId(id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-                next: (dentist_clinics: DentistClinicWithNames[]) => {
-                    this.dentistClinics.set(dentist_clinics);
-                },
-                error: (error) => {
-                    console.log(`error: ${error}`);
-                }
-            });
+        this.fetchClinics(id);
 
         this.dentistHMORelations.getExclusiveToHmos(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -309,6 +300,21 @@ export class DentistComponent {
                     this.exceptForHmos.set(exceptForHmos);
                 },
             })
+    }
+
+
+    private fetchClinics(id: number) {
+        this.dentistClinicService.getClinicsForDentistId(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (dentist_clinics: DentistClinicWithNames[]) => {
+                    this.dentistClinics.set(dentist_clinics);
+                },
+                error: (error) => {
+                    console.log(`error: ${error}`);
+                }
+            });
+
     }
 
     save() {
@@ -420,9 +426,33 @@ export class DentistComponent {
             if (!result) return;
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
-            console.log("result:", result);
+            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position, result.schedule)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: v=>{
+                        console.log(`clinic added successfully`);
+                        this.fetchClinics(<number>this.dentistId());
+                    },
+                    error: e=>{
+                        console.log(`clinic add failed`);
+                    }
+                })
         })
 
+    }
+    async onDeleteClinic(event:any){
+        console.log("onDeleteClinic:", event);
+         this.dentistClinicService.removeDentistClinic(event.clinic_id, <number>this.dentistId())
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: v=>{
+                    console.log(`clinic removed successfully`);
+                    this.fetchClinics(<number>this.dentistId());
+                },
+                error: e=>{
+                    console.log(`clinic remove failed`);
+                }
+            });
     }
 
     addExclusiveToHmo() {

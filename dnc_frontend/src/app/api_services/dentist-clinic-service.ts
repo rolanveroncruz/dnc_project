@@ -68,4 +68,16 @@ export class DentistClinicService {
             `${this.baseUrl}/dental_clinics/${encodeURIComponent(String(clinicId))}/dentists`, { headers: this.authHeaders()}
         );
     }
+    addDentistClinic(clinicId: number, dentistId: number, position:string|null, schedule:string|null): Observable<DentistClinicWithNames[]> {
+        const payload = { clinic_id: clinicId, position: position, schedule: schedule };
+        return this.http.post<DentistClinicWithNames[]>(
+            `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics`, payload, { headers: this.authHeaders()}
+        );
+    }
+
+    removeDentistClinic(clinicId: number, dentistId: number): Observable<DentistClinicWithNames[]> {
+        return this.http.delete<DentistClinicWithNames[]>(
+            `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics/${encodeURIComponent(String(clinicId))}`, { headers: this.authHeaders()}
+        );
+    }
 }

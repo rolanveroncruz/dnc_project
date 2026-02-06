@@ -317,6 +317,10 @@ export class DentalClinicComponent implements OnInit {
                 error: () => console.log("Error in clinic capabilities"),
             });
 
+        this.fetchDentistsForClinicId(id);
+    }
+
+    private fetchDentistsForClinicId(id: number){
         this.dentistClinicService.getDentistsForClinicId(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
@@ -325,6 +329,7 @@ export class DentalClinicComponent implements OnInit {
                 },
                 error: () => console.log("Error in dentist clinics"),
             })
+
     }
 
     // CHANGED: derive state_id + region_id from city_id using lookup tables
@@ -521,7 +526,26 @@ export class DentalClinicComponent implements OnInit {
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
             console.log("result:", result);
+            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position, result.schedule)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => {
+                        this.fetchDentistsForClinicId(<number>this.clinicId());
+                    },
+                    error: () => console.log("Error in adding dentist clinic")
+                })
         })
     }
-    onDelete(row:any){}
+    onDelete(row:any){
+        console.log("onDelete:", row);
+        this.dentistClinicService.removeDentistClinic(<number>this.clinicId(), row.dentist_id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: () => {
+                    this.fetchDentistsForClinicId(<number>this.clinicId());
+                },
+                error: () => console.log("Error in removing dentist clinic")
+            });
+
+    }
 }
