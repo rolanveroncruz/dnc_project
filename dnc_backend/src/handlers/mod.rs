@@ -32,7 +32,7 @@ pub use api::clinic_capabilities_list::{get_clinic_capabilities_for_clinic,
                                         add_clinic_capability_to_clinic,
                                         remove_clinic_capability_from_clinic,
                                         set_clinic_capabilities_for_clinic};
-pub use api::dentist::{get_all_dentists, get_dentist_from_id};
+pub use api::dentist::{get_all_dentists, get_dentist_from_id, create_dentist, patch_dentist};
 pub use api::dentist_clinic::{get_all_dentist_clinics, get_clinics_for_dentist_id, get_dentists_for_clinic_id,
                               add_dentist_clinic, remove_dentist_clinic};
 pub use api::dentist_history::{get_all_dentist_histories};

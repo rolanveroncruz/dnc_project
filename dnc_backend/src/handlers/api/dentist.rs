@@ -3,9 +3,9 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{ColumnTrait, EntityTrait, FromQueryResult, Iterable, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, Iterable, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
 use sea_orm::prelude::Expr;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
@@ -117,6 +117,223 @@ pub async fn get_dentist_from_id(
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch dentist id={id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    match row {
+        Some(v) => Ok(Json(v)),
+        None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct CreateDentistRequest {
+    // required fields
+    pub last_name: String,
+    pub given_name: String,
+    pub retainer_fee: f32,
+
+    // optional fields
+    pub middle_name: Option<String>,
+    pub email: Option<String>,
+    pub dentist_status_id: Option<i32>,
+    pub dentist_history_id: Option<i32>,
+    pub dentist_requested_by: Option<String>,
+
+    pub accre_dentist_contract_id: Option<i32>,
+    pub accre_document_code: Option<String>,
+    pub accreditation_date: Option<String>,
+    pub accre_contract_sent_date: Option<String>,
+    pub accre_contract_file_path: Option<String>,
+
+    pub acc_tin: Option<String>,
+    pub acc_bank_name: Option<String>,
+    pub acc_account_name: Option<String>,
+    pub acc_account_number: Option<String>,
+    pub acc_tax_type_id: Option<i32>,
+    pub acc_tax_classification_id: Option<i32>,
+}
+
+/// ----- PATCH request (PATCH)
+/// For nullable fields, use Option<Option<T>> so you can:
+/// - omit the field => no change
+/// - set field to null => send `"field": null`
+/// - set field value => send `"field": "value"`
+#[derive(Debug, Deserialize)]
+pub struct PatchDentistRequest {
+    pub last_name: Option<String>,
+    pub given_name: Option<String>,
+    pub retainer_fee: Option<f32>,
+
+    pub middle_name: Option<Option<String>>,
+    pub email: Option<Option<String>>,
+    pub dentist_status_id: Option<Option<i32>>,
+    pub dentist_history_id: Option<Option<i32>>,
+    pub dentist_requested_by: Option<Option<String>>,
+
+    pub accre_dentist_contract_id: Option<Option<i32>>,
+    pub accre_document_code: Option<Option<String>>,
+    pub accreditation_date: Option<Option<String>>,
+    pub accre_contract_sent_date: Option<Option<String>>,
+    pub accre_contract_file_path: Option<Option<String>>,
+
+    pub acc_tin: Option<Option<String>>,
+    pub acc_bank_name: Option<Option<String>>,
+    pub acc_account_name: Option<Option<String>>,
+    pub acc_account_number: Option<Option<String>>,
+    pub acc_tax_type_id: Option<Option<i32>>,
+    pub acc_tax_classification_id: Option<Option<i32>>,
+}
+
+/// Dentist row + lookup "name" fields
+
+#[instrument(skip(state, body), err(Debug))]
+pub async fn create_dentist(
+    State(state): State<AppState>,
+    Json(body): Json<CreateDentistRequest>,
+) -> Result<Json<DentistWithLookups>, StatusCode> {
+    // build ActiveModel
+    let am = dentist::ActiveModel {
+        // id is auto
+        last_name: Set(body.last_name),
+        given_name: Set(body.given_name),
+        middle_name: Set(body.middle_name),
+        email: Set(body.email),
+        retainer_fee: Set(body.retainer_fee),
+
+        dentist_status_id: Set(body.dentist_status_id),
+        dentist_history_id: Set(body.dentist_history_id),
+        dentist_requested_by: Set(body.dentist_requested_by),
+
+        accre_dentist_contract_id: Set(body.accre_dentist_contract_id),
+        accre_document_code: Set(body.accre_document_code),
+        accreditation_date: Set(body.accreditation_date),
+        accre_contract_sent_date: Set(body.accre_contract_sent_date),
+        accre_contract_file_path: Set(body.accre_contract_file_path),
+
+        acc_tin: Set(body.acc_tin),
+        acc_bank_name: Set(body.acc_bank_name),
+        acc_account_name: Set(body.acc_account_name),
+        acc_account_number: Set(body.acc_account_number),
+        acc_tax_type_id: Set(body.acc_tax_type_id),
+        acc_tax_classification_id: Set(body.acc_tax_classification_id),
+
+        ..Default::default()
+    };
+
+    let inserted: dentist::Model = am.insert(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to create dentist: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // return with lookups
+    let row = dentist_with_lookups_query()
+        .filter(dentist::Column::Id.eq(inserted.id))
+        .into_model::<DentistWithLookups>()
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch created dentist id={}: {e:?}", inserted.id);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(row))
+}
+
+#[instrument(skip(state, body), err(Debug))]
+pub async fn patch_dentist(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Json(body): Json<PatchDentistRequest>,
+) -> Result<Json<DentistWithLookups>, StatusCode> {
+    let existing = dentist::Entity::find_by_id(id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch dentist id={id} for patch: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let mut am: dentist::ActiveModel = existing.into();
+
+    // non-nullable strings / numbers
+    if let Some(v) = body.last_name {
+        am.last_name = Set(v);
+    }
+    if let Some(v) = body.given_name {
+        am.given_name = Set(v);
+    }
+    if let Some(v) = body.retainer_fee {
+        am.retainer_fee = Set(v);
+    }
+
+    // nullable fields (Option<Option<T>>)
+    if let Some(v) = body.middle_name {
+        am.middle_name = Set(v);
+    }
+    if let Some(v) = body.email {
+        am.email = Set(v);
+    }
+    if let Some(v) = body.dentist_status_id {
+        am.dentist_status_id = Set(v);
+    }
+    if let Some(v) = body.dentist_history_id {
+        am.dentist_history_id = Set(v);
+    }
+    if let Some(v) = body.dentist_requested_by {
+        am.dentist_requested_by = Set(v);
+    }
+
+    if let Some(v) = body.accre_dentist_contract_id {
+        am.accre_dentist_contract_id = Set(v);
+    }
+    if let Some(v) = body.accre_document_code {
+        am.accre_document_code = Set(v);
+    }
+    if let Some(v) = body.accreditation_date {
+        am.accreditation_date = Set(v);
+    }
+    if let Some(v) = body.accre_contract_sent_date {
+        am.accre_contract_sent_date = Set(v);
+    }
+    if let Some(v) = body.accre_contract_file_path {
+        am.accre_contract_file_path = Set(v);
+    }
+
+    if let Some(v) = body.acc_tin {
+        am.acc_tin = Set(v);
+    }
+    if let Some(v) = body.acc_bank_name {
+        am.acc_bank_name = Set(v);
+    }
+    if let Some(v) = body.acc_account_name {
+        am.acc_account_name = Set(v);
+    }
+    if let Some(v) = body.acc_account_number {
+        am.acc_account_number = Set(v);
+    }
+    if let Some(v) = body.acc_tax_type_id {
+        am.acc_tax_type_id = Set(v);
+    }
+    if let Some(v) = body.acc_tax_classification_id {
+        am.acc_tax_classification_id = Set(v);
+    }
+
+    let updated: dentist::Model = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed to patch dentist id={id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let row = dentist_with_lookups_query()
+        .filter(dentist::Column::Id.eq(updated.id))
+        .into_model::<DentistWithLookups>()
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch patched dentist id={id}: {e:?}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
