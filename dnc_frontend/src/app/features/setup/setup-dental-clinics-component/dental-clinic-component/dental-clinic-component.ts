@@ -477,6 +477,21 @@ export class DentalClinicComponent implements OnInit {
 
         ctrl.setValue(next);
         ctrl.markAsDirty(); // ensures hasUnsavedChanges flips on
+        if (checked) {
+            this.clinicCapabilitiesListService.addToClinic(this.clinicId()!, capId)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => console.log("Added capability to clinic"),
+                    error: () => console.log("Error in adding capability to clinic")
+                })
+        } else{
+            this.clinicCapabilitiesListService.removeFromClinic(this.clinicId()!, capId)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => console.log("Removed capability from clinic"),
+                    error: () => console.log("Error in removing capability from clinic")
+                })
+        }
     }
 
     isCapabilityChecked(capId:number): boolean{

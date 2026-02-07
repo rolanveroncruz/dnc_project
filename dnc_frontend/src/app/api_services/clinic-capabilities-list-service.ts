@@ -73,7 +73,7 @@ export class ClinicCapabilitiesListService {
   /** POST /dental_clinics/:clinic_id/capabilities  Body: { capability_id } */
   addToClinic(clinicId: number, capabilityId: number): Observable<ClinicCapabilityLinkRow> {
     const body: AddClinicCapabilityBody = { capability_id: capabilityId };
-    return this.http.post<ClinicCapabilityLinkRow>(this.clinicCapsUrl(clinicId), body, { headers: this.authHeaders() });
+    return this.http.post<ClinicCapabilityLinkRow>(`${this.clinicCapsUrl(clinicId)}/`, body, { headers: this.authHeaders() });
   }
 
   /** DELETE /dental_clinics/:clinic_id/capabilities/:capability_id  (204 No Content) */
