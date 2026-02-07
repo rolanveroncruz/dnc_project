@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,6 +20,8 @@ import { MatDividerModule } from '@angular/material/divider';
 
 import { catchError, finalize, of } from 'rxjs';
 import { SingleDocumentUploadService, StoredDocumentMeta } from '../../api_services/single-document-upload-service';
+import {environment} from '../../../environments/environment';
+import {LoginService} from '../../login.service';
 
 @Component({
     selector: 'app-single-document-slot',
@@ -37,7 +40,8 @@ import { SingleDocumentUploadService, StoredDocumentMeta } from '../../api_servi
 export class SingleDocumentSlotComponent {
     private readonly api = inject(SingleDocumentUploadService);
     private readonly destroyRef = inject(DestroyRef);
-
+    private readonly http = inject(HttpClient);
+    private readonly loginService = inject(LoginService);
     /** The owning entity id (e.g., dentistId) */
     @Input({transform: numberAttribute, required: true}) dentistId!: number;
 
@@ -93,20 +97,6 @@ export class SingleDocumentSlotComponent {
 
     /** Call this when the parent loads the page */
     refresh(): void {
-        this.loadState.set('loading');
-        this.api.getMeta(this.dentistId).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            catchError((err) => {
-                // Treat 404 as "no doc" if your backend does that:
-                // If your backend returns 404 when none exists, just show null.
-                // this.meta.set(null);
-                this.loadState.set('idle');
-                return of(null);
-            })
-        ).subscribe((m) => {
-            if (m) this.meta.set(m);
-            this.loadState.set('idle');
-        });
     }
 
     /** Parent calls this after saving other fields to commit the upload, if any */
@@ -168,24 +158,32 @@ export class SingleDocumentSlotComponent {
         });
     }
 
+    private authHeaders(): HttpHeaders {
+        const token = this.loginService.token?.() ?? '';
+        return new HttpHeaders({ Authorization: `Bearer ${token}` });
+    }
     download(): void {
-        if (this.disabled || this.busy()) return;
+        const meta = this.meta();
+        if (!meta) return;
 
-        this.busy.set(true);
+        const encodedName = encodeURIComponent(meta.file_name);
+        const url = `${environment.apiUrl}/api/dentists/${this.dentistId}/contract-file/${encodedName}`;
 
-        this.api.download(this.dentistId).pipe(
-            takeUntilDestroyed(this.destroyRef),
-            finalize(() => this.busy.set(false))
-        ).subscribe({
-            next: ({ blob, filename }) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                URL.revokeObjectURL(url);
+        // Open a blank tab immediately (keeps popup blockers happy)
+        const tab = window.open('', '_blank', 'noopener');
+
+        this.http.get(url, { responseType: 'blob', headers: this.authHeaders() }).subscribe({
+            next: (blob) => {
+                const blobUrl = URL.createObjectURL(blob);
+                if (tab) tab.location.href = blobUrl;
+                else window.open(blobUrl, '_blank', 'noopener');
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
             },
-            error: () => {},
+            error: (err) => {
+                if (tab) tab.close();
+                console.error('Download failed', err);
+            },
         });
     }
+
 }

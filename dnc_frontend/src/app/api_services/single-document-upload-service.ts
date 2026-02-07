@@ -47,7 +47,7 @@ export class SingleDocumentUploadService {
         console.log("In uploadReplace ");
 
         return this.http.post<StoredDocumentMeta>(
-            `${this.baseUrl}/dentists/${dentistId}/document`,
+            `${this.baseUrl}/dentists/${dentistId}/contract-file`,
             form,
             { headers: this.authHeaders() }
         );

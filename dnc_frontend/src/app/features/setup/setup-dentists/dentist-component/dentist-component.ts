@@ -165,7 +165,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
     // SingleDocumentSlotComponent For Accreditation Contract
     @ViewChild('documentSlot') documentSlot!: SingleDocumentSlotComponent;
     docPending = signal(false);
-    accreditationContractFilename = signal('test_contract.pdf');
+    accreditationContractFilename = signal('');
 
 
 
@@ -320,6 +320,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
                         accre_document_code: d.accre_document_code ?? null,
                         accreditation_date: d.accreditation_date ? new Date(d.accreditation_date) : null,
                         accre_contract_sent_date: d.accre_contract_sent_date ? new Date(d.accre_contract_sent_date) : null,
+                        accre_contract_file_path: d.accre_contract_file_path ?? null,
 
                         acc_tin: d.acc_tin ?? null,
                         acc_bank_name: d.acc_bank_name ?? null,
@@ -328,6 +329,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
                         acc_tax_type_id: d.acc_tax_type_id ?? null,
                         acc_tax_classification_id: d.acc_tax_classification_id ?? null,
                     });
+                    this.accreditationContractFilename.set(d.accre_contract_file_path ?? '');
 
                     this.loaded.set(true);
                     this.initialSnapshot = this.form.getRawValue();
@@ -345,7 +347,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
         this.fetchExclusiveToHmos(id);
         this.fetchExceptForHmos(id);
     }
-
 
 
     private fetchExclusiveToHmos(id: number) {
@@ -435,6 +436,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
                     this.saving.set(false);
                     this.initialSnapshot = this.form.getRawValue();
 
+                    this.documentSlot.commitPendingUpload();
+
                     // If create, navigate to edit route (optional)
                     if (!id && saved?.id) {
                         this.router.navigate(['../', saved.id], { relativeTo: this.route });
@@ -451,6 +454,16 @@ export class DentistComponent implements OnInit, AfterViewInit {
         this.form.patchValue({
             accre_contract_file_path: meta.file_name,
         })
+         this.dentistService.patchDentist(<number>this.dentistId(), {accre_contract_file_path: meta.file_name})
+             .pipe(takeUntilDestroyed(this.destroyRef))
+             .subscribe({
+                 next: ()=>{
+                     console.log(`patching${meta.file_name}} successful`);
+                 },
+                 error: ()=>{
+                     console.log(`patching failure.`);
+                 }
+             })
     }
 
     cancel() {
@@ -462,23 +475,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
     lookupName(list: LookupOption[], id: number | null): string {
         if (!id) return '';
         return list.find(x => x.id === id)?.name ?? '';
-    }
-
-
-    // openClinicInNewTab(clinicId: number | null) {
-    //     if (!clinicId) return;
-    //     const tree = this.router.createUrlTree(['/main/setup/dental-clinics/', clinicId]);
-    //     const url = this.router.serializeUrl(tree);
-    //
-    //     // If you use HashLocationStrategy, url already includes '#/...'
-    //     // If you use PathLocationStrategy and you want absolute, see Option B.
-    //     window.open(url, '_blank', 'noopener');
-    // }
-
-    // onClickClinic responds to a click on  row in the clinic table.
-    //  it basically opens a new tab with the clinic's detail page.'
-    onClickClinic(row: DentistClinicWithNames) {
-        // this.openClinicInNewTab(row.clinic_id);
     }
 
     async openNewClinicDialog() {
@@ -521,6 +517,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         })
 
     }
+
     async onDeleteClinic(event:any){
         console.log("onDeleteClinic:", event);
          this.dentistClinicService.removeDentistClinic(event.clinic_id, <number>this.dentistId())
