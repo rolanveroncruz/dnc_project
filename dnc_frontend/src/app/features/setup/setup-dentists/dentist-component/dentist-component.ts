@@ -28,17 +28,27 @@ import {
     DataTableWithSelectComponent
 } from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
-import {DentistHMORelationsService} from '../../../../api_services/dentist-hmorelations-service';
-import {MatListOption, MatSelectionList} from '@angular/material/list';
+import {DentistHMORelationsService, HMOListItem} from '../../../../api_services/dentist-hmorelations-service';
 import {MatDialog} from '@angular/material/dialog';
 import {
     AddClinicOrDentistDialogComponent,
     AddClinicOrDentistDialogData,
     AddClinicOrDentistDialogResult
 } from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
-import {firstValueFrom, map} from 'rxjs';
+import {firstValueFrom, } from 'rxjs';
 import {DentalClinicService} from '../../../../api_services/dental-clinic-service';
+import {
+    ListDialogComponent,
+    ListDialogData,
+    ListDialogResult
+} from '../../list-dialog-component/list-dialog-component';
+import {HMOService} from '../../../../api_services/hmoservice';
+import {HMORelationsComponent} from '../../hmorelations-component/hmorelations-component';
 
+interface CompanyListItem {
+    id: number;
+    short_name: string;
+}
 /** Matches your API response shape */
 export interface DentistWithLookups {
     id: number;
@@ -79,7 +89,6 @@ interface LookupOption {
     id: number;
     name: string;
 }
-
 /**
  * Replace these with your real service.
  * - getById(id)
@@ -106,8 +115,7 @@ interface LookupOption {
         MatDatepickerModule,
         MatNativeDateModule,
         DataTableWithSelectComponent,
-        MatSelectionList,
-        MatListOption
+        HMORelationsComponent
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],
@@ -121,8 +129,9 @@ export class DentistComponent {
     private readonly dentistContractsService = inject(DentistContractsService);
     private readonly dentistLookupService = inject(DentistLookupsService);
     private readonly dentistClinicService = inject(DentistClinicService);
-    private readonly dentistHMORelations = inject(DentistHMORelationsService)
+    private readonly dentistHMORelationsService = inject(DentistHMORelationsService)
     private readonly dentalClinicService = inject(DentalClinicService);
+    private readonly hmoService = inject(HMOService);
     readonly dialog = inject(MatDialog);
 
     // ---- State
@@ -140,10 +149,10 @@ export class DentistComponent {
     readonly taxTypes = signal<TaxType[]>([]);
     readonly taxClassifications = signal<TaxClassification[]>([]);
     readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
-    readonly exclusiveToHmos = signal<string[]>([]);
-    readonly exceptForHmos = signal<string[]>([]);
-    readonly exclusiveToCompanies = signal<string[]>([]);
-    readonly exceptForCompanies = signal<string[]>([]);
+    readonly exclusiveToHmos = signal<HMOListItem[]>([]);
+    readonly exceptForHmos = signal<HMOListItem[]>([]);
+    readonly exclusiveToCompanies = signal<CompanyListItem[]>([]);
+    readonly exceptForCompanies = signal<CompanyListItem[]>([]);
 
     // ---- Form
     readonly form: FormGroup = this.fb.group({
@@ -282,26 +291,37 @@ export class DentistComponent {
 
         this.fetchClinics(id);
 
-        this.dentistHMORelations.getExclusiveToHmos(id)
+        this.fetchExclusiveToHmos(id);
+        this.fetchExceptForHmos(id);
+    }
+
+
+
+    private fetchExclusiveToHmos(id: number) {
+        this.dentistHMORelationsService.getExclusiveToHmos(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (exclusiveToHmos: string[]) => {
+                next: (exclusiveToHmos: HMOListItem[]) => {
+                    console.log("exclusiveToHmos:", exclusiveToHmos);
                     this.exclusiveToHmos.set(exclusiveToHmos);
                 },
                 error: (error) => {
                     console.log(`error: ${error}`);
                 }
             })
-
-        this.dentistHMORelations.getExceptForHmos(id)
+    }
+    private fetchExceptForHmos(id: number) {
+        this.dentistHMORelationsService.getExceptForHmos(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (exceptForHmos: string[]) => {
+                next: (exceptForHmos: HMOListItem[]) => {
                     this.exceptForHmos.set(exceptForHmos);
                 },
+                error: (error) => {
+                    console.log(`error: ${error}`);
+                }
             })
     }
-
 
     private fetchClinics(id: number) {
         this.dentistClinicService.getClinicsForDentistId(id)
@@ -384,15 +404,15 @@ export class DentistComponent {
     }
 
 
-    openClinicInNewTab(clinicId: number | null) {
-        if (!clinicId) return;
-        const tree = this.router.createUrlTree(['/main/setup/dental-clinics/', clinicId]);
-        const url = this.router.serializeUrl(tree);
-
-        // If you use HashLocationStrategy, url already includes '#/...'
-        // If you use PathLocationStrategy and you want absolute, see Option B.
-        window.open(url, '_blank', 'noopener');
-    }
+    // openClinicInNewTab(clinicId: number | null) {
+    //     if (!clinicId) return;
+    //     const tree = this.router.createUrlTree(['/main/setup/dental-clinics/', clinicId]);
+    //     const url = this.router.serializeUrl(tree);
+    //
+    //     // If you use HashLocationStrategy, url already includes '#/...'
+    //     // If you use PathLocationStrategy and you want absolute, see Option B.
+    //     window.open(url, '_blank', 'noopener');
+    // }
 
     // onClickClinic responds to a click on  row in the clinic table.
     //  it basically opens a new tab with the clinic's detail page.'
@@ -429,11 +449,11 @@ export class DentistComponent {
             this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position, result.schedule)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
-                    next: v=>{
+                    next: ()=>{
                         console.log(`clinic added successfully`);
                         this.fetchClinics(<number>this.dentistId());
                     },
-                    error: e=>{
+                    error: ()=>{
                         console.log(`clinic add failed`);
                     }
                 })
@@ -445,38 +465,113 @@ export class DentistComponent {
          this.dentistClinicService.removeDentistClinic(event.clinic_id, <number>this.dentistId())
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: v=>{
+                next: ()=>{
                     console.log(`clinic removed successfully`);
                     this.fetchClinics(<number>this.dentistId());
                 },
-                error: e=>{
+                error: ()=>{
                     console.log(`clinic remove failed`);
                 }
             });
     }
 
-    addExclusiveToHmo() {
+    async addExclusiveToHmo() {
+        const res = await firstValueFrom(this.hmoService.getHMOs());
+        const hmo_list = res.items.map((c)=>({id:c.id, label: c.short_name}));
+
+        const data:ListDialogData = {
+            title: 'Select Exclusive to HMO',
+            subtitle: 'Select an HMO',
+            enableGroupFilter:true,
+            items: hmo_list
+        }
+        const ref = this.dialog.open<ListDialogComponent, ListDialogData, ListDialogResult |null> (
+            ListDialogComponent,
+            {data, width: '720px', maxWidth: '92vw' }
+        );
+        ref.afterClosed().subscribe((res)=>{
+            if (!res) return;
+            console.log('Selected:', res);
+            this.dentistHMORelationsService.addExclusiveToHmos(
+                <number>this.dentistId(),
+                res.selectedId
+            ).subscribe({
+                next: ()=>{
+                    console.log(`HMO added successfully`);
+                    this.fetchExclusiveToHmos(<number>this.dentistId());
+                }
+            })
+        })
     }
 
-    removeExclusiveToHmo() {
+    removeExclusiveToHmo(event:any) {
+        console.log("removeExclusiveToHmo:", event.selected.id);
+        this.dentistHMORelationsService.removeExclusiveToHmos(<number>this.dentistId(), event.selected.id)
+            .subscribe({
+                next: ()=>{
+                    console.log(`HMO removed successfully`);
+                    this.fetchExclusiveToHmos(<number>this.dentistId());
+                },
+                error: ()=>{
+                    console.log(`HMO remove failed`);
+                }
+            })
+
     };
 
-    addExceptForHmo() {
+    async addExceptForHmo() {
+        const res = await firstValueFrom(this.hmoService.getHMOs());
+        const hmo_list = res.items.map((c)=>({id:c.id, label: c.short_name}));
+
+        const data:ListDialogData = {
+            title: 'Select Except for HMO',
+            subtitle: 'Select an HMO',
+            enableGroupFilter:true,
+            items: hmo_list
+        }
+        const ref = this.dialog.open<ListDialogComponent, ListDialogData, ListDialogResult |null> (
+            ListDialogComponent,
+            {data, width: '720px', maxWidth: '92vw' }
+        );
+        ref.afterClosed().subscribe((res)=>{
+            if (!res) return;
+            console.log('Selected:', res);
+            this.dentistHMORelationsService.addExceptForHmos(
+                <number>this.dentistId(),
+                res.selectedId
+            ).subscribe({
+                next: ()=>{
+                    console.log(`HMO added successfully`);
+                    this.fetchExceptForHmos(<number>this.dentistId());
+                }
+            })
+        })
     }
 
-    removeExceptForHmo() {
+    removeExceptForHmo(event:any) {
+        console.log("removeExceptForHmo:", event.selected.id);
+        this.dentistHMORelationsService.removeExceptForHmos(<number>this.dentistId(), event.selected.id)
+            .subscribe({
+                next: ()=>{
+                    console.log(`HMO removed successfully`);
+                    this.fetchExceptForHmos(<number>this.dentistId());
+                },
+                error: ()=>{
+                    console.log(`HMO remove failed`);
+                }
+            })
     }
 
     addExclusiveToCompany() {
     }
 
-    removeExclusiveToCompany() {
+    removeExclusiveToCompany(selected:any) {
     }
 
     addExceptForCompany() {
     }
 
-    removeExceptForCompany() {
+    removeExceptForCompany(selected:any) {
     }
 }
 

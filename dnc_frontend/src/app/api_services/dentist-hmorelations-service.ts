@@ -5,11 +5,10 @@ import { Observable } from 'rxjs';
 import {LoginService} from '../login.service';
 import {environment} from '../../environments/environment';
 
-/**
- * Matches Rust handlers:
- *  - GET /dentists/:dentist_id/hmos/exclusive  -> Vec<String>
- *  - GET /dentists/:dentist_id/hmos/not        -> Vec<String>
- */
+export interface HMOListItem{
+    id: number;
+    short_name: string;
+}
 @Injectable({ providedIn: 'root' })
 export class DentistHMORelationsService {
     private readonly http = inject(HttpClient);
@@ -26,16 +25,38 @@ export class DentistHMORelationsService {
         return new HttpHeaders({ Authorization: `Bearer ${token}` });
     }
     /** GET /dentists/:dentist_id/hmos/exclusive */
-    getExclusiveToHmos(dentistId: number): Observable<string[]> {
-        return this.http.get<string[]>(
+    getExclusiveToHmos(dentistId: number): Observable<HMOListItem[]> {
+        return this.http.get<HMOListItem []>(
             `${this.baseUrl}/dentists/${dentistId}/hmos/exclusive`, { headers: this.authHeaders()}
+        );
+    }
+    addExclusiveToHmos(dentistId: number, hmoId: number): Observable<any> {
+        return this.http.post<any>(
+            `${this.baseUrl}/dentists/${dentistId}/hmos/exclusive/${encodeURIComponent(hmoId)}`, { hmo_id: hmoId }, { headers: this.authHeaders()}
+        );
+    }
+    removeExclusiveToHmos(dentistId: number, hmoId: number): Observable<any> {
+        console.log("removeExclusiveToHmos called");
+        return this.http.delete<any>(
+            `${this.baseUrl}/dentists/${dentistId}/hmos/exclusive/${encodeURIComponent(hmoId)}`, { headers: this.authHeaders()}
         );
     }
 
     /** GET /dentists/:dentist_id/hmos/not */
-    getExceptForHmos(dentistId: number): Observable<string[]> {
-        return this.http.get<string[]>(
+    getExceptForHmos(dentistId: number): Observable<HMOListItem[]> {
+        return this.http.get<HMOListItem[]>(
             `${this.baseUrl}/dentists/${dentistId}/hmos/except`, { headers: this.authHeaders()}
+        );
+    }
+    addExceptForHmos(dentistId: number, hmoId: number): Observable<any> {
+        console.log("addExceptForHmos called");
+        return this.http.post<any>(
+            `${this.baseUrl}/dentists/${dentistId}/hmos/except/${encodeURIComponent(hmoId)}`, {hmo_id: hmoId},{ headers: this.authHeaders()}
+        );
+    }
+    removeExceptForHmos(dentistId: number, hmoId: number): Observable<any> {
+        return this.http.delete<any>(
+            `${this.baseUrl}/dentists/${dentistId}/hmos/except/${encodeURIComponent(hmoId)}`, { headers: this.authHeaders()}
         );
     }
 }
