@@ -179,6 +179,15 @@
                             <mat-datepicker #sentDate></mat-datepicker>
                         </mat-form-field>
                     </div>
+                    <app-single-document-slot
+                        #documentSlot
+                        [dentistId]="dentistId()"
+                        label="Accreditation Contract"
+                        [existingFilename] = "accreditationContractFilename()"
+                    >
+                    </app-single-document-slot>
+
+
                 </mat-tab>
 
                 <!-- HMO relations tab -->

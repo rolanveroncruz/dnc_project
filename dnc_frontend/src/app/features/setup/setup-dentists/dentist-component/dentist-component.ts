@@ -1,4 +1,4 @@
-import {Component, DestroyRef, computed, effect, inject, signal} from '@angular/core';
+import {Component, DestroyRef, computed, effect, inject, signal, ViewChild, OnInit, AfterViewInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -44,6 +44,9 @@ import {
 } from '../../list-dialog-component/list-dialog-component';
 import {HMOService} from '../../../../api_services/hmoservice';
 import {HMORelationsComponent} from '../../hmorelations-component/hmorelations-component';
+import {
+    SingleDocumentSlotComponent
+} from '../../../../components/single-document-slot-component/single-document-slot-component';
 
 interface CompanyListItem {
     id: number;
@@ -115,12 +118,13 @@ interface LookupOption {
         MatDatepickerModule,
         MatNativeDateModule,
         DataTableWithSelectComponent,
-        HMORelationsComponent
+        HMORelationsComponent,
+        SingleDocumentSlotComponent
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],
 })
-export class DentistComponent {
+export class DentistComponent implements OnInit, AfterViewInit {
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
@@ -153,6 +157,14 @@ export class DentistComponent {
     readonly exceptForHmos = signal<HMOListItem[]>([]);
     readonly exclusiveToCompanies = signal<CompanyListItem[]>([]);
     readonly exceptForCompanies = signal<CompanyListItem[]>([]);
+
+
+    // SingleDocumentSlotComponent For Accreditation Contract
+    @ViewChild('documentSlot') documentSlot!: SingleDocumentSlotComponent;
+    docPending = signal(false);
+    accreditationContractFilename = signal('test_contract.pdf');
+
+
 
     // ---- Form
     readonly form: FormGroup = this.fb.group({
@@ -218,6 +230,13 @@ export class DentistComponent {
             this.dentistId.set(id);
             this.fetchDentist(id);
         });
+    }
+
+    ngOnInit(): void {
+    }
+
+    ngAfterViewInit(): void {
+        this.documentSlot.refresh();
     }
 
     private loadLookups() {
