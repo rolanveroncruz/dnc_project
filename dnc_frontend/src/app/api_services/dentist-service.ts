@@ -105,11 +105,11 @@ export class DentistService {
     // Optional future endpoints (only enable when your backend has them)
     // ------------------------------------------------------------
 
-    // createDentist(body: CreateDentistBody): Observable<DentistWithLookups> {
-    //   return this.http.post<DentistWithLookups>(`${this.baseUrl}/`, body);
-    // }
+    createDentist(body: CreateDentistBody): Observable<DentistWithLookups> {
+      return this.http.post<DentistWithLookups>(`${this.baseUrl}`, body, { headers: this.authHeaders() });
+    }
 
-    // patchDentist(id: number, body: PatchDentistBody): Observable<DentistWithLookups> {
-    //   return this.http.patch<DentistWithLookups>(`${this.baseUrl}/${id}`, body);
-    // }
+    patchDentist(id: number, body: PatchDentistBody): Observable<DentistWithLookups> {
+      return this.http.patch<DentistWithLookups>(`${this.baseUrl}${id}`, body, { headers: this.authHeaders() });
+    }
 }

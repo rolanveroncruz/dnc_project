@@ -1,7 +1,7 @@
 import {Component, DestroyRef, computed, effect, inject, signal, ViewChild, OnInit, AfterViewInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {CommonModule} from '@angular/common';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 import {MatCardModule} from '@angular/material/card';
@@ -47,6 +47,9 @@ import {HMORelationsComponent} from '../../hmorelations-component/hmorelations-c
 import {
     SingleDocumentSlotComponent
 } from '../../../../components/single-document-slot-component/single-document-slot-component';
+import {StoredDocumentMeta} from '../../../../api_services/single-document-upload-service';
+import { toSignal } from '@angular/core/rxjs-interop'
+import {startWith} from 'rxjs/operators';
 
 interface CompanyListItem {
     id: number;
@@ -176,6 +179,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         middle_name: [null as string | null, [Validators.maxLength(120)]],
 
         dentist_history_id: [null as number | null],
+        dentist_requested_by: [null as string | null, [Validators.maxLength(200)]],
         dentist_status_id: [null as number | null],
         retainer_fee: [0, [Validators.required, Validators.min(0)]],
 
@@ -184,6 +188,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         accre_document_code: [null as string | null, [Validators.maxLength(120)]],
         accreditation_date: [null as Date | null],
         accre_contract_sent_date: [null as Date | null],
+        accre_contract_file_path: [null as string | null],
 
         // Tabs: Accounting
         acc_tin: [null as string | null, [Validators.maxLength(60)]],
@@ -193,6 +198,15 @@ export class DentistComponent implements OnInit, AfterViewInit {
         acc_tax_type_id: [null as number | null],
         acc_tax_classification_id: [null as number | null],
     });
+
+    private dentistHistoryId = toSignal(
+        this.form.get('dentist_history_id')!.valueChanges.pipe(
+            startWith(this.form.get('dentist_history_id')!.value)
+        ),
+        {initialValue: this.form.get('dentist_history_id')!.value}
+    );
+
+    readonly showRequestedBy = computed(() => Number(this.dentistHistoryId()) === 2);
 
     // Keep an initial snapshot for "dirty" comparison if you want to warn on leave later
     private initialSnapshot: any = null;
@@ -215,6 +229,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         effect(() => {
             const idParam = this.route.snapshot.paramMap.get('id');
             const id = idParam ? Number(idParam) : null;
+            console.log(`idParam: ${idParam}, id: ${id}`);
 
             if (!id) {
                 // Create mode
@@ -229,6 +244,22 @@ export class DentistComponent implements OnInit, AfterViewInit {
             // Edit mode
             this.dentistId.set(id);
             this.fetchDentist(id);
+        });
+
+        effect(() => {
+            //When history_id === 2, require dentist_requested_by; otherwise clear it
+            const mustShow = this.showRequestedBy();
+            console.log(` in constructor(), showRequestedBy: ${this.showRequestedBy()}`)
+            console.log(`mustShow: ${mustShow}`);
+            const ctrl = this.form.get('dentist_requested_by') as AbstractControl | null;
+            if (!ctrl) return;
+            if (mustShow){
+                ctrl.setValidators([Validators.maxLength(200)]);
+            } else{
+                ctrl.clearValidators();
+                ctrl.setValue(null, {emitEvent: false});
+            }
+            ctrl.updateValueAndValidity({emitEvent: false});
         });
     }
 
@@ -281,6 +312,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
                         middle_name: d.middle_name ?? null,
 
                         dentist_history_id: d.dentist_history_id ?? null,
+                        dentist_requested_by: d.dentist_requested_by ?? null,
                         dentist_status_id: d.dentist_status_id ?? null,
                         retainer_fee: d.retainer_fee ?? 0,
 
@@ -321,7 +353,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
                 next: (exclusiveToHmos: HMOListItem[]) => {
-                    console.log("exclusiveToHmos:", exclusiveToHmos);
                     this.exclusiveToHmos.set(exclusiveToHmos);
                 },
                 error: (error) => {
@@ -364,6 +395,9 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
         this.saving.set(true);
 
+        // Let's save the file first.
+        // this.documentSlot.commitPendingUpload();
+
         const raw = this.form.getRawValue();
 
         // Convert Date -> ISO (or whatever your backend expects)
@@ -374,6 +408,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
             email: raw.email,
 
             dentist_history_id: raw.dentist_history_id,
+            dentist_requested_by: raw.dentist_requested_by,
             dentist_status_id: raw.dentist_status_id,
             retainer_fee: Number(raw.retainer_fee ?? 0),
 
@@ -391,24 +426,31 @@ export class DentistComponent implements OnInit, AfterViewInit {
         };
 
         const id = this.dentistId();
-        // //const req$ = id ? this.dentistService.patch(id, payload) : this.dentistService.create(payload);
-        //
-        // req$
-        //     .pipe(takeUntilDestroyed(this.destroyRef))
-        //     .subscribe({
-        //         next: (saved: DentistWithLookups) => {
-        //             this.saving.set(false);
-        //             this.initialSnapshot = this.form.getRawValue();
-        //
-        //             // If create, navigate to edit route (optional)
-        //             if (!id && saved?.id) {
-        //                 this.router.navigate(['../', saved.id], { relativeTo: this.route });
-        //             }
-        //         },
-        //         error: () => {
-        //             this.saving.set(false);
-        //         },
-        //     });
+        const req$ = id ? this.dentistService.patchDentist(id, payload) : this.dentistService.createDentist(payload);
+
+        req$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (saved: DentistWithLookups) => {
+                    this.saving.set(false);
+                    this.initialSnapshot = this.form.getRawValue();
+
+                    // If create, navigate to edit route (optional)
+                    if (!id && saved?.id) {
+                        this.router.navigate(['../', saved.id], { relativeTo: this.route });
+                    }
+                },
+                error: () => {
+                    this.saving.set(false);
+                },
+            });
+    }
+
+    onAccreditationContractUploaded(meta: StoredDocumentMeta) {
+        console.log(`onAccreditationContractUploaded: ${meta}`);
+        this.form.patchValue({
+            accre_contract_file_path: meta.file_name,
+        })
     }
 
     cancel() {

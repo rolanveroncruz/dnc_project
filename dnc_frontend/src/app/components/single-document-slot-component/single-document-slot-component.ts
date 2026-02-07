@@ -57,6 +57,7 @@ export class SingleDocumentSlotComponent {
         this.meta.set({
             id:0,
             file_name: filename,
+            file_path: filename,
             content_type: 'application/octet-stream',
             size_bytes: 0,
             updated_at: new Date(0).toISOString()
@@ -114,6 +115,7 @@ export class SingleDocumentSlotComponent {
         if (!file || this.disabled || this.busy()) return;
 
         this.busy.set(true);
+        console.log("calling api.uploadReplace");
 
         this.api.uploadReplace(this.dentistId, file).pipe(
             takeUntilDestroyed(this.destroyRef),

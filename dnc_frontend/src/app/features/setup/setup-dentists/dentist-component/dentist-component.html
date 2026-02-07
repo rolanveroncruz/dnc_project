@@ -84,6 +84,16 @@
 
                     }
                 </mat-form-field>
+                @if(showRequestedBy()) {
+                    <mat-form-field appearance="outline">
+                        <mat-label>Requested by</mat-label>
+                        <input matInput formControlName="dentist_requested_by"/>
+
+                        @if (form.get('dentist_requested_by')?.hasError('required')) {
+                            <mat-error>Required</mat-error>
+                        }
+                    </mat-form-field>
+                }
 
                 <mat-form-field appearance="outline">
                     <mat-label>Dentist Status</mat-label>
@@ -184,6 +194,7 @@
                         [dentistId]="dentistId()"
                         label="Accreditation Contract"
                         [existingFilename] = "accreditationContractFilename()"
+                        (uploaded)="onAccreditationContractUploaded($event)"
                     >
                     </app-single-document-slot>
 

@@ -7,6 +7,7 @@ import { LoginService } from '../login.service';
 export interface StoredDocumentMeta {
     id: number;
     file_name: string;
+    file_path: string;
     content_type: string;
     size_bytes: number;
     updated_at: string; // ISO string
@@ -43,8 +44,9 @@ export class SingleDocumentUploadService {
     uploadReplace(dentistId: number, file: File): Observable<StoredDocumentMeta> {
         const form = new FormData();
         form.append('file', file, file.name);
+        console.log("In uploadReplace ");
 
-        return this.http.put<StoredDocumentMeta>(
+        return this.http.post<StoredDocumentMeta>(
             `${this.baseUrl}/dentists/${dentistId}/document`,
             form,
             { headers: this.authHeaders() }

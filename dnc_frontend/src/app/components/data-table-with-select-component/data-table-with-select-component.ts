@@ -150,10 +150,6 @@ export class DataTableWithSelectComponent<T> implements AfterViewInit, OnChanges
             this.dataSource.data = (this.data || []).filter((x): x is T => x != null);
             this.generateFilterOptions(); // Recalculate unique values for dropdowns
 
-            console.log('[DT] dataSource.data length:', this.dataSource.data.length);
-            console.log('[DT] current filter string:', this.dataSource.filter);
-            console.log('[DT] filteredData length:', this.dataSource.filteredData.length);
-
 
             if (this.selectedId != null){
                 const stillExists = this.dataSource.data.some(r=>this.getRowId(r)===this.selectedId);
