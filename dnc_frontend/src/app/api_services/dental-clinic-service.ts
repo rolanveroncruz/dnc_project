@@ -141,7 +141,8 @@ export class DentalClinicService {
   //
   createDentalClinic(body: CreateDentalClinicBody): Observable<DentalClinic> {
     const url = `${this.baseUrl}${this.API_PATH}`;
-    return this.http.post<DentalClinic>(url, body);
+    return this.http.post<DentalClinic>(url, body, { headers: this.authHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
   //
@@ -149,6 +150,7 @@ export class DentalClinicService {
   //
   patchDentalClinic(id: number, body: PatchDentalClinicBody): Observable<DentalClinic> {
     const url = `${this.baseUrl}${this.API_PATH}/${encodeURIComponent(id)}`;
-    return this.http.patch<DentalClinic>(url, body);
+    return this.http.patch<DentalClinic>(url, body, { headers: this.authHeaders() })
+      .pipe(catchError(this.handleError));
   }
 }
