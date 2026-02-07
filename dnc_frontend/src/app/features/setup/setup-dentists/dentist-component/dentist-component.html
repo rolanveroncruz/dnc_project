@@ -129,6 +129,12 @@
                         @if (dentistClinics(); as ds) {
                             @if (ds.length === 0) {
                                 <p>No Dentists found.</p>
+                                <button
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="addClinic()">
+                                    Add Clinic
+                                </button>
                             } @else {
                                 <app-data-table-with-select
                                     [data]="ds"

@@ -634,5 +634,47 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
     removeExceptForCompany(selected:any) {
     }
+
+    async addClinic(){
+        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        const res = await firstValueFrom(this.dentalClinicService.getDentalClinics());
+        the_clinics = res.items.map(c=>({id:c.id, name:`${c.name}-(${c.address})`}));
+
+
+        const data: AddClinicOrDentistDialogData = {
+            mode: 'clinic',
+            options: the_clinics
+        };
+
+        const ref = this.dialog.open<
+            AddClinicOrDentistDialogComponent,
+            AddClinicOrDentistDialogData,
+            AddClinicOrDentistDialogResult | null>
+        (AddClinicOrDentistDialogComponent,
+            {
+                width: '860px',
+                maxWidth: '95vw',
+                data
+            });
+
+        ref.afterClosed().subscribe(result => {
+            if (!result) return;
+            // result is AddClinicOrDentistDialogResult.
+            // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
+            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position, result.schedule)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: ()=>{
+                        console.log(`clinic added successfully`);
+                        this.fetchClinics(<number>this.dentistId());
+                    },
+                    error: ()=>{
+                        console.log(`clinic add failed`);
+                    }
+                })
+        })
+
+
+    }
 }
 
