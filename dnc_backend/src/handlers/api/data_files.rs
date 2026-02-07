@@ -1,5 +1,5 @@
 use axum::{extract::{Multipart, Path},
-           http::{header, HeaderMap, StatusCode},
+           http::{header, HeaderMap, HeaderValue, StatusCode},
            response::{IntoResponse, Response},
            Json};
 use std::{path::{Path as StdPath, PathBuf}, ffi::OsStr};
@@ -99,18 +99,17 @@ pub async fn save_contract_file_for_dentist_id(
 
 
 
-/// GET /api/dentists/:dentist_id/contract-file/:file_name
-///
-/// Serves: ./DNC_DATAFILES/contracts/{dentist_id}/{file_name}
+
 pub async fn get_contract_file_for_dentist_id(
     Path((dentist_id, file_name)): Path<(i32, String)>,
 ) -> Result<Response, StatusCode> {
-    // Basic filename safety: strip any path components
+    // Strip any path components (prevents ../ traversal)
     let safe_file_name = StdPath::new(&file_name)
         .file_name()
         .and_then(OsStr::to_str)
         .ok_or(StatusCode::BAD_REQUEST)?
         .to_string();
+    tracing::info!("safe_file_name: {:?}", safe_file_name);
 
     let full_path: PathBuf = ["./DNC_DATAFILES", "contracts", &dentist_id.to_string()]
         .iter()
@@ -121,15 +120,28 @@ pub async fn get_contract_file_for_dentist_id(
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;
 
-    // Minimal content-type handling (default octet-stream)
+    // Infer a friendlier MIME type for inline display
+    let content_type = match StdPath::new(&safe_file_name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("pdf") => "application/pdf",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("webp") => "image/webp",
+        _ => "application/octet-stream",
+    };
+
+    // Very basic header-safe filename: replace quotes
+    let header_filename = safe_file_name.replace('"', "_");
+
     let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        header::HeaderValue::from_static("application/octet-stream"),
-    );
+    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
     headers.insert(
         header::CONTENT_DISPOSITION,
-        header::HeaderValue::from_str(&format!("inline; filename=\"{}\"", safe_file_name))
+        HeaderValue::from_str(&format!("inline; filename=\"{}\"", header_filename))
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
     );
 
