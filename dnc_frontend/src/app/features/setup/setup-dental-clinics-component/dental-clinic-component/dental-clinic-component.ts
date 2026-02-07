@@ -351,7 +351,7 @@ export class DentalClinicComponent implements OnInit {
     }
 
     onBack() {
-        this.router.navigate(['/setup/dental-clinics']).then();
+        this.router.navigate(['/main/setup/dental-clinics']).then();
     }
 
     onDiscardChanges(){
@@ -498,16 +498,17 @@ export class DentalClinicComponent implements OnInit {
     selectedRow:any |null = null;
 
 
-    async onAddClinic(){
+    async onAddDentist(){
 
-        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        console.log("onAddDentist");
+        let the_dentists: DentistOrClinicWithIdAndName[] = [];
         const res = await firstValueFrom(this.dentistService.getAllDentists());
-        the_clinics = res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
+        the_dentists= res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
 
 
         const data: AddClinicOrDentistDialogData = {
-            mode: 'clinic',
-            options: the_clinics
+            mode: 'dentist',
+            options: the_dentists
         };
 
         const ref = this.dialog.open<
@@ -546,6 +547,46 @@ export class DentalClinicComponent implements OnInit {
                 },
                 error: () => console.log("Error in removing dentist clinic")
             });
+
+    }
+
+    async addDentist(){
+        console.log("onAddDentist");
+        let the_dentists: DentistOrClinicWithIdAndName[] = [];
+        const res = await firstValueFrom(this.dentistService.getAllDentists());
+        the_dentists= res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
+
+
+        const data: AddClinicOrDentistDialogData = {
+            mode: 'dentist',
+            options: the_dentists
+        };
+
+        const ref = this.dialog.open<
+            AddClinicOrDentistDialogComponent,
+            AddClinicOrDentistDialogData,
+            AddClinicOrDentistDialogResult | null>
+        (AddClinicOrDentistDialogComponent,
+            {
+                width: '860px',
+                maxWidth: '95vw',
+                data
+            });
+
+        ref.afterClosed().subscribe(result => {
+            if (!result) return;
+            // result is AddClinicOrDentistDialogResult.
+            // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
+            console.log("result:", result);
+            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position, result.schedule)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => {
+                        this.fetchDentistsForClinicId(<number>this.clinicId());
+                    },
+                    error: () => console.log("Error in adding dentist clinic")
+                })
+        })
 
     }
 }
