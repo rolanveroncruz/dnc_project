@@ -1,0 +1,310 @@
+<mat-card class="dentist-card">
+    <mat-card-header>
+        <mat-card-title>
+            {{ isEditMode() ? 'Edit Dentist' : 'Create Dentist' }}
+        </mat-card-title>
+        @if (isEditMode()) {
+            <mat-card-subtitle>
+                ID: {{ dentistId() }}
+            </mat-card-subtitle>
+        }
+        <div class="spacer"></div>
+
+        <div class="header-actions">
+            <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">
+                Cancel
+            </button>
+
+            <button mat-flat-button color="primary" type="button"
+                    (click)="save()"
+                    [disabled]="saving() || loading()">
+                <mat-icon>save</mat-icon>
+                Save
+            </button>
+        </div>
+    </mat-card-header>
+    @if (loading() || saving()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+    <mat-card-content [formGroup]="form">
+        <!-- Top part: 4 columns -->
+        <section class="top-grid">
+            <!-- Column 1: last_name + email -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Last name</mat-label>
+                    <input matInput formControlName="last_name"/>
+                    @if (form.get('email')?.hasError('required')) {
+                        <mat-error>Required</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email"/>
+                    @if (form.get('email')?.hasError('email')) {
+                        <mat-error> Invalid email</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+
+            <!-- Column 2: given_name -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Given name</mat-label>
+                    <input matInput formControlName="given_name"/>
+                    @if (form.get('given_name')?.hasError('required')) {
+                        <mat-error>Required</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+
+            <!-- Column 3: middle_name -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Middle name</mat-label>
+                    <input matInput formControlName="middle_name"/>
+                </mat-form-field>
+            </div>
+
+            <!-- Column 4: dentist_history_name, dentist_status_name, retainer_fee -->
+            <div class="col">
+                <mat-form-field appearance="outline">
+                    <mat-label>Dentist History</mat-label>
+                    <mat-select formControlName="dentist_history_id">
+                        <mat-option [value]="null">None</mat-option>
+                        @for (o of histories(); track o.id) {
+                            <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                        }
+                    </mat-select>
+                    @if (form.value.dentist_history_id) {
+                        <mat-hint>
+                            Selected: {{ lookupName(histories(), form.value.dentist_history_id) }}
+                        </mat-hint>
+
+                    }
+                </mat-form-field>
+                @if(showRequestedBy()) {
+                    <mat-form-field appearance="outline">
+                        <mat-label>Requested by</mat-label>
+                        <input matInput formControlName="dentist_requested_by"/>
+
+                        @if (form.get('dentist_requested_by')?.hasError('required')) {
+                            <mat-error>Required</mat-error>
+                        }
+                    </mat-form-field>
+                }
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Dentist Status</mat-label>
+                    <mat-select formControlName="dentist_status_id">
+                        <mat-option [value]="null">None</mat-option>
+                        @for (o of statuses(); track o.id) {
+                            <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                        }
+                    </mat-select>
+                    @if (form.value.dentist_status_id) {
+                        <mat-hint>
+                            Selected: {{ lookupName(statuses(), form.value.dentist_status_id) }}
+                        </mat-hint>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Retainer fee</mat-label>
+                    <input matInput type="number" formControlName="retainer_fee"/>
+                    @if (form.get('retainer_fee')?.hasError('min')) {
+                        <mat-error>Must be ≥ 0</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+        </section>
+
+        <!-- Bottom part: Tabs -->
+        <section class="tabs-section">
+            <mat-tab-group>
+                <!-- Clinics tab -->
+                <mat-tab label="Clinics">
+                    <div class="tab-pad">
+                        @if (dentistClinics(); as ds) {
+                            @if (ds.length === 0) {
+                                <p>No Dentists found.</p>
+                                <button
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="addClinic()">
+                                    Add Clinic
+                                </button>
+                            } @else {
+                                <app-data-table-with-select
+                                    [data]="ds"
+                                    [columnDefs]="dentist_clinic_columns"
+                                    [filterSelectKeys]="['status']"
+                                    selectionMode="checkbox"
+                                    [showEditButton]="false"
+                                    [showHeaderFilters]="false"
+                                    [pageSize]="20"
+                                    [pageSizeOptions]="[10, 20, 50,100]"
+                                    (addClicked)="openNewClinicDialog()"
+                                    (deleteClicked)="onDeleteClinic($event)"
+                                />
+                            }
+
+                        } @else {
+                            <p>Loading...</p>
+                        }
+
+                    </div>
+                </mat-tab>
+
+                <!-- Accreditation tab -->
+                <mat-tab label="Accreditation">
+                    <div class="tab-grid tab-pad">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Dentist Contract</mat-label>
+                            <mat-select formControlName="accre_dentist_contract_id">
+                                <mat-option [value]="null">None</mat-option>
+                                @for (o of contracts(); track o.id) {
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (form.value.accre_dentist_contract_id) {
+                                <mat-hint>
+                                    Selected: {{ lookupName(contracts(), form.value.accre_dentist_contract_id) }}
+                                </mat-hint>
+                            }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Document code</mat-label>
+                            <input matInput formControlName="accre_document_code"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Accreditation date</mat-label>
+                            <input matInput [matDatepicker]="accDate" formControlName="accreditation_date"/>
+                            <mat-datepicker-toggle matIconSuffix [for]="accDate"></mat-datepicker-toggle>
+                            <mat-datepicker #accDate></mat-datepicker>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Contract sent date</mat-label>
+                            <input matInput [matDatepicker]="sentDate" formControlName="accre_contract_sent_date"/>
+                            <mat-datepicker-toggle matIconSuffix [for]="sentDate"></mat-datepicker-toggle>
+                            <mat-datepicker #sentDate></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <app-single-document-slot
+                        #documentSlot
+                        [dentistId]="dentistId()"
+                        label="Accreditation Contract"
+                        [existingFilename] = "accreditationContractFilename()"
+                        (uploaded)="onAccreditationContractUploaded($event)"
+                    >
+                    </app-single-document-slot>
+
+
+                </mat-tab>
+
+                <!-- HMO relations tab -->
+                <mat-tab label="HMO relations">
+                    <div class="tab-pad">
+
+                        <div class="hmo-grid">
+                            <app-hmo-relations
+                                title="Exclusive to HMO"
+                                [items]="exclusiveToHmos()"
+                                (add)="addExclusiveToHmo()"
+                                (remove)="removeExclusiveToHmo($event)" />
+
+                            <app-hmo-relations
+                                title="Except HMO"
+                                [items]="exceptForHmos()"
+                                (add)="addExceptForHmo()"
+                                (remove)="removeExceptForHmo($event)" />
+
+                            <app-hmo-relations
+                                title="Exclusive to Company"
+                                [items]="exclusiveToCompanies()"
+                                (add)="addExclusiveToCompany()"
+                                (remove)="removeExclusiveToCompany($event)" />
+
+
+                            <app-hmo-relations
+                                title="Except Company"
+                                [items]="exceptForCompanies()"
+                                (add)="addExceptForCompany()"
+                                (remove)="removeExceptForCompany($event)"
+                            />
+                        </div>
+
+                        >
+
+                    </div>
+                </mat-tab>
+
+                <!-- Accounting tab -->
+                <mat-tab label="Accounting">
+                    <div class="tab-grid tab-pad">
+                        <mat-form-field appearance="outline">
+                            <mat-label>TIN</mat-label>
+                            <input matInput formControlName="acc_tin"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Bank name</mat-label>
+                            <input matInput formControlName="acc_bank_name"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Account name</mat-label>
+                            <input matInput formControlName="acc_account_name"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Account number</mat-label>
+                            <input matInput formControlName="acc_account_number"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Tax type</mat-label>
+                            <mat-select formControlName="acc_tax_type_id">
+                                <mat-option [value]="null">None</mat-option>
+                                @for (o of taxTypes(); track o.id) {
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (form.value.acc_tax_type_id) {
+                                <mat-hint>
+                                    Selected: {{ lookupName(taxTypes(), form.value.acc_tax_type_id) }}
+                                </mat-hint>
+                            }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Tax classification</mat-label>
+                            <mat-select formControlName="acc_tax_classification_id">
+                                <mat-option [value]="null">None</mat-option>
+                                @for (o of taxClassifications(); track o.id) {
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (form.value.acc_tax_classification_id) {
+                                <mat-hint>
+                                    Selected: {{ lookupName(taxClassifications(), form.value.acc_tax_classification_id) }}
+                                </mat-hint>
+                            }
+                        </mat-form-field>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+
+            @if (isDirty()) {
+                <div class="dirty-row">
+                    <mat-icon>info</mat-icon>
+                    You have unsaved changes.
+                </div>
+            }
+        </section>
+    </mat-card-content>
+</mat-card>

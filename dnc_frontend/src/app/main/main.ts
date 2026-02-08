@@ -1,6 +1,6 @@
 // src/app/layout/shell.component.ts
 import {Component, Inject, inject, OnInit, PLATFORM_ID} from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -27,7 +27,7 @@ interface TopNavItem {
 }
 
 interface SideNavItem {
-  label: string;
+  label: string | {line1:string, line2:string, line3:string};
   icon: string;
   route: string;
   disabled: boolean;
@@ -94,8 +94,8 @@ export class MainComponent implements OnInit {
       { label: 'Dental Services',     icon: 'info',     route: '/main/setup/dental-services', disabled:true},
       { label: 'Clinic Capabilities',     icon: 'star',     route: '/main/setup/clinic-capabilities', disabled:true },
       { label: 'HMOs',    icon: 'account_balance',       route: '/main/setup/hmos', disabled:true  },
-      { label: 'Dental Contracts',    icon: 'file_copy',       route: '/main/setup/dental-contracts', disabled:true },
-      { label: 'Clinics',    icon: 'home',       route: '/main/setup/clinics', disabled:true },
+      { label: 'Dentist Contracts',    icon: 'file_copy',       route: '/main/setup/dentist-contracts', disabled:true },
+      { label: 'Dental Clinics',    icon: 'home',       route: '/main/setup/dental-clinics', disabled:true },
       { label: 'Dentists',    icon: 'face',       route: '/main/setup/dentists', disabled:true },
       { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/endorsements', disabled:true },
     ],
@@ -162,8 +162,8 @@ export class MainComponent implements OnInit {
     this.activate_item("user", "Users");
     this.activate_item("role", "Roles and Permissions");
     this.activate_item("hmo", "HMOs");
-    this.activate_item("dental_contract", "Dental Contracts");
-    this.activate_item("clinic", "Clinics");
+    this.activate_item("dentist_contract", "Dentist Contracts");
+    this.activate_item("dental_clinic", "Dental Clinics");
     this.activate_item("dentist", "Dentists");
     this.activate_item("endorsement", "Endorsements");
   }

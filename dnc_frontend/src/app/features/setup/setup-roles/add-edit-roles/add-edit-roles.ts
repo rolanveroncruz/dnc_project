@@ -32,6 +32,7 @@ type RoleDialogData = {
 
 @Component({
   selector: 'app-add-edit-roles',
+  standalone: true,
   imports: [
     DatePipe,
     ReactiveFormsModule,

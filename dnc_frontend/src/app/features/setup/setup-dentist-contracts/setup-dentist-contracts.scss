@@ -1,0 +1,69 @@
+
+mat-card-header.card-header-center {
+  justify-content: center;
+}
+mat-card-header.card-header-center .mat-mdc-card-header-text {
+  text-align: center;
+  margin: 0; // removes default left margin that can offset centering
+}
+
+.setup-roles-card .mat-mdc-card-title{
+  font-size:28px;
+  line-height: 1.2;
+  font-weight:700;
+}
+
+.contract-picker-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.contract-select {
+  flex: 1;
+  min-width: 320px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.section-divider {
+  margin: 12px 0;
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--mat-sys-surface, #fff);
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-chip, .mode-chip {
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.contract-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* ~half / half */
+  gap: 12px;
+  align-items: start;
+}
+
+.contract-fields mat-form-field {
+  width: 100%;
+}
+
+/* ✅ On narrow screens, stack them */
+@media (max-width: 900px) {
+  .contract-fields {
+    grid-template-columns: 1fr;
+  }
+}

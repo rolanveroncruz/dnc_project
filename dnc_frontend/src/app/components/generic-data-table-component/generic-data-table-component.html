@@ -1,3 +1,4 @@
+@if (showHeaderFilters) {
 <div class="toolbar" [formGroup]="form">
   <mat-form-field appearance="outline" class="q">
     <mat-label>Search</mat-label>
@@ -9,7 +10,6 @@
 
     }
   </mat-form-field>
-
   <ng-container formGroupName="filters">
     @for(key of filterSelectKeys; track key) {
       <mat-form-field appearance="outline" class="filter">
@@ -25,7 +25,6 @@
       </mat-form-field>
     }
   </ng-container>
-
   <mat-form-field appearance="outline" class="filter">
     <mat-label>Sort by</mat-label>
     <mat-select formControlName="sortBy">
@@ -61,7 +60,7 @@
   </div>
 <!--  End of class="btn-group"-->
 </div>
-
+}
 <div class="table-wrap">
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
     @for (col of columnDefs; track col.key) {
@@ -121,6 +120,12 @@
 </ng-template>
 
 <!-------------------->
+<!----Date Template--->
+<!-------------------->
+<ng-template #dateCell let-row let-col="col">
+  {{ toDate(row[col.key]) | date:'MMM d, y' }}
+</ng-template>
+<!-------------------->
 <!---Chips Template--->
 <!-------------------->
 <ng-template #chipsCell let-row let-col="col">
@@ -134,4 +139,14 @@
       </mat-chip>
     }
   </mat-chip-set>
+</ng-template>
+<!-------------------------->
+<!--- Check or X Template --->
+<!-------------------------->
+<ng-template #checkCell let-row let-col="col">
+  @if (row[col.key]) {
+    <mat-icon class="bool-icon bool-true" (click)="$event.stopPropagation()">check_circle</mat-icon>
+  } @else {
+    <mat-icon class="bool-icon bool-false" (click)="$event.stopPropagation()">cancel</mat-icon>
+  }
 </ng-template>

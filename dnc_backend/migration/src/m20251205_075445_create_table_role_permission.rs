@@ -68,10 +68,6 @@ impl MigrationTrait for Migration {
         Self::insert_role_all_permissions(manager, "Administrator", "role").await?;
         Self::insert_role_all_permissions(manager, "Administrator", "role_permission").await?;
         Self::insert_role_all_permissions(manager, "Administrator", "hmo").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "dental_contract").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "clinic").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "dentist").await?;
-        Self::insert_role_all_permissions(manager, "Administrator", "endorsement").await?;
 
         Ok(())
     }
@@ -85,10 +81,17 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration {
-    async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
-        let permissions = vec!["create", "read", "update" ];
+    pub async fn insert_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
+        let permissions = vec!["create", "read", "update", "delete" ];
         for permission in permissions{
             Self::insert_role_permission(manager, role_name, resource_name, permission).await?;
+        }
+        Ok(())
+    }
+    pub async fn del_role_all_permissions(manager: &SchemaManager<'_>, role_name: &str, resource_name:&str )->Result<(), DbErr>{
+        let permissions = vec!["create", "read", "update", "delete" ];
+        for permission in permissions {
+            Self::del_role_permission(manager, role_name, resource_name, permission).await?;
         }
         Ok(())
     }
@@ -151,6 +154,49 @@ impl Migration {
         Ok(())
 
 
+    }
+
+    async fn del_role_permission( manager:&SchemaManager<'_>, role_name:&str, resource_name:&str, permission_action_name:&str) -> Result<(), DbErr> {
+        println!(
+            "Deleting {} permission for role: {} and resource: {}",
+            permission_action_name, role_name, resource_name
+        );
+
+        // Subquery for RoleId
+        let role_id_subq = Query::select()
+            .column(Role::Id)
+            .from(Role::Table)
+            .and_where(Expr::col(Role::Name).eq(role_name))
+            .limit(1)
+            .to_owned();
+
+        // Subquery for PermissionId (resource + action)
+        let permission_id_subq = Query::select()
+            .column((Permission::Table, Permission::Id))
+            .from(Permission::Table)
+            .join(
+                JoinType::InnerJoin,
+                DataObject::Table,
+                Expr::col((Permission::Table, Permission::DataObjectId))
+                    .equals((DataObject::Table, DataObject::Id)),
+            )
+            .and_where(Expr::col(DataObject::Name).eq(resource_name))
+            .and_where(
+                Expr::col(Permission::Action).eq(
+                    Expr::val(permission_action_name).cast_as(PermissionAction::EnumName),
+                ),
+            )
+            .limit(1)
+            .to_owned();
+
+        let delete = Query::delete()
+            .from_table(RolePermission::Table)
+            .and_where(Expr::col(RolePermission::RoleId).in_subquery(role_id_subq))
+            .and_where(Expr::col(RolePermission::PermissionId).in_subquery(permission_id_subq))
+            .to_owned();
+
+        manager.exec_stmt(delete).await?;
+        Ok(())
     }
 
 }

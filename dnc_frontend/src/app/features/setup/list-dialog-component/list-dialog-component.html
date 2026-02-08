@@ -1,0 +1,74 @@
+<mat-dialog-content class="content">
+    <div class="header">
+        <h2 class="title">{{ title }}</h2>
+        @if (subtitle) {
+            <div class="subtitle">{{ subtitle }}</div>
+        }
+    </div>
+
+    <div class="toolbar">
+        <mat-form-field appearance="outline" class="q">
+            <mat-label>{{ searchLabel }}</mat-label>
+            <input matInput [formControl]="q" placeholder="Type to search..." />
+            @if (q.value) {
+                <button mat-icon-button matSuffix type="button" (click)="clearSearch()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+
+        @if (enableGroupFilter) {
+            <mat-form-field appearance="outline" class="filter">
+                <mat-label>{{ filterLabel }}</mat-label>
+                <mat-select [formControl]="group">
+                    <mat-option value="">All</mat-option>
+                    @for (g of groups(); track g) {
+                        <mat-option [value]="g">{{ g }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        }
+    </div>
+
+    <div class="listbox" role="listbox" aria-label="Selectable list">
+        @if (filteredItems().length === 0) {
+            <div class="empty">{{ emptyText }}</div>
+        } @else {
+            <mat-radio-group
+                class="radio-group"
+                [value]="selectedId()"
+                (change)="selectedId.set($event.value)"
+            >
+                @for (it of filteredItems(); track it.id) {
+                    <div
+                        class="row"
+                        role="option"
+                        [attr.aria-selected]="selectedId() === it.id"
+                        (click)="pick(it.id)"
+                    >
+                        <mat-radio-button class="rb" [value]="it.id">
+                            <span class="label">{{ it.label }}</span>
+                            <span class="meta">#{{ it.id }}</span>
+                        </mat-radio-button>
+
+                        @if (it.group) {
+                            <span class="chip">{{ it.group }}</span>
+                        }
+                    </div>
+                }
+            </mat-radio-group>
+        }
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="actions">
+    <button mat-button type="button" (click)="onCancel()">{{ cancelText }}</button>
+    <button
+        mat-flat-button
+        type="button"
+        (click)="onSave()"
+        [disabled]="selectedId() == null"
+    >
+        {{ saveText }}
+    </button>
+</mat-dialog-actions>

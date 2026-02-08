@@ -65,10 +65,6 @@ impl MigrationTrait for Migration {
         Self::add_dataobject(manager, "role", "permission Data Object").await?;
         Self::add_dataobject(manager, "role_permission", "role_permission Data Object").await?;
         Self::add_dataobject(manager, "hmo", "hmo Data Object").await?;
-        Self::add_dataobject(manager, "dental_contract", "dental_contract Data Object").await?;
-        Self::add_dataobject(manager, "clinic", "clinic Data Object").await?;
-        Self::add_dataobject(manager, "dentist", "dentist Data Object").await?;
-        Self::add_dataobject(manager, "endorsement", "endorsement Data Object").await?;
 
         Ok(())
     }
@@ -84,7 +80,7 @@ impl MigrationTrait for Migration {
     }
 }
 impl Migration {
-    async fn add_dataobject(manager: &SchemaManager<'_>, name: &str, description: &str)->Result<(), DbErr>{
+    pub async fn add_dataobject(manager: &SchemaManager<'_>, name: &str, description: &str)->Result<(), DbErr>{
         // 1. Create Insert Statement
         let insert = Query::insert()
             .into_table(DataObject::Table)
@@ -102,6 +98,24 @@ impl Migration {
 
         Ok(())
 
+    }
+
+    pub async fn delete_dataobject(manager: &SchemaManager<'_>, name: &str)->Result<(), DbErr>{
+        // 1. Create Delete Statement
+        let delete = Query::delete()
+            .from_table(DataObject::Table)
+            .and_where(Expr::col(DataObject::Name).eq(name))
+            .to_owned();
+
+        // 2. Force Postgres formatting
+        let sql = delete.to_string(PostgresQueryBuilder);
+
+        // 3. Execute
+        manager
+            .get_connection()
+            .execute_unprepared(&sql)
+            .await?;
+        Ok(())
     }
 }
 

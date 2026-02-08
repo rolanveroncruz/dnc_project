@@ -8,6 +8,14 @@ mod m20251205_075454_create_table_user;
 mod m20251221_124454_create_table_dental_services;
 mod m20251221_124505_create_table_clinic_capabilities;
 mod m20260108_051749_create_table_hmo;
+mod m20260119_112338_create_table_dentist_contract;
+mod m20260119_112532_create_table_dentist_contract_service_rates;
+mod m20260119_131647_add_dentist_contract_permission_and_role_permissions;
+mod m20260126_063012_create_tables_dental_clinic;
+mod m20260126_151643_add_dental_clinic_permission_and_role_permissions;
+mod m20260126_161604_create_table_dentists;
+mod m20260129_023740_insert_dentist_and_dental_clinics_from_xlsx;
+mod m20260205_013824_create_dentist_hmo_relations;
 
 pub struct Migrator;
 
@@ -23,6 +31,14 @@ impl MigratorTrait for Migrator {
             Box::new(m20251221_124454_create_table_dental_services::Migration),
             Box::new(m20251221_124505_create_table_clinic_capabilities::Migration),
             Box::new(m20260108_051749_create_table_hmo::Migration),
+            Box::new(m20260119_112338_create_table_dentist_contract::Migration),
+            Box::new(m20260119_112532_create_table_dentist_contract_service_rates::Migration),
+            Box::new(m20260119_131647_add_dentist_contract_permission_and_role_permissions::Migration),
+            Box::new(m20260126_063012_create_tables_dental_clinic::Migration),
+            Box::new(m20260126_151643_add_dental_clinic_permission_and_role_permissions::Migration),
+            Box::new(m20260126_161604_create_table_dentists::Migration),
+            Box::new(m20260129_023740_insert_dentist_and_dental_clinics_from_xlsx::Migration),
+            Box::new(m20260205_013824_create_dentist_hmo_relations::Migration),
         ]
     }
 }

@@ -1,0 +1,43 @@
+@use '@angular/material' as mat;
+.rates-grid {
+  display: grid;
+
+  /* Fill down first, then create new columns */
+  grid-auto-flow: column;
+
+  /* Max 4 items per column */
+  grid-template-rows:repeat(4, auto);
+
+  /* Each column width */
+  grid-auto-columns: minmax(100px, 1fr);
+  gap: 12px 24px;
+  padding: 12px 0;
+  align-items: start;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+  align-items: center;
+}
+
+.rate-field {
+  width: 100%;
+  @include mat.form-field-density(-3);
+  font-size: 12px;
+}
+
+
+/* Responsive: on narrow screens, go back to single column */
+@media (max-width: 900px) {
+  .rates-grid {
+    grid-auto-flow: row;
+    grid-template-rows: none;
+    grid-auto-columns: auto;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

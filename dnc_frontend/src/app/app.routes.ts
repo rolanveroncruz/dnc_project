@@ -14,11 +14,17 @@ import {SetupUsers} from './features/setup/setup-users/setup-users';
 import {SetupRoles} from './features/setup/setup-roles/setup-roles';
 import {SetupHMOs} from './features/setup/setup-hmos/setup-hmos';
 import {HMOPageComponent} from './features/setup/setup-hmos/hmopage-component/hmopage-component';
-import {SetupDentalContracts} from './features/setup/setup-dental-contracts/setup-dental-contracts';
-import {SetupClinics} from './features/setup/setup-clinics/setup-clinics';
 import {SetupDentists} from './features/setup/setup-dentists/setup-dentists';
 import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
 import {authGuard} from './auth-guard';
+import {SetupDentistContracts} from './features/setup/setup-dentist-contracts/setup-dentist-contracts';
+import {
+  SetupDentalClinicsComponent
+} from './features/setup/setup-dental-clinics-component/setup-dental-clinics-component';
+import {
+  DentalClinicComponent
+} from './features/setup/setup-dental-clinics-component/dental-clinic-component/dental-clinic-component';
+import {DentistComponent} from './features/setup/setup-dentists/dentist-component/dentist-component';
 
 export const routes: Routes = [
   {
@@ -45,9 +51,13 @@ export const routes: Routes = [
           { path: 'hmos', component: SetupHMOs, title: 'HMOs'},
           { path: 'hmos/:id', component: HMOPageComponent , title: 'HMO'},
           { path: 'hmos/new', component: HMOPageComponent , title: 'HMO'},
-          { path: 'dental-contracts', component: SetupDentalContracts, title: 'Dental Contracts'},
-          { path: 'clinics', component: SetupClinics, title: 'Clinics'},
+          { path: 'dentist-contracts', component:SetupDentistContracts, title: 'Dentist Contracts'},
+          { path: 'dental-clinics', component: SetupDentalClinicsComponent, title: 'All Clinics'},
+          { path: 'dental-clinics/:id', component: DentalClinicComponent, title: 'Dental Clinic'},
+          { path: 'dental-clinics/new', component: DentalClinicComponent, title: 'Dental Clinic'},
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
+          { path: 'dentists/new', component: DentistComponent, title: 'Dentists'},
+          { path: 'dentists/:id', component: DentistComponent, title: 'Dentists'},
           { path: 'endorsements', component: SetupEndorsements, title: 'Endorsements'},
 
          ]

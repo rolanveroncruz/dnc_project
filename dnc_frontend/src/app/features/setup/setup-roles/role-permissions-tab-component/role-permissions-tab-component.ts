@@ -21,6 +21,7 @@ type LoadState = 'loading' | 'loaded' | 'error';
   ],
   templateUrl: './role-permissions-tab-component.html',
   styleUrl: './role-permissions-tab-component.scss',
+  standalone: true
 })
 export class RolePermissionsTabComponent implements OnInit{
   role_permissions_state = signal<LoadState>('loading');

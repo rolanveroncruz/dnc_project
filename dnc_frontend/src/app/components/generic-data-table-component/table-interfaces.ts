@@ -1,4 +1,4 @@
-export interface TableColumn {
+export interface TableColumn<T extends object=any> {
   key: string;       // The property name in your JSON (e.g., 'email')
   label: string;     // The text to display in the header (e.g., 'Email Address')
   sortable?: boolean; // Whether to allow sorting on this column

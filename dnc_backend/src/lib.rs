@@ -20,7 +20,8 @@ use handlers::{
     get_clinic_capabilities, post_clinic_capability, patch_clinic_capability,
     get_users, post_user, patch_user,
     get_roles,create_role,patch_role,
-    get_role_permissions
+    get_role_permissions,
+    get_all_dentist_contracts, get_dentist_contract,
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 impl AppState {
@@ -34,11 +35,9 @@ impl AppState {
 use jsonwebtoken::{Validation, Algorithm, DecodingKey};
 use handlers::JwtConfig;
 use std::sync::Arc;
+use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects,
-                      get_dental_service_types, post_dental_service, patch_dental_service,
-                      get_hmos, post_hmo, patch_hmo,
-                      get_hmo_by_id};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities, get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic, get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic, get_region_by_id, post_region, patch_region, get_all_dentists, get_dentist_from_id, get_clinics_for_dentist_id, get_all_dentist_clinics, get_dentists_for_clinic_id, get_all_dentist_histories, get_all_dentist_status, get_all_tax_classifications, get_all_tax_types, get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id, add_dentist_clinic, remove_dentist_clinic, add_exclusive_to_hmo, remove_exclusive_to_hmo, add_except_for_hmo, remove_except_for_hmo, save_contract_file_for_dentist_id, get_contract_file_for_dentist_id, create_dentist, patch_dentist};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -63,6 +62,50 @@ fn protected_routes() ->Router<AppState>{
         .route("/hmos/{:id}", get(get_hmo_by_id))
         .route("/hmos/{:id}", patch(patch_hmo))
         .route("/hmos/", post(post_hmo))
+        .route("/dentist_contracts",get(get_all_dentist_contracts))
+        .route("/dentist_contracts/{:id}",get(get_dentist_contract))
+        .route("/dentist_contracts/",post(post_dentist_contract))
+        .route("/dentist_contracts/{:id}",patch(patch_dentist_contract))
+        .route("/dentist_contracts/{:id}/rates",patch(patch_dentist_contract_rates))
+        .route("/cities", get(get_cities))
+        .route("/provinces", get(get_provinces))
+        .route("/provinces/{:province_id}/cities", get(get_cities_by_province))
+        .route("/regions", get(get_regions))
+        .route("/regions/{:id}", get(get_region_by_id))
+        .route("/regions/", post(post_region))
+        .route("/regions/{:id}", patch(patch_region))
+        .route("/dental_clinics/", get(get_dental_clinics))
+        .route("/dental_clinics/{id}", get(get_dental_clinic_by_id))
+        .route("/dental_clinics/", post(create_dental_clinic))
+        .route("/dental_clinics/{id}", patch(patch_dental_clinic))
+        .route("/dental_clinics/{:clinic_id}/capabilities", get(get_clinic_capabilities_for_clinic))
+        .route("/dental_clinics/{:clinic_id}/capabilities/", post(add_clinic_capability_to_clinic))
+        .route("/dental_clinics/{:clinic_id}/capabilities/{:capability_id}", delete(remove_clinic_capability_from_clinic))
+        .route("/dental/_clinics/{:clinic_id}/capabilities", patch(set_clinic_capabilities_for_clinic))
+        .route("/dentists/", get(get_all_dentists))
+        .route("/dentists/{:id}", get(get_dentist_from_id))
+
+        .route("/dentist_clinics/", get(get_all_dentist_clinics))
+        .route("/dentists/{:dentist_id}/clinics", get(get_clinics_for_dentist_id))
+        .route("/dentists/{:dentist_id}/clinics", post(add_dentist_clinic))
+        .route("/dentists/{:dentist_id}/clinics/{:clinic_id}", delete(remove_dentist_clinic))
+        .route("/dental_clinics/{:clinic_id}/dentists", get(get_dentists_for_clinic_id))
+        .route("/dentist_histories/", get(get_all_dentist_histories))
+        .route("/dentist_statuses/", get(get_all_dentist_status))
+        .route("/tax_classifications/", get(get_all_tax_classifications))
+        .route("/tax_types/", get(get_all_tax_types))
+        .route("/dentists/{:dentist_id}/hmos/exclusive", get(get_exclusive_to_hmos_from_dentist_id))
+        .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", post(add_exclusive_to_hmo))
+        .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", delete(remove_exclusive_to_hmo))
+        .route("/dentists/{:dentist_id}/hmos/except", get(get_not_hmos_from_dentist_id))
+        .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", post(add_except_for_hmo))
+        .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", delete(remove_except_for_hmo))
+        .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id))
+        .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
+        .route("/dentists/", post(create_dentist))
+        .route("/dentists/{:id}", patch(patch_dentist))
+
+
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {

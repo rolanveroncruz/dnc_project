@@ -16,4 +16,6 @@ pub enum PermissionActionEnum {
     Read,
     #[sea_orm(string_value = "update")]
     Update,
+    #[sea_orm(string_value = "delete")]
+    Delete,
 }

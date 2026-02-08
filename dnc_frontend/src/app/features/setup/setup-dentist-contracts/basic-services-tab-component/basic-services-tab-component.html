@@ -1,0 +1,25 @@
+@if (ratesGroup && services.length) {
+
+  <div class="rates-grid" [formGroup]="ratesGroup">
+    @for (s of services; track s.id) {
+      <div class="row">
+        <div class="service-name">{{ s.name }}</div>
+
+        <mat-form-field appearance="outline" class="rate-field" subscriptSizing="dynamic">
+          <mat-label>Rate</mat-label>
+          <input
+            matInput
+            type="number"
+            [formControlName]="controlName(s.id)"
+            [disabled]="disabled"
+            min="0"
+            step="0.01"/>
+
+          @if (ratesGroup.get(controlName(s.id))?.invalid && ratesGroup.get(controlName(s.id))?.touched) {
+            <mat-error>Required, must be ≥ 0</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    }
+  </div>
+}

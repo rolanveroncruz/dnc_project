@@ -1,0 +1,96 @@
+<div class="slot">
+    <div class="top">
+        <div class="label">{{ label }} dentist_id: {{dentistId}}</div>
+
+        <div class="actions">
+            <!-- Hidden file input -->
+            <input
+                #fileInput
+                type="file"
+                class="file-input"
+                (change)="onFilePicked($event)"
+                [disabled]="disabled || busy()" />
+
+            <!-- Upload/Replace -->
+            <button
+                mat-icon-button
+                type="button"
+                [disabled]="disabled || busy()"
+                matTooltip="Upload / Replace"
+                (click)="fileInput.click()">
+                <mat-icon>upload</mat-icon>
+            </button>
+
+            <!-- Delete existing -->
+            <button
+                mat-icon-button
+                type="button"
+                [disabled]="disabled || busy() || !meta()"
+                matTooltip="Delete"
+                (click)="deleteExisting()">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Busy indicator -->
+    @if (busy()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+
+    <div class="body">
+        <!-- Saved file (if any) -->
+        @if (meta(); as m) {
+            <div class="row">
+                <button
+                    mat-button
+                    type="button"
+                    class="file-link"
+                    [disabled]="disabled || busy()"
+                    (click)="download()">
+                    <mat-icon class="doc-ic">description</mat-icon>
+                    <span class="name">{{ m.file_name }}</span>
+                </button>
+
+<!--                <div class="meta">-->
+<!--                    <span>{{ (m.size_bytes / 1024) | number:'1.0-0' }} KB</span>-->
+<!--                    <span class="dot">•</span>-->
+<!--                    <span>Updated {{ m.updated_at | date:'medium' }}</span>-->
+<!--                </div>-->
+            </div>
+        } @else {
+            <div class="empty">
+                No document uploaded.
+            </div>
+        }
+
+        <!-- Pending file (not yet uploaded) -->
+        @if (pendingFile(); as pf) {
+            <div class="pending">
+                <div class="pending-main">
+                    <mat-icon class="warn">schedule</mat-icon>
+                    <div class="pending-text">
+                        <div class="pending-title">
+                            Selected but not saved yet
+                        </div>
+                        <div class="pending-name">
+                            {{ pf.name }} ({{ (pf.size / 1024) | number:'1.0-0' }} KB)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pending-actions">
+                    <button
+                        mat-flat-button
+                        type="button"
+                        [disabled]="disabled || busy()"
+                        (click)="clearPendingSelection()">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>

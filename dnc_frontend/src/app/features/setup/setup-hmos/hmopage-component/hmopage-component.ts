@@ -25,6 +25,7 @@ interface Endorsement{
 }
 @Component({
   selector: 'app-hmopage-component',
+  standalone: true,
   imports: [
     ReactiveFormsModule,
     MatLabel,
