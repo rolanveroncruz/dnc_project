@@ -7,6 +7,15 @@ import {TableColumn} from '../../../components/generic-data-table-component/tabl
 import {DentalClinicRow} from '../setup-dental-clinics-component/setup-dental-clinics-component';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
+import {DentalClinicService} from '../../../api_services/dental-clinic-service';
+import {DentistClinicService, DentistClinicWithNames} from '../../../api_services/dentist-clinic-service';
+import {forkJoin} from 'rxjs';
+
+export interface DentistWithLookupsAndClinicInfo extends DentistWithLookups {
+    clinic_name: string | null;
+    position: string | null;
+    schedule: string | null;
+}
 
 @Component({
     selector: 'app-setup-dentists',
@@ -27,32 +36,47 @@ export class SetupDentists {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly dentistService = inject(DentistService);
+    private readonly dentistClinicService = inject(DentistClinicService);
 
     dentists = signal<DentistWithLookups[]|null>(null);
-    readonly columns: TableColumn<DentalClinicRow>[] = [
+    dentist_clinics = signal<DentistClinicWithNames[]>([]);
+    dentistsAllInfo = signal<DentistWithLookupsAndClinicInfo[]>([]);
+    readonly columns: TableColumn<DentistWithLookupsAndClinicInfo>[] = [
         { key: 'id', label: 'ID' },
         { key: 'last_name', label: 'Last Name' },
         { key: 'given_name', label: 'Given Name' },
         { key: 'middle_name', label: 'Middle Name' },
         { key: 'dentist_contract_name', label: 'Dentist Contract' },
-        { key: 'region_name', label: 'Region' },
-        { key: 'contact_numbers', label: 'Contact' },
-        { key: 'hasPanoramic', label: 'Panoramic Radio', cellTemplateKey: 'check'},
-        { key: 'hasPeriapical', label: 'Periapical Radio', cellTemplateKey: 'check'},
+        { key: 'clinic_name', label: 'Clinic' },
+        { key: 'position', label: 'Position' },
+        { key: 'schedule', label: 'Schedule' },
     ];
     constructor(){}
 
     ngOnInit(){
-        this.dentistService.getAllDentists()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-            next: (dentists) => {
-                this.dentists.set(dentists);
-            },
-            error: (err) => {
-                console.log("In load(), failed to load users", err);
-            }
+        forkJoin({
+            dentists: this.dentistService.getAllDentists(),
+            dentist_clinics: this.dentistClinicService.getAllDentistClinics(),
         })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: ({ dentists, dentist_clinics }) => {
+                    // set signals
+                    this.dentists.set(dentists);
+                    this.dentist_clinics.set(dentist_clinics);
+
+                    console.log('In ngOnInit(), dentists:', dentists);
+                    console.log('In ngOnInit(), dentist_clinics:', dentist_clinics);
+
+                    // now both are available
+                    const dentistAllInfo = this.buildDentistWithLookupAndClinicInfo(dentists, dentist_clinics);
+                    this.dentistsAllInfo.set(dentistAllInfo);
+                    console.log('In ngOnInit(), dentistAllInfo:', dentistAllInfo);
+                },
+                error: (err) => {
+                    console.log('In load(), failed to load data', err);
+                },
+            });
     }
 
 
@@ -66,4 +90,29 @@ export class SetupDentists {
         this.router.navigate(['/main/setup/dentists/', row.id]).then();
     }
 
+    buildDentistWithLookupAndClinicInfo(
+        dentists: readonly DentistWithLookups[],
+        dentistClinics: readonly DentistClinicWithNames[])
+    : DentistWithLookupsAndClinicInfo[]{
+        // Pick ONE clinic row per dentist_id (first one wins).
+        const byDentistId = new Map<number, DentistClinicWithNames>();
+        for (const dc of dentistClinics) {
+            if (!byDentistId.has(dc.dentist_id)) byDentistId.set(dc.dentist_id, dc);
+        }
+
+        // Copy dentist rows + attach clinic fields (or nulls if none).
+        return dentists.map((d) => {
+            const dc = byDentistId.get(d.id);
+
+            return {
+                ...d,
+                clinic_name: dc?.clinic_name ?? null,
+                position: dc?.position ?? null,
+                schedule: dc?.schedule ?? null,
+            };
+        });
+
+
+
+    }
 }
