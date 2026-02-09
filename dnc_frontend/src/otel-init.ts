@@ -12,7 +12,8 @@ import {environment} from './environments/environment';
 const resource = new Resource({
   [ATTR_SERVICE_NAME]: 'my-angular-frontend',
 });
-
+console.log('OTEL origin =', window.location.origin);
+console.log('OTEL exporter url =', environment.otelTracesUrl);
 const exporter = new OTLPTraceExporter({
   url: environment.otelTracesUrl,
 });
