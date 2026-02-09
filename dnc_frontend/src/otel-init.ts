@@ -6,6 +6,7 @@ import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { Resource } from '@opentelemetry/resources';
 import {ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
+import {environment} from './environments/environment';
 
 // 1. Setup Resource (v1.x style)
 const resource = new Resource({
@@ -13,7 +14,7 @@ const resource = new Resource({
 });
 
 const exporter = new OTLPTraceExporter({
-  url: 'http://localhost:4318/v1/traces',
+  url: environment.otelTracesUrl,
 });
 
 const provider = new WebTracerProvider({ resource,
@@ -34,11 +35,16 @@ provider.register({
 registerInstrumentations({
   instrumentations: [
     new FetchInstrumentation({
-      propagateTraceHeaderCorsUrls: [/http:\/\/localhost:3000\/.*/],
+      propagateTraceHeaderCorsUrls: [
+          environment.apiBaseUrl.startsWith('http')
+              ? new RegExp(`^${escapeRegExp(environment.apiBaseUrl)}/.*`)
+              : /\/api\/.*/ // if you keep apiBaseUrl as "/api" in prod
+      ],
     }),
   ],
 });
 import { trace } from '@opentelemetry/api';
+import {escapeRegExp} from '@angular/compiler';
 
 console.log("DIAGNOSTIC: Attempting manual trace...");
 
