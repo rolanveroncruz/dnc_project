@@ -279,6 +279,9 @@ pub async fn create_dentist(
     Ok(Json(row))
 }
 
+
+
+
 #[instrument(skip(state, body), err(Debug))]
 pub async fn patch_dentist(
     State(state): State<AppState>,

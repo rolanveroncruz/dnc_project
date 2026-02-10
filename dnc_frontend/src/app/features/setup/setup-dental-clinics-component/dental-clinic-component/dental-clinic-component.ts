@@ -13,7 +13,8 @@ import {MatProgressBar} from '@angular/material/progress-bar';
 
 import {
     DentalClinicService,
-    DentalClinic,                 // CHANGED: use service types
+    DentalClinicRowDb,                 // CHANGED: use service types
+    DentalClinicModel,
     CreateDentalClinicBody,       // CHANGED
     PatchDentalClinicBody         // CHANGED
 } from '../../../../api_services/dental-clinic-service';
@@ -29,16 +30,22 @@ import {
     ClinicCapabilityLinkRow
 } from '../../../../api_services/clinic-capabilities-list-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
-import {DataTableWithSelectComponent} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
+import {
+    DataTableWithSelectComponent
+} from '../../../../components/data-table-with-select-component/data-table-with-select-component';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 import {firstValueFrom} from 'rxjs';
 import {
     AddClinicOrDentistDialogComponent,
     AddClinicOrDentistDialogData, AddClinicOrDentistDialogResult
 } from '../../add-clinic-or-dentist-dialog-component/add-clinic-or-dentist-dialog-component';
-import { DentistOrClinicWithIdAndName }from "../../setup-dentists/dentist-component/dentist-component";
+import {DentistOrClinicWithIdAndName} from "../../setup-dentists/dentist-component/dentist-component";
 import {MatDialog} from '@angular/material/dialog';
 import {DentistService} from '../../../../api_services/dentist-service';
+import {
+    DentistClinicPositionService,
+    DentistClinicPosition
+} from '../../../../api_services/dentist-clinic-position-service';
 
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -74,6 +81,7 @@ export class DentalClinicComponent implements OnInit {
     private readonly clinicCapabilitiesService = inject(ClinicCapabilitiesService);
     private readonly clinicCapabilitiesListService = inject(ClinicCapabilitiesListService);
     private readonly dentistService = inject(DentistService);
+    private readonly dentistClinicPositionService = inject(DentistClinicPositionService);
 
     private readonly dialog = inject(MatDialog);
     readonly loadState = signal<LoadState>('loading');
@@ -91,6 +99,8 @@ export class DentalClinicComponent implements OnInit {
     readonly regions = signal<RegionRow[]>([]);
     readonly provinces = signal<Province[]>([]);
     readonly cities = signal<CityRow[]>([]);
+    readonly dentistClinicPositions = signal<DentistClinicPosition[]>([]);
+
 
     readonly selectedRegionId = signal<number | null>(null);
     readonly selectedProvinceId = signal<number | null>(null);
@@ -121,6 +131,7 @@ export class DentalClinicComponent implements OnInit {
     readonly form = new FormGroup({
         // Column 1:
         name: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
+        owner_name: new FormControl<string>(''),
         address: new FormControl<string>('', {nonNullable: true, validators: [Validators.required]}),
         contact_numbers: new FormControl<string>(''),
         email: new FormControl<string>(''),         // CHANGED: added
@@ -141,7 +152,7 @@ export class DentalClinicComponent implements OnInit {
     dentist_clinic_columns: TableColumn[] = [
         {key: 'last_name', label: 'Last Name'},
         {key: 'given_name', label: 'Given Name'},
-        {key: 'position', label: 'Position',},
+        {key: 'position_name', label: 'Position',},
         {key: 'schedule', label: 'Schedule'},
     ];
     private readonly initialFormValue = signal<ReturnType<typeof this.form.getRawValue> | null>(null)
@@ -179,7 +190,7 @@ export class DentalClinicComponent implements OnInit {
         });
     }
 
-    private captureInitialFormValue(){
+    private captureInitialFormValue() {
         this.initialFormValue.set(this.form.getRawValue());
     }
 
@@ -204,6 +215,7 @@ export class DentalClinicComponent implements OnInit {
             // New form starts "clean" until the user edits something.
             this.form.reset({
                 name: '',
+                owner_name: '',
                 address: '',
                 region_id: null,
                 province_id: null,
@@ -234,7 +246,52 @@ export class DentalClinicComponent implements OnInit {
 
         // Lookups + clinic
         this.loadLookups();
-        this.loadClinic(id);
+        this.route.paramMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(pm => {
+                const idParam = pm.get('id');
+
+                if (!idParam || idParam === 'new') {
+                    this.isCreate.set(true);
+                    this.clinicId.set(null);
+                    this.resetForCreate();
+                    this.loadState.set('loaded');
+                    return
+                }
+                const id = Number(idParam);
+                if (!Number.isFinite(id)) {
+                    this.router.navigate(['/main/setup/dental-clinics']).then();
+                    return;
+                }
+                this.isCreate.set(false);
+                this.clinicId.set(id);
+                this.loadClinic(id);
+            });
+    }
+
+    private resetForCreate() {
+        this.form.reset({
+            name: '',
+            owner_name: '',
+            address: '',
+            region_id: null,
+            province_id: null,
+            city_id: null,
+            zip_code: '',
+            contact_numbers: '',
+            email: '',
+            schedule: '',
+            remarks: '',
+            active: true,
+        }, {emitEvent: false});
+
+        this.selectedRegionId.set(null);
+        this.selectedProvinceId.set(null);
+        this.loadedCityIdFromApi.set(null);
+
+        this.form.markAsPristine();
+        this.hasUnsavedChanges.set(false);
+        this.captureInitialFormValue();
     }
 
     private loadLookups() {
@@ -263,6 +320,12 @@ export class DentalClinicComponent implements OnInit {
                 error: () => {
                 }
             });
+
+        this.dentistClinicPositionService.getAllPositions()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: res => this.dentistClinicPositions.set(res)
+            });
     }
 
     private loadClinic(id: number) {
@@ -272,11 +335,12 @@ export class DentalClinicComponent implements OnInit {
         this.dentalClinicService.getDentalClinicById(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (clinic: DentalClinic) => {
+                next: (clinic: DentalClinicRowDb) => {
                     // CHANGED: API does NOT include region_id/state_id.
                     // We patch backend fields now, then derive region/state from city_id once lookups are available.
                     this.form.patchValue({
                         name: clinic.name ?? '',
+                        owner_name: clinic.owner_name ?? '',
                         address: clinic.address ?? '',
                         city_id: clinic.city_id ?? null,
 
@@ -307,7 +371,7 @@ export class DentalClinicComponent implements OnInit {
                 next: (cap_list: ClinicCapabilityLinkRow[]) => {
                     this.clinicCapabilitiesList.set(cap_list);
                     // Pull capability IDs from link rows
-                    const capIds = cap_list.map(r=>r.capability_id)
+                    const capIds = cap_list.map(r => r.capability_id)
                     this.form.controls.capability_ids.setValue(capIds, {emitEvent: false});
                     //
                     this.form.markAsPristine();
@@ -320,7 +384,7 @@ export class DentalClinicComponent implements OnInit {
         this.fetchDentistsForClinicId(id);
     }
 
-    private fetchDentistsForClinicId(id: number){
+    private fetchDentistsForClinicId(id: number) {
         this.dentistClinicService.getDentistsForClinicId(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
@@ -354,17 +418,17 @@ export class DentalClinicComponent implements OnInit {
         this.router.navigate(['/main/setup/dental-clinics']).then();
     }
 
-    onDiscardChanges(){
+    onDiscardChanges() {
         const initial = this.initialFormValue();
         if (!initial) return;
         // 1.Reset form without triggering cascading valueChanges logic
         this.form.reset(initial, {emitEvent: false});
         // 2. Keep some signals in sync
-        this.selectedRegionId.set(initial.region_id?? null);
+        this.selectedRegionId.set(initial.region_id ?? null);
         this.selectedProvinceId.set(initial.province_id ?? null);
 
         // If a city exists, re-derive region/state from city_id
-        if(initial.city_id != null){
+        if (initial.city_id != null) {
             this.applyRegionProvinceFromCityId(initial.city_id);
         } else {
             this.form.controls.region_id.setValue(initial.region_id ?? null, {emitEvent: false});
@@ -401,6 +465,7 @@ export class DentalClinicComponent implements OnInit {
             const payload: CreateDentalClinicBody = {
                 name: raw.name,
                 address: raw.address,
+                owner_name: this.emptyToNull(raw.owner_name),
                 city_id: raw.city_id ?? null,
 
                 zip_code: this.emptyToNull(raw.zip_code),
@@ -416,14 +481,15 @@ export class DentalClinicComponent implements OnInit {
             this.dentalClinicService.createDentalClinic(payload)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
-                    next: (created: DentalClinic) => { // CHANGED: created is DentalClinic
+                    next: (created: DentalClinicModel) => { // CHANGED: created is DentalClinic
+                        this.loadState.set('loaded');
                         this.form.markAsPristine();
                         this.hasUnsavedChanges.set(false);
                         this.captureInitialFormValue();
 
                         const newId = created?.id;
                         if (newId) {
-                            this.router.navigate(['/setup/dental-clinics', newId]).then();
+                            this.router.navigate(['/main/setup/dental-clinics', newId]).then();
                         } else {
                             this.onBack();
                         }
@@ -440,6 +506,7 @@ export class DentalClinicComponent implements OnInit {
             const payload: PatchDentalClinicBody = {
                 name: raw.name,
                 address: raw.address,
+                owner_name: this.emptyToNull(raw.owner_name),
                 city_id: raw.city_id ?? null,
 
                 zip_code: this.emptyToNull(raw.zip_code),
@@ -484,7 +551,7 @@ export class DentalClinicComponent implements OnInit {
                     next: () => console.log("Added capability to clinic"),
                     error: () => console.log("Error in adding capability to clinic")
                 })
-        } else{
+        } else {
             this.clinicCapabilitiesListService.removeFromClinic(this.clinicId()!, capId)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
@@ -494,7 +561,7 @@ export class DentalClinicComponent implements OnInit {
         }
     }
 
-    isCapabilityChecked(capId:number): boolean{
+    isCapabilityChecked(capId: number): boolean {
         return this.form.controls.capability_ids.value.includes(capId);
     }
 
@@ -506,24 +573,27 @@ export class DentalClinicComponent implements OnInit {
         // If you use PathLocationStrategy and you want absolute, see Option B.
         window.open(url, '_blank', 'noopener');
     }
+
     onClickDentist(row: DentistClinicWithNames) {
         this.openDentistInNewTab(row.dentist_id);
     }
-    rowId = (r:any)=>r.id;
-    selectedRow:any |null = null;
+
+    rowId = (r: any) => r.id;
+    selectedRow: any | null = null;
 
 
-    async onAddDentist(){
+    async onAddDentist() {
 
         console.log("onAddDentist");
         let the_dentists: DentistOrClinicWithIdAndName[] = [];
         const res = await firstValueFrom(this.dentistService.getAllDentists());
-        the_dentists= res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
+        the_dentists = res.map(c => ({id: c.id, name: `${c.last_name}, ${c.given_name} ${c.middle_name} `}));
 
 
         const data: AddClinicOrDentistDialogData = {
             mode: 'dentist',
-            options: the_dentists
+            options: the_dentists,
+            positions: this.dentistClinicPositions(),
         };
 
         const ref = this.dialog.open<
@@ -542,7 +612,7 @@ export class DentalClinicComponent implements OnInit {
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
             console.log("result:", result);
-            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position, result.schedule)
+            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position_id, result.schedule)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
                     next: () => {
@@ -552,7 +622,8 @@ export class DentalClinicComponent implements OnInit {
                 })
         })
     }
-    onDelete(row:any){
+
+    onDelete(row: any) {
         console.log("onDelete:", row);
         this.dentistClinicService.removeDentistClinic(<number>this.clinicId(), row.dentist_id)
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -565,16 +636,17 @@ export class DentalClinicComponent implements OnInit {
 
     }
 
-    async addDentist(){
+    async addDentist() {
         console.log("onAddDentist");
         let the_dentists: DentistOrClinicWithIdAndName[] = [];
         const res = await firstValueFrom(this.dentistService.getAllDentists());
-        the_dentists= res.map(c=>({id:c.id, name:`${c.last_name}, ${c.given_name} ${c.middle_name} `}));
+        the_dentists = res.map(c => ({id: c.id, name: `${c.last_name}, ${c.given_name} ${c.middle_name} `}));
 
 
         const data: AddClinicOrDentistDialogData = {
             mode: 'dentist',
-            options: the_dentists
+            options: the_dentists,
+            positions: this.dentistClinicPositions(),
         };
 
         const ref = this.dialog.open<
@@ -593,7 +665,7 @@ export class DentalClinicComponent implements OnInit {
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
             console.log("result:", result);
-            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position, result.schedule)
+            this.dentistClinicService.addDentistClinic(<number>this.clinicId(), result.selected.id, result.position_id, result.schedule)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
                     next: () => {

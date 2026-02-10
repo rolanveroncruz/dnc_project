@@ -12,6 +12,8 @@ import {LoginService} from '../login.service';
 export interface DentistWithLookups {
     // ---- Dentist columns
     id: number;
+    prc_no: string | null;
+    prc_expiry_date: string | null;
     last_name: string;
     given_name: string;
     middle_name: string | null;
@@ -19,7 +21,7 @@ export interface DentistWithLookups {
     notes: string | null;
     retainer_fee: number;
     dentist_status_id: number | null;
-    dentist_declined_remarks: string | null;
+    dentist_decline_remarks: string | null;
     dentist_history_id: number | null;
     dentist_requested_by: string | null;
     accre_dentist_contract_id: number | null;
@@ -60,7 +62,7 @@ export interface CreateDentistBody {
 
 
     dentist_status_id?: number | null;
-    dentist_declined_remarks?: string | null;
+    dentist_decline_remarks?: string | null;
 
     dentist_history_id?: number | null;
     dentist_requested_by?: string | null;

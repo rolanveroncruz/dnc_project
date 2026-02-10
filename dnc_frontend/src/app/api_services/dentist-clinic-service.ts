@@ -14,7 +14,7 @@ export interface DentistClinicWithNames {
     dentist_id: number;
     clinic_id: number | null;
 
-    position: string | null;
+    position_id: number | null;
     schedule: string | null;
 
     last_name: string;
@@ -22,6 +22,7 @@ export interface DentistClinicWithNames {
     middle_name: string | null;
 
     clinic_name: string | null;
+    position_name: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -68,8 +69,8 @@ export class DentistClinicService {
             `${this.baseUrl}/dental_clinics/${encodeURIComponent(String(clinicId))}/dentists`, { headers: this.authHeaders()}
         );
     }
-    addDentistClinic(clinicId: number, dentistId: number, position:string|null, schedule:string|null): Observable<DentistClinicWithNames[]> {
-        const payload = { clinic_id: clinicId, position: position, schedule: schedule };
+    addDentistClinic(clinicId: number, dentistId: number, position_id:number|null, schedule:string|null): Observable<DentistClinicWithNames[]> {
+        const payload = { clinic_id: clinicId, position_id: position_id, schedule: schedule };
         return this.http.post<DentistClinicWithNames[]>(
             `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics`, payload, { headers: this.authHeaders()}
         );

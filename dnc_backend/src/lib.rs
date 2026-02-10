@@ -85,6 +85,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/bank_account_types", get(get_all_account_types))
         .route("/dentists/", get(get_all_dentists))
         .route("/dentists/{:id}", get(get_dentist_from_id))
+        .route("/dentists/{:id}", patch(patch_dentist))
 
         .route("/dentist_clinics/positions", get(get_dentist_clinic_positions))
 
@@ -106,9 +107,6 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id))
         .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
         .route("/dentists/", post(create_dentist))
-        .route("/dentists/{:id}", patch(patch_dentist))
-
-
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {

@@ -134,6 +134,8 @@ pub async fn add_dentist_clinic(
     Path(dentist_id): Path<i32>,
     Json(payload): Json<AddDentistClinicRequest>,
 ) -> Result<(StatusCode, Json<DentistClinicWithNames>), StatusCode> {
+    tracing::info!("add_dentist_clinic payload = {:?}", payload);
+
     // 1) Ensure dentist exists
     let dentist_exists = dentist::Entity::find_by_id(dentist_id)
         .one(&state.db)
