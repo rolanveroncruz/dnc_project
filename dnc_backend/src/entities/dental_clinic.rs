@@ -10,6 +10,7 @@ pub struct Model {
     pub id: i32,
     #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub name: String,
+    pub owner_name: Option<String>,
     #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]
     pub address: String,
     #[sea_orm(unique_key = "dental_clinic_name_address_city_zipcode_index")]

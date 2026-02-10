@@ -51,6 +51,7 @@ pub struct DentalClinicRowDb {
     // ---- dental_clinic columns
     pub id: i32,
     pub name: String,
+    pub owner_name: Option<String>,
     pub address: String,
     pub city_id: Option<i32>,
     pub zip_code: Option<String>,
@@ -75,6 +76,7 @@ pub struct DentalClinicRow {
     // ---- dental_clinic columns
     pub id: i32,
     pub name: String,
+    pub owner_name: Option<String>,
     pub address: String,
     pub city_id: Option<i32>,
     pub zip_code: Option<String>,
@@ -105,6 +107,7 @@ impl From<DentalClinicRowDb> for DentalClinicRow {
         Self {
             id: db.id,
             name: db.name,
+            owner_name: db.owner_name,
             address: db.address,
             city_id: db.city_id,
             zip_code: db.zip_code,
@@ -172,6 +175,7 @@ pub async fn get_dental_clinics(
         .columns([
             dental_clinic::Column::Id,
             dental_clinic::Column::Name,
+            dental_clinic::Column::OwnerName,
             dental_clinic::Column::Address,
             dental_clinic::Column::CityId,
             dental_clinic::Column::ZipCode,
@@ -284,6 +288,7 @@ pub async fn get_dental_clinic_by_id(
         .columns([
             dental_clinic::Column::Id,
             dental_clinic::Column::Name,
+            dental_clinic::Column::OwnerName,
             dental_clinic::Column::Address,
             dental_clinic::Column::CityId,
             dental_clinic::Column::ZipCode,
@@ -325,6 +330,7 @@ pub async fn get_dental_clinic_by_id(
 pub struct CreateDentalClinicBody {
     pub name: String,
     pub address: String,
+    pub owner_name: Option<String>,
     pub city_id: Option<i32>,
     pub zip_code: Option<String>,
     pub remarks: Option<String>,
@@ -380,6 +386,7 @@ pub async fn create_dental_clinic(
 
     let am = dental_clinic::ActiveModel {
         name: Set(name.to_string()),
+        owner_name: Set(body.owner_name),
         address: Set(address.to_string()),
         city_id: Set(body.city_id),
         zip_code: Set(body
@@ -411,6 +418,7 @@ pub async fn create_dental_clinic(
 #[derive(Debug, Deserialize)]
 pub struct PatchDentalClinicBody {
     pub name: Option<String>,
+    pub owner_name: Option<Option<String>>,
     pub address: Option<String>,
     pub city_id: Option<Option<i32>>, // Some(None)=explicitly null it; None=don't change
     pub zip_code: Option<Option<String>>,
@@ -448,6 +456,9 @@ pub async fn patch_dental_clinic(
             return Err(StatusCode::BAD_REQUEST);
         }
         am.name = Set(name);
+    }
+    if let Some(owner_name) = body.owner_name {
+        am.owner_name = Set(owner_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
     }
 
     if let Some(address) = body.address {

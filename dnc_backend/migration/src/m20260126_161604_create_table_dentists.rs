@@ -9,26 +9,32 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::create_dentist_status_table(manager).await?;
+        Self::create_account_type_table(manager).await?;
         Self::create_dentist_history_table(manager).await?;
         Self::create_tax_type_table(manager).await?;
         Self::create_tax_classification_table(manager).await?;
         Self::create_dentist_table(manager).await?;
+        Self::create_position_table(manager).await?;
         Self::create_dentist_clinic_table(manager).await?;
 
         Self::insert_dentist_status_seed(manager).await?;
+        Self::insert_account_type_seed(manager).await?;
         Self::insert_dentist_history_seed(manager).await?;
         Self::insert_tax_type_seed(manager).await?;
         Self::insert_tax_classification_seed(manager).await?;
+        Self::insert_position_seed(manager).await?;
         Self::create_dentist_permissions_and_role_permission_set(manager).await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::drop_dentist_clinic_table(manager).await?;
+        Self::drop_position_table(manager).await?;
         Self::drop_dentist_table(manager).await?;
         Self::drop_tax_classification_table(manager).await?;
         Self::drop_tax_type_table(manager).await?;
         Self::drop_dentist_history_table(manager).await?;
+        Self::drop_account_type_table(manager).await?;
         Self::drop_dentist_status_table(manager).await?;
 
         Ok(())
@@ -68,9 +74,10 @@ impl Migration{
                 Query::insert()
                     .into_table(DentistStatus::Table)
                     .columns([DentistStatus::Name])
+                    .values_panic(["Ongoing".into()])
                     .values_panic(["Accredited".into()])
-                    .values_panic(["Applicant".into()])
                     .values_panic(["On Hold".into()])
+                    .values_panic(["Ceased".into()])
                     .values_panic(["Non-accredited".into()])
                     .to_owned(),
             )
@@ -78,7 +85,44 @@ impl Migration{
         Ok(())
     }
 
+    pub async fn create_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(AccountType::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(AccountType::Id)
+                        .integer()
+                        .auto_increment()
+                        .not_null()
+                        .primary_key()
+                    )
+                    .col(ColumnDef::new(AccountType::Name)
+                        .string()
+                        .not_null()
+                    ).to_owned()
+            ).await?;
 
+        Ok(())
+    }
+    pub async fn drop_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(AccountType::Table).to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn insert_account_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(AccountType::Table)
+                    .columns([AccountType::Name])
+                    .values_panic(["Savings".into()])
+                    .values_panic(["Current".into()])
+                    .values_panic(["Checking".into()])
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
     pub async fn create_dentist_history_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -204,6 +248,12 @@ impl Migration{
                         .auto_increment()
                         .primary_key()
                     )
+                    .col(ColumnDef::new(Dentist::PRCNo)
+                        .string()
+                    )
+                    .col(ColumnDef::new(Dentist::PRCExpiryDate)
+                        .date()
+                    )
                     .col(ColumnDef::new(Dentist::LastName)
                         .string()
                         .not_null()
@@ -220,6 +270,9 @@ impl Migration{
                     .col(ColumnDef::new(Dentist::Email)
                         .string()
                     )
+                    .col(ColumnDef::new(Dentist::Notes)
+                        .text()
+                    )
                     .col(ColumnDef::new(Dentist::RetainerFee)
                         .float()
                         .not_null()
@@ -234,6 +287,9 @@ impl Migration{
                         .name("dentist_dentist_status_id_foreign_key")
                         .from(Dentist::Table, Dentist::DentistStatusId)
                         .to(DentistStatus::Table, DentistStatus::Id)
+                    )
+                    .col(ColumnDef::new(Dentist::DentistDeclineRemarks)
+                        .string()
                     )
                     // The dentist history id is a foreign key to the dentist_history table.
                     // We allow it to be null.
@@ -278,6 +334,14 @@ impl Migration{
                     .col(ColumnDef::new(Dentist::AccBankName)
                         .string()
                     )
+                    .col(ColumnDef::new(Dentist::AccAccountTypeId)
+                        .integer()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("dentist_acc_account_type_id_foreign_key")
+                        .from(Dentist::Table, Dentist::AccAccountTypeId)
+                        .to(AccountType::Table, AccountType::Id)
+                    )
                     .col(ColumnDef::new(Dentist::AccAccountName)
                         .string()
                     )
@@ -308,6 +372,41 @@ impl Migration{
         manager.drop_table(Table::drop().table(Dentist::Table).to_owned()).await?;
         Ok(())
     }
+    pub async fn create_position_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(Position::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(Position::Id )
+                        .integer()
+                        .not_null()
+                        .auto_increment()
+                        .primary_key()
+                    )
+                    .col(ColumnDef::new(Position::Name)
+                        .string()
+                    ).to_owned()
+            ).await?;
+        Ok(())
+    }
+    pub async fn drop_position_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(Position::Table).to_owned()).await?;
+        Ok(())
+    }
+    pub async fn insert_position_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(Position::Table)
+                    .columns([Position::Name])
+                    .values_panic(["Principal".into()])
+                    .values_panic(["Associate".into()])
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
+
 
     pub async fn create_dentist_clinic_table(manager: &SchemaManager<'_>) ->Result<(), DbErr>{
         manager
@@ -338,8 +437,13 @@ impl Migration{
                         .from(DentistClinic::Table, DentistClinic::ClinicId)
                         .to(DentalClinic::Table, DentalClinic::Id)
                     )
-                    .col(ColumnDef::new(DentistClinic::Position)
-                        .string()
+                    .col(ColumnDef::new(DentistClinic::PositionId)
+                        .integer()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("dentist_clinic_position_id_foreign_key")
+                        .from(DentistClinic::Table, DentistClinic::PositionId)
+                        .to(Position::Table, Position::Id)
                     )
                     .col(ColumnDef::new(DentistClinic::Schedule)
                         .string()
@@ -382,7 +486,18 @@ pub enum TaxType{
     Id,
     Name,
 }
-
+#[derive(Iden)]
+pub enum Position{
+    Table,
+    Id,
+    Name,
+}
+#[derive(Iden)]
+pub enum AccountType{
+    Table,
+    Id,
+    Name,
+}
 #[derive(Iden)]
 pub enum TaxClassification{
     Table,
@@ -394,12 +509,16 @@ pub enum TaxClassification{
 pub enum Dentist {
     Table,
     Id,
+    PRCNo,
+    PRCExpiryDate,
     LastName,
     GivenName,
     MiddleName,
+    Notes,
     Email,
     RetainerFee,
     DentistStatusId,
+    DentistDeclineRemarks,
     DentistHistoryId,
     DentistRequestedBy,
     AccreDentistContractId,
@@ -409,6 +528,7 @@ pub enum Dentist {
     AccreContractFilePath,
     AccTIN,
     AccBankName,
+    AccAccountTypeId,
     AccAccountName,
     AccAccountNumber,
     AccTaxTypeID,
@@ -420,7 +540,7 @@ pub enum DentistClinic {
     Id,
     DentistId,
     ClinicId,
-    Position,
+    PositionId,
     Schedule
 }
 

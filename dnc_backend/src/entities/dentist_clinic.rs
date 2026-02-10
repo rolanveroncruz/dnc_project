@@ -10,7 +10,7 @@ pub struct Model {
     pub id: i32,
     pub dentist_id: i32,
     pub clinic_id: Option<i32>,
-    pub position: Option<String>,
+    pub position_id: Option<i32>,
     pub schedule: Option<String>,
 }
 
@@ -32,6 +32,14 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Dentist,
+    #[sea_orm(
+        belongs_to = "super::position::Entity",
+        from = "Column::PositionId",
+        to = "super::position::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Position,
 }
 
 impl Related<super::dental_clinic::Entity> for Entity {
@@ -43,6 +51,12 @@ impl Related<super::dental_clinic::Entity> for Entity {
 impl Related<super::dentist::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Dentist.def()
+    }
+}
+
+impl Related<super::position::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Position.def()
     }
 }
 
