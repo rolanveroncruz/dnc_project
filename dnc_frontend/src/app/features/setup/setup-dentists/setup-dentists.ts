@@ -35,10 +35,10 @@ export class SetupDentists {
         { key: 'given_name', label: 'Given Name' },
         { key: 'middle_name', label: 'Middle Name' },
         { key: 'dentist_contract_name', label: 'Dentist Contract' },
-        { key: 'region_name', label: 'Region' },
-        { key: 'contact_numbers', label: 'Contact' },
-        { key: 'hasPanoramic', label: 'Panoramic Radio', cellTemplateKey: 'check'},
-        { key: 'hasPeriapical', label: 'Periapical Radio', cellTemplateKey: 'check'},
+        { key: 'prc_no', label: 'PRC License' },
+        { key: 'prc_expiry_date', label: 'PRC Expiry Date' },
+        { key: 'dentist_status_name', label: 'Status'},
+        { key: 'dentist_history_name', label: 'History'},
     ];
     constructor(){}
 
