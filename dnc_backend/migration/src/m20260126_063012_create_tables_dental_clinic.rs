@@ -156,6 +156,9 @@ impl Migration {
                         .string()
                         .not_null()
                     )
+                    .col(ColumnDef::new(DentalClinic::OwnerName)
+                        .string()
+                    )
                     .col(ColumnDef::new(DentalClinic::Address)
                         .string()
                         .not_null()
@@ -283,6 +286,7 @@ pub enum DentalClinic {
     Table,
     Id,
     Name,
+    OwnerName,
     Address,
     CityId,
     ZipCode,

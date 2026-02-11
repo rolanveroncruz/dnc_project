@@ -15,7 +15,7 @@ import {MatIconModule} from '@angular/material/icon';
 
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
-import {DentistService} from '../../../../api_services/dentist-service';
+import {DentistService, DentistWithLookups} from '../../../../api_services/dentist-service';
 import {
     DentistHistory,
     DentistLookupsService,
@@ -48,42 +48,19 @@ import {
     SingleDocumentSlotComponent
 } from '../../../../components/single-document-slot-component/single-document-slot-component';
 import {StoredDocumentMeta} from '../../../../api_services/single-document-upload-service';
+import {AccountType, AccountTypeService} from '../../../../api_services/account-type-service';
 import { toSignal } from '@angular/core/rxjs-interop'
 import {startWith} from 'rxjs/operators';
+import {
+    DentistClinicPosition,
+    DentistClinicPositionService
+} from '../../../../api_services/dentist-clinic-position-service';
 
 interface CompanyListItem {
     id: number;
     short_name: string;
 }
 /** Matches your API response shape */
-export interface DentistWithLookups {
-    id: number;
-    last_name: string;
-    given_name: string;
-    middle_name: string | null;
-    email: string | null;
-    retainer_fee: number;
-    dentist_status_id: number | null;
-    dentist_history_id: number | null;
-    dentist_requested_by: string | null;
-    accre_dentist_contract_id: number | null;
-    accre_document_code: string | null;
-    accreditation_date: string | null;
-    accre_contract_sent_date: string | null;
-    accre_contract_file_path: string | null;
-    acc_tin: string | null;
-    acc_bank_name: string | null;
-    acc_account_name: string | null;
-    acc_account_number: string | null;
-    acc_tax_type_id: number | null;
-    acc_tax_classification_id: number | null;
-
-    dentist_contract_name: string | null;
-    dentist_history_name: string | null;
-    dentist_status_name: string | null;
-    tax_type_name: string | null;
-    tax_classification_name: string | null;
-}
 
 export interface DentistOrClinicWithIdAndName {
     id: number;
@@ -140,6 +117,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
     private readonly dentalClinicService = inject(DentalClinicService);
     private readonly hmoService = inject(HMOService);
     readonly dialog = inject(MatDialog);
+    private readonly accountTypeService = inject(AccountTypeService);
+    private readonly dentistClinicPositionService = inject(DentistClinicPositionService);
 
     // ---- State
     readonly loading = signal(false);
@@ -155,11 +134,13 @@ export class DentistComponent implements OnInit, AfterViewInit {
     readonly contracts = signal<DentistContractRow[]>([]);
     readonly taxTypes = signal<TaxType[]>([]);
     readonly taxClassifications = signal<TaxClassification[]>([]);
+    readonly accountTypes = signal<AccountType[]>([]);
     readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
     readonly exclusiveToHmos = signal<HMOListItem[]>([]);
     readonly exceptForHmos = signal<HMOListItem[]>([]);
     readonly exclusiveToCompanies = signal<CompanyListItem[]>([]);
     readonly exceptForCompanies = signal<CompanyListItem[]>([]);
+    readonly dentistClinicPositions = signal<DentistClinicPosition[]>([]);
 
 
     // SingleDocumentSlotComponent For Accreditation Contract
@@ -172,8 +153,11 @@ export class DentistComponent implements OnInit, AfterViewInit {
     // ---- Form
     readonly form: FormGroup = this.fb.group({
         // Top part
+        prc_no: [null as string | null, [Validators.maxLength(120)]],
+        prc_expiry_date: [null as Date | null],
         last_name: ['', [Validators.required, Validators.maxLength(120)]],
         email: ['', [Validators.email, Validators.maxLength(200)]],
+        notes: [null as string |null, [Validators.maxLength(10_000)]],
 
         given_name: ['', [Validators.required, Validators.maxLength(120)]],
         middle_name: [null as string | null, [Validators.maxLength(120)]],
@@ -181,6 +165,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         dentist_history_id: [null as number | null],
         dentist_requested_by: [null as string | null, [Validators.maxLength(200)]],
         dentist_status_id: [null as number | null],
+        dentist_decline_remarks: [null as string | null],
         retainer_fee: [0, [Validators.required, Validators.min(0)]],
 
         // Tabs: Accreditation
@@ -193,6 +178,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         // Tabs: Accounting
         acc_tin: [null as string | null, [Validators.maxLength(60)]],
         acc_bank_name: [null as string | null, [Validators.maxLength(120)]],
+        acc_account_type_id: [null as number | null],
         acc_account_name: [null as string | null, [Validators.maxLength(120)]],
         acc_account_number: [null as string | null, [Validators.maxLength(60)]],
         acc_tax_type_id: [null as number | null],
@@ -205,8 +191,31 @@ export class DentistComponent implements OnInit, AfterViewInit {
         ),
         {initialValue: this.form.get('dentist_history_id')!.value}
     );
+    private dentistStatusId = toSignal(
+        this.form.get('dentist_status_id')!.valueChanges.pipe(
+            startWith(this.form.get('dentist_status_id')!.value)
+        ),
+        { initialValue: this.form.get('dentist_status_id')!.value }
+    );
 
     readonly showRequestedBy = computed(() => Number(this.dentistHistoryId()) === 2);
+
+    readonly declineRemarkOptions = [
+        { value: 'Declined by DNC', name: 'Declined by DNC' },
+        { value: 'Dentist Declined', name: 'Dentist Declined' },
+    ] as const;
+
+// ✅ ADD THIS: show field only when status is "Non-accredited"
+    readonly showDeclineRemarks = computed(() => {
+        const statusId = Number(this.dentistStatusId() ?? 0);
+        if (!statusId) return false;
+
+        const statusName = this.statuses().find(s => s.id === statusId)?.name ?? '';
+        console.log('statusId:', statusId, 'statusName:', statusName);
+
+        return statusName.trim().toLowerCase() === 'non-accredited';
+    });
+
 
     // Keep an initial snapshot for "dirty" comparison if you want to warn on leave later
     private initialSnapshot: any = null;
@@ -217,7 +226,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
     dentist_clinic_columns: TableColumn[] = [
         {key: 'clinic_name', label: 'Clinic Name'},
-        {key: 'position', label: 'Position'},
+        {key: 'position_name', label: 'Position'},
         {key: 'schedule', label: 'Schedule'},
     ];
 
@@ -261,6 +270,18 @@ export class DentistComponent implements OnInit, AfterViewInit {
             }
             ctrl.updateValueAndValidity({emitEvent: false});
         });
+
+        effect(() => {
+            const mustShow = this.showDeclineRemarks();
+            const ctrl = this.form.get('dentist_decline_remarks') as AbstractControl | null;
+            if (!ctrl) return;
+
+            if (!mustShow) {
+                ctrl.setValue(null, { emitEvent: false });
+            }
+        });
+
+
     }
 
     ngOnInit(): void {
@@ -271,10 +292,10 @@ export class DentistComponent implements OnInit, AfterViewInit {
     }
 
     private loadLookups() {
+
         this.dentistLookupService.getAllDentistStatuses()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((rows: DentistStatus[]) => {
-                console.log(`rows: ${rows}`);
                 this.statuses.set(rows ?? []);
             });
 
@@ -293,6 +314,14 @@ export class DentistComponent implements OnInit, AfterViewInit {
         this.dentistLookupService.getAllTaxClassifications()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((rows: TaxClassification[]) => this.taxClassifications.set(rows ?? []));
+
+        this.accountTypeService.getAllAccountTypes()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((rows: AccountType[]) => this.accountTypes.set(rows ?? []));
+
+        this.dentistClinicPositionService.getAllPositions()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((rows: DentistClinicPosition[]) => this.dentistClinicPositions.set(rows ?? []));
     }
 
     private fetchDentist(id: number) {
@@ -305,15 +334,18 @@ export class DentistComponent implements OnInit, AfterViewInit {
                 next: (d: DentistWithLookups) => {
                     // Patch form (map ISO string dates -> Date)
                     this.form.patchValue({
+                        prc_no: d.prc_no ?? null,
+                        prc_expiry_date: d.prc_expiry_date ? new Date(d.prc_expiry_date) : null,
                         last_name: d.last_name ?? '',
-                        email: d.email ?? null,
-
                         given_name: d.given_name ?? '',
                         middle_name: d.middle_name ?? null,
+                        email: d.email ?? null,
+                        notes: d.notes ?? null,
 
                         dentist_history_id: d.dentist_history_id ?? null,
                         dentist_requested_by: d.dentist_requested_by ?? null,
                         dentist_status_id: d.dentist_status_id ?? null,
+                        dentist_decline_remarks: d.dentist_decline_remarks ?? null,
                         retainer_fee: d.retainer_fee ?? 0,
 
                         accre_dentist_contract_id: d.accre_dentist_contract_id ?? null,
@@ -324,6 +356,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
                         acc_tin: d.acc_tin ?? null,
                         acc_bank_name: d.acc_bank_name ?? null,
+                        acc_account_type_id: d.acc_account_type_id ?? null,
                         acc_account_name: d.acc_account_name ?? null,
                         acc_account_number: d.acc_account_number ?? null,
                         acc_tax_type_id: d.acc_tax_type_id ?? null,
@@ -387,6 +420,18 @@ export class DentistComponent implements OnInit, AfterViewInit {
             });
 
     }
+    private toDateOnly(value: unknown): string | null {
+        if (!value) return null;
+        const d = value instanceof Date ? value : new Date(value as any);
+        if (!Number.isFinite(d.getTime())) return null;
+
+        // local date -> YYYY-MM-DD
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
 
     save() {
         if (this.form.invalid) {
@@ -403,14 +448,18 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
         // Convert Date -> ISO (or whatever your backend expects)
         const payload = {
+            prc_no: raw.prc_no,
+            prc_expiry_date: this.toDateOnly(raw.prc_expiry_date),
             last_name: raw.last_name,
             given_name: raw.given_name,
             middle_name: raw.middle_name,
             email: raw.email,
+            notes: raw.notes,
 
             dentist_history_id: raw.dentist_history_id,
             dentist_requested_by: raw.dentist_requested_by,
             dentist_status_id: raw.dentist_status_id,
+            dentist_decline_remarks: raw.dentist_decline_remarks,
             retainer_fee: Number(raw.retainer_fee ?? 0),
 
             accre_dentist_contract_id: raw.accre_dentist_contract_id,
@@ -420,6 +469,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
             acc_tin: raw.acc_tin,
             acc_bank_name: raw.acc_bank_name,
+            acc_account_type_id: raw.acc_account_type_id,
             acc_account_name: raw.acc_account_name,
             acc_account_number: raw.acc_account_number,
             acc_tax_type_id: raw.acc_tax_type_id,
@@ -440,7 +490,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
                     // If create, navigate to edit route (optional)
                     if (!id && saved?.id) {
-                        this.router.navigate(['../', saved.id], { relativeTo: this.route });
+                        this.router.navigate(['../', saved.id], { relativeTo: this.route }).then();
                     }
                 },
                 error: () => {
@@ -485,7 +535,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
         const data: AddClinicOrDentistDialogData = {
             mode: 'clinic',
-            options: the_clinics
+            options: the_clinics,
+            positions: this.dentistClinicPositions()
         };
 
         const ref = this.dialog.open<
@@ -503,7 +554,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
             if (!result) return;
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
-            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position, result.schedule)
+            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position_id, result.schedule)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
                     next: ()=>{
@@ -640,7 +691,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
         const data: AddClinicOrDentistDialogData = {
             mode: 'clinic',
-            options: the_clinics
+            options: the_clinics,
+            positions: this.dentistClinicPositions(),
         };
 
         const ref = this.dialog.open<
@@ -658,7 +710,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
             if (!result) return;
             // result is AddClinicOrDentistDialogResult.
             // result.mode 'clinic' or 'dentist'; result.position, result.schedule, result.selected.id, result.selected.name
-            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position, result.schedule)
+            this.dentistClinicService.addDentistClinic(result.selected.id,<number>this.dentistId(), result.position_id, result.schedule)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe({
                     next: ()=>{
@@ -670,8 +722,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
                     }
                 })
         })
-
-
     }
 }
 

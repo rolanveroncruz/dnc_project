@@ -5,7 +5,7 @@ use crate::m20260126_063012_create_tables_dental_clinic::{City, DentalClinic, Re
 use crate::m20260126_063012_create_tables_dental_clinic::Province;
 use sea_query::{Expr, OnConflict, Query};
 use crate::m20260119_112338_create_table_dentist_contract::DentistContract;
-use crate::m20260126_161604_create_table_dentists::{Dentist, DentistClinic};
+use crate::m20260126_161604_create_table_dentists::{Dentist, DentistClinic, Position};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -144,10 +144,15 @@ impl Migration{
         let dentist_given_name = clean(&d_row.given_name);
         let dentist_middle_name = clean(&d_row.middle_name);
         let dentist_last_name = clean(&d_row.last_name);
-        let dentist_position = clean(&d_row.dentist_position);
+
+        //---7) DENTIST_CLINIC_POSITION
+        let dentist_position_raw = clean(&d_row.dentist_position);
+        let dentist_position_name = map_xlsx_position_to_position_name(&dentist_position_raw)?;
+        let dentist_position_id = get_position_id_by_name(db, &dentist_position_name).await?;
+
 
         insert_dentist(db, &dentist_given_name, &dentist_middle_name, &dentist_last_name,
-                       dentist_contract_id, dental_clinic_id, &dentist_position).await?;
+                       dentist_contract_id, dental_clinic_id, dentist_position_id).await?;
         println!("dentist inserted:{dentist_given_name} {dentist_middle_name} {dentist_last_name}");
         Ok(())
     }
@@ -326,7 +331,7 @@ async fn get_or_insert_dental_clinic(db: &impl ConnectionTrait,
 
 async fn insert_dentist(db: &impl ConnectionTrait,
                         given_name:&str, middle_name: &str, last_name: &str,
-                        dental_contract_id: i32, dental_clinic_id: i32, position: &str) -> Result<(), DbErr> {
+                        dental_contract_id: i32, dental_clinic_id: i32, position_id: i32) -> Result<(), DbErr> {
     let insert = Query::insert()
         .into_table(Dentist::Table)
         .columns([Dentist::AccreDentistContractId,
@@ -358,11 +363,49 @@ async fn insert_dentist(db: &impl ConnectionTrait,
 
    let insert_dentist_clinic = Query::insert()
        .into_table(DentistClinic::Table)
-       .columns([DentistClinic::DentistId, DentistClinic::ClinicId, DentistClinic::Position])
-       .values_panic([dentist_id.into(), dental_clinic_id.into(), position.into()])
+       .columns([DentistClinic::DentistId, DentistClinic::ClinicId, DentistClinic::PositionId])
+       .values_panic([dentist_id.into(), dental_clinic_id.into(), position_id.into()])
        .to_owned();
 
     db.execute(&insert_dentist_clinic).await?;
 
     Ok(())
+}
+
+fn map_xlsx_position_to_position_name( raw:&str)->Result<String, DbErr>{
+    // normalize comparison
+    let lowered = raw.trim().to_lowercase();
+
+    let mapped = match lowered.as_str() {
+        "Owner" => "Principal",
+        "owner" => "Principal",
+        "Associate dentist" => "Associate",
+        "associate dentist" => "Associate",
+        "" => {
+            return Err(DbErr::Custom(
+                "Empty clinic position in XLSX (expected 'Owner' or 'Associate dentist')".to_string(),
+            ));
+        }
+        other => {
+            return Err(DbErr::Custom(format!(
+                "Unknown clinic position in XLSX: '{other}' (expected 'Owner' or 'Associate dentist')"
+            )));
+        }
+    };
+
+    Ok(mapped.to_string())
+}
+// ANNOTATED CHANGE: fetch Position.id by Position.name (NO INSERT; must already exist)
+async fn get_position_id_by_name(db: &impl ConnectionTrait, name: &str) -> Result<i32, DbErr> {
+    let select = Query::select()
+        .column(Position::Id)
+        .from(Position::Table)
+        .and_where(Expr::col(Position::Name).eq(name))
+        .limit(1)
+        .to_owned();
+
+    let row = db.query_one(&select).await?
+        .ok_or_else(|| DbErr::Custom(format!("Failed to find Position.id for name='{name}'")))?;
+
+    Ok(row.try_get("", "id")?)
 }

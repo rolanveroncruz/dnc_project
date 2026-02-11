@@ -8,13 +8,18 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub prc_no: Option<String>,
+    pub prc_expiry_date: Option<Date>,
     pub last_name: String,
     pub given_name: String,
     pub middle_name: Option<String>,
     pub email: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub notes: Option<String>,
     #[sea_orm(column_type = "Float")]
     pub retainer_fee: f32,
     pub dentist_status_id: Option<i32>,
+    pub dentist_decline_remarks: Option<String>,
     pub dentist_history_id: Option<i32>,
     pub dentist_requested_by: Option<String>,
     pub accre_dentist_contract_id: Option<i32>,
@@ -24,6 +29,7 @@ pub struct Model {
     pub accre_contract_file_path: Option<String>,
     pub acc_tin: Option<String>,
     pub acc_bank_name: Option<String>,
+    pub acc_account_type_id: Option<i32>,
     pub acc_account_name: Option<String>,
     pub acc_account_number: Option<String>,
     pub acc_tax_type_id: Option<i32>,
@@ -32,6 +38,14 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::account_type::Entity",
+        from = "Column::AccAccountTypeId",
+        to = "super::account_type::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    AccountType,
     #[sea_orm(has_many = "super::dentist_clinic::Entity")]
     DentistClinic,
     #[sea_orm(
@@ -76,6 +90,12 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     TaxType,
+}
+
+impl Related<super::account_type::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AccountType.def()
+    }
 }
 
 impl Related<super::dentist_clinic::Entity> for Entity {

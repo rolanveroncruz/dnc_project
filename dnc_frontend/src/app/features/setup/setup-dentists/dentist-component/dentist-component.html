@@ -29,27 +29,37 @@
     <mat-card-content [formGroup]="form">
         <!-- Top part: 4 columns -->
         <section class="top-grid">
-            <!-- Column 1: last_name + email -->
+
+            <!-- Column 1: PRC License No., PRC Expiry Date-->
             <div class="col">
                 <mat-form-field appearance="outline">
-                    <mat-label>Last name</mat-label>
-                    <input matInput formControlName="last_name"/>
-                    @if (form.get('email')?.hasError('required')) {
+                    <mat-label>PRC License No.</mat-label>
+                    <input matInput formControlName="prc_no"/>
+                    @if (form.get('prc_no')?.hasError('required')) {
                         <mat-error>Required</mat-error>
                     }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                    <mat-label>Email</mat-label>
-                    <input matInput formControlName="email"/>
-                    @if (form.get('email')?.hasError('email')) {
-                        <mat-error> Invalid email</mat-error>
-                    }
+                    <mat-label>PRC Expiry Date</mat-label>
+                    <input matInput [matDatepicker]="prcExpDate" formControlName="prc_expiry_date"/>
+                    <mat-datepicker-toggle matIconSuffix [for]="prcExpDate"></mat-datepicker-toggle>
+                    <mat-datepicker #prcExpDate></mat-datepicker>
                 </mat-form-field>
             </div>
 
+
+
             <!-- Column 2: given_name -->
             <div class="col">
+            <mat-form-field appearance="outline">
+                <mat-label>Last name</mat-label>
+                <input matInput formControlName="last_name"/>
+                @if (form.get('last_name')?.hasError('required')) {
+                    <mat-error>Required</mat-error>
+                }
+            </mat-form-field>
+
                 <mat-form-field appearance="outline">
                     <mat-label>Given name</mat-label>
                     <input matInput formControlName="given_name"/>
@@ -57,13 +67,35 @@
                         <mat-error>Required</mat-error>
                     }
                 </mat-form-field>
+                <div class="col">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Middle name</mat-label>
+                        <input matInput formControlName="middle_name"/>
+                    </mat-form-field>
+                </div>
             </div>
 
             <!-- Column 3: middle_name -->
             <div class="col">
                 <mat-form-field appearance="outline">
-                    <mat-label>Middle name</mat-label>
-                    <input matInput formControlName="middle_name"/>
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email"/>
+                    @if (form.get('email')?.hasError('email')) {
+                        <mat-error> Invalid email</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="notes-field">
+                    <mat-label>Notes</mat-label>
+                    <textarea
+                        matInput
+                        formControlName="notes"
+                        rows="5"
+                        placeholder="Additional notes…"></textarea>
+
+                    @if (form.get('notes')?.hasError('maxlength')) {
+                        <mat-error>Too long</mat-error>
+                    }
                 </mat-form-field>
             </div>
 
@@ -109,6 +141,19 @@
                         </mat-hint>
                     }
                 </mat-form-field>
+                <!-- ✅ ADD THIS right below the Dentist Status field -->
+                @if (showDeclineRemarks()) {
+                    <mat-form-field appearance="outline">
+                        <mat-label>Decline remarks</mat-label>
+                        <mat-select formControlName="dentist_decline_remarks">
+                            <mat-option [value]="null">None</mat-option>
+                            @for (o of declineRemarkOptions; track o.value) {
+                                <mat-option [value]="o.value">{{ o.name }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                }
+
 
                 <mat-form-field appearance="outline">
                     <mat-label>Retainer fee</mat-label>
@@ -254,6 +299,22 @@
                         <mat-form-field appearance="outline">
                             <mat-label>Bank name</mat-label>
                             <input matInput formControlName="acc_bank_name"/>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Account type</mat-label>
+                            <mat-select formControlName="acc_account_type_id">
+                                <mat-option [value]="null">None</mat-option>
+                                @for (o of accountTypes(); track o.id) {
+                                    <mat-option [value]="o.id">{{ o.name }}</mat-option>
+                                }
+                            </mat-select>
+
+                            @if (form.value.acc_account_type_id) {
+                                <mat-hint>
+                                    Selected: {{ lookupName(accountTypes(), form.value.acc_account_type_id) }}
+                                </mat-hint>
+                            }
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">

@@ -48,3 +48,5 @@ pub use api::dentist_hmo_relations::{get_exclusive_to_hmos_from_dentist_id,
 };
 
 pub use api::data_files::{save_contract_file_for_dentist_id, get_contract_file_for_dentist_id};
+pub use api::account_type::get_all_account_types;
+pub use api::dentist_clinic_position::get_dentist_clinic_positions;

@@ -12,12 +12,16 @@ import {LoginService} from '../login.service';
 export interface DentistWithLookups {
     // ---- Dentist columns
     id: number;
+    prc_no: string | null;
+    prc_expiry_date: string | null;
     last_name: string;
     given_name: string;
     middle_name: string | null;
     email: string | null;
+    notes: string | null;
     retainer_fee: number;
     dentist_status_id: number | null;
+    dentist_decline_remarks: string | null;
     dentist_history_id: number | null;
     dentist_requested_by: string | null;
     accre_dentist_contract_id: number | null;
@@ -27,6 +31,7 @@ export interface DentistWithLookups {
     accre_contract_file_path: string | null;
     acc_tin: string | null;
     acc_bank_name: string | null;
+    acc_account_type_id: number | null;
     acc_account_name: string | null;
     acc_account_number: string | null;
     acc_tax_type_id: number | null;
@@ -38,6 +43,7 @@ export interface DentistWithLookups {
     dentist_status_name: string | null;
     tax_type_name: string | null;
     tax_classification_name: string | null;
+    account_type_name: string | null;
 }
 
 /**
@@ -50,6 +56,55 @@ export interface CreateDentistBody {
     middle_name?: string | null;
     email?: string | null;
     retainer_fee: number;
+    prc_no?:string | null;
+    prc_expiry_date?:string | null;
+    notes?: string | null;
+
+
+    dentist_status_id?: number | null;
+    dentist_decline_remarks?: string | null;
+
+    dentist_history_id?: number | null;
+    dentist_requested_by?: string | null;
+
+    accre_dentist_contract_id?: number | null;
+    accre_document_code?: string | null;
+    accreditation_date?: string | null;
+    accre_contract_sent_date?: string | null;
+    accre_contract_file_path?: string | null;
+
+    acc_tin?: string | null;
+    acc_bank_name?: string | null;
+    acc_account_type_id?: number | null;
+    acc_account_name?: string | null;
+    acc_account_number?: string | null;
+
+    acc_tax_type_id?: number | null;
+    acc_tax_classification_id?: number | null;
+}
+/**
+ * ANNOTATED CHANGE: Patch body to match Rust PatchDentistRequest semantics.
+ * For nullable fields you must support:
+ * - omit => no change
+ * - null => set NULL
+ * - value => set value
+ *
+ * So we model nullable fields as: field?: string | null
+ * Non-nullable as: field?: string / number
+ */
+export interface PatchDentistBody {
+    // non-nullable in DB
+    last_name?: string;
+    given_name?: string;
+    retainer_fee?: number;
+
+    // nullable in DB (Option<Option<T>> in Rust)
+    middle_name?: string | null;
+    email?: string | null;
+    prc_no?: string | null;
+    prc_expiry_date?: string | null;
+    notes?: string | null;
+    dentist_decline_remarks?: string | null;
 
     dentist_status_id?: number | null;
     dentist_history_id?: number | null;
@@ -66,11 +121,12 @@ export interface CreateDentistBody {
     acc_account_name?: string | null;
     acc_account_number?: string | null;
 
+    // ANNOTATED CHANGE: add missing patch field (your Rust has this in Create; if you add it to Patch later, keep here)
+    acc_account_type_id?: number | null;
+
     acc_tax_type_id?: number | null;
     acc_tax_classification_id?: number | null;
 }
-
-export type PatchDentistBody = Partial<CreateDentistBody>;
 
 @Injectable({ providedIn: 'root' })
 export class DentistService {

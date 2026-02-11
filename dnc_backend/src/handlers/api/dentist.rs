@@ -18,6 +18,7 @@ use crate::entities::{
     dentist_status,
     tax_classification,
     tax_type,
+    account_type,
 };
 
 /// Dentist row + lookup "name" fields
@@ -25,12 +26,20 @@ use crate::entities::{
 pub struct DentistWithLookups {
     // ---- Dentist columns (match dentist table column names)
     pub id: i32,
+
+    pub prc_no: Option<String>,
+    pub prc_expiry_date: Option<sea_orm::prelude::Date>,
+
     pub last_name: String,
     pub given_name: String,
     pub middle_name: Option<String>,
     pub email: Option<String>,
+
+    pub notes: Option<String>,
     pub retainer_fee: f32,
     pub dentist_status_id: Option<i32>,
+    pub dentist_decline_remarks: Option<String>,
+
     pub dentist_history_id: Option<i32>,
     pub dentist_requested_by: Option<String>,
     pub accre_dentist_contract_id: Option<i32>,
@@ -40,6 +49,8 @@ pub struct DentistWithLookups {
     pub accre_contract_file_path: Option<String>,
     pub acc_tin: Option<String>,
     pub acc_bank_name: Option<String>,
+
+    pub acc_account_type_id: Option<i32>,
     pub acc_account_name: Option<String>,
     pub acc_account_number: Option<String>,
     pub acc_tax_type_id: Option<i32>,
@@ -51,6 +62,7 @@ pub struct DentistWithLookups {
     pub dentist_status_name: Option<String>,
     pub tax_type_name: Option<String>,
     pub tax_classification_name: Option<String>,
+    pub account_type_name: Option<String>,
 }
 
 /// Shared query builder so both handlers stay identical.
@@ -62,6 +74,7 @@ fn dentist_with_lookups_query() -> sea_orm::Select<dentist::Entity> {
         .join(JoinType::LeftJoin, dentist::Relation::DentistStatus.def())
         .join(JoinType::LeftJoin, dentist::Relation::TaxType.def())
         .join(JoinType::LeftJoin, dentist::Relation::TaxClassification.def())
+        .join(JoinType::LeftJoin, dentist::Relation::AccountType.def())
         // select dentist columns + aliases for lookup names
         .select_only()
         .columns(dentist::Column::iter())
@@ -84,6 +97,10 @@ fn dentist_with_lookups_query() -> sea_orm::Select<dentist::Entity> {
         .expr_as(
             Expr::col( (tax_classification::Entity, tax_classification::Column::Name)),
             "tax_classification_name",
+        )
+        .expr_as(
+            Expr::col((account_type::Entity, account_type::Column::Name)),
+            "account_type_name",
         )
 }
 
@@ -137,6 +154,13 @@ pub struct CreateDentistRequest {
     // optional fields
     pub middle_name: Option<String>,
     pub email: Option<String>,
+
+    pub prc_no: Option<String>,
+    pub prc_expiry_date: Option<sea_orm::prelude::Date>,
+    pub notes: Option<String>,
+    pub dentist_decline_remarks: Option<String>,
+    pub acc_account_type_id: Option<i32>,
+
     pub dentist_status_id: Option<i32>,
     pub dentist_history_id: Option<i32>,
     pub dentist_requested_by: Option<String>,
@@ -168,6 +192,11 @@ pub struct PatchDentistRequest {
 
     pub middle_name: Option<Option<String>>,
     pub email: Option<Option<String>>,
+    pub prc_no: Option<Option<String>>,
+    pub prc_expiry_date: Option<Option<sea_orm::prelude::Date>>,
+
+    pub notes: Option<Option<String>>,
+    pub dentist_decline_remarks: Option<Option<String>>,
     pub dentist_status_id: Option<Option<i32>>,
     pub dentist_history_id: Option<Option<i32>>,
     pub dentist_requested_by: Option<Option<String>>,
@@ -181,6 +210,7 @@ pub struct PatchDentistRequest {
     pub acc_tin: Option<Option<String>>,
     pub acc_bank_name: Option<Option<String>>,
     pub acc_account_name: Option<Option<String>>,
+    pub acc_account_type_id: Option<Option<i32>>,
     pub acc_account_number: Option<Option<String>>,
     pub acc_tax_type_id: Option<Option<i32>>,
     pub acc_tax_classification_id: Option<Option<i32>>,
@@ -200,9 +230,16 @@ pub async fn create_dentist(
         given_name: Set(body.given_name),
         middle_name: Set(body.middle_name),
         email: Set(body.email),
+
+        prc_no: Set(body.prc_no),
+        prc_expiry_date: Set(body.prc_expiry_date),
+        notes: Set(body.notes),
+
         retainer_fee: Set(body.retainer_fee),
 
         dentist_status_id: Set(body.dentist_status_id),
+        dentist_decline_remarks: Set(body.dentist_decline_remarks),
+        acc_account_type_id: Set(body.acc_account_type_id),
         dentist_history_id: Set(body.dentist_history_id),
         dentist_requested_by: Set(body.dentist_requested_by),
 
@@ -242,6 +279,9 @@ pub async fn create_dentist(
     Ok(Json(row))
 }
 
+
+
+
 #[instrument(skip(state, body), err(Debug))]
 pub async fn patch_dentist(
     State(state): State<AppState>,
@@ -277,6 +317,19 @@ pub async fn patch_dentist(
     if let Some(v) = body.email {
         am.email = Set(v);
     }
+
+    if let Some(v)= body.prc_no {
+        am.prc_no = Set(v);
+    }
+    if let Some(v) = body.prc_expiry_date {
+        am.prc_expiry_date = Set(v);
+    }
+    if let Some(v) = body.notes {
+        am.notes = Set(v);
+    }
+    if let Some(v)=body.dentist_decline_remarks {
+        am.dentist_decline_remarks = Set(v);
+    }
     if let Some(v) = body.dentist_status_id {
         am.dentist_status_id = Set(v);
     }
@@ -308,6 +361,9 @@ pub async fn patch_dentist(
     }
     if let Some(v) = body.acc_bank_name {
         am.acc_bank_name = Set(v);
+    }
+    if let Some(v) = body.acc_account_type_id {
+        am.acc_account_type_id = Set(v);
     }
     if let Some(v) = body.acc_account_name {
         am.acc_account_name = Set(v);

@@ -47,9 +47,16 @@
         <section class="form-pane" [formGroup]="form">
             <mat-form-field appearance="outline" class="field">
                 <mat-label>Position</mat-label>
-                <input matInput formControlName="position" placeholder="e.g., Visiting Dentist / Staff" />
+                <mat-select formControlName="position_id">
+                    <mat-option [value]="null">Select...</mat-option>
+                    @for (p of data.positions; track p.id) {
+                        <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                    }
+                </mat-select>
+                @if (form.get('position_id')?.hasError('required')) {
+                    <mat-error>Required</mat-error>
+                }
             </mat-form-field>
-
             <mat-form-field appearance="outline" class="field">
                 <mat-label>Schedule</mat-label>
                 <input matInput formControlName="schedule" placeholder="e.g., Mon/Wed 9am–3pm" />

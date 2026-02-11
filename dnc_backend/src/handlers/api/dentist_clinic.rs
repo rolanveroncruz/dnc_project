@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::{dentist, dentist_clinic, dental_clinic};
+use crate::entities::{dentist, dentist_clinic, dental_clinic, position};
 
 /// Joined row returned to the client
 #[derive(Debug, Serialize, FromQueryResult)]
@@ -17,7 +17,7 @@ pub struct DentistClinicWithNames {
     pub dentist_id: i32,
     pub clinic_id: Option<i32>,
 
-    pub position: Option<String>,
+    pub position_id: Option<i32>,
     pub schedule: Option<String>,
 
     pub last_name: String,
@@ -25,6 +25,7 @@ pub struct DentistClinicWithNames {
     pub middle_name: Option<String>,
 
     pub clinic_name: Option<String>,
+    pub position_name: Option<String>,
 }
 
 /// Base select used by all endpoints
@@ -34,11 +35,13 @@ fn dentist_clinic_select_base() -> sea_orm::Select<dentist_clinic::Entity> {
         .join(JoinType::InnerJoin, dentist_clinic::Relation::Dentist.def())
         // dentist_clinic -> dental_clinic (optional because clinic_id is Option<i32>)
         .join(JoinType::LeftJoin, dentist_clinic::Relation::DentalClinic.def())
+        // ANNOTATED CHANGE: join dentist_clinic -> position (optional because position_id is Option<i32>)
+        .join(JoinType::LeftJoin, dentist_clinic::Relation::Position.def())
         .select_only()
         // dentist_clinic fields
         .column_as(dentist_clinic::Column::DentistId, "dentist_id")
         .column_as(dentist_clinic::Column::ClinicId, "clinic_id")
-        .column_as(dentist_clinic::Column::Position, "position")
+        .column_as(dentist_clinic::Column::PositionId, "position_id")
         .column_as(dentist_clinic::Column::Schedule, "schedule")
         // dentist name fields
         .expr_as(Expr::col((dentist::Entity, dentist::Column::LastName)), "last_name")
@@ -46,6 +49,7 @@ fn dentist_clinic_select_base() -> sea_orm::Select<dentist_clinic::Entity> {
         .expr_as(Expr::col((dentist::Entity, dentist::Column::MiddleName)), "middle_name")
         // clinic name field (nullable because clinic left-join)
         .expr_as(Expr::col((dental_clinic::Entity, dental_clinic::Column::Name)), "clinic_name")
+        .expr_as(Expr::col((position::Entity, position::Column::Name)), "position_name")
 }
 
 /// GET /dentist_clinics
@@ -111,7 +115,7 @@ pub async fn get_dentists_for_clinic_id(
 #[derive(Debug, Deserialize)]
 pub struct AddDentistClinicRequest {
     pub clinic_id: i32,
-    pub position: Option<String>,
+    pub position_id: Option<i32>,
     pub schedule: Option<String>,
 }
 
@@ -130,6 +134,8 @@ pub async fn add_dentist_clinic(
     Path(dentist_id): Path<i32>,
     Json(payload): Json<AddDentistClinicRequest>,
 ) -> Result<(StatusCode, Json<DentistClinicWithNames>), StatusCode> {
+    tracing::info!("add_dentist_clinic payload = {:?}", payload);
+
     // 1) Ensure dentist exists
     let dentist_exists = dentist::Entity::find_by_id(dentist_id)
         .one(&state.db)
@@ -160,6 +166,20 @@ pub async fn add_dentist_clinic(
     if !clinic_exists {
         return Err(StatusCode::NOT_FOUND);
     }
+    if let Some(pos_id)=payload.position_id{
+        let pos_exists = position::Entity::find_by_id(pos_id)
+            .one(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to check position existence position_id={pos_id}: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?
+            .is_some();
+
+        if !pos_exists {
+            return Err(StatusCode::NOT_FOUND);
+        }
+    }
 
     // 3) Prevent duplicate link (app-level)
     let already_linked = dentist_clinic::Entity::find()
@@ -185,7 +205,7 @@ pub async fn add_dentist_clinic(
     let am = dentist_clinic::ActiveModel {
         dentist_id: Set(dentist_id),
         clinic_id: Set(Some(payload.clinic_id)),
-        position: Set(payload.position),
+        position_id: Set(payload.position_id),
         schedule: Set(payload.schedule),
         ..Default::default()
     };

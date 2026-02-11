@@ -1,0 +1,27 @@
+<mat-card class="hmo-card">
+    <mat-card-title class="hmo-title">{{ title }}</mat-card-title>
+
+    <div class="hmo-row">
+        <mat-selection-list
+            [multiple]="false"
+            class="hmo-list"
+            (selectionChange)="onSelectionChange($event)"
+        >
+            @for (item of visibleItems; track item.id) {
+                <mat-list-option [value]="item.id">
+                    <span>{{ displayShortName(item) }}</span>
+                </mat-list-option>
+            }
+        </mat-selection-list>
+
+        <div class="hmo-actions">
+            <button mat-flat-button type="button" (click)="onAddClick()" [disabled]="disableAdd">
+                {{ addLabel }}
+            </button>
+
+            <button mat-button type="button" (click)="onRemoveClick()" [disabled]="!canRemove">
+                {{ removeLabel }}
+            </button>
+        </div>
+    </div>
+</mat-card>

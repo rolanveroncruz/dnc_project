@@ -1,0 +1,51 @@
+:host {
+    display: block;
+}
+
+.hmo-card {
+    padding: 12px;
+}
+
+.hmo-title {
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-bottom: 8px;
+}
+
+.hmo-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
+}
+
+/* Fixed-height list with scrollbar */
+.hmo-list {
+    width: 100%;
+
+    /* pick a height that matches your card sizing */
+    height: 180px;
+
+    /* IMPORTANT: the scroll should be on the list itself */
+    overflow: auto;
+
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Optional: keep item padding a bit tighter */
+:host ::ng-deep .hmo-list .mat-mdc-list-item {
+    min-height: 36px;
+}
+
+.hmo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+
+    button {
+        min-width: 84px;
+    }
+}
