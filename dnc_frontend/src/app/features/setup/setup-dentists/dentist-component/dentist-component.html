@@ -267,7 +267,16 @@
                                 [items]="exceptForHmos()"
                                 (add)="addExceptForHmo()"
                                 (remove)="removeExceptForHmo($event)" />
+                        </div>
 
+
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Company relations">
+                    <div class="tab-pad">
+
+                        <div class="hmo-grid">
                             <app-hmo-relations
                                 title="Exclusive to Company"
                                 [items]="exclusiveToCompanies()"
@@ -287,7 +296,6 @@
 
                     </div>
                 </mat-tab>
-
                 <!-- Accounting tab -->
                 <mat-tab label="Accounting">
                     <div class="tab-grid tab-pad">
