@@ -31,6 +31,7 @@ pub async fn save_contract_file_for_dentist_id(
     Path(dentist_id): Path<i32>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, StatusCode> {
+    tracing::info!("Saving contract file for dentist_id: {}", dentist_id);
     let base_dir: PathBuf = ["./DNC_DATAFILES", "contracts", &dentist_id.to_string()]
         .iter()
         .collect();
@@ -38,11 +39,15 @@ pub async fn save_contract_file_for_dentist_id(
     fs::create_dir_all(&base_dir)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    tracing::info!("called fs::create_dir_all() on directory: {:?}", base_dir);
 
     while let Some(field) = multipart
         .next_field()
         .await
-        .map_err(|_| StatusCode::BAD_REQUEST)?
+        .map_err(|e|{
+            tracing::error!("Error reading multipart field: {:?}", e);
+            StatusCode::BAD_REQUEST
+        })?
     {
         let file_name = field
             .file_name()
@@ -66,7 +71,10 @@ pub async fn save_contract_file_for_dentist_id(
         let data = field
             .bytes()
             .await
-            .map_err(|_| StatusCode::BAD_REQUEST)?;
+            .map_err(|e| {
+                tracing::error!("Error reading multipart field bytes: {:?}", e);
+             StatusCode::BAD_REQUEST
+            })?;
 
         // size in bytes (cap at i32::MAX to satisfy your schema)
         let size_u64 = data.len() as u64;
@@ -90,6 +98,7 @@ pub async fn save_contract_file_for_dentist_id(
             size_bytes,
             updated_at: Utc::now().to_rfc3339(),
         };
+        tracing::info!("Saved file: {:?}", resp);
 
         return Ok((StatusCode::OK, Json(resp)));
     }

@@ -6,8 +6,9 @@ mod entities;
 pub struct AppState {
     pub db: DatabaseConnection,
 }
-use axum::{extract::Request, middleware::Next, response::Response};
+use axum::{extract::{Request, DefaultBodyLimit}, middleware::Next, response::Response};
 use axum::{Router, routing::{get,post,patch}, middleware};
+
 use sea_orm::DatabaseConnection;
 use handlers::boiler::{hello_world, healthcheck, test_posting_json, whoami};
 use handlers::login::{ login_handler};
@@ -104,7 +105,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentists/{:dentist_id}/hmos/except", get(get_not_hmos_from_dentist_id))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", post(add_except_for_hmo))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", delete(remove_except_for_hmo))
-        .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id))
+        .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id)
+            .layer(DefaultBodyLimit::max(100 * 1024 * 1024)),)
         .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
         .route("/dentists/", post(create_dentist))
 }
@@ -127,6 +129,7 @@ pub fn build_app(my_state:AppState) ->Router{
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
+    tracing::info!("Allowed hosts: {:?}", allowed_hosts);
 
     let cors = CorsLayer::new()
         // allow Angular dev origin
