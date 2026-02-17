@@ -28,6 +28,22 @@ pub struct DentistClinicWithNames {
     pub position_name: Option<String>,
 }
 
+#[derive(Debug, Serialize, FromQueryResult)]
+pub struct DentistClinicWithNamesAndAddress{
+    pub dentist_id: i32,
+    pub clinic_id: Option<i32>,
+
+    pub position_id: Option<i32>,
+    pub schedule: Option<String>,
+
+    pub last_name: String,
+    pub given_name: String,
+    pub middle_name: Option<String>,
+
+    pub clinic_name: Option<String>,
+    pub clinic_address: Option<String>,
+    pub position_name: Option<String>,
+}
 /// Base select used by all endpoints
 fn dentist_clinic_select_base() -> sea_orm::Select<dentist_clinic::Entity> {
     dentist_clinic::Entity::find()
@@ -49,6 +65,30 @@ fn dentist_clinic_select_base() -> sea_orm::Select<dentist_clinic::Entity> {
         .expr_as(Expr::col((dentist::Entity, dentist::Column::MiddleName)), "middle_name")
         // clinic name field (nullable because clinic left-join)
         .expr_as(Expr::col((dental_clinic::Entity, dental_clinic::Column::Name)), "clinic_name")
+        .expr_as(Expr::col((position::Entity, position::Column::Name)), "position_name")
+}
+
+fn dentist_clinic_with_address_select_base() -> sea_orm::Select<dentist_clinic::Entity> {
+    dentist_clinic::Entity::find()
+        // dentist_clinic -> dentist (required)
+        .join(JoinType::InnerJoin, dentist_clinic::Relation::Dentist.def())
+        // dentist_clinic -> dental_clinic (optional because clinic_id is Option<i32>)
+        .join(JoinType::LeftJoin, dentist_clinic::Relation::DentalClinic.def())
+        // ANNOTATED CHANGE: join dentist_clinic -> position (optional because position_id is Option<i32>)
+        .join(JoinType::LeftJoin, dentist_clinic::Relation::Position.def())
+        .select_only()
+        // dentist_clinic fields
+        .column_as(dentist_clinic::Column::DentistId, "dentist_id")
+        .column_as(dentist_clinic::Column::ClinicId, "clinic_id")
+        .column_as(dentist_clinic::Column::PositionId, "position_id")
+        .column_as(dentist_clinic::Column::Schedule, "schedule")
+        // dentist name fields
+        .expr_as(Expr::col((dentist::Entity, dentist::Column::LastName)), "last_name")
+        .expr_as(Expr::col((dentist::Entity, dentist::Column::GivenName)), "given_name")
+        .expr_as(Expr::col((dentist::Entity, dentist::Column::MiddleName)), "middle_name")
+        // clinic name field (nullable because clinic left-join)
+        .expr_as(Expr::col((dental_clinic::Entity, dental_clinic::Column::Name)), "clinic_name")
+        .expr_as(Expr::col((dental_clinic::Entity, dental_clinic::Column::Address)), "clinic_address")
         .expr_as(Expr::col((position::Entity, position::Column::Name)), "position_name")
 }
 
@@ -74,10 +114,10 @@ pub async fn get_all_dentist_clinics(
 pub async fn get_clinics_for_dentist_id(
     State(state): State<AppState>,
     Path(dentist_id): Path<i32>,
-) -> Result<Json<Vec<DentistClinicWithNames>>, StatusCode> {
-    let rows = dentist_clinic_select_base()
+) -> Result<Json<Vec<DentistClinicWithNamesAndAddress>>, StatusCode> {
+    let rows = dentist_clinic_with_address_select_base()
         .filter(dentist_clinic::Column::DentistId.eq(dentist_id))
-        .into_model::<DentistClinicWithNames>()
+        .into_model::<DentistClinicWithNamesAndAddress>()
         .all(&state.db)
         .await
         .map_err(|e| {

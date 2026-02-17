@@ -9,9 +9,12 @@
           <mat-label>Rate</mat-label>
           <input
             matInput
-            type="number"
+            type="text"
+            inputmode="decimal"
+            [value]="displayValue(s.id)"
+            (focus)="onFocus(s.id)"
+            (blur)="onBlur(s.id, $any($event.target).value)"
             [formControlName]="controlName(s.id)"
-            [disabled]="disabled"
             min="0"
             step="0.01"/>
 

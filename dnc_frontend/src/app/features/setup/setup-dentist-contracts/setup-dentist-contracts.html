@@ -49,14 +49,14 @@
     <div class="contract-fields" [formGroup]="contractForm">
       <mat-form-field appearance="outline" class="name-field">
         <mat-label>Name</mat-label>
-        <input matInput formControlName="name" [disabled]="isBusy()"/>
+        <input matInput formControlName="name" />
         @if (contractForm.controls.name.invalid && contractForm.controls.name.touched) {
           <mat-error>Name is required.</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline" class="desc-field">
         <mat-label>Description</mat-label>
-        <textarea matInput rows="3" formControlName="description" [disabled]="isBusy()"></textarea>
+        <textarea matInput rows="3" formControlName="description"></textarea>
       </mat-form-field>
     </div>
 

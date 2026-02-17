@@ -47,9 +47,10 @@ export class SetupDentists {
         { key: 'given_name', label: 'Given Name' },
         { key: 'middle_name', label: 'Middle Name' },
         { key: 'dentist_contract_name', label: 'Dentist Contract' },
-        { key: 'clinic_name', label: 'Clinic' },
-        { key: 'position', label: 'Position' },
-        { key: 'schedule', label: 'Schedule' },
+        { key: 'prc_no', label: 'PRC License' },
+        { key: 'prc_expiry_date', label: 'PRC Expiry Date' },
+        { key: 'dentist_status_name', label: 'Status'},
+        { key: 'dentist_history_name', label: 'History'},
     ];
     constructor(){}
 

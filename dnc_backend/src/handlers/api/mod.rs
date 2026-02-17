@@ -22,3 +22,4 @@ pub mod dentist_hmo_relations;
 pub mod data_files;
 pub mod account_type;
 pub mod dentist_clinic_position;
+pub mod extended_dental_clinic;

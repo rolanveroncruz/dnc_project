@@ -1,7 +1,7 @@
 // src/app/api_services/dentist-clinic-service.ts
 import { Injectable, inject } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {map, Observable} from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {LoginService} from '../login.service';
@@ -24,6 +24,24 @@ export interface DentistClinicWithNames {
     clinic_name: string | null;
     position_name: string | null;
 }
+
+export interface DentistClinicWithNamesAndAddress {
+    dentist_id: number;
+    clinic_id: number | null;
+
+    position_id: number | null;
+    schedule: string | null;
+
+    last_name: string;
+    given_name: string;
+    middle_name: string | null;
+
+    clinic_name: string | null;
+    clinic_address: string | null;
+    position_name: string | null;
+}
+
+
 
 @Injectable({ providedIn: 'root' })
 export class DentistClinicService {
@@ -54,10 +72,15 @@ export class DentistClinicService {
     // ---- GET /dentists/{dentist_id}/clinics
     //
 
-    getClinicsForDentistId(dentistId: number): Observable<DentistClinicWithNames[]> {
-        return this.http.get<DentistClinicWithNames[]>(
-            `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics`, { headers: this.authHeaders()}
-        );
+    getClinicsForDentistId(dentistId: number): Observable<DentistClinicWithNamesAndAddress[]> {
+        return this.http.get<DentistClinicWithNamesAndAddress[]>(
+            `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics`, { headers: this.authHeaders()})
+            .pipe(map(rows => rows.map(this.addAddressToClinicName)));
+    }
+
+    addAddressToClinicName(row: DentistClinicWithNamesAndAddress):DentistClinicWithNamesAndAddress{
+        row.clinic_name = row.clinic_name + " (" + row.clinic_address + ")";
+        return row;
     }
 
     //

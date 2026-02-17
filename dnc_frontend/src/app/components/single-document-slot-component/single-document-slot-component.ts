@@ -168,21 +168,18 @@ export class SingleDocumentSlotComponent {
 
         const encodedName = encodeURIComponent(meta.file_name);
         const url = `${environment.apiUrl}/api/dentists/${this.dentistId}/contract-file/${encodedName}`;
-
-        // Open a blank tab immediately (keeps popup blockers happy)
-        const tab = window.open('', '_blank', 'noopener');
-
         this.http.get(url, { responseType: 'blob', headers: this.authHeaders() }).subscribe({
             next: (blob) => {
                 const blobUrl = URL.createObjectURL(blob);
-                if (tab) tab.location.href = blobUrl;
-                else window.open(blobUrl, '_blank', 'noopener');
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = meta.file_name || 'document';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
             },
-            error: (err) => {
-                if (tab) tab.close();
-                console.error('Download failed', err);
-            },
+            error: (err) => console.error('Download failed', err),
         });
     }
 

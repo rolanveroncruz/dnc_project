@@ -542,8 +542,9 @@ export class DentalClinicComponent implements OnInit {
             ? Array.from(new Set([...current, capId]))
             : current.filter(id => id !== capId);
 
+        ctrl.markAsDirty();
+        this.form.markAsDirty();
         ctrl.setValue(next);
-        ctrl.markAsDirty(); // ensures hasUnsavedChanges flips on
         if (checked) {
             this.clinicCapabilitiesListService.addToClinic(this.clinicId()!, capId)
                 .pipe(takeUntilDestroyed(this.destroyRef))

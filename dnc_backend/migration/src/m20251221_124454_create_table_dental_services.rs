@@ -48,6 +48,9 @@ impl MigrationTrait for Migration {
                         .integer()
                         .not_null()
                     )
+                    .col(ColumnDef::new(DentalService::SortIndex)
+                        .integer()
+                        .default(99))
                     .col(ColumnDef::new(DentalService::RecordTooth)
                         .boolean()
                         .default(false)
@@ -177,6 +180,7 @@ pub enum DentalService{
     Id,
     Name,
     TypeId,
+    SortIndex,
     RecordTooth,
     Active, // instead of deleting, active = false effectively deletes it.
     LastModifiedBy,

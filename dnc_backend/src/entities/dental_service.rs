@@ -10,6 +10,7 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub type_id: i32,
+    pub sort_index: Option<i32>,
     pub record_tooth: bool,
     pub active: bool,
     pub last_modified_by: String,

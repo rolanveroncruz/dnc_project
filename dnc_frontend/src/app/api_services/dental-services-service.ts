@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {Observable, } from 'rxjs';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login.service';
 
@@ -15,6 +15,7 @@ export interface DentalService {
   id: number;
   name: string;
   type_id: number;
+  sort_index: number;
   type_name: string;
   record_tooth: boolean;
   active: boolean;
