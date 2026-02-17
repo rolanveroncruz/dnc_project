@@ -1,4 +1,4 @@
-import {Component, computed, DestroyRef, inject, OnInit, signal} from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, OnInit, signal} from '@angular/core';
 import {FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent} from '@angular/material/card';
 import {MatDivider} from '@angular/material/list';
@@ -10,10 +10,10 @@ import {MatButton} from '@angular/material/button';
 
 import {BasicServicesTabComponent} from './basic-services-tab-component/basic-services-tab-component';
 import {SpecialServicesTabComponent} from './special-services-tab-component/special-services-tab-component';
-import {DentalServicesService} from '../../../api_services/dental-services-service';
+import {DentalServicesService } from '../../../api_services/dental-services-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {DentistContractsService, DentistContractWithRates} from '../../../api_services/dentist-contracts-service';
-import {finalize} from 'rxjs';
+import {catchError, finalize, map, of, tap} from 'rxjs';
 
 type ServiceType = 'Basic' | 'Special' | 'High-End';
 
@@ -21,6 +21,7 @@ export interface DentalService {
   id: number;
   name: string;
   type: ServiceType;
+  sort_index: number;
   active: boolean;
 }
 
@@ -112,7 +113,16 @@ export class SetupDentistContracts implements OnInit {
   constructor(
     private dentalServicesService: DentalServicesService,
     private dentistContractsService: DentistContractsService) {
-    // TODO: load contracts list + services list from backend
+          effect(() => {
+              if (this.isBusy()) {
+                  this.contractForm.disable({emitEvent: false});
+                  this.ratesGroup.disable({emitEvent: false});
+              } else {
+                  this.contractForm.enable({emitEvent: false});
+                  this.ratesGroup.enable({emitEvent: false});
+              }
+          });
+
     // this.loadServices();
     this.rebuildRatesControls();
   }
@@ -122,40 +132,21 @@ export class SetupDentistContracts implements OnInit {
     this.loadContracts();
 
     // Load Services List
-    this.dentalServicesService.getDentalServices()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: value => {
-          console.log("In ngOnInit():", value);
-          let services: DentalService[] = [];
-          for (const s of value.items) {
-            services.push({
-              id: s.id,
-              name: s.name,
-              type: s.type_name === 'Basic' ? 'Basic'
-                : s.type_name === 'Special' ? 'Special'
-                  : 'High-End',
-              active: s.active
-            });
-          }
-          this.services.set(services);
-          this.rebuildRatesControls();
-          const id = this.selectedContractId();
-          if (id) this.dentistContractsService.getById(id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: value => {
+    this.dentalServicesService.getDentalServices().pipe(
+        takeUntilDestroyed(this.destroyRef),
+        map(page=>(page.items ??[]).map(transformToDentalService)),
 
-              },
-              error: err => {
-                console.log(err);
-              }
-            });
-        },
-        error: err => {
-
-        }
-      })
+        tap(( services:DentalService[])=>{
+            const sorted = [...services].sort((a,b)=>(a.sort_index??0)-(b.sort_index ?? 0));
+            this.services.set(sorted);
+            console.log("In ngOnInit(), this.services:", this.services());
+            this.rebuildRatesControls();
+        }),
+        catchError(err=> {
+            console.log("Error in ngOnInit():", err);
+            return of([] as DentalService[]);
+        })
+    ).subscribe();
   }
 
   // loadContracts() calls this.dentistContractsService.getAll(),
@@ -386,4 +377,16 @@ export class SetupDentistContracts implements OnInit {
     this.contractForm.markAsPristine();
     this.ratesGroup.markAsPristine();
   }
+}
+
+function transformToDentalService(s:any):DentalService{
+    return {
+        id: s.id,
+        name: s.name,
+        type: s.type_name === 'Basic' ? 'Basic'
+            : s.type_name === 'Special' ? 'Special'
+                : 'High-End',
+        sort_index: s.sort_index,
+        active: s.active
+    }
 }

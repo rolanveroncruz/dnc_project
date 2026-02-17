@@ -1,124 +1,149 @@
 <!-- add-edit-dental-services.html -->
 <h2 mat-dialog-title class="dialog-title">
-  <div class="title-wrap">
-    <div class="title-text">
-      <div class="title">
-        {{ isEdit() ? 'Edit Dental Service' : 'New Dental Service' }}
-      </div>
-      <div class="subtitle">
-        Define the service name, type, and recording behavior.
-      </div>
-    </div>
+    <div class="title-wrap">
+        <div class="title-text">
+            <div class="title">
+                {{ isEdit() ? 'Edit Dental Service' : 'New Dental Service' }}
+            </div>
+            <div class="subtitle">
+                Define the service name, type, and recording behavior.
+            </div>
+        </div>
 
-    @if (hasChanges()) {
-      <span class="status-chip">Unsaved changes</span>
-    }
-  </div>
+        @if (hasChanges()) {
+            <span class="status-chip">Unsaved changes</span>
+        }
+    </div>
 </h2>
 
 <div mat-dialog-content class="dialog-content">
-  <form [formGroup]="form" class="grid">
-    <!-- LEFT: Editable -->
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Dental service details</div>
-        <div class="panel-hint">Fields marked * are required.</div>
-      </div>
+    <form [formGroup]="form" class="grid">
+        <!-- LEFT: Editable -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Dental service details</div>
+                <div class="panel-hint">Fields marked * are required.</div>
+            </div>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Service name *</mat-label>
-        <input matInput formControlName="name" autocomplete="off" />
-        <mat-hint>Example: Cleaning, Extraction, Whitening</mat-hint>
+            <mat-form-field appearance="outline" class="full">
+                <mat-label>Service name *</mat-label>
+                <input matInput formControlName="name" autocomplete="off"/>
+                <mat-hint>Example: Cleaning, Extraction, Whitening</mat-hint>
 
-        @if (form.controls.name.invalid && form.controls.name.touched) {
-          @if (form.controls.name.hasError('required')) {
-            <mat-error>Name is required</mat-error>
-          }
-          @if (form.controls.name.hasError('maxlength')) {
-            <mat-error>Max 120 characters</mat-error>
-          }
-        }
-      </mat-form-field>
+                @if (form.controls.name.invalid && form.controls.name.touched) {
+                    @if (form.controls.name.hasError('required')) {
+                        <mat-error>Name is required</mat-error>
+                    }
+                    @if (form.controls.name.hasError('maxlength')) {
+                        <mat-error>Max 120 characters</mat-error>
+                    }
+                }
+            </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Service type *</mat-label>
-        <mat-select formControlName="type_id">
-          @for (opt of data.typeOptions; track opt.id) {
-            <mat-option [value]="opt.id">{{ opt.name }}</mat-option>
-          }
-        </mat-select>
+            <mat-form-field appearance="outline" class="full">
+                <mat-label>Service type *</mat-label>
+                <mat-select formControlName="type_id">
+                    @for (opt of data.typeOptions; track opt.id) {
+                        <mat-option [value]="opt.id">{{ opt.name }}</mat-option>
+                    }
+                </mat-select>
 
-        @if (selectedTypeName()) {
-          <mat-hint>Selected: {{ selectedTypeName() }}</mat-hint>
-        }
+                @if (selectedTypeName()) {
+                    <mat-hint>Selected: {{ selectedTypeName() }}</mat-hint>
+                }
 
-        @if (form.controls.type_id.invalid && form.controls.type_id.touched) {
-          <mat-error>Type is required</mat-error>
-        }
-      </mat-form-field>
+                @if (form.controls.type_id.invalid && form.controls.type_id.touched) {
+                    <mat-error>Type is required</mat-error>
+                }
+            </mat-form-field>
 
-      <div class="checks">
-        <mat-checkbox formControlName="record_tooth">
-          Record tooth / tooth mapping
-        </mat-checkbox>
+            <mat-form-field appearance="outline" class="full">
+                <mat-label>Sort Index </mat-label>
+                <input
+                    matInput
+                    type="number"
+                    inputmode="numeric"
+                    step="1"
+                    min="0"
+                    formControlName="sort_index"
+                    autocomplete="off"/>
+                <mat-hint>Controls ordering in lists (lower appears first).</mat-hint>
 
-        <mat-checkbox formControlName="active">
-          Active
-        </mat-checkbox>
-      </div>
+                @if (form.controls.sort_index.invalid && form.controls.sort_index.touched) {
+                    @if (form.controls.sort_index.hasError('required')) {
+                        <mat-error>Sort index is required</mat-error>
+                    }
+                    @if (form.controls.sort_index.hasError('min')) {
+                        <mat-error>Must be 0 or higher</mat-error>
+                    }
+                    @if (form.controls.sort_index.hasError('max')) {
+                        <mat-error>Value is too large</mat-error>
+                    }
+                }
 
-      <!-- keep submit available for Enter key -->
-      <button type="submit" class="sr-only" aria-hidden="true" (click)="save()"></button>
-    </section>
+            </mat-form-field>
+            <div class="checks">
+                <mat-checkbox formControlName="record_tooth">
+                    Record tooth / tooth mapping
+                </mat-checkbox>
 
-    <!-- RIGHT: Readonly meta -->
-    <aside class="panel panel--meta">
-      <div class="panel-header">
-        <div class="panel-title">Audit</div>
-        <div class="panel-hint">Read-only information.</div>
-      </div>
+                <mat-checkbox formControlName="active">
+                    Active
+                </mat-checkbox>
+            </div>
 
-      <div class="meta-row">
-        <div class="meta-label">Service ID</div>
-        <div class="meta-value mono">
-          {{ data.service?.id ?? '—' }}
-        </div>
-      </div>
+            <!-- keep submit available for Enter key -->
+            <button type="submit" class="sr-only" aria-hidden="true" (click)="save()"></button>
+        </section>
 
-      <div class="meta-row">
-        <div class="meta-label">Last modified by</div>
-        <div class="meta-value">
-          {{ data.service?.last_modified_by ?? '—' }}
-        </div>
-      </div>
+        <!-- RIGHT: Readonly meta -->
+        <aside class="panel panel--meta">
+            <div class="panel-header">
+                <div class="panel-title">Audit</div>
+                <div class="panel-hint">Read-only information.</div>
+            </div>
 
-      <div class="meta-row">
-        <div class="meta-label">Last modified on</div>
-        <div class="meta-value">
-          {{ data.service?.last_modified_on ? (data.service!.last_modified_on | date:'medium') : '—' }}
-        </div>
-      </div>
+            <div class="meta-row">
+                <div class="meta-label">Service ID</div>
+                <div class="meta-value mono">
+                    {{ data.service?.id ?? '—' }}
+                </div>
+            </div>
 
-      <div class="meta-row">
-        <div class="meta-label">Notes</div>
-        <div class="meta-value">
-          ID and audit fields are system-controlled and cannot be edited.
-        </div>
-      </div>
-    </aside>
-  </form>
+            <div class="meta-row">
+                <div class="meta-label">Last modified by</div>
+                <div class="meta-value">
+                    {{ data.service?.last_modified_by ?? '—' }}
+                </div>
+            </div>
+
+            <div class="meta-row">
+                <div class="meta-label">Last modified on</div>
+                <div class="meta-value">
+                    {{ data.service?.last_modified_on ? (data.service!.last_modified_on | date:'medium') : '—' }}
+                </div>
+            </div>
+
+            <div class="meta-row">
+                <div class="meta-label">Notes</div>
+                <div class="meta-value">
+                    ID and audit fields are system-controlled and cannot be edited.
+                </div>
+            </div>
+        </aside>
+    </form>
 </div>
 
 <div mat-dialog-actions class="dialog-actions" align="end">
-  <button mat-button type="button" (click)="close()">Cancel</button>
+    <button mat-button type="button" (click)="close()">Cancel</button>
 
-  <button
-    mat-flat-button
-    color="primary"
-    type="button"
-    (click)="save()"
-    [disabled]="form.invalid || !hasChanges()"
-  >
-    Save
-  </button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="save()"
+        [disabled]="form.invalid || !hasChanges()"
+    >
+        Save
+    </button>
 </div>
