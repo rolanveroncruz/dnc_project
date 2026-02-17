@@ -82,7 +82,11 @@
             color: #333;
             font-weight: 600;
             font-size: 14px;
-            white-space: nowrap; // Prevent header text wrapping
+
+            white-space: normal; // Prevent header text wrapping
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.2;
 
             &.mat-sort-header-sorted {
                 color: black;
