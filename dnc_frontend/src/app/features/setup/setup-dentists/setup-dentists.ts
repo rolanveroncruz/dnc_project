@@ -1,13 +1,11 @@
-import {Component, DestroyRef, inject, signal} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {Router} from '@angular/router';
 import {DentistService, DentistWithLookups} from '../../../api_services/dentist-service';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {DentalClinicRow} from '../setup-dental-clinics-component/setup-dental-clinics-component';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
-import {DentalClinicService} from '../../../api_services/dental-clinic-service';
 import {DentistClinicService, DentistClinicWithNames} from '../../../api_services/dentist-clinic-service';
 import {forkJoin} from 'rxjs';
 
@@ -32,7 +30,7 @@ export interface DentistWithLookupsAndClinicInfo extends DentistWithLookups {
     styleUrl: './setup-dentists.scss',
     standalone: true
 })
-export class SetupDentists {
+export class SetupDentists implements OnInit {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly dentistService = inject(DentistService);
@@ -95,7 +93,7 @@ export class SetupDentists {
         dentists: readonly DentistWithLookups[],
         dentistClinics: readonly DentistClinicWithNames[])
     : DentistWithLookupsAndClinicInfo[]{
-        // Pick ONE clinic row per dentist_id (first one wins).
+        // Pick ONE clinic row per dentist_id (the first one wins).
         const byDentistId = new Map<number, DentistClinicWithNames>();
         for (const dc of dentistClinics) {
             if (!byDentistId.has(dc.dentist_id)) byDentistId.set(dc.dentist_id, dc);
@@ -108,7 +106,7 @@ export class SetupDentists {
             return {
                 ...d,
                 clinic_name: dc?.clinic_name ?? null,
-                position: dc?.position ?? null,
+                position: null,
                 schedule: dc?.schedule ?? null,
             };
         });
