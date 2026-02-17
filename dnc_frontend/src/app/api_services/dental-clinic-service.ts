@@ -1,7 +1,7 @@
 // src/app/api_services/dental-clinic-service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { catchError, Observable, throwError } from 'rxjs';
+import {catchError, Observable, throwError, map, tap} from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { LoginService } from '../login.service';
@@ -110,6 +110,7 @@ export interface CreateDentalClinicBody {
  * - Include field as null => Some(None) => explicitly set NULL
  * - Include field as value => Some(Some(value)) => set to that value
  */
+
 export interface PatchDentalClinicBody {
     name?: string;
     address?: string;
@@ -129,6 +130,41 @@ export interface PatchDentalClinicBody {
     last_modified_by: string; // required
 }
 
+
+export interface ClinicWithCapabilities {
+    // clinic fields
+    id: number;
+    name: string;
+    owner_name: string | null;
+    address: string;
+    capabilities: Record<string, boolean>;
+
+    city_id: number | null;
+    city_name: string | null;
+
+    province_id: number | null;
+    province_name: string | null;
+
+    region_id: number | null;
+    region_name: string | null;
+
+    zip_code: string | null;
+    remarks: string | null;
+    contact_numbers: string | null;
+    email: string | null;
+    schedule: string | null;
+    active: boolean | null;
+
+    last_modified_by: string;
+
+    // DateTimeWithTimeZone serialized (commonly ISO string)
+    last_modified_on: string;
+
+    // dynamic: "capability_name" -> boolean
+}
+export type FlattenedClinic = ClinicWithCapabilities & Record<string, any>;
+
+
 @Injectable({ providedIn: 'root' })
 export class DentalClinicService {
     private readonly http = inject(HttpClient);
@@ -146,6 +182,16 @@ export class DentalClinicService {
 
     private handleError(err: unknown) {
         return throwError(() => err);
+    }
+
+    getExtendedClinicCapabilities(): Observable<FlattenedClinic[]> {
+        const url = `${this.baseUrl}/api/extended_clinics`;
+        return this.http
+            .get<ClinicWithCapabilities[]>(url, { headers: this.authHeaders() })
+            .pipe(
+                tap(rows=>console.log("raw:",rows)),
+                map(flattenClinicRows),
+                catchError(this.handleError));
     }
 
     //
@@ -204,4 +250,12 @@ export class DentalClinicService {
             .patch<DentalClinicModel>(url, body, { headers: this.authHeaders() })
             .pipe(catchError(this.handleError));
     }
+
+}
+
+function flattenClinicRows( clinics: ClinicWithCapabilities[]):FlattenedClinic[] {
+    return clinics.map(clinic=> ({
+        ...clinic,
+        ...clinic.capabilities,
+    }));
 }

@@ -4,7 +4,7 @@ import { MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle }
 
 import { GenericDataTableComponent } from '../../../components/generic-data-table-component/generic-data-table-component';
 import { TableColumn } from '../../../components/generic-data-table-component/table-interfaces';
-import {DentalClinicService} from '../../../api_services/dental-clinic-service';
+import {DentalClinicService, FlattenedClinic} from '../../../api_services/dental-clinic-service';
 // If you have a shared PageResponse/ListQuery type, import them; otherwise keep as `any`.
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
@@ -29,6 +29,17 @@ export type DentalClinicRow = {
   hasPeriapical?: boolean;
 };
 
+const staticCols: TableColumn[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Name' },
+    { key: 'address', label: 'Address', widthPx: 250,maxWidthPx: 250 },
+    { key: 'city_name', label: 'City' },
+    { key: 'province_name', label: 'Province' },
+    { key: 'region_name', label: 'Region' },
+    { key: 'contact_numbers', label: 'Contact', widthPx: 200,maxWidthPx: 200 },
+]
+
+
 @Component({
   selector: 'app-setup-dental-clinic',
   standalone: true,
@@ -47,19 +58,11 @@ export class SetupDentalClinicsComponent implements OnInit{
   private readonly destroyRef = inject(DestroyRef);
   private readonly dentalClinicsService = inject(DentalClinicService);
   dentalClinics = signal<DentalClinicRow[] | null>(null);
+  extendedDentalClinics = signal<FlattenedClinic[]>([]);
+  capabilityKeys = signal<string[]>([]);
+  dynamicColumns = signal<TableColumn[]>([]);
+  allColumns = signal<TableColumn[]>([]);
 
-  // If your GenericDataTable expects a `columns` array, keep it like this.
-  readonly columns: TableColumn<DentalClinicRow>[] = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Name' },
-    { key: 'address', label: 'Address' },
-    { key: 'city_name', label: 'City' },
-    { key: 'province_name', label: 'Province' },
-    { key: 'region_name', label: 'Region' },
-    { key: 'contact_numbers', label: 'Contact' },
-    { key: 'hasPanoramic', label: 'Panoramic Radio', cellTemplateKey: 'check'},
-    { key: 'hasPeriapical', label: 'Periapical Radio', cellTemplateKey: 'check'},
-  ];
 
   /**
    * Many of your other pages likely pass a function like this to the table.
@@ -74,6 +77,26 @@ export class SetupDentalClinicsComponent implements OnInit{
       },
       error: err => console.error(err),
     });
+
+    this.dentalClinicsService.getExtendedClinicCapabilities().pipe(
+        takeUntilDestroyed(this.destroyRef),)
+        .subscribe({
+            next: clinics => {
+                this.extendedDentalClinics.set(clinics)
+                console.log("In loadFn(), clinics:", clinics);
+                let capkeys = [...new Set(clinics.flatMap( c=> Object.keys(clinics[0].capabilities)))]
+                console.log("In loadFn(), capkeys:", capkeys);
+                this.capabilityKeys.set(capkeys);
+                this.dynamicColumns.set(this.capabilityKeys().map( key=> ({
+                    key:key,
+                    label: key,
+                    cellTemplateKey: 'check',
+                })));
+                this.allColumns.set([...staticCols, ...this.dynamicColumns()]);
+                console.log("In loadFn(), allColumns:", this.allColumns());
+            },
+            error: err => console.error(err),
+        });
   };
 
 

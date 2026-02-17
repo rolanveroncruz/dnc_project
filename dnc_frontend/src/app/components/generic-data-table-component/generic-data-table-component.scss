@@ -2,201 +2,256 @@
 
 // 1. Toolbar Layout
 .toolbar {
-  display: flex;
-  flex-wrap: nowrap; // Allows items to wrap on mobile
-  gap: 16px;       // Spacing between inputs/buttons
-  align-items: center; // Vertically align buttons with inputs
-  margin-bottom: 16px;
-  padding: 8px 0;
+    display: flex;
+    flex-wrap: nowrap; // Allows items to wrap on mobile
+    gap: 16px; // Spacing between inputs/buttons
+    align-items: center; // Vertically align buttons with inputs
+    margin-bottom: 16px;
+    padding: 8px 0;
 
-  // Let flex items actually shrink
-  > * {min-width: 0;}
-
-  // Search Field (Grow to fill space)
-  .q {
-    flex: 1 1 260px; // Grow: 1, Shrink: 1, Min-width: 250px
-    width: auto;
-  }
-
-  // Dropdowns & Sort (Fixed width logic)
-  .filter {
-    flex: 0 1 140px; // Grow: 0, Shrink: 1, Basis: 180px
-    width: auto;
-  }
-  .filter.sort{
-    flex-basis: 130px;
-  }
-
-  // Buttons: keep as one unbroken group and allow shrink
-  .btn-group{
-    display: inline-flex;
-    gap: 8px;
-    flex: 0 1 auto;
-    min-width: 0;
-    flex-wrap:nowrap;
-    align-items: center;
-    margin-bottom: 22px;
-    button{
-      margin-bottom: 0;
-      height: 56px;
-      min-width: 0;
-      padding: 0 10px;
-      white-space: nowrap;
+    // Let flex items actually shrink
+    > * {
+        min-width: 0;
     }
-  }
 
-  button {
-    margin-bottom: 0;
-  }
-  .spacer {flex: 1 1 auto;}
+    // Search Field (Grow to fill space)
+    .q {
+        flex: 1 1 260px; // Grow: 1, Shrink: 1, Min-width: 250px
+        width: auto;
+    }
+
+    // Dropdowns & Sort (Fixed width logic)
+    .filter {
+        flex: 0 1 140px; // Grow: 0, Shrink: 1, Basis: 180px
+        width: auto;
+    }
+
+    .filter.sort {
+        flex-basis: 130px;
+    }
+
+    // Buttons: keep as one unbroken group and allow shrink
+    .btn-group {
+        display: inline-flex;
+        gap: 8px;
+        flex: 0 1 auto;
+        min-width: 0;
+        flex-wrap: nowrap;
+        align-items: center;
+        margin-bottom: 22px;
+
+        button {
+            margin-bottom: 0;
+            height: 56px;
+            min-width: 0;
+            padding: 0 10px;
+            white-space: nowrap;
+        }
+    }
+
+    button {
+        margin-bottom: 0;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
 }
 
 // 2. Table Container & Scroll
 .table-wrap {
-  position: relative;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden; // Ensures rounded corners clip the content
-  background: white;
+    position: relative;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
 
-  // Responsive Table Scroll:
-  // If table gets too wide, this container will scroll horizontally
-  overflow-x: auto;
+    overflow: hidden; // Ensures rounded corners clip the content
 
-  // 3. Table Styling
-  // We target .mat-mdc-table for Angular Material 15+ compatibility
-  .mat-mdc-table, table {
-    width: 100%;
 
-    // Header Cells
-    .mat-mdc-header-cell, th.mat-header-cell {
-      background-color: #f8f9fa; // Light gray header
-      color: #333;
-      font-weight: 600;
-      font-size: 14px;
-      white-space: nowrap; // Prevent header text wrapping
+    // 3. Table Styling
+    // We target .mat-mdc-table for Angular Material 15+ compatibility
+    .table-scroll .mat-mdc-table,
+    .table-scroll table {
+        width: 100%;
+        min-width: 100%;
+        table-layout: fixed;
 
-      &.mat-sort-header-sorted {
-        color: black;
-      }
+        // Header Cells
+        .mat-mdc-header-cell, th.mat-header-cell {
+            background-color: #f8f9fa; // Light gray header
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap; // Prevent header text wrapping
+
+            &.mat-sort-header-sorted {
+                color: black;
+            }
+        }
+
+        // Body Cells
+        .mat-mdc-cell, td.mat-cell {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.87);
+            padding-right: 24px;
+
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+
+            text-overflow: clip;
+
+        }
+
+        // Rows - The Interaction Logic
+        // We target both new MDC class (.mat-mdc-row) and legacy (.mat-row)
+        .mat-mdc-row, tr.mat-row {
+            transition: background-color 0.2s ease;
+            cursor: pointer !important; // Force the hand icon
+
+            // Hover Effect
+            &:hover {
+                background-color: #888888 !important; // Force the grey highlight
+            }
+
+            // Active/Click Effect
+            &:active {
+                background-color: #555555 !important;
+            }
+
+            &:focus {
+                outline: 2px solid #3f51b5;
+                outline-offset: -2px;
+            }
+        }
     }
+}
+.table-scroll{
+    overflow-x: scroll;
+    overflow-y: hidden;
 
-    // Body Cells
-    .mat-mdc-cell, td.mat-cell {
-      font-size: 14px;
-      color: rgba(0, 0, 0, 0.87);
-      padding-right: 24px;
-    }
-
-    // Rows - The Interaction Logic
-    // We target both new MDC class (.mat-mdc-row) and legacy (.mat-row)
-    .mat-mdc-row, tr.mat-row {
-      transition: background-color 0.2s ease;
-      cursor: pointer !important; // Force the hand icon
-
-      // Hover Effect
-      &:hover {
-        background-color: #888888 !important; // Force the grey highlight
-      }
-
-      // Active/Click Effect
-      &:active {
-        background-color: #555555 !important;
-      }
-      &:focus{
-        outline: 2px solid #3f51b5;
-        outline-offset: -2px;
-      }
-    }
-  }
+    scrollbar-gutter: stable both-edges;
+    border-bottom: 1px solid #e0e0e0;
+}
+.table-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.06);
+}
+.table-scroll::-webkit-scrollbar {
+    width: 12px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.28);
+    border-radius:999px;
+}
+.table-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.38);
+}
+.table-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(0, 0, 0, 0.28) rgba(0, 0, 0, 0.06);
 }
 
 // 4. "No Data" Row
 .mat-no-data-row {
-  td {
-    padding: 48px;
-    text-align: center;
-    font-style: italic;
-    color: #888;
-    background: #fafafa;
-  }
+    td {
+        padding: 48px;
+        text-align: center;
+        font-style: italic;
+        color: #888;
+        background: #fafafa;
+    }
 }
 
 // 5. Paginator Styling
 mat-paginator {
-  border-top: 1px solid #e0e0e0;
-  background: white;
+    border-top: 1px solid #e0e0e0;
+    background: white;
 }
+
 .tag-set {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 /* Target the actual rendered chip surface + label (MDC) */
 .tag-chip.mat-mdc-chip {
-  border-radius: 999px;
-  --mdc-chip-container-height: 26px;           /* height */
-  --mdc-chip-label-text-size: 12px;            /* font size */
-  --mdc-chip-label-text-weight: 600;           /* font weight */
+    border-radius: 999px;
+    --mdc-chip-container-height: 26px; /* height */
+    --mdc-chip-label-text-size: 12px; /* font size */
+    --mdc-chip-label-text-weight: 600; /* font weight */
 
-  background: rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.06);
 }
+
 /* Padding + letter spacing apply on the internal label */
 .tag-chip.mat-mdc-chip .mdc-evolution-chip__text-label {
-  padding: 0 10px;
-  letter-spacing: 0.2px;
-  line-height: 26px;
+    padding: 0 10px;
+    letter-spacing: 0.2px;
+    line-height: 26px;
 }
 
 /* CREATE */
 .tag-chip.tag-create.mat-mdc-chip {
-  background: lightgreen; /* green-ish */
-  border-color: rgba(46, 125, 50, 0.35);
+    background: lightgreen; /* green-ish */
+    border-color: rgba(46, 125, 50, 0.35);
 }
+
 .tag-chip.tag-create.mat-mdc-chip .mdc-evolution-chip__text-label {
-  color: rgb(27, 94, 32);
+    color: rgb(27, 94, 32);
 }
 
 /* READ */
 .tag-chip.tag-read.mat-mdc-chip {
-  background: lightblue; /* blue-ish */
-  border-color: rgba(21, 101, 192, 0.35);
+    background: lightblue; /* blue-ish */
+    border-color: rgba(21, 101, 192, 0.35);
 }
+
 .tag-chip.tag-read.mat-mdc-chip .mdc-evolution-chip__text-label {
-  color: rgb(13, 71, 161);
+    color: rgb(13, 71, 161);
 }
 
 /* UPDATE */
 .tag-chip.tag-update.mat-mdc-chip {
-  background: lightsalmon; /* orange-ish */
-  border-color: rgba(239, 108, 0, 0.35);
+    background: lightsalmon; /* orange-ish */
+    border-color: rgba(239, 108, 0, 0.35);
 }
+
 .tag-chip.tag-update.mat-mdc-chip .mdc-evolution-chip__text-label {
-  color: rgb(230, 81, 0);
+    color: rgb(230, 81, 0);
 }
 
 /* fallback */
 .tag-chip.tag-other.mat-mdc-chip {
-  background: rgba(0,0,0,0.06);
+    background: rgba(0, 0, 0, 0.06);
 }
+
 /* Optional hover */
 .tag-chip:hover {
-  background: rgba(0, 0, 0, 0.09);
+    background: rgba(0, 0, 0, 0.09);
 }
+
 .bool-icon {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-  vertical-align: middle;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    vertical-align: middle;
 }
 
 .bool-true {
-  color: #2e7d32; // green
+    color: #2e7d32; // green
 }
 
 .bool-false {
-  color: #c62828; // red
-  font-size:16px;
+    color: #c62828; // red
+    font-size: 16px;
+}
+.cell-text {
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: clip;
 }
