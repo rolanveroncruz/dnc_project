@@ -64,7 +64,7 @@ export class DentistClinicService {
 
     getAllDentistClinics(): Observable<DentistClinicWithNames[]> {
         return this.http.get<DentistClinicWithNames[]>(
-            `${this.baseUrl}`
+            `${this.baseUrl}/dentist_clinics/`, { headers: this.authHeaders()}
         );
     }
 
