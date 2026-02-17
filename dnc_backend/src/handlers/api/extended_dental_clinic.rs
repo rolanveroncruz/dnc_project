@@ -1,7 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
 use sea_orm::{
     ColumnTrait, EntityTrait, JoinType, QueryFilter, QuerySelect, RelationTrait,
-    sea_query::Expr,
 };
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -108,7 +107,7 @@ pub async fn get_all_clinics_and_capabilities(
     // 2.6) ✅ ADDED: Index clinic_id -> location info
     #[derive(Clone, Debug)]
     struct Loc {
-        city_id: Option<i32>,
+        _city_id: Option<i32>,
         city_name: Option<String>,
         province_id: Option<i32>,
         province_name: Option<String>,
@@ -117,11 +116,11 @@ pub async fn get_all_clinics_and_capabilities(
     }
 
     let mut loc_by_clinic: HashMap<i32, Loc> = HashMap::new();
-    for (clinic_id, city_id, city_name, province_id, province_name, region_id, region_name) in clinic_locations {
+    for (clinic_id, _city_id, city_name, province_id, province_name, region_id, region_name) in clinic_locations {
         loc_by_clinic.insert(
             clinic_id,
             Loc {
-                city_id,
+                _city_id,
                 city_name,
                 province_id,
                 province_name,

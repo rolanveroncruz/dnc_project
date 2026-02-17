@@ -26,6 +26,7 @@ pub struct DentalServiceRow {
     pub active: bool,
     pub type_id: Option<i32>,
     pub type_name: Option<String>, // LEFT JOIN => can be NULL
+    pub sort_index: Option<i32>,
     pub last_modified_by: Option<String>,
     pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
 }
@@ -60,7 +61,7 @@ pub async fn get_dental_services(
     let page_size = params.base.page_size.unwrap_or(25).clamp(1, 200);
     let active = params.base.active.unwrap_or(true);
 
-    let sort = params.base.sort.as_deref().unwrap_or("name");
+    let sort = params.base.sort.as_deref().unwrap_or("sort_index");
     println!("sort: {}", sort);
     let order = params.base.order.as_deref().unwrap_or("asc");
     println!("order: {}", order);
@@ -89,6 +90,7 @@ pub async fn get_dental_services(
         "id" => query.order_by(dental_service::Column::Id, sort_order),
         "name" => query.order_by(dental_service::Column::Name, sort_order),
         "typeId" | "type_id" => query.order_by( dental_service::Column::TypeId,sort_order),
+        "sortIndex" | "sort_index" => query.order_by(dental_service::Column::SortIndex, sort_order),
         "lastModifiedOn" | "last_modified_on" => query.order_by(dental_service::Column::LastModifiedOn, sort_order),
         _ => return Err(StatusCode::BAD_REQUEST),
     };
@@ -99,6 +101,7 @@ pub async fn get_dental_services(
         .column(dental_service::Column::Id)
         .column(dental_service::Column::Name)
         .column(dental_service::Column::Active)
+        .column(dental_service::Column::SortIndex)
         .column_as(dental_service_type::Column::Id, "type_id")
         .column_as(dental_service_type::Column::Name, "type_name")
         .column_as(dental_service::Column::LastModifiedBy, "last_modified_by")
@@ -145,6 +148,7 @@ pub struct CreateDentalServiceRequest {
     pub name: String,
     pub type_id: i32,
     pub record_tooth: bool,
+    pub sort_index: Option<i32>,
     // optional; default true if omitted
     pub active: Option<bool>,
 }
@@ -154,6 +158,7 @@ pub struct DentalServiceResponse {
     pub id: i32,
     pub name: String,
     pub type_id: i32,
+    pub sort_index: Option<i32>,
     pub record_tooth: bool,
     pub active: bool,
     pub last_modified_by: String,
@@ -166,6 +171,7 @@ impl From<dental_service::Model> for DentalServiceResponse {
             id: m.id,
             name: m.name,
             type_id: m.type_id,
+            sort_index: m.sort_index,
             record_tooth: m.record_tooth,
             active: m.active,
             last_modified_by: m.last_modified_by,
@@ -214,6 +220,7 @@ pub async fn post_dental_service(
     let am = dental_service::ActiveModel {
         name: Set(name.to_string()),
         type_id: Set(payload.type_id),
+        sort_index: Set(payload.sort_index),
         record_tooth: Set(payload.record_tooth),
         active: Set(payload.active.unwrap_or(true)),
         last_modified_by: Set(actor),
@@ -238,6 +245,7 @@ pub async fn post_dental_service(
 pub struct PatchDentalServiceRequest {
     pub name: Option<String>,
     pub type_id: Option<i32>,
+    pub sort_index: Option<i32>,
     pub record_tooth: Option<bool>,
     pub active: Option<bool>,
 }
@@ -288,6 +296,7 @@ pub async fn patch_dental_service(
     // If they sent nothing, treat as bad request (optional but usually desired)
     let sent_any = payload.name.is_some()
         || payload.type_id.is_some()
+        || payload.sort_index.is_some()
         || payload.record_tooth.is_some()
         || payload.active.is_some();
     if !sent_any {
@@ -307,6 +316,9 @@ pub async fn patch_dental_service(
             return Err(StatusCode::BAD_REQUEST);
         }
         am.type_id = Set(type_id);
+    }
+    if let Some(sort_index) = payload.sort_index {
+        am.sort_index = Set(Some(sort_index));
     }
 
     if let Some(record_tooth) = payload.record_tooth {
