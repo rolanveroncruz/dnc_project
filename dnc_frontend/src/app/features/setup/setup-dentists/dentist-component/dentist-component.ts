@@ -23,7 +23,7 @@ import {
     TaxType
 } from '../../../../api_services/dentist-lookups-service';
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
-import {DentistClinicService, DentistClinicWithNames} from '../../../../api_services/dentist-clinic-service';
+import {DentistClinicService, DentistClinicWithNames, DentistClinicWithNamesAndAddress} from '../../../../api_services/dentist-clinic-service';
 import {
     DataTableWithSelectComponent
 } from '../../../../components/data-table-with-select-component/data-table-with-select-component';
@@ -135,7 +135,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
     readonly taxTypes = signal<TaxType[]>([]);
     readonly taxClassifications = signal<TaxClassification[]>([]);
     readonly accountTypes = signal<AccountType[]>([]);
-    readonly dentistClinics = signal<DentistClinicWithNames[]>([]);
+    readonly dentistClinics = signal<DentistClinicWithNamesAndAddress[]>([]);
     readonly exclusiveToHmos = signal<HMOListItem[]>([]);
     readonly exceptForHmos = signal<HMOListItem[]>([]);
     readonly exclusiveToCompanies = signal<CompanyListItem[]>([]);
@@ -411,7 +411,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
         this.dentistClinicService.getClinicsForDentistId(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (dentist_clinics: DentistClinicWithNames[]) => {
+                next: (dentist_clinics: DentistClinicWithNamesAndAddress[]) => {
+                    console.log("Dentist's clinics:", dentist_clinics)
                     this.dentistClinics.set(dentist_clinics);
                 },
                 error: (error) => {
