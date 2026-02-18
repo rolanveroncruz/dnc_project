@@ -68,8 +68,7 @@ pub async fn get_dental_services(
 
     // 3. Build the query (JOIN to dental_service_type)
     let mut query = dental_service::Entity::find()
-        .join(JoinType::LeftJoin, dental_service::Relation::DentalServiceType.def())
-        .filter(dental_service::Column::Active.eq(active));
+        .join(JoinType::LeftJoin, dental_service::Relation::DentalServiceType.def());
 
     // 4. Safe sort mapping (never trust raw column names from the client!)
     let sort_order = match order {
