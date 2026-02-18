@@ -52,7 +52,7 @@ export class DentalServices implements OnInit {
         {key: 'sort_index', label: 'Sort Index'},
         {key: 'last_modified_by', label: 'Last Modified By'},
         {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},
-        {key: 'active', label: 'Active', cellTemplateKey: 'boolean'},
+        {key: 'active', label: 'Active', cellTemplateKey: 'check'},
     ];
 
     openEditDentalServiceDialog(row: any) {
