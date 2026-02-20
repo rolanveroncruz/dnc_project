@@ -1,0 +1,73 @@
+<div class="wrap">
+    @if (showChips && selected().length) {
+        <mat-chip-set class="chips" aria-label="Selected items">
+            @for (chip of selected(); track chip.id) {
+                <mat-chip (removed)="removeChip(chip)">
+                    {{ chip.label }}
+                    <button matChipRemove type="button" aria-label="Remove">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </mat-chip>
+            }
+        </mat-chip-set>
+    }
+
+    <mat-form-field appearance="outline" class="field">
+        <mat-label>{{ label }}</mat-label>
+
+        <input
+            #textInput
+            matInput
+            [placeholder]="placeholder"
+            [formControl]="ctrl"
+            [matAutocomplete]="auto"
+            [disabled]="disabled"
+            (keydown.enter)="$event.preventDefault(); onEnterKey()"
+        />
+
+        @if (ctrl.value) {
+            <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                aria-label="Clear"
+                (click)="clearInput()"
+                [disabled]="disabled"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        }
+
+        <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Add"
+            (click)="addTypedValue()"
+            [disabled]="disabled || !isBusyAddable()"
+            [class.add-visible]="isBusyAddable()"
+        >
+            <mat-icon>add</mat-icon>
+        </button>
+
+        <mat-hint *ngIf="hint">{{ hint }}</mat-hint>
+
+        <mat-autocomplete
+            #auto="matAutocomplete"
+            (optionSelected)="onOptionSelected($event)"
+            [displayWith]="displayWith"
+        >
+            @if (!filteredOptions().length) {
+                <mat-option disabled>
+                    No matches
+                </mat-option>
+            } @else {
+                @for (opt of filteredOptions(); track opt.id) {
+                    <mat-option [value]="opt">
+                        {{ opt.label }}
+                    </mat-option>
+                }
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+</div>

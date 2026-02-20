@@ -1,0 +1,21 @@
+.wrap {
+    display: grid;
+    gap: 8px;
+}
+
+.field {
+    width: 100%;
+}
+
+.chips {
+    max-width: 100%;
+    overflow: auto;
+}
+
+/* Subtle: the add button is always there but only "looks enabled" when addable */
+button.add-visible {
+    opacity: 1;
+}
+button[aria-label="Add"] {
+    opacity: 0.6;
+}
