@@ -16,6 +16,8 @@ mod m20260126_151643_add_dental_clinic_permission_and_role_permissions;
 mod m20260126_161604_create_table_dentists;
 mod m20260129_023740_insert_dentist_and_dental_clinics_from_xlsx;
 mod m20260205_013824_create_dentist_hmo_relations;
+mod m20260220_082933_create_endorsement_tables;
+mod m20260220_122937_add_endorsement_permission_and_role_permissions;
 
 pub struct Migrator;
 
@@ -39,6 +41,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260126_161604_create_table_dentists::Migration),
             Box::new(m20260129_023740_insert_dentist_and_dental_clinics_from_xlsx::Migration),
             Box::new(m20260205_013824_create_dentist_hmo_relations::Migration),
+            Box::new(m20260220_082933_create_endorsement_tables::Migration),
+            Box::new(m20260220_122937_add_endorsement_permission_and_role_permissions::Migration),
         ]
     }
 }

@@ -35,6 +35,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(HMO::ContactNos)
                         .string()
                     )
+                    .col(ColumnDef::new(HMO::ExpectAMasterList)
+                        .boolean()
+                        .default(false)
+                    )
                     .col(ColumnDef::new(HMO::Active)
                         .boolean()
                         .default(true)
@@ -54,17 +58,17 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        Self::insert_hmo(manager, "AFDR", "AFDR Insurance Brokers, Inc.").await?;
-        Self::insert_hmo(manager, "Avega", "Avega Managed Care, Inc.").await?;
-        Self::insert_hmo(manager, "Etiqa", "Etiqua Life and General Assurance Philippines, Inc.").await?;
-        Self::insert_hmo(manager, "Intellicare", "Intellicare").await?;
-        Self::insert_hmo(manager, "Kaiser", "Kaiser International Healthgroup, Inc.").await?;
-        Self::insert_hmo(manager, "HMI", "Health Maintenance Inc.").await?;
-        Self::insert_hmo(manager, "Maxicare", "MaxiCare Corporation").await?;
-        Self::insert_hmo(manager, "Medicare Plus", "Medicare Plus, Inc.").await?;
-        Self::insert_hmo(manager, "PhilCare", "PhilCare").await?;
-        Self::insert_hmo(manager, "Responsive", "Responsive Health & Insurance Brokers").await?;
-        Self::insert_hmo(manager, "Simple PPA", "Simple PPA").await?;
+        Self::insert_hmo(manager, "AFDR", "AFDR Insurance Brokers, Inc.", true).await?;
+        Self::insert_hmo(manager, "Avega", "Avega Managed Care, Inc.", false).await?;
+        Self::insert_hmo(manager, "Etiqa", "Etiqua Life and General Assurance Philippines, Inc.",true).await?;
+        Self::insert_hmo(manager, "Intellicare", "Intellicare", true).await?;
+        Self::insert_hmo(manager, "Kaiser", "Kaiser International Healthgroup, Inc.",false).await?;
+        Self::insert_hmo(manager, "HMI", "Health Maintenance Inc.",false).await?;
+        Self::insert_hmo(manager, "Maxicare", "MaxiCare Corporation", false).await?;
+        Self::insert_hmo(manager, "Medicare Plus", "Medicare Plus, Inc.", true).await?;
+        Self::insert_hmo(manager, "PhilCare", "PhilCare", false).await?;
+        Self::insert_hmo(manager, "Responsive", "Responsive Health & Insurance Brokers",true).await?;
+        Self::insert_hmo(manager, "Simple PPA", "Simple PPA",true).await?;
 
         Ok(())
     }
@@ -77,11 +81,11 @@ impl MigrationTrait for Migration {
 }
 
 impl Migration{
-    async fn insert_hmo(manager: &SchemaManager<'_>, short_name: &str, long_name:&str) -> Result<(), DbErr> {
+    async fn insert_hmo(manager: &SchemaManager<'_>, short_name: &str, long_name:&str, expect_master_list: bool) -> Result<(), DbErr> {
         let insert = Query::insert()
             .into_table(HMO::Table)
-            .columns([HMO::ShortName, HMO::LongName])
-            .values_panic([short_name.into(), long_name.into()])
+            .columns([HMO::ShortName, HMO::LongName, HMO::ExpectAMasterList])
+            .values_panic([short_name.into(), long_name.into(), expect_master_list.into()])
             .to_owned();
         manager.exec_stmt(insert).await
     }
@@ -97,6 +101,7 @@ pub enum HMO{
     Address,
     TaxAccountNumber,
     ContactNos,
+    ExpectAMasterList,
     Active,
     LastModifiedBy,
     LastModifiedOn,

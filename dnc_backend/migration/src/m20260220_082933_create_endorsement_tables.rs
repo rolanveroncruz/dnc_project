@@ -1,4 +1,5 @@
 use sea_orm_migration::{prelude::*};
+use crate::m20260220_082933_create_endorsement_tables::Endorsement::EndorsementBillingPeriodTypeId;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -70,7 +71,14 @@ impl Migration {
                         .primary_key()
                         .auto_increment()
                     )
-                    .col(ColumnDef::new(EndorsementType::Name).string().not_null())
+                    .col(ColumnDef::new(EndorsementType::Name)
+                        .string()
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(EndorsementType::IsActive)
+                        .boolean()
+                        .default(true)
+                    )
                     .to_owned()
             ).await?;
         Ok(())
@@ -107,6 +115,10 @@ impl Migration {
                         .string()
                         .not_null()
                     )
+                    .col(ColumnDef::new(EndorsementBillingPeriodType::IsActive)
+                        .boolean()
+                        .default(true)
+                    )
                     .to_owned()
             ).await?;
         Ok(())
@@ -139,6 +151,56 @@ impl Migration {
                         .primary_key()
                         .auto_increment()
                     )
+                    .col(ColumnDef::new(Endorsement::EndorsementCompanyId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_endorsement_company_id")
+                        .from(Endorsement::Table, Endorsement::EndorsementCompanyId )
+                        .to(EndorsementCompany::Table, EndorsementCompany::Id)
+                        .on_delete(ForeignKeyAction::Restrict)
+                    )
+                    .col(ColumnDef::new(Endorsement::EndorsementTypeId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_endorsement_type_id")
+                        .from(Endorsement::Table, Endorsement::EndorsementTypeId )
+                        .to(EndorsementType::Table, EndorsementType::Id)
+                        .on_delete(ForeignKeyAction::Restrict)
+                    )
+                    .col(ColumnDef::new(Endorsement::AgreementCorpNumber)
+                        .string()
+                    )
+                    .col(ColumnDef::new(Endorsement::DateStart)
+                        .date()
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(Endorsement::DateEnd)
+                        .date()
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(EndorsementBillingPeriodTypeId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_endorsement_billing_period_type_id")
+                        .from(Endorsement::Table, EndorsementBillingPeriodTypeId )
+                        .to(EndorsementBillingPeriodType::Table, EndorsementBillingPeriodType::Id)
+                        .on_delete(ForeignKeyAction::Restrict)
+                    )
+                    .col(ColumnDef::new(Endorsement::RetainerFee)
+                        .decimal()
+                    )
+                    .col(ColumnDef::new(Endorsement::Remarks)
+                        .string()
+                    )
+                    .col(ColumnDef::new(Endorsement::EndorsementMethod)
+                        .string()
+                    )
                     .to_owned()
             ).await?;
        Ok(())
@@ -161,12 +223,14 @@ pub enum EndorsementType{
     Table,
     Id,
     Name,
+    IsActive
 }
 #[derive(Iden)]
 pub enum EndorsementBillingPeriodType{
     Table,
     Id,
     Name,
+    IsActive
 }
 
 
@@ -183,8 +247,6 @@ pub enum Endorsement {
     RetainerFee,
     Remarks,
     EndorsementMethod,
-    MemberCount,
-    LastBilledDate
 }
 
 
