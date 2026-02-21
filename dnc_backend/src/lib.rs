@@ -142,6 +142,7 @@ pub fn build_app(my_state:AppState) ->Router{
              // allow methods
         .allow_methods(vec![Method::GET,
                             Method::POST,
+                            Method::PATCH,
                             Method::PUT,
                             Method::OPTIONS,])
         // allow headers frontend sends

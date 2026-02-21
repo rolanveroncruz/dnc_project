@@ -304,6 +304,7 @@ pub async fn patch_hmo(
     Path(id): Path<i32>,
     Json(body): Json<PatchHmoRequest>,
 ) -> Result<Json<HmoResponse>, StatusCode> {
+    tracing::info!("PATCHing /hmos/{id}: {body:?}");
     // 1) Permission check
     let has_permission = role_has_permission_by_data_object_name(
         &state.db,
@@ -359,6 +360,10 @@ pub async fn patch_hmo(
     if let Some(v) = body.contact_nos {
         am.contact_nos = Set(v);
     }
+    if let Some(v) = body.expect_a_master_list {
+        am.expect_a_master_list = Set(v);
+    }
+
     if let Some(v) = body.active {
         am.active = Set(v);
     }
