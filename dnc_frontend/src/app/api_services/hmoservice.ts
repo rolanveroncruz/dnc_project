@@ -22,6 +22,7 @@ export interface HMO{
   address: string;
   tax_account_number: string;
   contact_nos: string;
+  expect_a_master_list: boolean;
   active: boolean;
   last_endorsement_date: Date | null;
   last_collection_date: Date | null;
