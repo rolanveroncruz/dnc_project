@@ -10,29 +10,28 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::create_table_region(manager).await?;
-        Self::create_table_state(manager).await?;
+        Self::create_table_province(manager).await?;
         Self::create_table_city(manager).await?;
+        Self::create_tax_type_table(manager).await?;
+        Self::insert_tax_type_seed(manager).await?;
+        Self::create_account_type_table(manager).await?;
+        Self::insert_account_type_seed(manager).await?;
+        Self::create_tax_classification_table(manager).await?;
+        Self::insert_tax_classification_seed(manager).await?;
         Self::create_table_dental_clinic(manager).await?;
         Self::create_table_clinic_capabilities_list(manager).await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .drop_table(Table::drop().table(ClinicCapabilitiesList::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(DentalClinic::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(City::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(Province::Table).to_owned())
-            .await?;
-        manager
-            .drop_table(Table::drop().table(Region::Table).to_owned())
-            .await?;
+        manager.drop_table(Table::drop().table(ClinicCapabilitiesList::Table).to_owned()).await?;
+        manager.drop_table(Table::drop().table(DentalClinic::Table).to_owned()).await?;
+        Self::drop_account_type_table(manager).await?;
+        Self::drop_tax_classification_table(manager).await?;
+        Self::drop_tax_type_table(manager).await?;
+        manager.drop_table(Table::drop().table(City::Table).to_owned()).await?;
+        manager.drop_table(Table::drop().table(Province::Table).to_owned()).await?;
+        manager.drop_table(Table::drop().table(Region::Table).to_owned()).await?;
 
         Ok(())
     }
@@ -40,6 +39,7 @@ impl MigrationTrait for Migration {
 impl Migration {
 
     async fn create_table_region(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table region");
         manager
             .create_table(
                 Table::create()
@@ -67,7 +67,8 @@ impl Migration {
             .await
     }
 
-    async fn create_table_state(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    async fn create_table_province(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table province");
         manager
             .create_table(
                 Table::create()
@@ -106,6 +107,7 @@ impl Migration {
     }
 
     async fn create_table_city(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table city");
         manager
             .create_table(
                 Table::create()
@@ -141,6 +143,7 @@ impl Migration {
     }
 
     async fn create_table_dental_clinic(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table dental_clinic");
         manager
             .create_table(
                 Table::create()
@@ -190,6 +193,48 @@ impl Migration {
                     .col(ColumnDef::new(DentalClinic::Schedule)
                         .string()
                     )
+                    .col(ColumnDef::new(DentalClinic::AcctTIN)
+                        .string()
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctBankName)
+                        .string()
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctAccountType)
+                        .integer()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("dental_clinic_acct_account_type_foreign_key")
+                        .from(DentalClinic::Table, DentalClinic::AcctAccountType)
+                        .to(AccountType::Table, AccountType::Id)
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctAccountName)
+                    .string()
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctAccountNumber)
+                        .string()
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctTaxType)
+                        .integer()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("dental_clinic_acct_tax_type_foreign_key")
+                        .from(DentalClinic::Table, DentalClinic::AcctTaxType)
+                        .to(TaxType::Table, TaxType::Id)
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctTaxClassification)
+                        .integer()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("dental_clinic_acct_tax_classification_foreign_key")
+                        .from(DentalClinic::Table, DentalClinic::AcctTaxClassification)
+                        .to(TaxClassification::Table, TaxClassification::Id)
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctTradeName)
+                        .string()
+                    )
+                    .col(ColumnDef::new(DentalClinic::AcctTaxpayerName)
+                        .string()
+                    )
                     .col(ColumnDef::new(DentalClinic::Active)
                         .boolean()
                         .default(true)
@@ -214,6 +259,7 @@ impl Migration {
     }
 
     async fn create_table_clinic_capabilities_list(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table clinic_capabilities_list");
         manager
             .create_table(
                 Table::create().table(ClinicCapabilitiesList::Table)
@@ -246,6 +292,129 @@ impl Migration {
 
         ).await
     }
+
+
+    pub async fn create_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table tax_type");
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaxType::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(TaxType::Id)
+                        .integer()
+                        .not_null()
+                        .auto_increment()
+                        .primary_key()
+                    )
+                    .col(ColumnDef::new(TaxType::Name)
+                        .string()
+                        .not_null()
+                    ).to_owned()
+            ).await?;
+        Ok(())
+    }
+    pub async fn drop_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(TaxType::Table).to_owned()).await?;
+        Ok(())
+    }
+    pub async fn insert_tax_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Inserting tax_type seed");
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(TaxType::Table)
+                    .columns([TaxType::Name])
+                    .values_panic(["VAT-Reg".into()])
+                    .values_panic(["Non-VAT-Reg".into()])
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
+
+
+
+    pub async fn create_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table tax_classification");
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaxClassification::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(TaxClassification::Id)
+                        .integer()
+                        .auto_increment()
+                        .not_null()
+                        .primary_key()
+                    )
+                    .col(ColumnDef::new(TaxClassification::Name)
+                        .string()
+                        .not_null()
+                    ).to_owned()
+            ).await?;
+        Ok(())
+    }
+    pub async fn drop_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Dropping table tax_classification");
+        manager.drop_table(Table::drop().table(TaxClassification::Table).to_owned()).await?;
+        Ok(())
+    }
+    pub async fn insert_tax_classification_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Inserting tax_classification seed");
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(TaxClassification::Table)
+                    .columns([TaxClassification::Name])
+                    .values_panic(["Corporation".into()])
+                    .values_panic(["Individual".into()])
+                    .values_panic(["GPP".into()])
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
+
+    pub async fn create_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Creating table account_type");
+        manager
+            .create_table(
+                Table::create()
+                    .table(AccountType::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(AccountType::Id)
+                        .integer()
+                        .auto_increment()
+                        .not_null()
+                        .primary_key()
+                    )
+                    .col(ColumnDef::new(AccountType::Name)
+                        .string()
+                        .not_null()
+                    ).to_owned()
+            ).await?;
+
+        Ok(())
+    }
+    pub async fn drop_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Dropping table account_type");
+        manager.drop_table(Table::drop().table(AccountType::Table).to_owned()).await?;
+        Ok(())
+    }
+    pub async fn insert_account_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        tracing::info!("Inserting account_type seed");
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(AccountType::Table)
+                    .columns([AccountType::Name])
+                    .values_panic(["Savings".into()])
+                    .values_panic(["Current".into()])
+                    .values_panic(["Checking".into()])
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
+
 }
 
 
@@ -282,6 +451,24 @@ pub enum ClinicCapabilitiesList {
 }
 
 #[derive(Iden)]
+pub enum AccountType{
+    Table,
+    Id,
+    Name,
+}
+#[derive(Iden)]
+pub enum TaxClassification{
+    Table,
+    Id,
+    Name,
+}
+#[derive(Iden)]
+pub enum TaxType{
+    Table,
+    Id,
+    Name,
+}
+#[derive(Iden)]
 pub enum DentalClinic {
     Table,
     Id,
@@ -294,6 +481,15 @@ pub enum DentalClinic {
     ContactNumbers,
     Email,
     Remarks,
+    AcctTIN,
+    AcctBankName,
+    AcctAccountType,
+    AcctAccountName,
+    AcctAccountNumber,
+    AcctTaxType,
+    AcctTaxClassification,
+    AcctTaxpayerName,
+    AcctTradeName,
     Active,
     LastModifiedBy,
     LastModifiedOn,

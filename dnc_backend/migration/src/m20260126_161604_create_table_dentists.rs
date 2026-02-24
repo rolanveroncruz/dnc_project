@@ -9,19 +9,13 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::create_dentist_status_table(manager).await?;
-        Self::create_account_type_table(manager).await?;
         Self::create_dentist_history_table(manager).await?;
-        Self::create_tax_type_table(manager).await?;
-        Self::create_tax_classification_table(manager).await?;
         Self::create_dentist_table(manager).await?;
         Self::create_position_table(manager).await?;
         Self::create_dentist_clinic_table(manager).await?;
 
         Self::insert_dentist_status_seed(manager).await?;
-        Self::insert_account_type_seed(manager).await?;
         Self::insert_dentist_history_seed(manager).await?;
-        Self::insert_tax_type_seed(manager).await?;
-        Self::insert_tax_classification_seed(manager).await?;
         Self::insert_position_seed(manager).await?;
         Self::create_dentist_permissions_and_role_permission_set(manager).await?;
         Ok(())
@@ -31,15 +25,11 @@ impl MigrationTrait for Migration {
         Self::drop_dentist_clinic_table(manager).await?;
         Self::drop_position_table(manager).await?;
         Self::drop_dentist_table(manager).await?;
-        Self::drop_tax_classification_table(manager).await?;
-        Self::drop_tax_type_table(manager).await?;
         Self::drop_dentist_history_table(manager).await?;
-        Self::drop_account_type_table(manager).await?;
         Self::drop_dentist_status_table(manager).await?;
 
         Ok(())
     }
-
 
 }
 
@@ -85,44 +75,7 @@ impl Migration{
         Ok(())
     }
 
-    pub async fn create_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table(AccountType::Table)
-                    .if_not_exists()
-                    .col(ColumnDef::new(AccountType::Id)
-                        .integer()
-                        .auto_increment()
-                        .not_null()
-                        .primary_key()
-                    )
-                    .col(ColumnDef::new(AccountType::Name)
-                        .string()
-                        .not_null()
-                    ).to_owned()
-            ).await?;
 
-        Ok(())
-    }
-    pub async fn drop_account_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AccountType::Table).to_owned()).await?;
-        Ok(())
-    }
-
-    pub async fn insert_account_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .exec_stmt(
-                Query::insert()
-                    .into_table(AccountType::Table)
-                    .columns([AccountType::Name])
-                    .values_panic(["Savings".into()])
-                    .values_panic(["Current".into()])
-                    .values_panic(["Checking".into()])
-                    .to_owned(),
-            ).await?;
-        Ok(())
-    }
     pub async fn create_dentist_history_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .create_table(
@@ -155,81 +108,6 @@ impl Migration{
                     .columns([DentistHistory::Name])
                     .values_panic(["Applicant".into()])
                     .values_panic(["Requested".into()])
-                    .to_owned(),
-            ).await?;
-        Ok(())
-    }
-
-
-    pub async fn create_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table(TaxType::Table)
-                    .if_not_exists()
-                    .col(ColumnDef::new(TaxType::Id)
-                        .integer()
-                        .not_null()
-                        .auto_increment()
-                        .primary_key()
-                    )
-                    .col(ColumnDef::new(TaxType::Name)
-                        .string()
-                        .not_null()
-                    ).to_owned()
-            ).await?;
-        Ok(())
-    }
-    pub async fn drop_tax_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(TaxType::Table).to_owned()).await?;
-        Ok(())
-    }
-    pub async fn insert_tax_type_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .exec_stmt(
-                Query::insert()
-                    .into_table(TaxType::Table)
-                    .columns([TaxType::Name])
-                    .values_panic(["VAT-Reg".into()])
-                    .values_panic(["Non-VAT-Reg".into()])
-                    .to_owned(),
-            ).await?;
-        Ok(())
-    }
-
-
-    pub async fn create_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table(TaxClassification::Table)
-                        .if_not_exists()
-                    .col(ColumnDef::new(TaxClassification::Id)
-                        .integer()
-                        .auto_increment()
-                        .not_null()
-                        .primary_key()
-                    )
-                    .col(ColumnDef::new(TaxClassification::Name)
-                        .string()
-                        .not_null()
-                    ).to_owned()
-            ).await?;
-        Ok(())
-    }
-    pub async fn drop_tax_classification_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(TaxClassification::Table).to_owned()).await?;
-        Ok(())
-    }
-    pub async fn insert_tax_classification_seed(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .exec_stmt(
-                Query::insert()
-                    .into_table(TaxClassification::Table)
-                    .columns([TaxClassification::Name])
-                    .values_panic(["Corporation".into()])
-                    .values_panic(["Individual".into()])
-                    .values_panic(["GPP".into()])
                     .to_owned(),
             ).await?;
         Ok(())
@@ -327,42 +205,6 @@ impl Migration{
                     )
                     .col(ColumnDef::new(Dentist::AccreContractFilePath)
                         .string()
-                    )
-                    .col(ColumnDef::new(Dentist::AccTIN)
-                        .string()
-                    )
-                    .col(ColumnDef::new(Dentist::AccBankName)
-                        .string()
-                    )
-                    .col(ColumnDef::new(Dentist::AccAccountTypeId)
-                        .integer()
-                    )
-                    .foreign_key(ForeignKey::create()
-                        .name("dentist_acc_account_type_id_foreign_key")
-                        .from(Dentist::Table, Dentist::AccAccountTypeId)
-                        .to(AccountType::Table, AccountType::Id)
-                    )
-                    .col(ColumnDef::new(Dentist::AccAccountName)
-                        .string()
-                    )
-                    .col(ColumnDef::new(Dentist::AccAccountNumber)
-                        .string()
-                    )
-                    .col(ColumnDef::new(Dentist::AccTaxTypeID)
-                    .integer()
-                    )
-                    .foreign_key(ForeignKey::create()
-                        .name("dentist_acc_tax_type_id_foreign_key")
-                        .from(Dentist::Table, Dentist::AccTaxTypeID)
-                        .to(TaxType::Table, TaxType::Id)
-                    )
-                    .col(ColumnDef::new(Dentist::AccTaxClassificationID)
-                        .integer()
-                    )
-                    .foreign_key(ForeignKey::create()
-                        .name("dentist_acc_tax_classification_id_foreign_key")
-                        .from(Dentist::Table, Dentist::AccTaxClassificationID)
-                        .to(TaxClassification::Table, TaxClassification::Id)
                     )
                     .to_owned()
             ).await?;
@@ -481,25 +323,7 @@ pub enum DentistHistory{
 }
 
 #[derive(Iden)]
-pub enum TaxType{
-    Table,
-    Id,
-    Name,
-}
-#[derive(Iden)]
 pub enum Position{
-    Table,
-    Id,
-    Name,
-}
-#[derive(Iden)]
-pub enum AccountType{
-    Table,
-    Id,
-    Name,
-}
-#[derive(Iden)]
-pub enum TaxClassification{
     Table,
     Id,
     Name,
@@ -526,13 +350,6 @@ pub enum Dentist {
     AccreditationDate,
     AccreContractSentDate,
     AccreContractFilePath,
-    AccTIN,
-    AccBankName,
-    AccAccountTypeId,
-    AccAccountName,
-    AccAccountNumber,
-    AccTaxTypeID,
-    AccTaxClassificationID
 }
 #[derive(Iden)]
 pub enum DentistClinic {
