@@ -13,6 +13,7 @@ pub struct Model {
     pub address: Option<String>,
     pub tax_account_number: Option<String>,
     pub contact_nos: Option<String>,
+    pub expect_a_master_list: Option<bool>,
     pub active: bool,
     pub last_modified_by: String,
     pub last_modified_on: DateTimeWithTimeZone,

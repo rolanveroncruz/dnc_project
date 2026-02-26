@@ -51,3 +51,6 @@ pub use api::data_files::{save_contract_file_for_dentist_id, get_contract_file_f
 pub use api::account_type::get_all_account_types;
 pub use api::dentist_clinic_position::get_dentist_clinic_positions;
 pub use api::extended_dental_clinic::get_all_clinics_and_capabilities;
+
+pub use api::endorsement_type::get_endorsement_types;
+pub use api::endorsement_billing_period_type::get_endorsement_billing_period_types;

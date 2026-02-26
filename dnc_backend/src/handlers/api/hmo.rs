@@ -2,7 +2,7 @@ use axum::{extract::{Query, State}, http::StatusCode, Json};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
 use sea_orm::{ActiveModelTrait, ActiveValue::NotSet,ColumnTrait, Condition, EntityTrait, FromQueryResult, Order,
-              PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set};
+              PaginatorTrait, QueryFilter, QueryOrder, Set};
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
@@ -22,15 +22,16 @@ pub struct HMOListQuery {
 pub struct HMORow {
     pub id: i32,
     pub short_name: String,
-    pub long_name: Option<String>,
+    pub long_name: String,
     pub address: Option<String>,
     pub tax_account_number: Option<String>,
     pub contact_nos: Option<String>,
+    pub expect_a_master_list: Option<bool>,
     pub active: bool,
     pub last_endorsement_date: Option<chrono::DateTime<chrono::Utc>>,
     pub last_collection_date: Option<chrono::DateTime<chrono::Utc>>,
     pub last_modified_by: String,
-    pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
+    pub last_modified_on: chrono::DateTime<chrono::Utc>,
 }
 
 
@@ -70,8 +71,6 @@ pub async fn get_hmos(
 
     // 3. Build the query (JOIN to dental_service_type)
     let mut query = hmo::Entity::find()
-        .column_as(Expr::cust("NULL"), "last_endorsement_date")
-        .column_as(Expr::cust("NULL"), "last_collection_date")
         .filter(hmo::Column::Active.eq(active));
 
     // 4. Safe sort mapping (never trust raw column names from the client!)
@@ -92,6 +91,7 @@ pub async fn get_hmos(
     query = match sort {
         "id" => query.order_by(hmo::Column::Id, sort_order),
         "name" => query.order_by(hmo::Column::ShortName, sort_order),
+        "longName" | "long_name" => query.order_by(hmo::Column::LongName, sort_order),
         "lastModifiedOn" | "last_modified_on" => query.order_by(hmo::Column::LastModifiedOn, sort_order),
         _ => return Err(StatusCode::BAD_REQUEST),
     };
@@ -144,7 +144,7 @@ pub async fn get_hmo_by_id(
     user: AuthUser,
     Path(id): Path<i32>,
 ) -> Result<Json<HMORow>, StatusCode> {
-    // permission check (same as list)
+    // Permission check
     let has_permission = role_has_permission_by_data_object_name(
         &state.db,
         user.claims.role_id,
@@ -159,8 +159,6 @@ pub async fn get_hmo_by_id(
     }
 
     let row = hmo::Entity::find()
-        .column_as(Expr::cust("NULL"), "last_endorsement_date")
-        .column_as(Expr::cust("NULL"), "last_collection_date")
         .filter(hmo::Column::Id.eq(id))
         .into_model::<HMORow>()
         .one(&state.db)
@@ -170,6 +168,8 @@ pub async fn get_hmo_by_id(
 
     Ok(Json(row))
 }
+
+
 #[derive(Debug, Deserialize)]
 pub struct CreateHmoRequest {
     pub short_name: String,
@@ -177,6 +177,7 @@ pub struct CreateHmoRequest {
     pub address: Option<String>,
     pub tax_account_number: Option<String>,
     pub contact_nos: Option<String>,
+    pub expect_a_master_list: Option<bool>,
     pub active: Option<bool>, // default to true if omitted
 }
 
@@ -193,6 +194,8 @@ pub struct PatchHmoRequest {
     pub tax_account_number: Option<Option<String>>,
     pub contact_nos: Option<Option<String>>,
 
+    pub expect_a_master_list: Option<Option<bool>>,
+
     pub active: Option<bool>,
 }
 
@@ -204,6 +207,7 @@ pub struct HmoResponse {
     pub address: Option<String>,
     pub tax_account_number: Option<String>,
     pub contact_nos: Option<String>,
+    pub expect_a_master_list: Option<bool>,
     pub active: bool,
     pub last_modified_by: String,
     pub last_modified_on: DateTimeWithTimeZone,
@@ -218,6 +222,7 @@ impl From<hmo::Model> for HmoResponse {
             address: m.address,
             tax_account_number: m.tax_account_number,
             contact_nos: m.contact_nos,
+            expect_a_master_list: m.expect_a_master_list,
             active: m.active,
             last_modified_by: m.last_modified_by,
             last_modified_on: m.last_modified_on,
@@ -275,6 +280,7 @@ pub async fn post_hmo(
         address: Set(body.address),
         tax_account_number: Set(body.tax_account_number),
         contact_nos: Set(body.contact_nos),
+        expect_a_master_list: Set(body.expect_a_master_list),
         active: Set(active),
         last_modified_by: Set(last_modified_by),
         last_modified_on: Set(now),
@@ -298,6 +304,7 @@ pub async fn patch_hmo(
     Path(id): Path<i32>,
     Json(body): Json<PatchHmoRequest>,
 ) -> Result<Json<HmoResponse>, StatusCode> {
+    tracing::info!("PATCHing /hmos/{id}: {body:?}");
     // 1) Permission check
     let has_permission = role_has_permission_by_data_object_name(
         &state.db,
@@ -325,7 +332,7 @@ pub async fn patch_hmo(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    // 3) Apply patch
+    // 3) Apply the patch
     let mut am: hmo::ActiveModel = existing.into();
 
     if let Some(v) = body.short_name {
@@ -353,6 +360,10 @@ pub async fn patch_hmo(
     if let Some(v) = body.contact_nos {
         am.contact_nos = Set(v);
     }
+    if let Some(v) = body.expect_a_master_list {
+        am.expect_a_master_list = Set(v);
+    }
+
     if let Some(v) = body.active {
         am.active = Set(v);
     }

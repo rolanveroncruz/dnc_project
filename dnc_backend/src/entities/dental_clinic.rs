@@ -21,6 +21,15 @@ pub struct Model {
     pub contact_numbers: Option<String>,
     pub email: Option<String>,
     pub schedule: Option<String>,
+    pub acct_tin: Option<String>,
+    pub acct_bank_name: Option<String>,
+    pub acct_account_type: Option<i32>,
+    pub acct_account_name: Option<String>,
+    pub acct_account_number: Option<String>,
+    pub acct_tax_type: Option<i32>,
+    pub acct_tax_classification: Option<i32>,
+    pub acct_trade_name: Option<String>,
+    pub acct_taxpayer_name: Option<String>,
     pub active: Option<bool>,
     pub last_modified_by: String,
     pub last_modified_on: DateTimeWithTimeZone,
@@ -28,6 +37,14 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::account_type::Entity",
+        from = "Column::AcctAccountType",
+        to = "super::account_type::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    AccountType,
     #[sea_orm(
         belongs_to = "super::city::Entity",
         from = "Column::CityId",
@@ -40,6 +57,28 @@ pub enum Relation {
     ClinicCapabilitiesList,
     #[sea_orm(has_many = "super::dentist_clinic::Entity")]
     DentistClinic,
+    #[sea_orm(
+        belongs_to = "super::tax_classification::Entity",
+        from = "Column::AcctTaxClassification",
+        to = "super::tax_classification::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    TaxClassification,
+    #[sea_orm(
+        belongs_to = "super::tax_type::Entity",
+        from = "Column::AcctTaxType",
+        to = "super::tax_type::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    TaxType,
+}
+
+impl Related<super::account_type::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AccountType.def()
+    }
 }
 
 impl Related<super::city::Entity> for Entity {
@@ -57,6 +96,18 @@ impl Related<super::clinic_capabilities_list::Entity> for Entity {
 impl Related<super::dentist_clinic::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistClinic.def()
+    }
+}
+
+impl Related<super::tax_classification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TaxClassification.def()
+    }
+}
+
+impl Related<super::tax_type::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TaxType.def()
     }
 }
 

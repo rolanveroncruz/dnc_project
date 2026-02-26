@@ -23,7 +23,7 @@ import {
     TaxType
 } from '../../../../api_services/dentist-lookups-service';
 import {DentistContractRow, DentistContractsService} from '../../../../api_services/dentist-contracts-service';
-import {DentistClinicService, DentistClinicWithNames, DentistClinicWithNamesAndAddress} from '../../../../api_services/dentist-clinic-service';
+import {DentistClinicService,  DentistClinicWithNamesAndAddress} from '../../../../api_services/dentist-clinic-service';
 import {
     DataTableWithSelectComponent
 } from '../../../../components/data-table-with-select-component/data-table-with-select-component';
@@ -55,6 +55,7 @@ import {
     DentistClinicPosition,
     DentistClinicPositionService
 } from '../../../../api_services/dentist-clinic-position-service';
+import {CurrencyInputComponent} from '../../../../components/currency-input-component/currency-input-component';
 
 interface CompanyListItem {
     id: number;
@@ -99,7 +100,8 @@ interface LookupOption {
         MatNativeDateModule,
         DataTableWithSelectComponent,
         HMORelationsComponent,
-        SingleDocumentSlotComponent
+        SingleDocumentSlotComponent,
+        CurrencyInputComponent
     ],
     templateUrl: './dentist-component.html',
     styleUrls: ['./dentist-component.scss'],
@@ -145,7 +147,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
     // SingleDocumentSlotComponent For Accreditation Contract
     @ViewChild('documentSlot') documentSlot!: SingleDocumentSlotComponent;
-    docPending = signal(false);
     accreditationContractFilename = signal('');
 
 
@@ -175,14 +176,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
         accre_contract_sent_date: [null as Date | null],
         accre_contract_file_path: [null as string | null],
 
-        // Tabs: Accounting
-        acc_tin: [null as string | null, [Validators.maxLength(60)]],
-        acc_bank_name: [null as string | null, [Validators.maxLength(120)]],
-        acc_account_type_id: [null as number | null],
-        acc_account_name: [null as string | null, [Validators.maxLength(120)]],
-        acc_account_number: [null as string | null, [Validators.maxLength(60)]],
-        acc_tax_type_id: [null as number | null],
-        acc_tax_classification_id: [null as number | null],
     });
 
     private dentistHistoryId = toSignal(
@@ -216,11 +209,22 @@ export class DentistComponent implements OnInit, AfterViewInit {
         return statusName.trim().toLowerCase() === 'non-accredited';
     });
 
+    private readonly initialSnapshotSig = signal<any>(null);
+
+    private readonly formValueSig = toSignal(
+        this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
+        {initialValue: this.form.getRawValue() }
+    );
 
     // Keep an initial snapshot for "dirty" comparison if you want to warn on leave later
     private initialSnapshot: any = null;
+
     readonly isDirty = computed(() => {
         if (!this.loaded()) return false;
+        const _formSig = this.formValueSig();
+        _formSig;
+        const _snap = this.initialSnapshotSig();
+        _snap;
         return JSON.stringify(this.initialSnapshot) !== JSON.stringify(this.form.getRawValue());
     });
 
@@ -234,7 +238,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
         // Load lookups immediately
         this.loadLookups();
 
-        // Load dentist if route has :id
+        // Load dentist if the route has :id
         effect(() => {
             const idParam = this.route.snapshot.paramMap.get('id');
             const id = idParam ? Number(idParam) : null;
@@ -245,6 +249,9 @@ export class DentistComponent implements OnInit, AfterViewInit {
                 this.dentistId.set(null);
                 this.loaded.set(true);
                 this.initialSnapshot = this.form.getRawValue();
+                this.initialSnapshotSig.set(this.form.getRawValue());
+                this.form.markAsPristine();
+                this.form.markAsUntouched();
                 return;
             }
 
@@ -354,13 +361,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
                         accre_contract_sent_date: d.accre_contract_sent_date ? new Date(d.accre_contract_sent_date) : null,
                         accre_contract_file_path: d.accre_contract_file_path ?? null,
 
-                        acc_tin: d.acc_tin ?? null,
-                        acc_bank_name: d.acc_bank_name ?? null,
-                        acc_account_type_id: d.acc_account_type_id ?? null,
-                        acc_account_name: d.acc_account_name ?? null,
-                        acc_account_number: d.acc_account_number ?? null,
-                        acc_tax_type_id: d.acc_tax_type_id ?? null,
-                        acc_tax_classification_id: d.acc_tax_classification_id ?? null,
                     });
                     this.accreditationContractFilename.set(d.accre_contract_file_path ?? '');
 
@@ -467,14 +467,6 @@ export class DentistComponent implements OnInit, AfterViewInit {
             accre_document_code: raw.accre_document_code,
             accreditation_date: raw.accreditation_date ? new Date(raw.accreditation_date).toISOString() : null,
             accre_contract_sent_date: raw.accre_contract_sent_date ? new Date(raw.accre_contract_sent_date).toISOString() : null,
-
-            acc_tin: raw.acc_tin,
-            acc_bank_name: raw.acc_bank_name,
-            acc_account_type_id: raw.acc_account_type_id,
-            acc_account_name: raw.acc_account_name,
-            acc_account_number: raw.acc_account_number,
-            acc_tax_type_id: raw.acc_tax_type_id,
-            acc_tax_classification_id: raw.acc_tax_classification_id,
         };
 
         const id = this.dentistId();
@@ -489,10 +481,12 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
                     this.documentSlot.commitPendingUpload();
 
-                    // If create, navigate to edit route (optional)
+                    // If 'create', navigate to edit route (optional)
                     if (!id && saved?.id) {
                         this.router.navigate(['../', saved.id], { relativeTo: this.route }).then();
                     }
+                    this.initialSnapshotSig.set(this.form.getRawValue());
+                    this.saving.set(false);
                 },
                 error: () => {
                     this.saving.set(false);
@@ -519,7 +513,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
     cancel() {
         // Typical behavior: back to list
-        this.router.navigate(['../'], {relativeTo: this.route});
+        this.router.navigate(['../'], {relativeTo: this.route}).then();
     }
 
     // Helpers for showing the *_name conceptually
@@ -529,7 +523,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
     }
 
     async openNewClinicDialog() {
-        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        let the_clinics: DentistOrClinicWithIdAndName[];
         const res = await firstValueFrom(this.dentalClinicService.getDentalClinics());
         the_clinics = res.items.map(c=>({id:c.id, name:`${c.name}-(${c.address})`}));
 
@@ -675,17 +669,17 @@ export class DentistComponent implements OnInit, AfterViewInit {
     addExclusiveToCompany() {
     }
 
-    removeExclusiveToCompany(selected:any) {
+    removeExclusiveToCompany(_selected:any) {
     }
 
     addExceptForCompany() {
     }
 
-    removeExceptForCompany(selected:any) {
+    removeExceptForCompany(_selected:any) {
     }
 
     async addClinic(){
-        let the_clinics: DentistOrClinicWithIdAndName[] = [];
+        let the_clinics: DentistOrClinicWithIdAndName[];
         const res = await firstValueFrom(this.dentalClinicService.getDentalClinics());
         the_clinics = res.items.map(c=>({id:c.id, name:`${c.name}-(${c.address})`}));
 

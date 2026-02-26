@@ -49,6 +49,22 @@ export interface DentalClinicRowDb {
     province_name: string | null;
     region_id: number | null;
     region_name: string | null;
+
+    // ---- accounting fields (from dental_clinic table)
+    acct_tin: string | null;
+    acct_bank_name: string | null;
+    acct_account_type: number | null;
+    acct_account_name: string | null;
+    acct_account_number: string | null;
+    acct_tax_type: number | null;
+    acct_tax_classification: number | null;
+    acct_trade_name: string | null;
+    acct_taxpayer_name: string | null;
+
+    // ---- accounting lookup names (joined)
+    acct_account_type_name: string | null;
+    acct_tax_type_name: string | null;
+    acct_tax_classification_name: string | null;
 }
 
 // ✅ NEW: This matches your API list item DentalClinicRow (RowDb + capability flags)
@@ -71,6 +87,18 @@ export interface DentalClinicModel {
     contact_numbers: string | null;
     email: string | null;
     schedule: string | null;
+
+    // ✅ CHANGE: include accounting fields on model, because backend Model has them
+    acct_tin: string | null;
+    acct_bank_name: string | null;
+    acct_account_type: number | null;
+    acct_account_name: string | null;
+    acct_account_number: string | null;
+    acct_tax_type: number | null;
+    acct_tax_classification: number | null;
+    acct_trade_name: string | null;
+    acct_taxpayer_name: string | null;
+
     active: boolean | null;
     last_modified_by: string;
     last_modified_on: string;
@@ -99,6 +127,17 @@ export interface CreateDentalClinicBody {
     contact_numbers?: string | null;
     email?: string | null;
     schedule?: string | null;
+
+    // ✅ CHANGE: add accounting fields
+    acct_tin?: string | null;
+    acct_bank_name?: string | null;
+    acct_account_type?: number | null;
+    acct_account_name?: string | null;
+    acct_account_number?: string | null;
+    acct_tax_type?: number | null;
+    acct_tax_classification?: number | null;
+    acct_trade_name?: string | null;
+    acct_taxpayer_name?: string | null;
     active?: boolean | null;
 
     last_modified_by: string; // required by your Rust API
@@ -125,6 +164,18 @@ export interface PatchDentalClinicBody {
     contact_numbers?: string | null;
     email?: string | null;
     schedule?: string | null;
+
+    // ✅ CHANGE: add accounting fields
+    acct_tin?: string | null;
+    acct_bank_name?: string | null;
+    acct_account_type?: number | null;
+    acct_account_name?: string | null;
+    acct_account_number?: string | null;
+    acct_tax_type?: number | null;
+    acct_tax_classification?: number | null;
+    acct_trade_name?: string | null;
+    acct_taxpayer_name?: string | null;
+
     active?: boolean | null;
 
     last_modified_by: string; // required

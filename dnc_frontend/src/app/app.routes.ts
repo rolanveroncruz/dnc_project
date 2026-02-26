@@ -15,7 +15,6 @@ import {SetupRoles} from './features/setup/setup-roles/setup-roles';
 import {SetupHMOs} from './features/setup/setup-hmos/setup-hmos';
 import {HMOPageComponent} from './features/setup/setup-hmos/hmopage-component/hmopage-component';
 import {SetupDentists} from './features/setup/setup-dentists/setup-dentists';
-import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
 import {authGuard} from './auth-guard';
 import {SetupDentistContracts} from './features/setup/setup-dentist-contracts/setup-dentist-contracts';
 import {
@@ -25,6 +24,7 @@ import {
   DentalClinicComponent
 } from './features/setup/setup-dental-clinics-component/dental-clinic-component/dental-clinic-component';
 import {DentistComponent} from './features/setup/setup-dentists/dentist-component/dentist-component';
+import {SetupEndorsementsComponent} from './features/setup/setup-endorsements-component/setup-endorsements-component';
 
 export const routes: Routes = [
   {
@@ -58,7 +58,7 @@ export const routes: Routes = [
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
           { path: 'dentists/new', component: DentistComponent, title: 'Dentists'},
           { path: 'dentists/:id', component: DentistComponent, title: 'Dentists'},
-          { path: 'endorsements', component: SetupEndorsements, title: 'Endorsements'},
+          { path: 'endorsements', component: SetupEndorsementsComponent, title: 'Endorsements'},
 
          ]
       }, // end of 'setup'

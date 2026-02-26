@@ -13,8 +13,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::{city, dental_clinic, province, region,
-                      clinic_capability, clinic_capabilities_list };
+use crate::entities::{city, dental_clinic, province, region, clinic_capability, clinic_capabilities_list, account_type, tax_type, tax_classification};
 
 use std::collections::HashMap;
 
@@ -69,6 +68,22 @@ pub struct DentalClinicRowDb {
     pub province_name: Option<String>,
     pub region_id: Option<i32>,
     pub region_name: Option<String>,
+
+    // ---- accounting fields
+    pub acct_tin: Option<String>,
+    pub acct_bank_name: Option<String>,
+    pub acct_account_type: Option<i32>,
+    pub acct_account_name: Option<String>,
+    pub acct_account_number: Option<String>,
+    pub acct_tax_type: Option<i32>,
+    pub acct_tax_classification: Option<i32>,
+    pub acct_trade_name: Option<String>,
+    pub acct_taxpayer_name: Option<String>,
+
+    // ---- accounting lookup names
+    pub acct_account_type_name: Option<String>,
+    pub acct_tax_type_name: Option<String>,
+    pub acct_tax_classification_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, FromQueryResult)]
@@ -95,6 +110,22 @@ pub struct DentalClinicRow {
     pub region_id: Option<i32>,
     pub region_name: Option<String>,
 
+    // ---- accounting fields
+    pub acct_tin: Option<String>,
+    pub acct_bank_name: Option<String>,
+    pub acct_account_type: Option<i32>,
+    pub acct_account_name: Option<String>,
+    pub acct_account_number: Option<String>,
+    pub acct_tax_type: Option<i32>,
+    pub acct_tax_classification: Option<i32>,
+    pub acct_trade_name: Option<String>,
+    pub acct_taxpayer_name: Option<String>,
+
+    // ----- accounting lookup names
+    pub acct_account_type_name: Option<String>,
+    pub acct_tax_type_name: Option<String>,
+    pub acct_tax_classification_name: Option<String>,
+
     //---- clinic capabilities
     #[serde(rename="hasPanoramic")]
     pub has_panoramic: bool,
@@ -115,6 +146,18 @@ impl From<DentalClinicRowDb> for DentalClinicRow {
             contact_numbers: db.contact_numbers,
             email: db.email,
             schedule: db.schedule,
+
+            // --- additional accounting fields
+            acct_tin: db.acct_tin,
+            acct_bank_name: db.acct_bank_name,
+            acct_account_type: db.acct_account_type,
+            acct_account_name: db.acct_account_name,
+            acct_account_number: db.acct_account_number,
+            acct_tax_type: db.acct_tax_type,
+            acct_tax_classification: db.acct_tax_classification,
+            acct_trade_name: db.acct_trade_name,
+            acct_taxpayer_name: db.acct_taxpayer_name,
+
             active: db.active,
             last_modified_by: db.last_modified_by,
             last_modified_on: db.last_modified_on,
@@ -123,6 +166,12 @@ impl From<DentalClinicRowDb> for DentalClinicRow {
             province_name: db.province_name,
             region_id: db.region_id,
             region_name: db.region_name,
+
+            // --- additional accounting lookup names
+            acct_account_type_name: db.acct_account_type_name,
+            acct_tax_type_name: db.acct_tax_type_name,
+            acct_tax_classification_name: db.acct_tax_classification_name,
+
             has_panoramic: false,
             has_periapical: false,
         }
@@ -153,6 +202,9 @@ pub async fn get_dental_clinics(
         .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
         .join(JoinType::LeftJoin, city::Relation::Province.def())
         .join(JoinType::LeftJoin, province::Relation::Region.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::AccountType.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::TaxType.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::TaxClassification.def())
         .order_by_asc(dental_clinic::Column::Name);
 
     if let Some(city_id) = params.city_id {
@@ -183,6 +235,16 @@ pub async fn get_dental_clinics(
             dental_clinic::Column::ContactNumbers,
             dental_clinic::Column::Email,
             dental_clinic::Column::Schedule,
+            dental_clinic::Column::AcctTin,
+            dental_clinic::Column::AcctBankName,
+            dental_clinic::Column::AcctAccountType,
+            dental_clinic::Column::AcctAccountName,
+            dental_clinic::Column::AcctAccountNumber,
+            dental_clinic::Column::AcctTaxType,
+            dental_clinic::Column::AcctTaxClassification,
+            dental_clinic::Column::AcctTradeName,
+            dental_clinic::Column::AcctTaxpayerName,
+
             dental_clinic::Column::Active,
             dental_clinic::Column::LastModifiedBy,
             dental_clinic::Column::LastModifiedOn,
@@ -192,6 +254,10 @@ pub async fn get_dental_clinics(
         .column_as(province::Column::Name, "province_name")
         .column_as(province::Column::RegionId, "region_id")
         .column_as(region::Column::Name, "region_name")
+
+        .column_as(account_type::Column::Name, "acct_account_type_name")
+        .column_as(tax_type::Column::Name, "acct_tax_type_name")
+        .column_as(tax_classification::Column::Name, "acct_tax_classification_name")
 
         .order_by_asc(dental_clinic::Column::Name)
         .into_model::<DentalClinicRowDb>();
@@ -284,6 +350,10 @@ pub async fn get_dental_clinic_by_id(
         .join(JoinType::LeftJoin, dental_clinic::Relation::City.def())
         .join(JoinType::LeftJoin, city::Relation::Province.def())
         .join(JoinType::LeftJoin, province::Relation::Region.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::AccountType.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::TaxType.def())
+        .join(JoinType::LeftJoin, dental_clinic::Relation::TaxClassification.def())
+
         .select_only()
         .columns([
             dental_clinic::Column::Id,
@@ -305,6 +375,9 @@ pub async fn get_dental_clinic_by_id(
         .column_as(province::Column::Name, "province_name")
         .column_as(province::Column::RegionId, "region_id")
         .column_as(region::Column::Name, "region_name")
+        .column_as(account_type::Column::Name, "acct_account_type_name")
+        .column_as(tax_type::Column::Name, "acct_tax_type_name")
+        .column_as(tax_classification::Column::Name, "acct_tax_classification_name")
         .into_model::<DentalClinicRowDb>()
         .one(&state.db)
         .await
@@ -337,6 +410,18 @@ pub struct CreateDentalClinicBody {
     pub contact_numbers: Option<String>,
     pub email: Option<String>,
     pub schedule: Option<String>,
+
+    // --- additional accounting fields
+    pub acct_tin: Option<String>,
+    pub acct_bank_name: Option<String>,
+    pub acct_account_type: Option<i32>,
+    pub acct_account_name: Option<String>,
+    pub acct_account_number: Option<String>,
+    pub acct_tax_type: Option<i32>,
+    pub acct_tax_classification: Option<i32>,
+    pub acct_trade_name: Option<String>,
+    pub acct_taxpayer_name: Option<String>,
+
     pub active: Option<bool>,
     pub last_modified_by: String,
 }
@@ -397,6 +482,16 @@ pub async fn create_dental_clinic(
         contact_numbers: Set(body.contact_numbers),
         email: Set(body.email),
         schedule: Set(body.schedule),
+        acct_tin: Set(body.acct_tin.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        acct_bank_name: Set(body.acct_bank_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        acct_account_type: Set(body.acct_account_type),
+        acct_account_name: Set(body.acct_account_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        acct_account_number: Set(body.acct_account_number.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        acct_tax_type: Set(body.acct_tax_type),
+        acct_tax_classification: Set(body.acct_tax_classification),
+        acct_trade_name: Set(body.acct_trade_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+        acct_taxpayer_name: Set(body.acct_taxpayer_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
+
         active: Set(body.active),
         last_modified_by: Set(body.last_modified_by),
         last_modified_on: Set(now),
@@ -426,6 +521,17 @@ pub struct PatchDentalClinicBody {
     pub contact_numbers: Option<Option<String>>,
     pub email: Option<Option<String>>,
     pub schedule: Option<Option<String>>,
+    // --- additional accounting fields
+    pub acct_tin: Option<Option<String>>,
+    pub acct_bank_name: Option<Option<String>>,
+    pub acct_account_type: Option<Option<i32>>,
+    pub acct_account_name: Option<Option<String>>,
+    pub acct_account_number: Option<Option<String>>,
+    pub acct_tax_type: Option<Option<i32>>,
+    pub acct_tax_classification: Option<Option<i32>>,
+    pub acct_trade_name: Option<Option<String>>,
+    pub acct_taxpayer_name: Option<Option<String>>,
+
     pub active: Option<Option<bool>>,
     pub last_modified_by: String,
 }
@@ -491,6 +597,36 @@ pub async fn patch_dental_clinic(
     if let Some(v) = body.schedule {
         am.schedule = Set(v);
     }
+    // ADD (CHANGE 9): acct_* setters
+    if let Some(v) = body.acct_tin {
+        am.acct_tin = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+    if let Some(v) = body.acct_bank_name {
+        am.acct_bank_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+    if let Some(v) = body.acct_account_type {
+        am.acct_account_type = Set(v);
+    }
+    if let Some(v) = body.acct_account_name {
+        am.acct_account_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+    if let Some(v) = body.acct_account_number {
+        am.acct_account_number = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+    if let Some(v) = body.acct_tax_type {
+        am.acct_tax_type = Set(v);
+    }
+    if let Some(v) = body.acct_tax_classification {
+        am.acct_tax_classification = Set(v);
+    }
+    if let Some(v) = body.acct_trade_name {
+        am.acct_trade_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+    if let Some(v) = body.acct_taxpayer_name {
+        am.acct_taxpayer_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+
+
     if let Some(v) = body.active {
         am.active = Set(v);
     }

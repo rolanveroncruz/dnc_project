@@ -164,3 +164,14 @@
         <mat-icon class="bool-icon bool-false" (click)="$event.stopPropagation()">cancel</mat-icon>
     }
 </ng-template>
+
+<!-------------------------->
+<!--- Check Only Template --->
+<!-------------------------->
+<ng-template #checkOnlyCell let-row let-col="col">
+    @if (row[col.key]) {
+        <mat-icon class="bool-icon bool-true" (click)="$event.stopPropagation()">check_circle</mat-icon>
+    } @else {
+
+    }
+</ng-template>

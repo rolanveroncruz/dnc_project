@@ -46,6 +46,9 @@ import {
     DentistClinicPositionService,
     DentistClinicPosition
 } from '../../../../api_services/dentist-clinic-position-service';
+import {MatTab, MatTabGroup} from '@angular/material/tabs';
+import {AccountType, AccountTypeService} from '../../../../api_services/account-type-service';
+import {DentistLookupsService, TaxClassification, TaxType} from '../../../../api_services/dentist-lookups-service';
 
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -63,7 +66,7 @@ type CityRow = { id: number; name: string; province_id?: number | null };
         MatSelect, MatOption,
         MatSlideToggle,
         MatButton,
-        MatProgressBar, MatCheckbox, MatDivider, DataTableWithSelectComponent,
+        MatProgressBar, MatCheckbox, MatDivider, DataTableWithSelectComponent, MatTabGroup, MatTab,
     ],
     templateUrl: './dental-clinic-component.html',
     styleUrl: './dental-clinic-component.scss',
@@ -82,6 +85,8 @@ export class DentalClinicComponent implements OnInit {
     private readonly clinicCapabilitiesListService = inject(ClinicCapabilitiesListService);
     private readonly dentistService = inject(DentistService);
     private readonly dentistClinicPositionService = inject(DentistClinicPositionService);
+    private readonly accountTypesService = inject(AccountTypeService);
+    private readonly TaxLookupService = inject(DentistLookupsService);
 
     private readonly dialog = inject(MatDialog);
     readonly loadState = signal<LoadState>('loading');
@@ -100,6 +105,10 @@ export class DentalClinicComponent implements OnInit {
     readonly provinces = signal<Province[]>([]);
     readonly cities = signal<CityRow[]>([]);
     readonly dentistClinicPositions = signal<DentistClinicPosition[]>([]);
+
+    readonly accountTypes = signal<AccountType[]>([]);
+    readonly taxTypes = signal<TaxType[]>([]);
+    readonly taxClassifications = signal<TaxClassification[]>([]);
 
 
     readonly selectedRegionId = signal<number | null>(null);
@@ -147,6 +156,20 @@ export class DentalClinicComponent implements OnInit {
         schedule: new FormControl<string>(''),      // CHANGED: added
         remarks: new FormControl<string>(''),
         active: new FormControl<boolean>(true, {nonNullable: true}),
+
+        // Accounting
+        tin: new FormControl<string>(''),
+        tax_classification_id: new FormControl<number | null>(null),
+        bank_name: new FormControl<string>(''),
+        account_type_id: new FormControl<number | null>(null),
+        account_name: new FormControl<string>(''),
+        account_number: new FormControl<string>(''),
+        tax_type_id: new FormControl<number | null>(null),
+        trade_name: new FormControl<string>(''),
+        taxpayer_name: new FormControl<string>(''),
+
+
+
     });
 
     dentist_clinic_columns: TableColumn[] = [

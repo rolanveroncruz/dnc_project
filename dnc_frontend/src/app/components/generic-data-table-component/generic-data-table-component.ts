@@ -33,6 +33,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   @ViewChild('datetimeCell', { static: true }) dateTimeCell!: TemplateRef<any>;
   @ViewChild('chipsCell', { static: true }) chipsCell!: TemplateRef<any>;
   @ViewChild('checkCell', { static: true }) checkCell!: TemplateRef<any>;
+  @ViewChild('checkOnlyCell', { static: true }) checkOnly!: TemplateRef<any>;
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn[] = [];
@@ -225,7 +226,9 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
       case 'datetime': return this.dateTimeCell;
       case 'chips': return this.chipsCell;
       case 'check': return this.checkCell;
+      case 'checkonly': return this.checkOnly;
       case 'default': return this.defaultCell;
+
     }
     return this.defaultCell;
 

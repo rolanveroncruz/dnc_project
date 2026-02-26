@@ -2,7 +2,7 @@ use axum::{extract::{Query, Path, State}, http::StatusCode, Json};
 use chrono::{FixedOffset, Utc};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, EntityTrait, FromQueryResult, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
+use sea_orm::{ActiveModelTrait, Condition, EntityTrait, FromQueryResult, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
 use sea_orm::prelude::DateTimeWithTimeZone;
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
@@ -28,7 +28,7 @@ pub struct DentalServiceRow {
     pub type_name: Option<String>, // LEFT JOIN => can be NULL
     pub sort_index: Option<i32>,
     pub last_modified_by: Option<String>,
-    pub last_modified_on: chrono::DateTime<chrono::Utc>, // adjust type to your column type
+    pub last_modified_on: chrono::DateTime<Utc>,
 }
 
 
@@ -59,7 +59,7 @@ pub async fn get_dental_services(
     // 2. Defaults + basic validation/clamping
     let page = params.base.page.unwrap_or(1).max(1);
     let page_size = params.base.page_size.unwrap_or(25).clamp(1, 200);
-    let active = params.base.active.unwrap_or(true);
+    let _active = params.base.active.unwrap_or(true);
 
     let sort = params.base.sort.as_deref().unwrap_or("sort_index");
     println!("sort: {}", sort);
@@ -213,7 +213,7 @@ pub async fn post_dental_service(
 
     // 3) Insert
     let now = now_tz_utc();
-    // Adjust this to whatever you store (email/name). I’m using email-like field name.
+    // Adjust this to whatever you store (email/name). I’m using an email-like field name.
     let actor = user.claims.email.clone();
 
     let am = dental_service::ActiveModel {
@@ -289,7 +289,7 @@ pub async fn patch_dental_service(
         })?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    // 3) Apply patch (start from existing ActiveModel so unchanged fields remain)
+    // 3) Apply the patch (start from the existing ActiveModel so unchanged fields remain)
     let mut am: dental_service::ActiveModel = existing.into();
 
     // If they sent nothing, treat as bad request (optional but usually desired)

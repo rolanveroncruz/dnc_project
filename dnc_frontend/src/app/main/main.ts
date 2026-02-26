@@ -97,7 +97,7 @@ export class MainComponent implements OnInit {
       { label: 'Dentist Contracts',    icon: 'file_copy',       route: '/main/setup/dentist-contracts', disabled:true },
       { label: 'Dental Clinics',    icon: 'home',       route: '/main/setup/dental-clinics', disabled:true },
       { label: 'Dentists',    icon: 'face',       route: '/main/setup/dentists', disabled:true },
-      { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/endorsements', disabled:true },
+      { label: 'Endorsements',    icon: 'settings',       route: '/main/setup/endorsements', disabled:true},
     ],
   };
   menu_activation_map: MenuActivationMap = {};
@@ -165,7 +165,7 @@ export class MainComponent implements OnInit {
     this.activate_item("dentist_contract", "Dentist Contracts");
     this.activate_item("dental_clinic", "Dental Clinics");
     this.activate_item("dentist", "Dentists");
-    this.activate_item("endorsement", "Endorsements");
+    this.activate_item("endorsements", "Endorsements");
   }
 
 

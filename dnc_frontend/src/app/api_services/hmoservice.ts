@@ -13,7 +13,7 @@ export interface HMOPageInfo{
 }
 export type HMOEditable = Pick<
   HMO,
-  'short_name' | 'long_name' | 'address' | 'tax_account_number' | 'contact_nos' | 'active'
+  'short_name' | 'long_name' | 'address' | 'tax_account_number' | 'contact_nos' | 'expect_a_master_list' | 'active'
 >;
 export interface HMO{
   id: number;
@@ -22,6 +22,7 @@ export interface HMO{
   address: string;
   tax_account_number: string;
   contact_nos: string;
+  expect_a_master_list: boolean;
   active: boolean;
   last_endorsement_date: Date | null;
   last_collection_date: Date | null;

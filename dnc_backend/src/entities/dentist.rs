@@ -27,25 +27,10 @@ pub struct Model {
     pub accreditation_date: Option<String>,
     pub accre_contract_sent_date: Option<String>,
     pub accre_contract_file_path: Option<String>,
-    pub acc_tin: Option<String>,
-    pub acc_bank_name: Option<String>,
-    pub acc_account_type_id: Option<i32>,
-    pub acc_account_name: Option<String>,
-    pub acc_account_number: Option<String>,
-    pub acc_tax_type_id: Option<i32>,
-    pub acc_tax_classification_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::account_type::Entity",
-        from = "Column::AccAccountTypeId",
-        to = "super::account_type::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    AccountType,
     #[sea_orm(has_many = "super::dentist_clinic::Entity")]
     DentistClinic,
     #[sea_orm(
@@ -74,28 +59,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     DentistStatus,
-    #[sea_orm(
-        belongs_to = "super::tax_classification::Entity",
-        from = "Column::AccTaxClassificationId",
-        to = "super::tax_classification::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    TaxClassification,
-    #[sea_orm(
-        belongs_to = "super::tax_type::Entity",
-        from = "Column::AccTaxTypeId",
-        to = "super::tax_type::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    TaxType,
-}
-
-impl Related<super::account_type::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::AccountType.def()
-    }
 }
 
 impl Related<super::dentist_clinic::Entity> for Entity {
@@ -125,18 +88,6 @@ impl Related<super::dentist_hmo_relations::Entity> for Entity {
 impl Related<super::dentist_status::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistStatus.def()
-    }
-}
-
-impl Related<super::tax_classification::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::TaxClassification.def()
-    }
-}
-
-impl Related<super::tax_type::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::TaxType.def()
     }
 }
 

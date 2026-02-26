@@ -1,0 +1,141 @@
+<mat-card class="page-card">
+    <mat-card-header class="card-header">
+        <div class="title-block">
+            <mat-card-title class="mat-headline-5">Setup Endorsements</mat-card-title>
+            <mat-card-subtitle>Maintain endorsement details and related billing rules</mat-card-subtitle>
+        </div>
+    </mat-card-header>
+
+    <mat-card-content class="card-content" [formGroup]="form">
+        <!-- Top section (≈60% height) -->
+        <section class="top-grid">
+            <!-- Column 1 -->
+            <div class="col">
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>HMO</mat-label>
+                    <mat-select formControlName="hmo">
+                        @for (hmo of hmoOptions(); track hmo) {
+                            <mat-option [value]="hmo">{{ hmo }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Company</mat-label>
+                    <mat-select formControlName="company">
+                        @for (c of companyOptions(); track c) {
+                            <mat-option [value]="c">{{ c }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Agmt/Corp Number</mat-label>
+                    <input matInput formControlName="agreementNumber" placeholder="e.g., AGMT-2026-001" />
+                </mat-form-field>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="col">
+                <div class="radio-block">
+                    <div class="block-label">Billing Frequency</div>
+
+                    <mat-radio-group formControlName="billingFrequency" class="radio-group">
+                        <mat-radio-button value="annual">Billed Annually</mat-radio-button>
+                        <mat-radio-button value="monthly">Billed Monthly</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Retainer Fee</mat-label>
+                    <input matInput type="number" formControlName="retainerFee" placeholder="0.00" />
+                </mat-form-field>
+
+                <div class="date-row">
+                    <mat-form-field appearance="outline" class="w">
+                        <mat-label>Date Start</mat-label>
+                        <input matInput [matDatepicker]="dpStart" formControlName="dateStart" />
+                        <mat-datepicker-toggle matSuffix [for]="dpStart"></mat-datepicker-toggle>
+                        <mat-datepicker #dpStart></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w">
+                        <mat-label>Date End</mat-label>
+                        <input matInput [matDatepicker]="dpEnd" formControlName="dateEnd" />
+                        <mat-datepicker-toggle matSuffix [for]="dpEnd"></mat-datepicker-toggle>
+                        <mat-datepicker #dpEnd></mat-datepicker>
+                    </mat-form-field>
+                </div>
+
+                @if (form.value.dateStart && form.value.dateEnd && form.value.dateEnd < form.value.dateStart) {
+                    <div class="hint error">
+                        Date End must be on/after Date Start.
+                    </div>
+                }
+            </div>
+
+            <!-- Column 3 -->
+            <div class="col">
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Endorsement Type</mat-label>
+                    <mat-select formControlName="endorsementType">
+                        @for (t of endorsementTypeOptions(); track t) {
+                            <mat-option [value]="t">{{ t }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Remarks</mat-label>
+                    <textarea matInput rows="5" formControlName="remarks" placeholder="Optional notes..."></textarea>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Endorsement Method</mat-label>
+                    <mat-select formControlName="endorsementMethod">
+                        @for (m of endorsementMethodOptions(); track m) {
+                            <mat-option [value]="m">{{ m }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </section>
+
+        <!-- Bottom section (tabs) -->
+        <section class="bottom-tabs">
+            <mat-tab-group class="tabs" animationDuration="150ms">
+                <mat-tab label="Special Services Fees">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            Configure special service fees here.
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Special Services Counts">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            Configure special services counts here.
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="High End Services Counts">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            Configure high-end services counts here.
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Additional Billing Rules">
+                    <div class="tab-pad">
+                        <div class="placeholder">
+                            Configure additional billing rules here.
+                        </div>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+        </section>
+    </mat-card-content>
+</mat-card>

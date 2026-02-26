@@ -12,15 +12,15 @@
   "private": true,
   "dependencies": {
     "@angular/cdk": "^20.2.14",
-    "@angular/common": "^20.0.0",
-    "@angular/compiler": "^20.0.0",
-    "@angular/core": "^20.0.0",
-    "@angular/forms": "^20.0.0",
+    "@angular/common": "^20.3.16",
+    "@angular/compiler": "^20.3.16",
+    "@angular/core": "^20.3.16",
+    "@angular/forms": "^20.3.16",
     "@angular/material": "^20.2.14",
-    "@angular/platform-browser": "^20.0.0",
-    "@angular/platform-server": "^20.0.0",
-    "@angular/router": "^20.0.0",
-    "@angular/ssr": "^20.0.2",
+    "@angular/platform-browser": "^20.3.16",
+    "@angular/platform-server": "^20.3.16",
+    "@angular/router": "^20.3.16",
+    "@angular/ssr": "^20.3.16",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/context-zone": "^1.30.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.57.2",
@@ -35,9 +35,9 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.0.2",
-    "@angular/cli": "^20.0.2",
-    "@angular/compiler-cli": "^20.0.0",
+    "@angular/build": "^20.3.16",
+    "@angular/cli": "^20.3.16",
+    "@angular/compiler-cli": "^20.3.16",
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^20.17.19",
@@ -47,6 +47,6 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.8.2"
+    "typescript": "^5.9.3"
   }
 }
