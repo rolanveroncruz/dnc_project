@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub hmo_id: i32,
     pub endorsement_company_id: i32,
     pub endorsement_type_id: i32,
     pub agreement_corp_number: Option<String>,
@@ -46,6 +47,14 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementType,
+    #[sea_orm(
+        belongs_to = "super::hmo::Entity",
+        from = "Column::HmoId",
+        to = "super::hmo::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Hmo,
 }
 
 impl Related<super::endorsement_billing_period_type::Entity> for Entity {
@@ -63,6 +72,12 @@ impl Related<super::endorsement_company::Entity> for Entity {
 impl Related<super::endorsement_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementType.def()
+    }
+}
+
+impl Related<super::hmo::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Hmo.def()
     }
 }
 

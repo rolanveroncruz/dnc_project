@@ -1,4 +1,5 @@
 use sea_orm_migration::{prelude::*};
+use crate::m20260108_051749_create_table_hmo::HMO;
 use crate::m20260220_082933_create_endorsement_tables::Endorsement::EndorsementBillingPeriodTypeId;
 
 #[derive(DeriveMigrationName)]
@@ -151,6 +152,15 @@ impl Migration {
                         .primary_key()
                         .auto_increment()
                     )
+                    .col(ColumnDef::new(Endorsement::HMOId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_endorsement_hmo_id")
+                    .from(Endorsement::Table, Endorsement::HMOId)
+                        .to(HMO::Table, HMO::Id)
+                    )
                     .col(ColumnDef::new(Endorsement::EndorsementCompanyId)
                         .integer()
                         .not_null()
@@ -238,6 +248,7 @@ pub enum EndorsementBillingPeriodType{
 pub enum Endorsement {
     Table,
     Id,
+    HMOId,
     EndorsementCompanyId, //
     EndorsementTypeId,    //
     AgreementCorpNumber,

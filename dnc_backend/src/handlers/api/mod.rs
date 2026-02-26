@@ -26,3 +26,4 @@ pub mod extended_dental_clinic;
 pub mod endorsement_type;
 pub mod endorsement_billing_period_type;
 mod endorsement_company;
+mod endorsements;
