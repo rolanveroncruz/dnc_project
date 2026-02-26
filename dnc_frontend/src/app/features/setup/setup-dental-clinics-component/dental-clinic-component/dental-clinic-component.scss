@@ -1,280 +1,138 @@
+:host {
+    display: block;
+}
+
+/* =========================
+   Layout shell
+   ========================= */
+
 .clinic-page {
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  height: calc(100vh - 64px); // adjust if your topbar differs
-  box-sizing: border-box;
-  overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 14px; /* slightly tighter than 16 */
+    height: calc(100vh - 64px); /* adjust if your topbar differs */
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .clinic-card {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; // header fixed, body scrolls
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* header fixed, body scrolls */
 }
 
 .top-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 4px; /* small tightening */
 }
 
 .title-block {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .header-actions {
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 8px;
 }
 
-/* ✅ Make the card body scroll instead of being cut */
+/* Card body scroll area */
 .card-body {
-  overflow: auto;
-  min-height: 0;
-  padding-top: 12px;
+    overflow: auto;
+    min-height: 0;
+    padding-top: 12px;
 }
 
-/* ---- DETAILS GRID (3 columns) ---- */
+/* =========================
+   Details grid (top form)
+   ========================= */
+
 .details-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr 1.2fr;
-  gap: 16px;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1.2fr;
+    gap: 14px;
+    align-items: start;
+}
+
+.details-grid.compact {
+    gap: 8px; /* tighter for top form */
 }
 
 .col {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
 .field {
-  width: 100%;
+    width: 100%;
 }
 
-/* Capabilities: scroll inside column */
+/* Capabilities (scroll inside column) */
 .capabilities-block {
-  display: flex;
-  flex-direction: column;
-  min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    min-height: 140px;
 }
 
 .section-title {
-  font-weight: 600;
-  margin-bottom: 6px;
+    font-weight: 600;
+    margin-bottom: 6px;
 }
 
 .capabilities-list {
-  max-height: 220px; // keeps it from eating the whole page
-  overflow: auto;
-  padding-right: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+    max-height: 210px;
+    overflow: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.capabilities-list.compact-caps {
+    max-height: 140px;
+    overflow: auto;
+    padding-right: 4px;
+    gap: 2px;
 }
 
 .capability-item {
-  margin-left: 2px;
+    margin-left: 2px;
+}
+
+.capabilities-list.compact-caps .capability-item {
+    margin: 0;
+    padding: 0;
+    display: block;
 }
 
 .capabilities-empty {
-  opacity: 0.65;
-  font-style: italic;
-  padding: 8px 0;
+    opacity: 0.65;
+    font-style: italic;
+    padding: 8px 0;
 }
 
 .toggle {
-  margin-top: 2px;
+    margin-top: 2px;
 }
 
 .error {
-  margin-top: 12px;
-  color: #b00020;
+    margin-top: 12px;
+    color: #b00020;
 }
 
-/* ---- DENTISTS SECTION (same card, bottom) ---- */
-.section-divider {
-  margin: 16px 0;
-}
-
-.dentists-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dentists-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.dentists-subtitle {
-  opacity: 0.75;
-  margin-top: 2px;
-}
-
-.dentists-content {
-  overflow: auto;
-}
-
-.dentists-placeholder {
-  min-height: 180px;
-  display: grid;
-  place-items: center;
-  opacity: 0.65;
-  border: 1px dashed rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-}
-
-/* ✅ Density adjustments for Material fields & checkboxes */
-/* ✅ CHANGE: scope deep overrides to ONLY elements under .clinic-page */
-:host ::ng-deep .clinic-page .mat-mdc-form-field {
-    font-size: 13px;
-}
-
-:host ::ng-deep .clinic-page .mat-mdc-form-field-infix {
-    min-height: 38px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-}
-
-:host ::ng-deep .clinic-page .mat-mdc-text-field-wrapper {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-
-
-
-
-
-:host ::ng-deep .mat-mdc-checkbox .mdc-form-field {
-  font-size: 13px;
-}
-
-:host ::ng-deep .mat-mdc-checkbox .mdc-label {
-  line-height: 18px;
-}
-
-/* Responsive: stack on smaller screens */
-@media (max-width: 900px) {
-  .clinic-page {
-    height: auto;
-    overflow: visible;
-  }
-
-  .clinic-card {
-    overflow: visible;
-  }
-
-  .card-body {
-    overflow: visible;
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .capabilities-list {
-    max-height: none;
-  }
-}
-/* ✅ UNSAVED CHANGES INDICATOR */
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.unsaved-pill {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgba(255, 193, 7, 0.18); /* amber-ish */
-  border: 1px solid rgba(255, 193, 7, 0.55);
-}
-.dentists-title{
-    flex: 1;
-    display: flex;
-    justify-content: center;
-}
-.dentists-headline {
-    font-size: 25px !important;   // try 26–32
-    font-weight: 400 !important;  // bold
-    line-height: 1.1;
-    letter-spacing: -0.3px;
-    margin: 0;         // just in case it inherits any margins
-    width: 100%;
-    text-align: center;
-}
 /* =========================
-   Gentle vertical tightening
+   Divider + Tabs (bottom area)
    ========================= */
 
-/* 1) Slightly less page padding */
-.clinic-page {
-    padding: 14px; /* was 16px */
-}
-
-/* 2) Slightly less gap between columns/fields */
-.details-grid {
-    gap: 14px; /* was 16px */
-}
-.col {
-    gap: 7px; /* was 8px */
-}
-
-/* 3) Slightly less space around the divider */
 .section-divider {
-    margin: 12px 0 !important; /* was 16px 0 */
+    margin: 8px 0;
 }
 
-/* 4) Dentists placeholder: small reduction (often fixes the tiny scroll) */
-.dentists-placeholder {
-    min-height: 150px; /* was 180px */
-}
-
-/* 5) Very small Material form-field height reduction */
-:host ::ng-deep .mat-mdc-form-field-infix {
-    min-height: 36px !important;  /* was 38px */
-    padding-top: 5px !important;  /* was 6px */
-    padding-bottom: 5px !important;
-}
-
-/* Optional: shave a tiny bit from capabilities max height (only 10px) */
-.capabilities-list {
-    max-height: 210px; /* was 220px */
-}
-/* Make the top form more compact (more vertical space for tabs) */
-.details-grid.compact {
-    gap: 10px; /* was likely larger */
-}
-
-.details-grid.compact .field {
-    margin: 0;
-}
-
-/* Tighten Material form-field vertical padding */
-.details-grid.compact .mat-mdc-form-field-infix {
-    padding-top: 6px;
-    padding-bottom: 6px;
-    min-height: 40px;
-}
-
-/* Capabilities list tighter */
-.compact-caps .capability-item {
-    margin: 0;
-    padding: 0;
-}
-
-/* Tabs area */
 .bottom-tabs {
     margin-top: 8px;
 }
@@ -283,7 +141,80 @@
     padding: 12px 4px 4px;
 }
 
-/* Accounting 3x3 grid */
+/* =========================
+   Dentists tab section
+   ========================= */
+
+.dentists-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dentists-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dentists-title {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.dentists-headline {
+    font-size: 25px !important;
+    font-weight: 400 !important;
+    line-height: 1.1;
+    letter-spacing: -0.3px;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.dentists-subtitle {
+    opacity: 0.75;
+    margin-top: 2px;
+}
+
+.dentists-content {
+    overflow: auto;
+}
+
+.dentists-placeholder {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    opacity: 0.65;
+    border: 1px dashed rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+/* =========================
+   Unsaved changes indicator
+   ========================= */
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.unsaved-pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(255, 193, 7, 0.18);
+    border: 1px solid rgba(255, 193, 7, 0.55);
+}
+
+/* =========================
+   Accounting grid (tab 2)
+   ========================= */
+
 .accounting-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
@@ -302,59 +233,117 @@
         grid-template-columns: 1fr;
     }
 }
-:host {
-    display: block;
+
+/* =========================
+   LOCAL Material density tweaks (safe + consistent)
+   Goal: compact controls WITHOUT breaking label resting position
+   ========================= */
+
+/* Base: slightly smaller typography inside this page */
+:host ::ng-deep .clinic-page .mat-mdc-form-field {
+    font-size: 13px;
 }
 
-/* Tighten ALL fields in the top form */
-.details-grid.compact .mat-mdc-form-field {
+/* Keep wrapper padding modest (doesn't break label positioning much) */
+:host ::ng-deep .clinic-page .mat-mdc-text-field-wrapper {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/*
+  IMPORTANT:
+  Do NOT have multiple conflicting infix overrides.
+  This single rule is tuned so the *resting* label sits centered
+  while still keeping the field compact.
+*/
+:host ::ng-deep .clinic-page .details-grid.compact .mat-mdc-form-field-infix {
+    min-height: 36px;
+    padding-top: 10px;  /* raises resting label */
+    padding-bottom: 6px;
+}
+
+/* If you want the Accounting tab to be a bit taller/standard, uncomment:
+:host ::ng-deep .clinic-page .accounting-grid .mat-mdc-form-field-infix {
+  min-height: 38px;
+  padding-top: 11px;
+  padding-bottom: 7px;
+}
+*/
+
+/* Tighten spacing around form-fields in the compact (top) grid */
+:host ::ng-deep .clinic-page .details-grid.compact .mat-mdc-form-field {
     margin: 0;
 }
 
-/* Reduce infix height + vertical padding */
-.details-grid.compact .mat-mdc-form-field-infix {
-    min-height: 36px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+/* Optional: hide hint/error row in the compact top form (saves height)
+   If you need errors visible, comment this out. */
+:host ::ng-deep .clinic-page .details-grid.compact .mat-mdc-form-field-subscript-wrapper {
+    display: none;
 }
 
-/* Reduce label/outline spacing a bit */
-.details-grid.compact .mat-mdc-form-field-subscript-wrapper {
-    display: none; /* hides hint/error area; only do this if you can live with it */
-}
-
-/* Make inputs align better vertically */
-.details-grid.compact input.mat-mdc-input-element,
-.details-grid.compact textarea.mat-mdc-input-element {
+/* Make input/textarea feel visually centered */
+:host ::ng-deep,
+.clinic-page,
+.details-grid.compact,
+input.mat-mdc-input-element,
+:host ::ng-deep,
+.clinic-page,
+.details-grid.compact,
+textarea.mat-mdc-input-element {
     line-height: 1.2;
 }
 
-/* Slightly smaller toggle footprint */
-.details-grid.compact .mat-mdc-slide-toggle {
+/* Slightly smaller checkbox text */
+:host ::ng-deep .clinic-page .mat-mdc-checkbox .mdc-form-field {
+    font-size: 13px;
+}
+
+:host ::ng-deep .clinic-page .mat-mdc-checkbox .mdc-label {
+    line-height: 18px;
+}
+
+/* Slightly smaller toggle footprint in the top form */
+:host ::ng-deep .clinic-page .details-grid.compact .mat-mdc-slide-toggle {
     margin-top: 4px;
 }
+
+/* Allow user to expand the textarea(s) if needed */
 .details-grid.compact textarea {
-    resize: vertical; /* user can expand if needed */
-}
-.capabilities-list.compact-caps {
-    max-height: 140px;   /* adjust */
-    overflow: auto;
-    padding-right: 4px;
+    resize: vertical;
 }
 
-.capabilities-list.compact-caps .capability-item {
-    display: block;
-    margin: 0;
-    padding: 0;
-}
-.details-grid.compact {
-    gap: 8px;
-}
+/* =========================
+   Responsive: stack on smaller screens
+   ========================= */
 
-.top-header {
-    padding-bottom: 4px;
-}
+@media (max-width: 900px) {
+    .clinic-page {
+        height: auto;
+        overflow: visible;
+    }
 
-.section-divider {
-    margin: 8px 0;
+    .clinic-card {
+        overflow: visible;
+    }
+
+    .card-body {
+        overflow: visible;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .capabilities-list {
+        max-height: none;
+    }
+
+    .capabilities-list.compact-caps {
+        max-height: none;
+    }
+
+    /* On mobile, don't hide errors/hints */
+    :host ::ng-deep .clinic-page .details-grid.compact .mat-mdc-form-field-subscript-wrapper {
+        display: block;
+    }
 }
