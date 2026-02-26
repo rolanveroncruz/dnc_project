@@ -31,7 +31,7 @@ export interface DentalClinicRowDb {
     // dental_clinic columns
     id: number;
     name: string;
-    owner_name: string | null;            // ✅ CHANGED: include owner_name (was missing)
+    owner_name: string | null;
     address: string;
     city_id: number | null;
     zip_code: string | null;
@@ -53,11 +53,11 @@ export interface DentalClinicRowDb {
     // ---- accounting fields (from dental_clinic table)
     acct_tin: string | null;
     acct_bank_name: string | null;
-    acct_account_type: number | null;
+    acct_account_type_id: number | null;
     acct_account_name: string | null;
     acct_account_number: string | null;
-    acct_tax_type: number | null;
-    acct_tax_classification: number | null;
+    acct_tax_type_id: number | null;
+    acct_tax_classification_id: number | null;
     acct_trade_name: string | null;
     acct_taxpayer_name: string | null;
 
@@ -91,11 +91,11 @@ export interface DentalClinicModel {
     // ✅ CHANGE: include accounting fields on model, because backend Model has them
     acct_tin: string | null;
     acct_bank_name: string | null;
-    acct_account_type: number | null;
+    acct_account_type_id: number | null;
     acct_account_name: string | null;
     acct_account_number: string | null;
-    acct_tax_type: number | null;
-    acct_tax_classification: number | null;
+    acct_tax_type_id: number | null;
+    acct_tax_classification_id: number | null;
     acct_trade_name: string | null;
     acct_taxpayer_name: string | null;
 
@@ -131,11 +131,11 @@ export interface CreateDentalClinicBody {
     // ✅ CHANGE: add accounting fields
     acct_tin?: string | null;
     acct_bank_name?: string | null;
-    acct_account_type?: number | null;
+    acct_account_type_id?: number | null;
     acct_account_name?: string | null;
     acct_account_number?: string | null;
-    acct_tax_type?: number | null;
-    acct_tax_classification?: number | null;
+    acct_tax_type_id?: number | null;
+    acct_tax_classification_id?: number | null;
     acct_trade_name?: string | null;
     acct_taxpayer_name?: string | null;
     active?: boolean | null;
@@ -165,14 +165,13 @@ export interface PatchDentalClinicBody {
     email?: string | null;
     schedule?: string | null;
 
-    // ✅ CHANGE: add accounting fields
     acct_tin?: string | null;
     acct_bank_name?: string | null;
-    acct_account_type?: number | null;
+    acct_account_type_id?: number | null;
     acct_account_name?: string | null;
     acct_account_number?: string | null;
-    acct_tax_type?: number | null;
-    acct_tax_classification?: number | null;
+    acct_tax_type_id?: number | null;
+    acct_tax_classification_id?: number | null;
     acct_trade_name?: string | null;
     acct_taxpayer_name?: string | null;
 
