@@ -23,11 +23,11 @@ pub struct Model {
     pub schedule: Option<String>,
     pub acct_tin: Option<String>,
     pub acct_bank_name: Option<String>,
-    pub acct_account_type: Option<i32>,
+    pub acct_account_type_id: Option<i32>,
     pub acct_account_name: Option<String>,
     pub acct_account_number: Option<String>,
-    pub acct_tax_type: Option<i32>,
-    pub acct_tax_classification: Option<i32>,
+    pub acct_tax_type_id: Option<i32>,
+    pub acct_tax_classification_id: Option<i32>,
     pub acct_trade_name: Option<String>,
     pub acct_taxpayer_name: Option<String>,
     pub active: Option<bool>,
@@ -39,7 +39,7 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::account_type::Entity",
-        from = "Column::AcctAccountType",
+        from = "Column::AcctAccountTypeId",
         to = "super::account_type::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
@@ -59,7 +59,7 @@ pub enum Relation {
     DentistClinic,
     #[sea_orm(
         belongs_to = "super::tax_classification::Entity",
-        from = "Column::AcctTaxClassification",
+        from = "Column::AcctTaxClassificationId",
         to = "super::tax_classification::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
@@ -67,7 +67,7 @@ pub enum Relation {
     TaxClassification,
     #[sea_orm(
         belongs_to = "super::tax_type::Entity",
-        from = "Column::AcctTaxType",
+        from = "Column::AcctTaxTypeId",
         to = "super::tax_type::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
