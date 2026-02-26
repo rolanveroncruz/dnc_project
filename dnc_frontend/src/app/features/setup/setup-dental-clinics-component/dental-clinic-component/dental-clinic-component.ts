@@ -86,7 +86,8 @@ export class DentalClinicComponent implements OnInit {
     private readonly dentistService = inject(DentistService);
     private readonly dentistClinicPositionService = inject(DentistClinicPositionService);
     private readonly accountTypesService = inject(AccountTypeService);
-    private readonly TaxLookupService = inject(DentistLookupsService);
+    private readonly dentistLookupsService= inject(DentistLookupsService);
+
 
     private readonly dialog = inject(MatDialog);
     readonly loadState = signal<LoadState>('loading');
@@ -158,16 +159,15 @@ export class DentalClinicComponent implements OnInit {
         active: new FormControl<boolean>(true, {nonNullable: true}),
 
         // Accounting
-        tin: new FormControl<string>(''),
-        tax_classification_id: new FormControl<number | null>(null),
-        bank_name: new FormControl<string>(''),
-        account_type_id: new FormControl<number | null>(null),
-        account_name: new FormControl<string>(''),
-        account_number: new FormControl<string>(''),
-        tax_type_id: new FormControl<number | null>(null),
-        trade_name: new FormControl<string>(''),
-        taxpayer_name: new FormControl<string>(''),
-
+        acct_tin: new FormControl<string>(''),
+        acct_tax_classification_id: new FormControl<number | null>(null),
+        acct_bank_name: new FormControl<string>(''),
+        acct_account_type_id: new FormControl<number | null>(null),
+        acct_account_name: new FormControl<string>(''),
+        acct_account_number: new FormControl<string>(''),
+        acct_tax_type_id: new FormControl<number | null>(null),
+        acct_trade_name: new FormControl<string>(''),
+        acct_taxpayer_name: new FormControl<string>(''),
 
 
     });
@@ -218,6 +218,29 @@ export class DentalClinicComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        //---- load AccountTypes
+        this.accountTypesService.getAllAccountTypes()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (v) => this.accountTypes.set(v),
+                error: () => console.log("Error in account types"),
+            })
+        // ---- load TaxTypes
+        this.dentistLookupsService.getAllTaxTypes()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (v) => this.taxTypes.set(v),
+                error: () => console.log("Error in tax types"),
+                }
+            )
+        // ---- load TaxClassifications
+        this.dentistLookupsService.getAllTaxClassifications()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (v) => this.taxClassifications.set(v),
+                error: () => console.log("Error in tax classifications"),
+            })
+
         // ---- load capabilities (unchanged)
         this.clinicCapabilitiesService.getClinicCapabilities()
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -249,6 +272,18 @@ export class DentalClinicComponent implements OnInit {
                 schedule: '',
                 remarks: '',
                 active: true,
+
+                // ✅ FIX: include accounting defaults too
+                acct_tin: '',
+                acct_tax_classification_id: null,
+                acct_bank_name: '',
+                acct_account_type_id: null,
+                acct_account_name: '',
+                acct_account_number: '',
+                acct_tax_type_id: null,
+                acct_trade_name: '',
+                acct_taxpayer_name: '',
+
             });
             this.form.markAsPristine();
             this.hasUnsavedChanges.set(false);
@@ -306,6 +341,15 @@ export class DentalClinicComponent implements OnInit {
             schedule: '',
             remarks: '',
             active: true,
+            acct_tin: '',
+            acct_bank_name: '',
+            acct_account_type_id: null,
+            acct_account_name: '',
+            acct_account_number: '',
+            acct_tax_type_id: null,
+            acct_tax_classification_id: null,
+            acct_trade_name: '',
+            acct_taxpayer_name: '',
         }, {emitEvent: false});
 
         this.selectedRegionId.set(null);
@@ -373,6 +417,17 @@ export class DentalClinicComponent implements OnInit {
                         schedule: clinic.schedule ?? '',         // CHANGED
                         remarks: clinic.remarks ?? '',
                         active: clinic.active ?? true,
+
+                        // ✅ ADDED: accounting fields (load into the Accounting tab)
+                        acct_tin: clinic.acct_tin ?? '',
+                        acct_bank_name: clinic.acct_bank_name ?? '',
+                        acct_account_type_id: clinic.acct_account_type_id ?? null,
+                        acct_account_name: clinic.acct_account_name ?? '',
+                        acct_account_number: clinic.acct_account_number ?? '',
+                        acct_tax_type_id: clinic.acct_tax_type_id ?? null,
+                        acct_tax_classification_id: clinic.acct_tax_classification_id ?? null,
+                        acct_trade_name: clinic.acct_trade_name ?? '',
+                        acct_taxpayer_name: clinic.acct_taxpayer_name ?? '',
                     });
 
 
@@ -474,6 +529,9 @@ export class DentalClinicComponent implements OnInit {
         return s.length === 0 ? null : s;
     }
 
+    private numOrNull(v: number | null | undefined): number | null {
+        return v == null ? null : v;
+    }
     onSave() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
@@ -497,6 +555,18 @@ export class DentalClinicComponent implements OnInit {
                 email: this.emptyToNull(raw.email),
                 schedule: this.emptyToNull(raw.schedule),
                 active: raw.active,
+
+                // ✅ FIX: include accounting fields in the create payload
+                acct_tin: this.emptyToNull(raw.acct_tin),
+                acct_tax_classification_id: this.numOrNull(raw.acct_tax_classification_id),
+                acct_bank_name: this.emptyToNull(raw.acct_bank_name),
+                acct_account_type_id: this.numOrNull(raw.acct_account_type_id),
+                acct_account_name: this.emptyToNull(raw.acct_account_name),
+                acct_account_number: this.emptyToNull(raw.acct_account_number),
+                acct_tax_type_id: this.numOrNull(raw.acct_tax_type_id),
+                acct_trade_name: this.emptyToNull(raw.acct_trade_name),
+                acct_taxpayer_name: this.emptyToNull(raw.acct_taxpayer_name),
+
 
                 last_modified_by: this.getLastModifiedBy(), // REQUIRED by your API
             };
@@ -538,6 +608,16 @@ export class DentalClinicComponent implements OnInit {
                 email: this.emptyToNull(raw.email),
                 schedule: this.emptyToNull(raw.schedule),
                 active: raw.active,
+                acct_tin: this.emptyToNull(raw.acct_tin),
+                acct_tax_classification_id: this.numOrNull(raw.acct_tax_classification_id),
+                acct_bank_name: this.emptyToNull(raw.acct_bank_name),
+                acct_account_type_id: this.numOrNull(raw.acct_account_type_id),
+                acct_account_name: this.emptyToNull(raw.acct_account_name),
+                acct_account_number: this.emptyToNull(raw.acct_account_number),
+                acct_tax_type_id: this.numOrNull(raw.acct_tax_type_id),
+                acct_trade_name: this.emptyToNull(raw.acct_trade_name),
+                acct_taxpayer_name: this.emptyToNull(raw.acct_taxpayer_name),
+
 
                 last_modified_by: this.getLastModifiedBy(), // REQUIRED by your API
             };

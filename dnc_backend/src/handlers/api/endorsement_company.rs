@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, QueryOrder, Set,
+    ActiveModelTrait,  EntityTrait, QueryOrder, Set,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;

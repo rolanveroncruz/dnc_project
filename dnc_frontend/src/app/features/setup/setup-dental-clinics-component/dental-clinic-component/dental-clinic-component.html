@@ -208,17 +208,17 @@
                                 <!-- Row 1 -->
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>TIN</mat-label>
-                                    <input matInput formControlName="tin" />
+                                    <input matInput formControlName="acct_tin" />
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Bank Name</mat-label>
-                                    <input matInput formControlName="bank_name" />
+                                    <input matInput formControlName="acct_bank_name" />
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Account Type</mat-label>
-                                    <mat-select formControlName="account_type_id">
+                                    <mat-select formControlName="acct_account_type_id">
                                         <mat-option [value]="null">—</mat-option>
                                         @for (t of accountTypes(); track t.id) {
                                             <mat-option [value]="t.id">{{ t.name }}</mat-option>
@@ -229,17 +229,17 @@
                                 <!-- Row 2 -->
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Account Name</mat-label>
-                                    <input matInput formControlName="account_name" />
+                                    <input matInput formControlName="acct_account_name" />
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Account Number</mat-label>
-                                    <input matInput formControlName="account_number" />
+                                    <input matInput formControlName="acct_account_number" />
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Tax Type</mat-label>
-                                    <mat-select formControlName="tax_type_id">
+                                    <mat-select formControlName="acct_tax_type_id">
                                         <mat-option [value]="null">—</mat-option>
                                         @for (t of taxTypes(); track t.id) {
                                             <mat-option [value]="t.id">{{ t.name }}</mat-option>
@@ -250,7 +250,7 @@
                                 <!-- Row 3 -->
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Tax Classification</mat-label>
-                                    <mat-select formControlName="tax_classification_id">
+                                    <mat-select formControlName="acct_tax_classification_id">
                                         <mat-option [value]="null">—</mat-option>
                                         @for (t of taxClassifications(); track t.id) {
                                             <mat-option [value]="t.id">{{ t.name }}</mat-option>
@@ -260,12 +260,12 @@
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Trade Name</mat-label>
-                                    <input matInput formControlName="trade_name" />
+                                    <input matInput formControlName="acct_trade_name" />
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="field">
                                     <mat-label>Taxpayer Name</mat-label>
-                                    <input matInput formControlName="taxpayer_name" />
+                                    <input matInput formControlName="acct_taxpayer_name" />
                                 </mat-form-field>
                             </div>
                         </div>

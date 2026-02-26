@@ -199,12 +199,12 @@ impl Migration {
                     .col(ColumnDef::new(DentalClinic::AcctBankName)
                         .string()
                     )
-                    .col(ColumnDef::new(DentalClinic::AcctAccountType)
+                    .col(ColumnDef::new(DentalClinic::AcctAccountTypeId)
                         .integer()
                     )
                     .foreign_key(ForeignKey::create()
                         .name("dental_clinic_acct_account_type_foreign_key")
-                        .from(DentalClinic::Table, DentalClinic::AcctAccountType)
+                        .from(DentalClinic::Table, DentalClinic::AcctAccountTypeId)
                         .to(AccountType::Table, AccountType::Id)
                     )
                     .col(ColumnDef::new(DentalClinic::AcctAccountName)
@@ -213,20 +213,20 @@ impl Migration {
                     .col(ColumnDef::new(DentalClinic::AcctAccountNumber)
                         .string()
                     )
-                    .col(ColumnDef::new(DentalClinic::AcctTaxType)
+                    .col(ColumnDef::new(DentalClinic::AcctTaxTypeId)
                         .integer()
                     )
                     .foreign_key(ForeignKey::create()
                         .name("dental_clinic_acct_tax_type_foreign_key")
-                        .from(DentalClinic::Table, DentalClinic::AcctTaxType)
+                        .from(DentalClinic::Table, DentalClinic::AcctTaxTypeId)
                         .to(TaxType::Table, TaxType::Id)
                     )
-                    .col(ColumnDef::new(DentalClinic::AcctTaxClassification)
+                    .col(ColumnDef::new(DentalClinic::AcctTaxClassificationId)
                         .integer()
                     )
                     .foreign_key(ForeignKey::create()
                         .name("dental_clinic_acct_tax_classification_foreign_key")
-                        .from(DentalClinic::Table, DentalClinic::AcctTaxClassification)
+                        .from(DentalClinic::Table, DentalClinic::AcctTaxClassificationId)
                         .to(TaxClassification::Table, TaxClassification::Id)
                     )
                     .col(ColumnDef::new(DentalClinic::AcctTradeName)
@@ -408,8 +408,7 @@ impl Migration {
                     .into_table(AccountType::Table)
                     .columns([AccountType::Name])
                     .values_panic(["Savings".into()])
-                    .values_panic(["Current".into()])
-                    .values_panic(["Checking".into()])
+                    .values_panic(["Current / Checking".into()])
                     .to_owned(),
             ).await?;
         Ok(())
@@ -483,11 +482,11 @@ pub enum DentalClinic {
     Remarks,
     AcctTIN,
     AcctBankName,
-    AcctAccountType,
+    AcctAccountTypeId,
     AcctAccountName,
     AcctAccountNumber,
-    AcctTaxType,
-    AcctTaxClassification,
+    AcctTaxTypeId,
+    AcctTaxClassificationId,
     AcctTaxpayerName,
     AcctTradeName,
     Active,
