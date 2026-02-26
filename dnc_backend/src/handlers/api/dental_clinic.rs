@@ -72,11 +72,11 @@ pub struct DentalClinicRowDb {
     // ---- accounting fields
     pub acct_tin: Option<String>,
     pub acct_bank_name: Option<String>,
-    pub acct_account_type: Option<i32>,
+    pub acct_account_type_id: Option<i32>,
     pub acct_account_name: Option<String>,
     pub acct_account_number: Option<String>,
-    pub acct_tax_type: Option<i32>,
-    pub acct_tax_classification: Option<i32>,
+    pub acct_tax_type_id: Option<i32>,
+    pub acct_tax_classification_id: Option<i32>,
     pub acct_trade_name: Option<String>,
     pub acct_taxpayer_name: Option<String>,
 
@@ -150,11 +150,11 @@ impl From<DentalClinicRowDb> for DentalClinicRow {
             // --- additional accounting fields
             acct_tin: db.acct_tin,
             acct_bank_name: db.acct_bank_name,
-            acct_account_type: db.acct_account_type,
+            acct_account_type: db.acct_account_type_id,
             acct_account_name: db.acct_account_name,
             acct_account_number: db.acct_account_number,
-            acct_tax_type: db.acct_tax_type,
-            acct_tax_classification: db.acct_tax_classification,
+            acct_tax_type: db.acct_tax_type_id,
+            acct_tax_classification: db.acct_tax_classification_id,
             acct_trade_name: db.acct_trade_name,
             acct_taxpayer_name: db.acct_taxpayer_name,
 
@@ -237,11 +237,11 @@ pub async fn get_dental_clinics(
             dental_clinic::Column::Schedule,
             dental_clinic::Column::AcctTin,
             dental_clinic::Column::AcctBankName,
-            dental_clinic::Column::AcctAccountType,
+            dental_clinic::Column::AcctAccountTypeId,
             dental_clinic::Column::AcctAccountName,
             dental_clinic::Column::AcctAccountNumber,
-            dental_clinic::Column::AcctTaxType,
-            dental_clinic::Column::AcctTaxClassification,
+            dental_clinic::Column::AcctTaxTypeId,
+            dental_clinic::Column::AcctTaxClassificationId,
             dental_clinic::Column::AcctTradeName,
             dental_clinic::Column::AcctTaxpayerName,
 
@@ -484,11 +484,11 @@ pub async fn create_dental_clinic(
         schedule: Set(body.schedule),
         acct_tin: Set(body.acct_tin.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
         acct_bank_name: Set(body.acct_bank_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
-        acct_account_type: Set(body.acct_account_type),
+        acct_account_type_id: Set(body.acct_account_type),
         acct_account_name: Set(body.acct_account_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
         acct_account_number: Set(body.acct_account_number.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
-        acct_tax_type: Set(body.acct_tax_type),
-        acct_tax_classification: Set(body.acct_tax_classification),
+        acct_tax_type_id: Set(body.acct_tax_type),
+        acct_tax_classification_id: Set(body.acct_tax_classification),
         acct_trade_name: Set(body.acct_trade_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
         acct_taxpayer_name: Set(body.acct_taxpayer_name.map(|s| s.trim().to_string()).filter(|s| !s.is_empty())),
 
@@ -524,11 +524,11 @@ pub struct PatchDentalClinicBody {
     // --- additional accounting fields
     pub acct_tin: Option<Option<String>>,
     pub acct_bank_name: Option<Option<String>>,
-    pub acct_account_type: Option<Option<i32>>,
+    pub acct_account_type_id: Option<Option<i32>>,
     pub acct_account_name: Option<Option<String>>,
     pub acct_account_number: Option<Option<String>>,
-    pub acct_tax_type: Option<Option<i32>>,
-    pub acct_tax_classification: Option<Option<i32>>,
+    pub acct_tax_type_id: Option<Option<i32>>,
+    pub acct_tax_classification_id: Option<Option<i32>>,
     pub acct_trade_name: Option<Option<String>>,
     pub acct_taxpayer_name: Option<Option<String>>,
 
@@ -604,8 +604,8 @@ pub async fn patch_dental_clinic(
     if let Some(v) = body.acct_bank_name {
         am.acct_bank_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
     }
-    if let Some(v) = body.acct_account_type {
-        am.acct_account_type = Set(v);
+    if let Some(v) = body.acct_account_type_id{
+        am.acct_account_type_id = Set(v);
     }
     if let Some(v) = body.acct_account_name {
         am.acct_account_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
@@ -613,11 +613,11 @@ pub async fn patch_dental_clinic(
     if let Some(v) = body.acct_account_number {
         am.acct_account_number = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
     }
-    if let Some(v) = body.acct_tax_type {
-        am.acct_tax_type = Set(v);
+    if let Some(v) = body.acct_tax_type_id {
+        am.acct_tax_type_id = Set(v);
     }
-    if let Some(v) = body.acct_tax_classification {
-        am.acct_tax_classification = Set(v);
+    if let Some(v) = body.acct_tax_classification_id {
+        am.acct_tax_classification_id = Set(v);
     }
     if let Some(v) = body.acct_trade_name {
         am.acct_trade_name = Set(v.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
