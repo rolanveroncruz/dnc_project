@@ -54,3 +54,4 @@ pub use api::extended_dental_clinic::get_all_clinics_and_capabilities;
 
 pub use api::endorsement_type::get_endorsement_types;
 pub use api::endorsement_billing_period_type::get_endorsement_billing_period_types;
+pub use api::endorsements::{get_all_endorsements, get_endorsement_by_id, create_endorsement, patch_endorsement};
