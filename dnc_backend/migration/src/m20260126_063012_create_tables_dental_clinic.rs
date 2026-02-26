@@ -408,8 +408,7 @@ impl Migration {
                     .into_table(AccountType::Table)
                     .columns([AccountType::Name])
                     .values_panic(["Savings".into()])
-                    .values_panic(["Current".into()])
-                    .values_panic(["Checking".into()])
+                    .values_panic(["Current / Checking".into()])
                     .to_owned(),
             ).await?;
         Ok(())
