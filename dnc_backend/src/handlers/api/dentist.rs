@@ -16,9 +16,6 @@ use crate::entities::{
     dentist_contract,
     dentist_history,
     dentist_status,
-    tax_classification,
-    tax_type,
-    account_type,
 };
 
 /// Dentist row + lookup "name" fields
@@ -47,14 +44,7 @@ pub struct DentistWithLookups {
     pub accreditation_date: Option<String>,
     pub accre_contract_sent_date: Option<String>,
     pub accre_contract_file_path: Option<String>,
-    pub acc_tin: Option<String>,
-    pub acc_bank_name: Option<String>,
 
-    pub acc_account_type_id: Option<i32>,
-    pub acc_account_name: Option<String>,
-    pub acc_account_number: Option<String>,
-    pub acc_tax_type_id: Option<i32>,
-    pub acc_tax_classification_id: Option<i32>,
 
     // ---- Lookup names (these must match the column aliases below)
     pub dentist_contract_name: Option<String>,
@@ -72,9 +62,6 @@ fn dentist_with_lookups_query() -> sea_orm::Select<dentist::Entity> {
         .join(JoinType::LeftJoin, dentist::Relation::DentistContract.def())
         .join(JoinType::LeftJoin, dentist::Relation::DentistHistory.def())
         .join(JoinType::LeftJoin, dentist::Relation::DentistStatus.def())
-        .join(JoinType::LeftJoin, dentist::Relation::TaxType.def())
-        .join(JoinType::LeftJoin, dentist::Relation::TaxClassification.def())
-        .join(JoinType::LeftJoin, dentist::Relation::AccountType.def())
         // select dentist columns + aliases for lookup names
         .select_only()
         .columns(dentist::Column::iter())
@@ -90,17 +77,6 @@ fn dentist_with_lookups_query() -> sea_orm::Select<dentist::Entity> {
         .expr_as(
             Expr::col((dentist_status::Entity, dentist_status::Column::Name)),
             "dentist_status_name",
-        )
-        .expr_as(
-            Expr::col((tax_type::Entity, tax_type::Column::Name)),
-            "tax_type_name")
-        .expr_as(
-            Expr::col( (tax_classification::Entity, tax_classification::Column::Name)),
-            "tax_classification_name",
-        )
-        .expr_as(
-            Expr::col((account_type::Entity, account_type::Column::Name)),
-            "account_type_name",
         )
 }
 
@@ -159,7 +135,6 @@ pub struct CreateDentistRequest {
     pub prc_expiry_date: Option<sea_orm::prelude::Date>,
     pub notes: Option<String>,
     pub dentist_decline_remarks: Option<String>,
-    pub acc_account_type_id: Option<i32>,
 
     pub dentist_status_id: Option<i32>,
     pub dentist_history_id: Option<i32>,
@@ -170,13 +145,6 @@ pub struct CreateDentistRequest {
     pub accreditation_date: Option<String>,
     pub accre_contract_sent_date: Option<String>,
     pub accre_contract_file_path: Option<String>,
-
-    pub acc_tin: Option<String>,
-    pub acc_bank_name: Option<String>,
-    pub acc_account_name: Option<String>,
-    pub acc_account_number: Option<String>,
-    pub acc_tax_type_id: Option<i32>,
-    pub acc_tax_classification_id: Option<i32>,
 }
 
 /// ----- PATCH request (PATCH)
@@ -206,14 +174,6 @@ pub struct PatchDentistRequest {
     pub accreditation_date: Option<Option<String>>,
     pub accre_contract_sent_date: Option<Option<String>>,
     pub accre_contract_file_path: Option<Option<String>>,
-
-    pub acc_tin: Option<Option<String>>,
-    pub acc_bank_name: Option<Option<String>>,
-    pub acc_account_name: Option<Option<String>>,
-    pub acc_account_type_id: Option<Option<i32>>,
-    pub acc_account_number: Option<Option<String>>,
-    pub acc_tax_type_id: Option<Option<i32>>,
-    pub acc_tax_classification_id: Option<Option<i32>>,
 }
 
 /// Dentist row + lookup "name" fields
@@ -239,7 +199,6 @@ pub async fn create_dentist(
 
         dentist_status_id: Set(body.dentist_status_id),
         dentist_decline_remarks: Set(body.dentist_decline_remarks),
-        acc_account_type_id: Set(body.acc_account_type_id),
         dentist_history_id: Set(body.dentist_history_id),
         dentist_requested_by: Set(body.dentist_requested_by),
 
@@ -249,12 +208,6 @@ pub async fn create_dentist(
         accre_contract_sent_date: Set(body.accre_contract_sent_date),
         accre_contract_file_path: Set(body.accre_contract_file_path),
 
-        acc_tin: Set(body.acc_tin),
-        acc_bank_name: Set(body.acc_bank_name),
-        acc_account_name: Set(body.acc_account_name),
-        acc_account_number: Set(body.acc_account_number),
-        acc_tax_type_id: Set(body.acc_tax_type_id),
-        acc_tax_classification_id: Set(body.acc_tax_classification_id),
 
         ..Default::default()
     };
@@ -356,27 +309,6 @@ pub async fn patch_dentist(
         am.accre_contract_file_path = Set(v);
     }
 
-    if let Some(v) = body.acc_tin {
-        am.acc_tin = Set(v);
-    }
-    if let Some(v) = body.acc_bank_name {
-        am.acc_bank_name = Set(v);
-    }
-    if let Some(v) = body.acc_account_type_id {
-        am.acc_account_type_id = Set(v);
-    }
-    if let Some(v) = body.acc_account_name {
-        am.acc_account_name = Set(v);
-    }
-    if let Some(v) = body.acc_account_number {
-        am.acc_account_number = Set(v);
-    }
-    if let Some(v) = body.acc_tax_type_id {
-        am.acc_tax_type_id = Set(v);
-    }
-    if let Some(v) = body.acc_tax_classification_id {
-        am.acc_tax_classification_id = Set(v);
-    }
 
     let updated: dentist::Model = am.update(&state.db).await.map_err(|e| {
         tracing::error!("Failed to patch dentist id={id}: {e:?}");

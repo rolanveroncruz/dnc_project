@@ -29,13 +29,6 @@ export interface DentistWithLookups {
     accreditation_date: string | null;
     accre_contract_sent_date: string | null;
     accre_contract_file_path: string | null;
-    acc_tin: string | null;
-    acc_bank_name: string | null;
-    acc_account_type_id: number | null;
-    acc_account_name: string | null;
-    acc_account_number: string | null;
-    acc_tax_type_id: number | null;
-    acc_tax_classification_id: number | null;
 
     // ---- Lookup names (aliased in the query via expr_as)
     dentist_contract_name: string | null;
@@ -73,14 +66,6 @@ export interface CreateDentistBody {
     accre_contract_sent_date?: string | null;
     accre_contract_file_path?: string | null;
 
-    acc_tin?: string | null;
-    acc_bank_name?: string | null;
-    acc_account_type_id?: number | null;
-    acc_account_name?: string | null;
-    acc_account_number?: string | null;
-
-    acc_tax_type_id?: number | null;
-    acc_tax_classification_id?: number | null;
 }
 /**
  * ANNOTATED CHANGE: Patch body to match Rust PatchDentistRequest semantics.
@@ -115,17 +100,6 @@ export interface PatchDentistBody {
     accreditation_date?: string | null;
     accre_contract_sent_date?: string | null;
     accre_contract_file_path?: string | null;
-
-    acc_tin?: string | null;
-    acc_bank_name?: string | null;
-    acc_account_name?: string | null;
-    acc_account_number?: string | null;
-
-    // ANNOTATED CHANGE: add missing patch field (your Rust has this in Create; if you add it to Patch later, keep here)
-    acc_account_type_id?: number | null;
-
-    acc_tax_type_id?: number | null;
-    acc_tax_classification_id?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

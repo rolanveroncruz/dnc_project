@@ -252,3 +252,109 @@
 .capabilities-list {
     max-height: 210px; /* was 220px */
 }
+/* Make the top form more compact (more vertical space for tabs) */
+.details-grid.compact {
+    gap: 10px; /* was likely larger */
+}
+
+.details-grid.compact .field {
+    margin: 0;
+}
+
+/* Tighten Material form-field vertical padding */
+.details-grid.compact .mat-mdc-form-field-infix {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    min-height: 40px;
+}
+
+/* Capabilities list tighter */
+.compact-caps .capability-item {
+    margin: 0;
+    padding: 0;
+}
+
+/* Tabs area */
+.bottom-tabs {
+    margin-top: 8px;
+}
+
+.tab-pad {
+    padding: 12px 4px 4px;
+}
+
+/* Accounting 3x3 grid */
+.accounting-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .accounting-grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .accounting-grid {
+        grid-template-columns: 1fr;
+    }
+}
+:host {
+    display: block;
+}
+
+/* Tighten ALL fields in the top form */
+.details-grid.compact .mat-mdc-form-field {
+    margin: 0;
+}
+
+/* Reduce infix height + vertical padding */
+.details-grid.compact .mat-mdc-form-field-infix {
+    min-height: 36px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+/* Reduce label/outline spacing a bit */
+.details-grid.compact .mat-mdc-form-field-subscript-wrapper {
+    display: none; /* hides hint/error area; only do this if you can live with it */
+}
+
+/* Make inputs align better vertically */
+.details-grid.compact input.mat-mdc-input-element,
+.details-grid.compact textarea.mat-mdc-input-element {
+    line-height: 1.2;
+}
+
+/* Slightly smaller toggle footprint */
+.details-grid.compact .mat-mdc-slide-toggle {
+    margin-top: 4px;
+}
+.details-grid.compact textarea {
+    resize: vertical; /* user can expand if needed */
+}
+.capabilities-list.compact-caps {
+    max-height: 140px;   /* adjust */
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.capabilities-list.compact-caps .capability-item {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+.details-grid.compact {
+    gap: 8px;
+}
+
+.top-header {
+    padding-bottom: 4px;
+}
+
+.section-divider {
+    margin: 8px 0;
+}
