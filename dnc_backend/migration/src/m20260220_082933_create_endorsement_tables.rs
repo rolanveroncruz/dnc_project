@@ -228,6 +228,40 @@ pub enum EndorsementCompany{
     Name,
 }
 
+
+/*
+ The Member table lists all members.
+ */
+pub enum Member{
+    Table,
+    Id,
+    FirstName,
+    LastName,
+    MiddleName,
+    EmailAddress,
+    BirthDate,
+    MobileNumber,
+}
+/*
+ The Member
+ */
+pub enum MasterList{
+    Table,
+    Id,
+    FileName,
+    EndorsementId,
+    MemberId,
+
+}
+
+pub enum EndorsementAdditionalRules{
+    Table,
+    Id,
+    EndorsementId,
+}
+pub enum EndorsementRates{
+    Table,
+}
 #[derive(Iden)]
 pub enum EndorsementType{
     Table,
