@@ -1,0 +1,172 @@
+<mat-card class="page-card">
+    <mat-card-header class="card-header">
+        <div class="title-block">
+            <mat-card-title class="mat-headline-5">
+                {{ isEditMode() ? 'Edit Endorsement' : 'New Endorsement' }}
+
+                <!-- CHANGED: Unsaved changes pill (Material chip) -->
+                @if (hasUnsavedChanges()) {
+                    <mat-chip class="unsaved-chip" color="warn" aria-selected="true" >Unsaved changes</mat-chip>
+                }
+            </mat-card-title>
+
+            <mat-card-subtitle>
+                Maintain endorsement details and related billing rules
+            </mat-card-subtitle>
+        </div>
+
+        <!-- CHANGED: header actions -->
+        <div class="header-actions">
+            <button
+                mat-stroked-button
+                type="button"
+                (click)="onDiscardChanges()"
+                [disabled]="!hasUnsavedChanges() || loadState() === 'loading' || loadState() === 'saving'">
+                Cancel
+            </button>
+
+
+            <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                (click)="onSave()"
+                [disabled]="!hasUnsavedChanges() || form.invalid || loadState() === 'loading' || loadState() === 'saving'">
+                Save
+            </button>
+        </div>
+    </mat-card-header>
+
+    <!-- CHANGED: progress indicator -->
+    @if (loadState() === 'loading' || loadState() === 'saving') {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+
+    <mat-card-content class="card-content" [formGroup]="form">
+        <!-- Top section (≈60% height) -->
+        <section class="top-grid">
+            <!-- Column 1 -->
+            <div class="col">
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>HMO</mat-label>
+                    <mat-select formControlName="hmo_id">
+                        @for (hmo of hmoOptions(); track hmo.id) {
+                            <mat-option [value]="hmo.id">{{ hmo.short_name }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                    <app-addable-autocomplete
+                        label="Company"
+                        placeholder="Select company or enter new..."
+                        [items]="companyOptions()"
+                        [showChips]="false"
+                        [selectAddsToChips]="false"
+                        formControlName="endorsement_company_id"
+                        (itemSelected)="onCompanySelected($event)"
+                        (itemCreated)="onCompanyCreated($event)">
+                        </app-addable-autocomplete>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Agmt/Corp Number</mat-label>
+                    <input
+                        matInput
+                        formControlName="agreement_corp_number"
+                        placeholder="e.g., AGMT-2026-001" />
+                </mat-form-field>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="col">
+                <div class="radio-block">
+                    <div class="block-label">Billing Frequency</div>
+
+                    <mat-radio-group formControlName="billingFrequency" class="radio-group">
+                        <mat-radio-button value="annual">Billed Annually</mat-radio-button>
+                        <mat-radio-button value="monthly">Billed Monthly</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+
+                    <mat-label>Retainer Fee</mat-label>
+                    <app-currency-input />
+
+                <div class="date-row">
+                    <mat-form-field appearance="outline" class="w">
+                        <mat-label>Date Start</mat-label>
+                        <input matInput [matDatepicker]="dpStart" formControlName="date_start" />
+                        <mat-datepicker-toggle matSuffix [for]="dpStart"></mat-datepicker-toggle>
+                        <mat-datepicker #dpStart></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w">
+                        <mat-label>Date End</mat-label>
+                        <input matInput [matDatepicker]="dpEnd" formControlName="date_end" />
+                        <mat-datepicker-toggle matSuffix [for]="dpEnd"></mat-datepicker-toggle>
+                        <mat-datepicker #dpEnd></mat-datepicker>
+                    </mat-form-field>
+                </div>
+
+                @if (form.value.date_start && form.value.date_end && form.value.date_end < form.value.date_start) {
+                    <div class="hint error">
+                        Date End must be on/after Date Start.
+                    </div>
+                }
+            </div>
+
+            <!-- Column 3 -->
+            <div class="col">
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Endorsement Type</mat-label>
+                    <mat-select formControlName="endorsement_type_id">
+                        @for (t of endorsementTypeOptions(); track t.endorsement_type_id) {
+                            <mat-option [value]="t.endorsement_type_id">{{ t.endorsement_type_name }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Remarks</mat-label>
+                    <textarea
+                        matInput
+                        rows="5"
+                        formControlName="remarks"
+                        placeholder="Optional notes..."></textarea>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w">
+                    <mat-label>Endorsement Method</mat-label>
+                    <input matInput formControlName="endorsement_method"/>
+                </mat-form-field>
+            </div>
+        </section>
+
+        <!-- Bottom section (tabs) -->
+        <section class="bottom-tabs">
+            <mat-tab-group class="tabs" animationDuration="150ms">
+                <mat-tab label="Special Services Fees">
+                    <div class="tab-pad">
+                        <div class="placeholder">Configure special service fees here.</div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Special Services Counts">
+                    <div class="tab-pad">
+                        <div class="placeholder">Configure special services counts here.</div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="High End Services Counts">
+                    <div class="tab-pad">
+                        <div class="placeholder">Configure high-end services counts here.</div>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Additional Billing Rules">
+                    <div class="tab-pad">
+                        <div class="placeholder">Configure additional billing rules here.</div>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+        </section>
+    </mat-card-content>
+</mat-card>

@@ -1,3 +1,29 @@
+/* CHANGED: header actions layout + pill styling */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.unsaved-chip {
+    margin-left: 10px;
+    transform: translateY(-2px);
+}
+
+/* keep your existing layout styles below... */
 .page-card {
     height: 100%;
     display: flex;
@@ -106,4 +132,43 @@
     .date-row {
         grid-template-columns: 1fr;
     }
+}
+/* Unsaved changes pill */
+.unsaved-chip {
+    border-radius: 999px;         // ✅ pill
+    padding: 0 10px;
+    height: 26px;
+    line-height: 26px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .2px;
+
+    /* ✅ color */
+    background: rgba(255, 193, 7, 0.18); // amber-ish background
+    color: #8a5b00;                      // darker amber text
+    border: 1px solid rgba(255, 193, 7, 0.55);
+
+    /* keep it aligned nicely beside the title */
+    margin-left: 10px;
+    vertical-align: middle;
+
+    /* optional: subtle emphasis */
+    box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+.unsaved-chip {
+    border-radius: 999px;
+    padding: 0 10px;
+    height: 26px;
+    line-height: 26px;
+    display: inline-flex;
+    align-items: center;
+
+    font-weight: 800;
+    font-size: 12px;
+
+    background: #ffec99;          /* soft yellow */
+    border: 1px solid #ffd43b;    /* golden border */
+    color: #5c4a00;
+
+    margin-left: 10px;
 }

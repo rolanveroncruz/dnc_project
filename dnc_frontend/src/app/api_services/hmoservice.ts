@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {environment} from '../../environments/environment';
 import {HttpClient} from '@angular/common/http';
-import {EMPTY, Observable} from 'rxjs';
+import {EMPTY, Observable,map} from 'rxjs';
 import {LoginService} from '../login.service';
 
 export interface HMOPageInfo{
@@ -29,6 +29,12 @@ export interface HMO{
   last_modified_by: string;
   last_modified_on: Date;
 }
+export interface HMOOptions{
+    id:number,
+  short_name: string;
+  long_name: string;
+  expect_a_master_list: boolean;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +47,22 @@ export class HMOService {
     let token = this.LoginService.token();
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<HMOPageInfo>(`${this.apiUrl}/api/hmos`, {headers});
+  }
+  getHMOOptions():Observable<HMOOptions[]>{
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.get<HMOPageInfo>(`${this.apiUrl}/api/hmos`, {headers})
+        .pipe(
+            map((page)=> page.items.map
+            (
+                (hmo)=>
+                    ({id:hmo.id,
+                    short_name:hmo.short_name,
+                    long_name:hmo.long_name,
+                    expect_a_master_list:hmo.expect_a_master_list,})
+            )
+            )
+        );
   }
 
   getHMOById(id:number):Observable<HMO>{
