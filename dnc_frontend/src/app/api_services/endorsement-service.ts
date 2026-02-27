@@ -114,6 +114,10 @@ export interface EndorsementTypeOptions {
     endorsement_type_id: number;
     endorsement_type_name: string;
 }
+interface BillingFrequencyDb{
+    id: number;
+    name: string;
+}
 export interface BillingFrequencyOptions{
     billing_frequency_option_id: number;
     billing_frequency_option_name: string;
@@ -168,8 +172,12 @@ export class EndorsementService {
      * GET /api/endorsement_billing_period_types
      */
     getEndorsementBillingPeriodTypes(): Observable<BillingFrequencyOptions[]> {
-        return this.http.get<BillingFrequencyOptions[]>(`${this.baseUrl}/api/endorsement_billing_period_types`,
-            { headers: this.authHeaders() });
+        return this.http.get<BillingFrequencyDb[]>(`${this.baseUrl}/api/endorsement_billing_period_types`,
+            { headers: this.authHeaders() })
+            .pipe(map(options => options.map(option => ({
+                billing_frequency_option_id: option.id,
+                billing_frequency_option_name: option.name,
+            }))))
     }
 
 
@@ -186,21 +194,21 @@ export class EndorsementService {
      * GET /endorsements/:id
      */
     get_endorsement_by_id(id: number): Observable<EndorsementResponse> {
-        return this.http.get<EndorsementResponse>(`${this.baseUrl}/api/endorsements/${id}`);
+        return this.http.get<EndorsementResponse>(`${this.baseUrl}/api/endorsements/${id}`, { headers: this.authHeaders() });
     }
 
     /**
      * POST /endorsements
      */
     create_endorsement(body: CreateEndorsementRequest): Observable<EndorsementResponse> {
-        return this.http.post<EndorsementResponse>(this.baseUrl, body);
+        return this.http.post<EndorsementResponse>(`${this.baseUrl}/api/endorsements`, body, { headers: this.authHeaders() });
     }
 
     /**
      * PATCH /endorsements/:id
      */
     patch_endorsement(id: number, body: PatchEndorsementRequest): Observable<EndorsementResponse> {
-        return this.http.patch<EndorsementResponse>(`${this.baseUrl}/${id}`, body);
+        return this.http.patch<EndorsementResponse>(`${this.baseUrl}/api/endorsements/${id}`, body, { headers: this.authHeaders() });
     }
 
     // --- helpers

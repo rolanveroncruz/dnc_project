@@ -36,14 +36,12 @@ export class SetupEndorsements implements OnInit{
 
     readonly columns: TableColumn<EndorsementListRow>[] = [
         { key: 'id', label: 'ID' },
-        { key: 'last_name', label: 'Last Name' },
-        { key: 'given_name', label: 'Given Name' },
-        { key: 'middle_name', label: 'Middle Name' },
-        { key: 'dentist_contract_name', label: 'Dentist Contract' },
-        { key: 'prc_no', label: 'PRC License' },
-        { key: 'prc_expiry_date', label: 'PRC Expiry Date' },
-        { key: 'dentist_status_name', label: 'Status'},
-        { key: 'dentist_history_name', label: 'History'},
+        { key: 'hmo_name', label: 'HMO' },
+        { key: 'company_name', label: 'Company' },
+        { key: 'date_start', label: 'Date Start', cellTemplateKey: 'date' },
+        { key: 'date_end', label: 'Date End', cellTemplateKey: 'date' },
+        { key: 'type_name', label: 'Type' },
+        { key: 'billing_period_type_name', label: 'Billing Period' },
     ];
     ngOnInit(): void {
         this.endorsementsService.getAll()

@@ -81,14 +81,15 @@
                 <div class="radio-block">
                     <div class="block-label">Billing Frequency</div>
 
-                    <mat-radio-group formControlName="billingFrequency" class="radio-group">
-                        <mat-radio-button value="annual">Billed Annually</mat-radio-button>
-                        <mat-radio-button value="monthly">Billed Monthly</mat-radio-button>
+                    <mat-radio-group formControlName="endorsement_billing_period_type_id" class="radio-group">
+                        @for (opt of billingFrequencyOptions(); track opt.billing_frequency_option_id) {
+                            <mat-radio-button [value]="opt.billing_frequency_option_id">{{ opt.billing_frequency_option_name}}</mat-radio-button>
+                        }
                     </mat-radio-group>
                 </div>
 
                     <mat-label>Retainer Fee</mat-label>
-                    <app-currency-input />
+                    <app-currency-input formControlName="retainer_fee" />
 
                 <div class="date-row">
                     <mat-form-field appearance="outline" class="w">

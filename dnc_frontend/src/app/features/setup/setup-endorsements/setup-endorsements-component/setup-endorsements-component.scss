@@ -18,41 +18,39 @@
     align-items: center;
 }
 
-.unsaved-chip {
-    margin-left: 10px;
-    transform: translateY(-2px);
-}
 
 /* keep your existing layout styles below... */
 .page-card {
-    height: 100%;
+    height: calc(100vh - 64px);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .card-header {
+    flex: 0 0 auto;
     padding-bottom: 0.25rem;
 }
 
 .card-content {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0; // important for nested scrolling areas
+    overflow: auto;
+    padding-top: 16px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-height: 0; // important for nested scrolling areas
 }
 
 /* Top portion ~60% */
 .top-grid {
     flex: 0 0 60%;
-    min-height: 320px;
+    min-height: 0;
 
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 1rem;
 
-    overflow: auto;
-    padding-right: 0.25rem;
 }
 
 .col {
@@ -154,21 +152,4 @@
 
     /* optional: subtle emphasis */
     box-shadow: 0 1px 0 rgba(0,0,0,.06);
-}
-.unsaved-chip {
-    border-radius: 999px;
-    padding: 0 10px;
-    height: 26px;
-    line-height: 26px;
-    display: inline-flex;
-    align-items: center;
-
-    font-weight: 800;
-    font-size: 12px;
-
-    background: #ffec99;          /* soft yellow */
-    border: 1px solid #ffd43b;    /* golden border */
-    color: #5c4a00;
-
-    margin-left: 10px;
 }
