@@ -13,11 +13,13 @@ impl MigrationTrait for Migration {
         Self::create_member_table(manager).await?;
         Self::create_master_list_member_table(manager).await?;
         Self::create_endorsement_rates_table(manager).await?;
+        Self::create_endorsement_counts_table(manager).await?;
         Ok(())
 
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        Self::drop_endorsement_counts_table(manager).await?;
         Self::drop_endorsement_rates_table(manager).await?;
         Self::drop_master_list_member_table(manager).await?;
         Self::drop_member_table(manager).await?;
@@ -182,6 +184,49 @@ impl Migration {
         Ok(())
     }
 
+    pub async fn create_endorsement_counts_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager
+            .create_table( Table::create()
+                .table(EndorsementCounts::Table)
+                    .if_not_exists()
+                .col(ColumnDef::new(EndorsementCounts::Id)
+                    .integer()
+                    .not_null()
+                    .primary_key()
+                    .auto_increment()
+                )
+                .col(ColumnDef::new(EndorsementCounts::EndorsementId)
+                    .integer()
+                    .not_null()
+                )
+                .foreign_key(ForeignKey::create()
+                    .name("fk_endorsement_count_endorsement_id")
+                    .from(EndorsementCounts::Table, EndorsementCounts::Id)
+                    .to(EndorsementCounts::Table, EndorsementCounts::Id)
+                )
+                .col(ColumnDef::new(EndorsementCounts::DentalServicesId)
+                    .integer()
+                    .not_null()
+                )
+                .foreign_key(ForeignKey::create()
+                    .name("fk_endorsement_count_dental_services_id")
+                    .from(EndorsementCounts::Table, EndorsementCounts::Id)
+                    .to(EndorsementCounts::Table, EndorsementCounts::Id)
+                )
+                .col(ColumnDef::new(EndorsementCounts::Count)
+                    .integer()
+                    .not_null()
+                )
+                .to_owned()).await?;
+        Ok(())
+
+    }
+
+    pub async fn drop_endorsement_counts_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+        manager.drop_table(Table::drop().table(EndorsementCounts::Table).to_owned()).await?;
+        Ok(())
+    }
+
 }
 /*
 The Member represents the people endorsed in the MasterList.
@@ -230,4 +275,13 @@ pub enum EndorsementRates {
     EndorsementId,
     DentalServicesId,
     Rate,
+}
+
+#[derive(Iden)]
+pub enum EndorsementCounts{
+    Table,
+    Id,
+    EndorsementId,
+    DentalServicesId,
+    Count,
 }

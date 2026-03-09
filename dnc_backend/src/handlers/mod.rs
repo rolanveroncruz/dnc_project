@@ -59,3 +59,4 @@ pub use api::endorsements::{get_all_endorsements, get_endorsement_by_id, create_
 pub use api::endorsement_company::{get_endorsement_companies, post_endorsement_company};
 
 pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rate};
+pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count};

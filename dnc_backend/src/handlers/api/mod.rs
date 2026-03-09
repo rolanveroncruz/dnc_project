@@ -29,3 +29,4 @@ pub mod endorsement_billing_period_type;
 pub mod endorsement_company;
 pub mod endorsements;
 pub mod endorsement_rates;
+pub mod endorsement_counts;

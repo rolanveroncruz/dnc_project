@@ -9,16 +9,22 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        DataObjectMigration::add_dataobject(manager, "endorsement_rates_mls", "Endorsement Rates Master List").await?;
-        PermissionMigration::add_all_permissions(manager, "endorsement_rates_mls").await?;
-        RolePermissionMigration::insert_role_all_permissions(manager, "Administrator", "endorsement_rates_mls").await?;
+        DataObjectMigration::add_dataobject(manager, "endorsement_rates", "Endorsement Rates Master List").await?;
+        PermissionMigration::add_all_permissions(manager, "endorsement_rates").await?;
+        RolePermissionMigration::insert_role_all_permissions(manager, "Administrator", "endorsement_rates").await?;
+        DataObjectMigration::add_dataobject(manager, "endorsement_counts", "Endorsement Rates Master List").await?;
+        PermissionMigration::add_all_permissions(manager, "endorsement_counts").await?;
+        RolePermissionMigration::insert_role_all_permissions(manager, "Administrator", "endorsement_counts").await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        RolePermissionMigration::del_role_all_permissions(manager, "Administrator", "endorsement_rates_mls").await?;
-        PermissionMigration::del_all_permissions(manager, "endorsement_rates_mls").await?;
-        DataObjectMigration::delete_dataobject(manager, "endorsement_rates_mls").await?;
+        RolePermissionMigration::del_role_all_permissions(manager, "Administrator", "endorsement_counts").await?;
+        PermissionMigration::del_all_permissions(manager, "endorsement_counts").await?;
+        DataObjectMigration::delete_dataobject(manager, "endorsement_counts").await?;
+        RolePermissionMigration::del_role_all_permissions(manager, "Administrator", "endorsement_counts").await?;
+        PermissionMigration::del_all_permissions(manager, "endorsement_counts").await?;
+        DataObjectMigration::delete_dataobject(manager, "endorsement_counts").await?;
 
         Ok(())
 
