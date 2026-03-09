@@ -6,7 +6,9 @@ import {
     EndorsementService,
     EndorsementTypeOptions,
     BillingFrequencyOptions,
-    PatchEndorsementRequest
+    PatchEndorsementRequest,
+    EndorsementRateResponse,
+    EndorsementCountResponse,
 } from '../../../../api_services/endorsement-service';
 import {CurrencyInputComponent} from '../../../../components/currency-input-component/currency-input-component';
 import {DentalServicesService,DentalService} from '../../../../api_services/dental-services-service';
@@ -26,7 +28,7 @@ import {MatButton} from '@angular/material/button';
 import {
     AddableAutocompleteComponent, AddableAutocompleteItem
 } from '../../../../components/addable-autocomplete-component/addable-autocomplete-component';
-import {catchError, finalize, map, of, switchMap, tap} from 'rxjs';
+import {Observable, catchError, finalize, forkJoin, map as rxMap, of, switchMap, tap} from 'rxjs';
 import {ExistingMasterListMeta} from './endorsement-master-list-upload-component/data-types';
 import {
     EndorsementMasterListUploadComponent
@@ -55,8 +57,6 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         'highEndServicesCounts',
     ],
 };
-type ServiceFeeRule = { dental_service_id: number; rate: number | null };
-type ServiceCountRule = { dental_service_id: number; limit: number | null };
 
 
 @Component({
@@ -66,7 +66,6 @@ type ServiceCountRule = { dental_service_id: number; limit: number | null };
     imports: [
         CommonModule,
         ReactiveFormsModule,
-
         MatCardModule,
         MatFormFieldModule,
         MatInputModule,
@@ -80,7 +79,6 @@ type ServiceCountRule = { dental_service_id: number; limit: number | null };
         MatButton,
         AddableAutocompleteComponent,
         CurrencyInputComponent,
-        AddableAutocompleteComponent,
         EndorsementMasterListUploadComponent,
         SpecialServicesFeesTabComponent,
         SpecialServicesCountsTabComponent,
@@ -171,20 +169,32 @@ export class SetupEndorsementsComponent implements OnInit{
     readonly specialServicesCountsEnabled = computed(()=>this.enabledSections().has('specialServicesCounts'));
     readonly highEndServicesCountsEnabled = computed(()=>this.enabledSections().has('highEndServicesCounts'));
     readonly additionalBillingRulesEnabled = computed(()=>this.enabledSections().has('additionalBillingRules'));
+    readonly loadedRateRows = signal<EndorsementRateResponse[]>([]);
+    readonly loadedCountRows = signal<EndorsementCountResponse[]>([]);
 
     /*
     * API Helpers and Functions
      */
-    private feeRow(serviceId:number){
+    private feeRow(
+        serviceId:number,
+        recordId:number|null=null,
+        rate:number|null=null
+    ){
         return this.fb.group({
+            id: new FormControl<number|null> (recordId),
             dental_service_id: new FormControl<number>(serviceId, {nonNullable: true}),
-            rate: new FormControl<number|null>(null, [Validators.min(0)]),
+            rate: new FormControl<number|null>(rate, [Validators.min(0)]),
         })
     };
-    private countRow(serviceId:number){
+    private countRow(
+        serviceId:number,
+        recordId:number|null=null,
+        limit:number|null=null
+    ){
         return this.fb.group({
+            id: new FormControl<number|null> (recordId),
             dental_service_id: new FormControl<number>(serviceId, {nonNullable: true}),
-            limit: new FormControl<number|null>(null, [Validators.min(0)]),
+            limit: new FormControl<number|null>(limit, [Validators.min(0)]),
         })
     };
 // ✅ NEW: convenience getters
@@ -199,13 +209,37 @@ export class SetupEndorsementsComponent implements OnInit{
     }
 
     private rebuildRuleMatrices():void{
-        const specialServicesFeesRows = this.specialServices().map(s=>this.feeRow(s.id));
+        const rateMap = new Map(this.loadedRateRows().map(r=>[r.dental_service_id, r] as const));
+
+        const countMap = new Map(this.loadedCountRows().map(c=>[c.dental_service_id, c] as const));
+        const specialServicesFeesRows = this.specialServices().map(s=>{
+            const existing = rateMap.get(s.id);
+            return this.feeRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.rate != null? Number(existing.rate) : null,
+            );
+        });
         this.form.setControl('specialServicesFees', this.fb.array(specialServicesFeesRows));
 
-        const specialServicesCountRows = this.specialServices().map(s=>this.countRow(s.id));
+        const specialServicesCountRows = this.specialServices().map(s=>{
+            const existing = countMap.get(s.id);
+            return this.countRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.count ?? null,
+            );
+        });
         this.form.setControl('specialServicesCounts', this.fb.array(specialServicesCountRows));
 
-        const highEndCountRows = this.highEndServices().map(s=>this.countRow(s.id));
+        const highEndCountRows = this.highEndServices().map(s=>{
+            const existing = countMap.get(s.id);
+            return this.countRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.count ?? null,
+            );
+        });
         this.form.setControl('highEndServicesCounts', this.fb.array(highEndCountRows));
     }
 
@@ -214,7 +248,7 @@ export class SetupEndorsementsComponent implements OnInit{
         return this.endorsementService.getEndorsementCompanies()
             .pipe(
                 takeUntilDestroyed(this.destroyRef),
-                map((items)=>
+                rxMap((items)=>
                     items.map((x)=>({
                         id: String(x.id),
                         label:x.name
@@ -223,21 +257,6 @@ export class SetupEndorsementsComponent implements OnInit{
     }
 
     ngOnInit(): void {
-// ✅ TEMP DEBUG: verify rules matrix toggles correctly
-        const logEnabled = () => {
-            console.log('endorsement_type_id =', this.endorsementTypeIdSig(), {
-                enabledSections: Array.from(this.enabledSections().values()),
-                feesEnabled: this.specialServicesFeesEnabled(),
-                specialCountsEnabled: this.specialServicesCountsEnabled(),
-                highEndCountsEnabled: this.highEndServicesCountsEnabled(),
-            });
-        };
-        logEnabled();
-        this.form.controls.endorsement_type_id.valueChanges
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => logEnabled());
-
-
 
         this.hmoService.getHMOOptions()
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -305,6 +324,10 @@ export class SetupEndorsementsComponent implements OnInit{
 
     // CHANGED
     private resetForNew(): void {
+        this.loadedRateRows.set([]);
+        this.loadedCountRows.set([]);
+        this.masterListMeta.set(null);
+
         // Reset to defaults
         this.form.reset({
             hmo_id: null,
@@ -321,6 +344,7 @@ export class SetupEndorsementsComponent implements OnInit{
             endorsement_method: null,
         });
 
+        this.rebuildRuleMatrices();
         // Mark pristine baseline
         const snap = this.snapshotForm();
         this.baseline.set(snap);
@@ -346,48 +370,177 @@ export class SetupEndorsementsComponent implements OnInit{
             return new Date(yy, mm - 1, dd);
         };
 
-        this.endorsementService
-            .get_endorsement_by_id(id)
+        forkJoin({
+            dto: this.endorsementService.get_endorsement_by_id(id),
+            rates: this.endorsementService.getEndorsementRates(id).pipe(
+                catchError((err) => {
+                    console.error('Failed to load endorsement rates:', err);
+                    return of([] as EndorsementRateResponse[]);
+                })
+            ),
+            counts: this.endorsementService.getEndorsementCounts(id).pipe(
+                catchError((err) => {
+                    console.error('Failed to load endorsement counts:', err);
+                    return of([] as EndorsementCountResponse[]);
+                })
+            ),
+            masterListMeta: this.endorsementService.getEndorsementMasterListMeta(id).pipe(
+                catchError((err) => {
+                    console.error('Failed to load endorsement master list meta:', err);
+                    return of(null);
+                })
+            ),
+        })
             .pipe(
-                tap((dto) => {
-                    // Populate the form from DTO
+                tap(({dto, rates, counts, masterListMeta}) => {
+                    this.loadedRateRows.set(rates);
+                    this.loadedCountRows.set(counts);
+                    this.masterListMeta.set(masterListMeta);
+
                     this.form.reset({
-                        hmo_id: dto.hmo_id, // mat-select accepts number too; string is fine since you currently use string
-                        endorsement_company_id: String(dto.endorsement_company_id), // CVA expects string id
+                        hmo_id: dto.hmo_id,
+                        endorsement_company_id: String(dto.endorsement_company_id),
                         agreement_corp_number: dto.agreement_corp_number ?? '',
 
-                        endorsement_billing_period_type_id: dto.endorsement_billing_period_type_id ?? null,
-                        retainer_fee: dto.retainer_fee == null ? null : Number(dto.retainer_fee),
-                        date_start: parseIsoDate(dto.date_start),
-                        date_end: parseIsoDate(dto.date_end),
-
-                        endorsement_type_id: dto.endorsement_type_id != null ? dto.endorsement_type_id : null,
+                        endorsement_billing_period_type_id: dto.endorsement_billing_period_type_id,
+                        retainer_fee: dto.retainer_fee == null ? null: Number(dto.retainer_fee),
+                        date_start: dto.date_start ? parseIsoDate(dto.date_start) : null,
+                        date_end: dto.date_end ? parseIsoDate(dto.date_end) : null,
+                        endorsement_type_id: dto.endorsement_type_id !=null? dto.endorsement_type_id : null,
                         remarks: dto.remarks ?? '',
                         endorsement_method: dto.endorsement_method ?? null,
                     });
-
-                    // Baseline must reflect the loaded record
+                    this.rebuildRuleMatrices();
                     this.baseline.set(this.snapshotForm());
-
-                    // Make it “clean”
                     this.form.markAsPristine();
                     this.form.markAsUntouched();
-
                     this.loadState.set('idle');
                 }),
-                catchError((err) => {
+                catchError((err)=>{
                     console.error('Failed to load endorsement:', err);
                     this.loadState.set('error');
                     return of(null);
                 }),
-                finalize(() => {
+                finalize(()=>{
                     if (this.loadState() === 'loading') this.loadState.set('idle');
                 }),
                 takeUntilDestroyed(this.destroyRef),
-            )
-            .subscribe();
+            ).subscribe();
+    }
+    private buildRateRequests(endorsementId: number): Observable<EndorsementRateResponse>[] { // 🔵 CHANGED
+        if (!this.specialServicesFeesEnabled()) return [];
+
+        return this.specialServiceFeesArr.controls
+            .map(ctrl => ctrl.getRawValue())
+            .filter(row => row.rate != null)
+            .map(row => {
+                const rate = Number(row.rate).toFixed(2);
+
+                if (row.id != null) {
+                    return this.endorsementService.updateEndorsementRatePatch(
+                        endorsementId,
+                        row.id,
+                        { rate }
+                    );
+                }
+
+                return this.endorsementService.createEndorsementRate(
+                    endorsementId,
+                    {
+                        dental_service_id: Number(row.dental_service_id),
+                        rate,
+                    }
+                );
+            });
     }
 
+    private buildCountRequests(endorsementId: number): Observable<EndorsementCountResponse>[] { // ✅🔵 ADDED
+        const requests: Observable<EndorsementCountResponse>[] = [];
+
+        if (this.specialServicesCountsEnabled()) {
+            for (const ctrl of this.specialServiceCountsArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.limit == null) continue;
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementCountPatch(
+                            endorsementId,
+                            row.id,
+                            { count: Number(row.limit) }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementCount(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                count: Number(row.limit),
+                            }
+                        )
+                    );
+                }
+            }
+        }
+
+        if (this.highEndServicesCountsEnabled()) {
+            for (const ctrl of this.highEndServiceCountsArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.limit == null) continue;
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementCountPatch(
+                            endorsementId,
+                            row.id,
+                            { count: Number(row.limit) }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementCount(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                count: Number(row.limit),
+                            }
+                        )
+                    );
+                }
+            }
+        }
+
+        return requests;
+    }
+
+    private saveRuleTabs(endorsementId: number): Observable<{
+        rates: EndorsementRateResponse[];
+        counts: EndorsementCountResponse[];
+    }> { // 🔵 CHANGED
+        const requests: Observable<unknown>[] = [ // 🔵 CHANGED
+            ...this.buildRateRequests(endorsementId),
+            ...this.buildCountRequests(endorsementId),
+        ];
+
+        const save$: Observable<unknown> = requests.length > 0 // 🔵 CHANGED
+            ? forkJoin(requests)
+            : of(null);
+
+        return save$.pipe(
+            switchMap(() =>
+                forkJoin({
+                    rates: this.endorsementService.getEndorsementRates(endorsementId),
+                    counts: this.endorsementService.getEndorsementCounts(endorsementId),
+                })
+            ),
+            tap(({ rates, counts }) => {
+                this.loadedRateRows.set(rates);
+                this.loadedCountRows.set(counts);
+                this.rebuildRuleMatrices();
+            })
+        );
+    }
 
     // CHANGED
     private snapshotForm() {
@@ -406,6 +559,9 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: v.remarks ?? '',
             endorsement_method: v.endorsement_method ?? null,
+            specialServicesFees: v.specialServicesFees ?? [],
+            specialServicesCounts: v.specialServicesCounts ?? [],
+            highEndServicesCounts: v.highEndServicesCounts ?? [],
         };
     }
 
@@ -529,16 +685,24 @@ export class SetupEndorsementsComponent implements OnInit{
         console.log("Posting or Patching...");
         req$
             .pipe(
+                switchMap( (saved)=> {
+                    if (!saved) return of(null);
+
+                    const wasNew = id == null;
+                    if (wasNew) this.endorsementId.set(saved.id);
+
+                    return this.saveRuleTabs(saved.id).pipe(
+                        switchMap( ()=> of({saved, wasNew}))
+                    );
+                }),
                 catchError((err) => {
                     console.error('Save failed:', err);
                     this.loadState.set('error');
                     return of(null);
                 }),
-                tap((saved) => {
-                    if (!saved) return;
-                    const wasNew = this.endorsementId() == null;
-
-                    if (wasNew) this.endorsementId.set(saved.id);
+                tap((result) => {
+                    if (!result) return;
+                    const {saved, wasNew} = result;
 
                     this.baseline.set(this.snapshotForm());
                     this.form.markAsPristine();
@@ -575,6 +739,7 @@ export class SetupEndorsementsComponent implements OnInit{
             endorsement_method: base.endorsement_method ?? null,
         });
 
+        this.rebuildRuleMatrices();
         // Make it “clean” again
         this.form.markAsPristine();
         this.form.markAsUntouched();
