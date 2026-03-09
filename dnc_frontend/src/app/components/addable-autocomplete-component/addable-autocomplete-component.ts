@@ -11,7 +11,7 @@ import {
     effect,
     forwardRef,
     inject,
-    signal,
+    signal
 } from '@angular/core';
 import {
     ControlValueAccessor,
@@ -40,7 +40,7 @@ export type AddableAutocompleteItem = {
 
 // CVA value type:
 // - If showChips === false: the form value is a single id (string | null)
-// - If showChips === true : the form value is multiple ids (string[])
+// - If showChips === true: the form value is multiple ids (string[])
 export type AddableAutocompleteValue = string | null | string[];
 
 @Component({
@@ -69,6 +69,7 @@ export type AddableAutocompleteValue = string | null | string[];
 })
 export class AddableAutocompleteComponent implements ControlValueAccessor {
     private readonly destroyRef = inject(DestroyRef);
+    readonly wasTouched = signal(false);
 
     // ---------- Inputs ----------
     @Input() label = 'Select or add';
@@ -117,6 +118,7 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
         this.ctrl.valueChanges.pipe(
             startWith(this.ctrl.value),
             map((v) => this.norm(v).trim()),
+            takeUntilDestroyed(this.destroyRef),
         ),
         { initialValue: '' },
     );
@@ -144,8 +146,21 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
                 const list = this._items();
                 if (!q) {
                     this.filteredOptions.set(list.slice(0, 50));
+                    if (!this.showChips) {
+                        this.selected.set([]);
+                    }
                     return;
                 }
+                if (!this.showChips) {
+                    const currentText = this.asText(this.ctrl.value).trim();
+                    const selected = this.selected()[0] ?? null;
+                    const selectedLabel = selected?.label?.trim()?? '';
+
+                    if (!selected || currentText !== selectedLabel) {
+                        this.selected.set([]);
+                    }
+                }
+
                 this.filteredOptions.set(
                     list
                         .filter((x) => (x.label ?? '').toLowerCase().includes(q))
@@ -164,9 +179,9 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
             this._pendingIds.set(null);
         });
 
-        // If user manually edits the text in single-select mode, do NOT automatically change the form value.
+        // If the user manually edits the text in single-select mode, do NOT automatically change the form value.
         // The value should change when they pick an option or create one.
-        // (If you want “free text” support, tell me and I’ll wire it.)
+        // (If you want “free text” support, tell me, and I’ll wire it.)
     }
 
     // ---------- CVA ----------
@@ -222,6 +237,23 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
         const exists = this._items().some((x) => (x.label ?? '').trim().toLowerCase() === text.toLowerCase());
         return !exists;
     });
+    // hasRealSelection is true if there is an actual selected item with an id.
+    readonly hasRealSelection = computed(()=>this.selected().length > 0);
+
+    // typedButNotCommitted is true if the user has typed text but hasn't selected ot created anything yet.
+    readonly typedButNotCommitted = computed(()=>{
+        if (this.showChips) return false;
+        const text = this.asText(this.ctrl.value).trim();
+        if (!text) return false;
+        return !this.hasRealSelection();
+    });
+    //shouldShowCreateFirstHint is true of it should show the hint after interaction
+    readonly shouldShowCreateFirstHint = computed(()=>{
+        return this.typedButNotCommitted() && this.wasTouched();
+    });
+    onBlur(): void{
+        this.markTouched();
+    }
 
     // ---------- Actions ----------
     onOptionSelected(ev: MatAutocompleteSelectedEvent) {
@@ -290,26 +322,22 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
             label,
         };
 
-        // Update local list so UI can show it immediately
-        this._items.set([created, ...this._items()]);
         this.itemCreated.emit(created);
 
         if (this.showChips) {
             if (this.selectAddsToChips) {
-                this.addToSelected(created);
                 this.ctrl.setValue('', { emitEvent: true });
             } else {
-                this.selected.set([created]);
                 this.ctrl.setValue(created.label, { emitEvent: true });
             }
         } else {
-            this.selected.set([created]);
-            this.ctrl.setValue(created.label, { emitEvent: true });
+            this.selected.set([]);
+            this.ctrl.setValue(label, { emitEvent: true });
         }
 
-        this.emitValueChange();
         this.markTouched();
         this.focusInput();
+        return;
     }
 
     removeChip(item: AddableAutocompleteItem) {
@@ -390,6 +418,7 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
     }
 
     private markTouched(): void {
+        this.wasTouched.set(true);
         this._onTouched();
     }
 }

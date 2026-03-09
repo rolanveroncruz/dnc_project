@@ -5,6 +5,9 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {LoginService} from '../login.service';
 import {AddableAutocompleteItem} from '../components/addable-autocomplete-component/addable-autocomplete-component';
+import {
+    ExistingMasterListMeta, MasterListPreview
+} from '../features/setup/setup-endorsements/setup-endorsements-component/endorsement-master-list-upload-component/data-types';
 
 // If you prefer, rename this to DateString
 export type IsoDate = string; // "YYYY-MM-DD"
@@ -123,6 +126,25 @@ export interface BillingFrequencyOptions{
     billing_frequency_option_name: string;
 }
 
+/** Mirrors EndorsementRateResponse DTO */
+export interface EndorsementRateResponse {
+    id: number;
+    endorsement_id: number;
+    dental_service_id: number;
+    dental_service_name: string;
+    dental_service_type_id: number;
+    sort_index: number | null;
+    record_tooth: boolean;
+    active: boolean;
+    rate: DecimalString;
+}
+
+/** Mirrors CreateEndorsementRateRequest DTO */
+export interface CreateEndorsementRateRequest {
+    dental_service_id: number;
+    rate: DecimalString;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EndorsementService {
     private readonly http = inject(HttpClient);
@@ -211,6 +233,30 @@ export class EndorsementService {
         return this.http.patch<EndorsementResponse>(`${this.baseUrl}/api/endorsements/${id}`, body, { headers: this.authHeaders() });
     }
 
+    /**
+     * GET /api/endorsements/:endorsement_id/rates
+     */
+    getEndorsementRates(endorsementId: number): Observable<EndorsementRateResponse[]> {
+        return this.http.get<EndorsementRateResponse[]>(
+    `${this.baseUrl}/api/endorsements/${endorsementId}/rates`, { headers: this.authHeaders() });
+    }
+
+     /**
+     * POST /api/endorsements/:endorsement_id/rates
+     */
+    createEndorsementRate( endorsementId: number, body: CreateEndorsementRateRequest ): Observable<EndorsementRateResponse> {
+    return this.http.post<EndorsementRateResponse>( `${this.baseUrl}/api/endorsements/${endorsementId}/rates`,
+        body,
+        { headers: this.authHeaders() }
+    );
+}
+
+
+
+
+
+
+
     // --- helpers
 
     private toParams(q: ListQuery): HttpParams {
@@ -218,5 +264,19 @@ export class EndorsementService {
         if (q.page != null) params = params.set('page', String(q.page));
         if (q.page_size != null) params = params.set('page_size', String(q.page_size));
         return params;
+    }
+    getEndorsementMasterListMeta(id: number):Observable<ExistingMasterListMeta>{
+        return this.http.get<ExistingMasterListMeta>(`${this.baseUrl}/api/endorsements/${id}/master_list_meta`, { headers: this.authHeaders() });
+    }
+    previewEndorsementMasterList(endorsement_id:number, file: File):Observable<MasterListPreview>{
+        return this.http.get<MasterListPreview>(`${this.baseUrl}/api/endorsements/${endorsement_id}/preview`, { headers: this.authHeaders() });
+    }
+    commitEndorsementMasterList(eid:number, temp_upload_id:string ): Observable<ExistingMasterListMeta>{
+        return this.http.post<ExistingMasterListMeta>(`${this.baseUrl}/api/endorsements/${eid}/master_list`, { headers: this.authHeaders() });
+
+    }
+    deleteEndorsementMasterList(eid:number):Observable<any>{
+        return this.http.delete<any>(`${this.baseUrl}/api/endorsements/${eid}/master_list`, { headers: this.authHeaders() });
+
     }
 }

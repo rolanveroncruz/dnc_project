@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import {Component, ChangeDetectionStrategy, DestroyRef, computed,  inject, signal, OnInit} from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {Component, ChangeDetectionStrategy, DestroyRef, computed, inject, signal, OnInit, effect} from '@angular/core';
+import { FormArray, FormControl, FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {HMOService, HMOOptions} from '../../../../api_services/hmoservice';
 import {
     EndorsementService,
@@ -9,6 +9,7 @@ import {
     PatchEndorsementRequest
 } from '../../../../api_services/endorsement-service';
 import {CurrencyInputComponent} from '../../../../components/currency-input-component/currency-input-component';
+import {DentalServicesService,DentalService} from '../../../../api_services/dental-services-service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,8 +18,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {ActivatedRoute } from '@angular/router';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {ActivatedRoute, Router} from '@angular/router';
 import {MatChip} from '@angular/material/chips';
 import {MatProgressBar} from '@angular/material/progress-bar';
 import {MatButton} from '@angular/material/button';
@@ -26,8 +27,37 @@ import {
     AddableAutocompleteComponent, AddableAutocompleteItem
 } from '../../../../components/addable-autocomplete-component/addable-autocomplete-component';
 import {catchError, finalize, map, of, switchMap, tap} from 'rxjs';
+import {ExistingMasterListMeta} from './endorsement-master-list-upload-component/data-types';
+import {
+    EndorsementMasterListUploadComponent
+} from './endorsement-master-list-upload-component/endorsement-master-list-upload-component';
+import {SpecialServicesFeesTabComponent} from './special-services-fees-tab-component/special-services-fees-tab-component';
+import {SpecialServicesCountsTabComponent} from './special-services-counts-tab-component/special-services-counts-tab-component';
+import {HighEndServicesCountsTabComponent} from './high-end-services-counts-tab-component/high-end-services-counts-tab-component';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
+type RuleSectionKey =
+    | 'specialServicesFees'
+    | 'specialServicesCounts'
+    | 'highEndServicesCounts'
+    | 'additionalBillingRules';
+const ENDORSEMENT_TYPE_ID = {
+    RetainerOnly: 1,
+    RetainerWithSpecialServices: 2,
+    RetainerAndFeePerService: 3,
+} as const;
+const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
+    [ENDORSEMENT_TYPE_ID.RetainerOnly]: [],
+    [ENDORSEMENT_TYPE_ID.RetainerWithSpecialServices]: ['specialServicesCounts'],
+    [ENDORSEMENT_TYPE_ID.RetainerAndFeePerService]: [
+        'specialServicesFees',
+        'specialServicesCounts',
+        'highEndServicesCounts',
+    ],
+};
+type ServiceFeeRule = { dental_service_id: number; rate: number | null };
+type ServiceCountRule = { dental_service_id: number; limit: number | null };
+
 
 @Component({
     selector: 'app-setup-endorsements',
@@ -51,6 +81,10 @@ type UIState = 'idle' | 'loading' | 'saving' | 'error';
         AddableAutocompleteComponent,
         CurrencyInputComponent,
         AddableAutocompleteComponent,
+        EndorsementMasterListUploadComponent,
+        SpecialServicesFeesTabComponent,
+        SpecialServicesCountsTabComponent,
+        HighEndServicesCountsTabComponent,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
@@ -58,9 +92,11 @@ type UIState = 'idle' | 'loading' | 'saving' | 'error';
 export class SetupEndorsementsComponent implements OnInit{
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
+    private readonly router=inject(Router);
     private destroyRef = inject(DestroyRef);
     private readonly hmoService = inject(HMOService);
     private readonly endorsementService = inject(EndorsementService);
+    private readonly dentalServicesService = inject(DentalServicesService);
 
     readonly loadState = signal<UIState>('idle');
     readonly endorsementId = signal<number | null>(null);
@@ -75,6 +111,18 @@ export class SetupEndorsementsComponent implements OnInit{
     readonly billingFrequencyOptions = signal<BillingFrequencyOptions[]>([]);
 
     readonly isSavingCompany = signal(false);
+
+    readonly masterListEnabled = computed(()=>!! this.selectedHMO()?.expect_a_master_list);
+    readonly masterListMeta = signal<ExistingMasterListMeta | null>(null);
+
+    readonly all_dental_services = signal<DentalService[]>([]);
+    readonly basicServices = computed(() =>
+        this.all_dental_services().filter(s => s.type_id=== 1 && s.active));
+    readonly specialServices = computed(() =>
+        this.all_dental_services().filter(s => s.type_id === 2 && s.active));
+    readonly highEndServices = computed(() =>
+    this.all_dental_services().filter(s => s.type_id === 3 && s.active));
+
 
     readonly form = this.fb.group({
         // Column 1
@@ -92,11 +140,76 @@ export class SetupEndorsementsComponent implements OnInit{
         endorsement_type_id: [null as number| null, [Validators.required]],
         remarks: [''],
         endorsement_method: [null as string | null],
+
+        // Tab sections
+        specialServicesFees: this.fb.array<FormGroup>([]),
+        specialServicesCounts: this.fb.array<FormGroup>([]),
+        highEndServicesCounts: this.fb.array<FormGroup>([]),
+
     });
 
+    readonly hmoIdSig = toSignal( this.form.controls.hmo_id.valueChanges, {initialValue: this.form.controls.hmo_id.value});
+
+    readonly selectedHMO = computed(()=>{
+        const raw = this.hmoIdSig();
+        const id = raw==null? null: Number(raw);
+        if(!id || !Number.isFinite(id)) return null;
+        return this.hmoOptions().find(x=>x.id==id) ?? null;
+    });
+    readonly endorsementTypeIdSig = toSignal(this.form.controls.endorsement_type_id.valueChanges,
+        {initialValue: this.form.controls.endorsement_type_id.value});
+    readonly enabledSections = computed<Set<RuleSectionKey>>( ()=>{
+        const raw = this.endorsementTypeIdSig();
+        const typeId = raw == null? null : Number(raw);
+        if (!typeId || !Number.isFinite(typeId)) return new Set<RuleSectionKey>();
+
+        const enabled = RULES_MATRIX[typeId] ?? [];
+        return new Set(enabled);
+
+    });
+    readonly specialServicesFeesEnabled = computed(()=>this.enabledSections().has('specialServicesFees'));
+    readonly specialServicesCountsEnabled = computed(()=>this.enabledSections().has('specialServicesCounts'));
+    readonly highEndServicesCountsEnabled = computed(()=>this.enabledSections().has('highEndServicesCounts'));
+    readonly additionalBillingRulesEnabled = computed(()=>this.enabledSections().has('additionalBillingRules'));
+
     /*
-    * API Helpers
+    * API Helpers and Functions
      */
+    private feeRow(serviceId:number){
+        return this.fb.group({
+            dental_service_id: new FormControl<number>(serviceId, {nonNullable: true}),
+            rate: new FormControl<number|null>(null, [Validators.min(0)]),
+        })
+    };
+    private countRow(serviceId:number){
+        return this.fb.group({
+            dental_service_id: new FormControl<number>(serviceId, {nonNullable: true}),
+            limit: new FormControl<number|null>(null, [Validators.min(0)]),
+        })
+    };
+// ✅ NEW: convenience getters
+    get specialServiceFeesArr() {
+        return this.form.controls.specialServicesFees as FormArray<FormGroup>;
+    }
+    get specialServiceCountsArr() {
+        return this.form.controls.specialServicesCounts as FormArray<FormGroup>;
+    }
+    get highEndServiceCountsArr() {
+        return this.form.controls.highEndServicesCounts as FormArray<FormGroup>;
+    }
+
+    private rebuildRuleMatrices():void{
+        const specialServicesFeesRows = this.specialServices().map(s=>this.feeRow(s.id));
+        this.form.setControl('specialServicesFees', this.fb.array(specialServicesFeesRows));
+
+        const specialServicesCountRows = this.specialServices().map(s=>this.countRow(s.id));
+        this.form.setControl('specialServicesCounts', this.fb.array(specialServicesCountRows));
+
+        const highEndCountRows = this.highEndServices().map(s=>this.countRow(s.id));
+        this.form.setControl('highEndServicesCounts', this.fb.array(highEndCountRows));
+    }
+
+
     private refreshCompanies(){
         return this.endorsementService.getEndorsementCompanies()
             .pipe(
@@ -110,6 +223,22 @@ export class SetupEndorsementsComponent implements OnInit{
     }
 
     ngOnInit(): void {
+// ✅ TEMP DEBUG: verify rules matrix toggles correctly
+        const logEnabled = () => {
+            console.log('endorsement_type_id =', this.endorsementTypeIdSig(), {
+                enabledSections: Array.from(this.enabledSections().values()),
+                feesEnabled: this.specialServicesFeesEnabled(),
+                specialCountsEnabled: this.specialServicesCountsEnabled(),
+                highEndCountsEnabled: this.highEndServicesCountsEnabled(),
+            });
+        };
+        logEnabled();
+        this.form.controls.endorsement_type_id.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => logEnabled());
+
+
+
         this.hmoService.getHMOOptions()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(dto => this.hmoOptions.set(dto));
@@ -131,7 +260,9 @@ export class SetupEndorsementsComponent implements OnInit{
             .subscribe( items => {
                 this.billingFrequencyOptions.set(items)
             });
-
+        this.dentalServicesService.getDentalServices()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe( page=> {this.all_dental_services.set(page.items)})
 
         this.route.paramMap
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -147,6 +278,14 @@ export class SetupEndorsementsComponent implements OnInit{
 
             })
     }
+    private readonly _rebuildRuleMatricesEffect = effect(
+        ()=> {
+            const all = this.all_dental_services();
+            if (!all.length) return;
+            this.rebuildRuleMatrices();
+        },
+        {allowSignalWrites:true}
+    );
     // -----------------------------
     // Route handling
     // -----------------------------
@@ -302,6 +441,7 @@ export class SetupEndorsementsComponent implements OnInit{
         return this.baseline() != null && !this.form.pristine;
     }
     onSave(): void {
+        console.log("Saving...");
         if (this.loadState() === 'saving' || this.loadState() === 'loading') return;
 
         this.form.markAllAsTouched();
@@ -386,6 +526,7 @@ export class SetupEndorsementsComponent implements OnInit{
                     return patch;
                 })());
 
+        console.log("Posting or Patching...");
         req$
             .pipe(
                 catchError((err) => {
@@ -395,12 +536,16 @@ export class SetupEndorsementsComponent implements OnInit{
                 }),
                 tap((saved) => {
                     if (!saved) return;
+                    const wasNew = this.endorsementId() == null;
 
-                    if (id == null) this.endorsementId.set(saved.id);
+                    if (wasNew) this.endorsementId.set(saved.id);
 
                     this.baseline.set(this.snapshotForm());
                     this.form.markAsPristine();
                     this.form.markAsUntouched();
+                    if (wasNew){
+                        this.router.navigate(['../', saved.id], {relativeTo: this.route }).then();
+                    }
                 }),
                 finalize(() => {
                     if (this.loadState() === 'saving') this.loadState.set('idle');

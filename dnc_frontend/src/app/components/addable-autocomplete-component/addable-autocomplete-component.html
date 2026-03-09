@@ -22,6 +22,7 @@
             [formControl]="ctrl"
             [matAutocomplete]="auto"
             (keydown.enter)="$event.preventDefault(); onEnterKey()"
+            (blur)="onBlur()"
         />
 
         @if (ctrl.value) {
@@ -50,8 +51,13 @@
             </button>
         }
 
-        @if (hint){
+        @if (hint && !shouldShowCreateFirstHint()){
             <mat-hint>{{ hint }}</mat-hint>
+        }
+        @if (shouldShowCreateFirstHint()){
+            <mat-error>
+                Select an existing item, or create a new company first.
+            </mat-error>
         }
 
         <mat-autocomplete

@@ -1,0 +1,138 @@
+<mat-card class="ml-card">
+    <mat-card-header>
+        <mat-card-title>Master List</mat-card-title>
+        <mat-card-subtitle>
+            Upload a Master List if HMO expects it.
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="ml-body">
+        @if (!enabled) {
+            <p class="muted">This HMO does not issue a master list.</p>
+        }
+        @else if(!hasValidEndorsementId()){
+            <p class="muted"> Please save endorsement first before uploading a master list.</p>
+        } @else {
+            @if (existing) {
+                <div class="existing">
+                    <div class="existing-meta">
+                        <div class="row"><span class="k">File:</span> <span class="v">{{ existing.original_filename }}</span></div>
+                        <div class="row"><span class="k">Rows:</span> <span class="v">{{ existing.total_rows }}</span></div>
+                        <div class="row"><span class="k">Uploaded:</span> <span class="v">{{ existing.uploaded_at }}</span></div>
+                        <div class="row"><span class="k">By:</span> <span class="v">{{ existing.uploaded_by }}</span></div>
+                    </div>
+
+                    <div class="existing-actions">
+                        <button mat-stroked-button type="button" (click)="replace()">
+                            Replace
+                        </button>
+                        <button mat-stroked-button color="warn" type="button" (click)="removeExisting()">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+
+                <mat-divider></mat-divider>
+            }
+
+            <div class="upload-row">
+                <input #fileInput type="file" accept=".xlsx,.xls" hidden (change)="onPickFile(fileInput)" />
+
+                <button mat-raised-button type="button" (click)="fileInput.click()">
+                    <mat-icon>upload</mat-icon>
+                    Upload Excel
+                </button>
+
+                <span class="hint">.xlsx recommended</span>
+            </div>
+
+            @if (ui() === 'uploading' || ui() === 'saving') {
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            }
+
+            @if (errorMsg()) {
+                <p class="error">{{ errorMsg() }}</p>
+            }
+
+            @if (preview()) {
+                <div class="summary">
+                    <mat-chip-set>
+                        <mat-chip>Total rows: {{ preview()!.total_rows }}</mat-chip>
+                        <mat-chip [disabled]="true">Errors: {{ errorCount() }}</mat-chip>
+                        <mat-chip [disabled]="true">Warnings: {{ warnCount() }}</mat-chip>
+                    </mat-chip-set>
+
+                    <div class="summary-actions">
+                        <button mat-stroked-button type="button" (click)="replace()">Replace file</button>
+
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            type="button"
+                            (click)="commit()"
+                            [disabled]="hasErrors() || ui() === 'saving'"
+                        >
+                            Save & Attach
+                        </button>
+                    </div>
+
+                    @if (hasErrors()) {
+                        <p class="muted">Fix the errors and re-upload. Saving is disabled while errors exist.</p>
+                    }
+                </div>
+
+                <div class="preview-grid">
+                    <div class="table-wrap">
+                        <table mat-table [dataSource]="preview()!.preview_rows" class="mat-elevation-z1">
+                            <ng-container matColumnDef="member_id">
+                                <th mat-header-cell *matHeaderCellDef>Member ID</th>
+                                <td mat-cell *matCellDef="let r">{{ r.member_id }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="full_name">
+                                <th mat-header-cell *matHeaderCellDef>Full Name</th>
+                                <td mat-cell *matCellDef="let r">{{ r.full_name }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="birthdate">
+                                <th mat-header-cell *matHeaderCellDef>Birthdate</th>
+                                <td mat-cell *matCellDef="let r">{{ r.birthdate }}</td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                        </table>
+
+                        <p class="muted small">Showing first {{ preview()!.preview_rows.length }} rows.</p>
+                    </div>
+
+                    <div class="issues">
+                        <mat-accordion>
+                            <mat-expansion-panel [expanded]="true">
+                                <mat-expansion-panel-header>
+                                    <mat-panel-title>Issues</mat-panel-title>
+                                    <mat-panel-description>
+                                        {{ preview()!.issues.length }} total
+                                    </mat-panel-description>
+                                </mat-expansion-panel-header>
+
+                                <div class="issue-list">
+                                    @for (i of preview()!.issues; track trackIssue($index, i)) {
+                                        <div class="issue" [class.err]="i.severity === 'error'" [class.warn]="i.severity === 'warn'">
+                                            <div class="meta">
+                                                <span class="sev">{{ i.severity.toUpperCase() }}</span>
+                                                @if (i.row != null) { <span class="rowno">Row {{ i.row }}</span> }
+                                                @if (i.field) { <span class="field">{{ i.field }}</span> }
+                                            </div>
+                                            <div class="msg">{{ i.message }}</div>
+                                        </div>
+                                    }
+                                </div>
+                            </mat-expansion-panel>
+                        </mat-accordion>
+                    </div>
+                </div>
+            }
+        }
+    </mat-card-content>
+</mat-card>

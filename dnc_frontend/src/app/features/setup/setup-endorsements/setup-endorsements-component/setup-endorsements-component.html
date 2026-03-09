@@ -74,6 +74,14 @@
                         formControlName="agreement_corp_number"
                         placeholder="e.g., AGMT-2026-001" />
                 </mat-form-field>
+
+                    <app-endorsement-masterlist-upload
+                        [endorsementId]="endorsementId()"
+                        [enabled]="masterListEnabled()"
+                        [existing]="masterListMeta()"
+                        (saved)="masterListMeta.set($event)"
+                        (cleared)="masterListMeta.set(null)"
+                        />
             </div>
 
             <!-- Column 2 -->
@@ -144,29 +152,37 @@
         <!-- Bottom section (tabs) -->
         <section class="bottom-tabs">
             <mat-tab-group class="tabs" animationDuration="150ms">
-                <mat-tab label="Special Services Fees">
-                    <div class="tab-pad">
-                        <div class="placeholder">Configure special service fees here.</div>
-                    </div>
-                </mat-tab>
-
-                <mat-tab label="Special Services Counts">
-                    <div class="tab-pad">
-                        <div class="placeholder">Configure special services counts here.</div>
-                    </div>
-                </mat-tab>
-
-                <mat-tab label="High End Services Counts">
-                    <div class="tab-pad">
-                        <div class="placeholder">Configure high-end services counts here.</div>
-                    </div>
-                </mat-tab>
-
-                <mat-tab label="Additional Billing Rules">
-                    <div class="tab-pad">
-                        <div class="placeholder">Configure additional billing rules here.</div>
-                    </div>
-                </mat-tab>
+                @if (specialServicesFeesEnabled()){
+                        <mat-tab label="Special Services Fees" [disabled]="!specialServicesFeesEnabled()">
+                            <app-special-services-fees-tab-component
+                                [services]="specialServices()"
+                                [rows]="specialServiceFeesArr"
+                            />
+                        </mat-tab>
+                }
+                @if (specialServicesCountsEnabled()){
+                    <mat-tab label="Special Services Counts">
+                        <app-special-services-counts-tab-component
+                            [services]="specialServices()"
+                            [rows]="specialServiceCountsArr"
+                        />
+                    </mat-tab>
+                }
+                @if (highEndServicesCountsEnabled()){
+                    <mat-tab label="High End Services Counts">
+                        <app-high-end-services-counts-tab-component
+                            [services]="highEndServices()"
+                            [rows]="highEndServiceCountsArr"
+                        />
+                    </mat-tab>
+                }
+                @if (additionalBillingRulesEnabled()){
+                    <mat-tab label="Additional Billing Rules" [disabled]="!additionalBillingRulesEnabled()">
+                        <div class="tab-pad">
+                            <div class="placeholder">Configure additional billing rules here.</div>
+                        </div>
+                    </mat-tab>
+                }
             </mat-tab-group>
         </section>
     </mat-card-content>
