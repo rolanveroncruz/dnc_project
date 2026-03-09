@@ -115,6 +115,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements", get(get_all_endorsements).post(create_endorsement))
         .route("/endorsements/{:id}", get(get_endorsement_by_id).patch(patch_endorsement))
         .route("/endorsements/companies", get(get_endorsement_companies).post(post_endorsement_company))
+        .route("/endorsements/{:endorsement_id}/rates", get(get_endorsement_billing_period_types).post(post_endorsement_company))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {

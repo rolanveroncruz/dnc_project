@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub mod dental_services;
 pub mod clinic_capabilities;
 pub mod users;
@@ -27,3 +28,4 @@ pub mod endorsement_type;
 pub mod endorsement_billing_period_type;
 pub mod endorsement_company;
 pub mod endorsements;
+pub mod endorsement_rates;
