@@ -185,3 +185,183 @@ pub async fn post_endorsement_rate(
 
     Ok(Json(response))
 }
+/// Full replacement for PUT
+#[derive(Debug, Deserialize)]
+pub struct UpdateEndorsementRatePutRequest {
+    pub dental_service_id: i32,
+    pub rate: Decimal,
+}
+
+/// Partial update for PATCH
+#[derive(Debug, Deserialize)]
+pub struct UpdateEndorsementRatePatchRequest {
+    pub dental_service_id: Option<i32>,
+    pub rate: Option<Decimal>,
+}
+
+/// PUT /api/endorsements/:endorsement_id/rates/:rate_id
+#[instrument(skip(state, body), err(Debug))]
+pub async fn put_endorsement_rate(
+    State(state): State<AppState>,
+    Path((endorsement_id, rate_id)): Path<(i32, i32)>,
+    Json(body): Json<UpdateEndorsementRatePutRequest>,
+) -> Result<Json<EndorsementRateResponse>, StatusCode> {
+    tracing::info!(
+        "PUT /endorsements/{endorsement_id}/rates/{rate_id} dental_service_id={} rate={}",
+        body.dental_service_id,
+        body.rate
+    );
+
+    // 1) Load existing row, scoped to endorsement_id
+    let existing = endorsement_rates::Entity::find_by_id(rate_id)
+        .filter(endorsement_rates::Column::EndorsementId.eq(endorsement_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed loading endorsement_rate {rate_id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    // 2) Validate dental service exists
+    let dental_service_row = dental_service::Entity::find_by_id(body.dental_service_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed checking dental service {}: {e:?}", body.dental_service_id);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    // 3) Prevent duplicate (same endorsement + same dental service on another row)
+    let duplicate = endorsement_rates::Entity::find()
+        .filter(endorsement_rates::Column::EndorsementId.eq(endorsement_id))
+        .filter(endorsement_rates::Column::DentalServicesId.eq(body.dental_service_id))
+        .filter(endorsement_rates::Column::Id.ne(rate_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed checking duplicate endorsement_rate endorsement_id={} dental_service_id={}: {e:?}",
+                endorsement_id,
+                body.dental_service_id
+            );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if duplicate.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    // 4) Update
+    let mut am: endorsement_rates::ActiveModel = existing.into();
+
+    am.dental_services_id = Set(body.dental_service_id);
+    am.rate = Set(body.rate);
+
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed updating endorsement_rate {rate_id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let response = EndorsementRateResponse {
+        id: updated.id,
+        endorsement_id: updated.endorsement_id,
+        dental_service_id: dental_service_row.id,
+        dental_service_name: dental_service_row.name,
+        dental_service_type_id: dental_service_row.type_id,
+        sort_index: dental_service_row.sort_index,
+        record_tooth: dental_service_row.record_tooth,
+        active: dental_service_row.active,
+        rate: updated.rate,
+    };
+
+    Ok(Json(response))
+}
+
+/// PATCH /api/endorsements/:endorsement_id/rates/:rate_id
+#[instrument(skip(state, body), err(Debug))]
+pub async fn patch_endorsement_rate(
+    State(state): State<AppState>,
+    Path((endorsement_id, rate_id)): Path<(i32, i32)>,
+    Json(body): Json<UpdateEndorsementRatePatchRequest>,
+) -> Result<Json<EndorsementRateResponse>, StatusCode> {
+    tracing::info!(
+        "PATCH /endorsements/{endorsement_id}/rates/{rate_id} dental_service_id={:?} rate={:?}",
+        body.dental_service_id,
+        body.rate
+    );
+
+    // 1) Load existing row, scoped to endorsement_id
+    let existing = endorsement_rates::Entity::find_by_id(rate_id)
+        .filter(endorsement_rates::Column::EndorsementId.eq(endorsement_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed loading endorsement_rate {rate_id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let new_dental_service_id = body.dental_service_id.unwrap_or(existing.dental_services_id);
+
+    // 2) Validate dental service exists
+    let dental_service_row = dental_service::Entity::find_by_id(new_dental_service_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed checking dental service {}: {e:?}", new_dental_service_id);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    // 3) Prevent duplicate if dental service changed
+    let duplicate = endorsement_rates::Entity::find()
+        .filter(endorsement_rates::Column::EndorsementId.eq(endorsement_id))
+        .filter(endorsement_rates::Column::DentalServicesId.eq(new_dental_service_id))
+        .filter(endorsement_rates::Column::Id.ne(rate_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed checking duplicate endorsement_rate endorsement_id={} dental_service_id={}: {e:?}",
+                endorsement_id,
+                new_dental_service_id
+            );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if duplicate.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    // 4) Update only supplied fields
+    let mut am: endorsement_rates::ActiveModel = existing.into();
+
+    if let Some(dental_service_id) = body.dental_service_id {
+        am.dental_services_id = Set(dental_service_id);
+    }
+
+    if let Some(rate) = body.rate {
+        am.rate = Set(rate);
+    }
+
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed updating endorsement_rate {rate_id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let response = EndorsementRateResponse {
+        id: updated.id,
+        endorsement_id: updated.endorsement_id,
+        dental_service_id: dental_service_row.id,
+        dental_service_name: dental_service_row.name,
+        dental_service_type_id: dental_service_row.type_id,
+        sort_index: dental_service_row.sort_index,
+        record_tooth: dental_service_row.record_tooth,
+        active: dental_service_row.active,
+        rate: updated.rate,
+    };
+
+    Ok(Json(response))
+}

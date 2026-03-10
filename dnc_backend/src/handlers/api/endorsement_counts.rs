@@ -190,3 +190,175 @@ pub async fn post_endorsement_count(
 
     Ok(Json(response))
 }
+/// Full replacement for PUT
+#[derive(Debug, Deserialize)]
+pub struct UpdateEndorsementCountPutRequest {
+    pub dental_service_id: i32,
+    pub count: i32,
+}
+
+/// Partial update for PATCH
+#[derive(Debug, Deserialize)]
+pub struct UpdateEndorsementCountPatchRequest {
+    pub dental_service_id: Option<i32>,
+    pub count: Option<i32>,
+}
+
+/// PUT /api/endorsements/:endorsement_id/counts/:count_id
+#[instrument(skip(state, body), err(Debug))]
+pub async fn put_endorsement_count(
+    State(state): State<AppState>,
+    Path((endorsement_id, count_id)): Path<(i32, i32)>,
+    Json(body): Json<UpdateEndorsementCountPutRequest>,
+) -> Result<Json<EndorsementCountResponse>, StatusCode> {
+    tracing::info!(
+        "PUT /endorsements/{endorsement_id}/counts/{count_id} dental_service_id={} count={}",
+        body.dental_service_id,
+        body.count
+    );
+
+    let existing = endorsement_counts::Entity::find_by_id(count_id)
+        .filter(endorsement_counts::Column::EndorsementId.eq(endorsement_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed loading endorsement_count {count_id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let dental_service_row = dental_service::Entity::find_by_id(body.dental_service_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed checking dental service {}: {e:?}", body.dental_service_id);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    let duplicate = endorsement_counts::Entity::find()
+        .filter(endorsement_counts::Column::EndorsementId.eq(endorsement_id))
+        .filter(endorsement_counts::Column::DentalServicesId.eq(body.dental_service_id))
+        .filter(endorsement_counts::Column::Id.ne(count_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed checking duplicate endorsement_count endorsement_id={} dental_service_id={}: {e:?}",
+                endorsement_id,
+                body.dental_service_id
+            );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if duplicate.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    let mut am: endorsement_counts::ActiveModel = existing.into();
+    am.dental_services_id = Set(body.dental_service_id);
+    am.count = Set(body.count);
+
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed updating endorsement_count {count_id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let response = EndorsementCountResponse {
+        id: updated.id,
+        endorsement_id: updated.endorsement_id,
+        dental_service_id: dental_service_row.id,
+        dental_service_name: dental_service_row.name,
+        dental_service_type_id: dental_service_row.type_id,
+        sort_index: dental_service_row.sort_index,
+        record_tooth: dental_service_row.record_tooth,
+        active: dental_service_row.active,
+        count: updated.count,
+    };
+
+    Ok(Json(response))
+}
+
+/// PATCH /api/endorsements/:endorsement_id/counts/:count_id
+#[instrument(skip(state, body), err(Debug))]
+pub async fn patch_endorsement_count(
+    State(state): State<AppState>,
+    Path((endorsement_id, count_id)): Path<(i32, i32)>,
+    Json(body): Json<UpdateEndorsementCountPatchRequest>,
+) -> Result<Json<EndorsementCountResponse>, StatusCode> {
+    tracing::info!(
+        "PATCH /endorsements/{endorsement_id}/counts/{count_id} dental_service_id={:?} count={:?}",
+        body.dental_service_id,
+        body.count
+    );
+
+    let existing = endorsement_counts::Entity::find_by_id(count_id)
+        .filter(endorsement_counts::Column::EndorsementId.eq(endorsement_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed loading endorsement_count {count_id}: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    let new_dental_service_id = body.dental_service_id.unwrap_or(existing.dental_services_id);
+
+    let dental_service_row = dental_service::Entity::find_by_id(new_dental_service_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed checking dental service {}: {e:?}", new_dental_service_id);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    let duplicate = endorsement_counts::Entity::find()
+        .filter(endorsement_counts::Column::EndorsementId.eq(endorsement_id))
+        .filter(endorsement_counts::Column::DentalServicesId.eq(new_dental_service_id))
+        .filter(endorsement_counts::Column::Id.ne(count_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed checking duplicate endorsement_count endorsement_id={} dental_service_id={}: {e:?}",
+                endorsement_id,
+                new_dental_service_id
+            );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if duplicate.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    let mut am: endorsement_counts::ActiveModel = existing.into();
+
+    if let Some(dental_service_id) = body.dental_service_id {
+        am.dental_services_id = Set(dental_service_id);
+    }
+
+    if let Some(count) = body.count {
+        am.count = Set(count);
+    }
+
+    let updated = am.update(&state.db).await.map_err(|e| {
+        tracing::error!("Failed updating endorsement_count {count_id}: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let response = EndorsementCountResponse {
+        id: updated.id,
+        endorsement_id: updated.endorsement_id,
+        dental_service_id: dental_service_row.id,
+        dental_service_name: dental_service_row.name,
+        dental_service_type_id: dental_service_row.type_id,
+        sort_index: dental_service_row.sort_index,
+        record_tooth: dental_service_row.record_tooth,
+        active: dental_service_row.active,
+        count: updated.count,
+    };
+
+    Ok(Json(response))
+}
+

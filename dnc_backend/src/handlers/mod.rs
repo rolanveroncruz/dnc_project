@@ -58,5 +58,5 @@ pub use api::endorsement_billing_period_type::get_endorsement_billing_period_typ
 pub use api::endorsements::{get_all_endorsements, get_endorsement_by_id, create_endorsement, patch_endorsement};
 pub use api::endorsement_company::{get_endorsement_companies, post_endorsement_company};
 
-pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rate};
-pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count};
+pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rate, put_endorsement_rate, patch_endorsement_rate};
+pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_count, patch_endorsement_count};
