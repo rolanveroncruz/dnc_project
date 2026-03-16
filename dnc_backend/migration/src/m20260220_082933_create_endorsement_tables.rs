@@ -230,6 +230,7 @@ impl Migration {
                     .col(ColumnDef::new(Endorsement::RetainerFee).decimal())
                     .col(ColumnDef::new(Endorsement::Remarks).string())
                     .col(ColumnDef::new(Endorsement::EndorsementMethod).string())
+                    .col(ColumnDef::new(Endorsement::IsActive).boolean().default(true).not_null())
                     .to_owned(),
             )
             .await?;
@@ -292,4 +293,5 @@ pub enum Endorsement {
     RetainerFee,
     Remarks,
     EndorsementMethod,
+    IsActive,
 }

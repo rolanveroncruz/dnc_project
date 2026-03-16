@@ -113,6 +113,11 @@ impl Migration {
                 .col(ColumnDef::new(MasterListMember::BirthDate)
                     .date()
                 )
+                .col(ColumnDef::new(MasterListMember::IsActive)
+                    .boolean()
+                    .default(true)
+                    .not_null()
+                )
                     .to_owned()
             ).await?;
 
@@ -241,6 +246,7 @@ pub enum MasterListMember {
     EmailAddress,
     BirthDate,
     MobileNumber,
+    IsActive,
 }
 #[derive(Iden)]
 pub enum EndorsementRates {

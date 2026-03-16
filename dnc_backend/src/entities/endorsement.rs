@@ -19,6 +19,7 @@ pub struct Model {
     pub retainer_fee: Option<Decimal>,
     pub remarks: Option<String>,
     pub endorsement_method: Option<String>,
+    pub is_active: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
