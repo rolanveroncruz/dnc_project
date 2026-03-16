@@ -9,9 +9,13 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub master_list_id: i32,
-    pub member_id: i32,
-    pub card_no: String,
-    pub row_number: Option<i32>,
+    pub account_number: String,
+    pub last_name: String,
+    pub first_name: String,
+    pub middle_name: String,
+    pub email_address: String,
+    pub mobile_number: Option<String>,
+    pub birth_date: Option<Date>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -24,25 +28,11 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     MasterList,
-    #[sea_orm(
-        belongs_to = "super::member::Entity",
-        from = "Column::MemberId",
-        to = "super::member::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    Member,
 }
 
 impl Related<super::master_list::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterList.def()
-    }
-}
-
-impl Related<super::member::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Member.def()
     }
 }
 

@@ -10,7 +10,6 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
 
         Self::create_master_list_table(manager).await?;
-        Self::create_member_table(manager).await?;
         Self::create_master_list_member_table(manager).await?;
         Self::create_endorsement_rates_table(manager).await?;
         Self::create_endorsement_counts_table(manager).await?;
@@ -22,7 +21,6 @@ impl MigrationTrait for Migration {
         Self::drop_endorsement_counts_table(manager).await?;
         Self::drop_endorsement_rates_table(manager).await?;
         Self::drop_master_list_member_table(manager).await?;
-        Self::drop_member_table(manager).await?;
         Self::drop_master_list_table(manager).await?;
         Ok(())
     }
@@ -42,7 +40,6 @@ impl Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(MasterList::FileName).string().not_null())
-                    .col(ColumnDef::new(MasterList::FilePath).string().not_null())
                     .col(ColumnDef::new(MasterList::EndorsementId).integer())
                     .foreign_key(
                         ForeignKey::create()
@@ -50,7 +47,6 @@ impl Migration {
                             .from(MasterList::Table, MasterList::EndorsementId)
                             .to(Endorsement::Table, Endorsement::Id),
                     )
-                    .col(ColumnDef::new(MasterList::NumRowsRead).integer())
                     .col(ColumnDef::new(MasterList::UploadedBy).string())
                     .col(
                         ColumnDef::new(MasterList::UploadDate)
@@ -70,29 +66,6 @@ impl Migration {
         Ok(())
     }
 
-    pub async fn create_member_table(manager: &SchemaManager<'_>)-> Result<(), DbErr>{
-        manager
-            .create_table(
-                Table::create()
-                    .table(Member::Table)
-                    .if_not_exists()
-                    .col(ColumnDef::new(Member::Id).integer().not_null().primary_key().auto_increment())
-                    .col(ColumnDef::new(Member::FirstName).string().not_null())
-                    .col(ColumnDef::new(Member::LastName).string().not_null())
-                    .col(ColumnDef::new(Member::MiddleName).string())
-                    .col(ColumnDef::new(Member::EmailAddress).string())
-                    .col(ColumnDef::new(Member::BirthDate).date())
-                    .col(ColumnDef::new(Member::MobileNumber).string())
-                    .to_owned()
-            ).await?;
-        Ok(())
-    }
-
-    pub async fn drop_member_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager
-            .drop_table(Table::drop().table(Member::Table).to_owned()).await?;
-        Ok(())
-    }
 
     pub async fn create_master_list_member_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
@@ -114,20 +87,31 @@ impl Migration {
                     .from(MasterListMember::Table, MasterListMember::MasterListId)
                     .to(MasterList::Table, MasterList::Id)
                 )
-                .col(ColumnDef::new(MasterListMember::MemberId)
-                    .integer()
-                    .not_null()
-                ).foreign_key(ForeignKey::create()
-                    .name("fk_member_id")
-                    .from(MasterListMember::Table, MasterListMember::MemberId)
-                    .to(Member::Table, Member::Id)
-                )
-                .col(ColumnDef::new(MasterListMember::CardNo)
+                .col(ColumnDef::new(MasterListMember::AccountNumber)
                     .string()
                     .not_null()
                 )
-                .col(ColumnDef::new(MasterListMember::RowNumber)
-                    .integer()
+                .col(ColumnDef::new(MasterListMember::LastName)
+                    .string()
+                    .not_null()
+                )
+                .col(ColumnDef::new(MasterListMember::FirstName)
+                    .string()
+                    .not_null()
+                )
+                .col(ColumnDef::new(MasterListMember::MiddleName)
+                    .string()
+                    .not_null()
+                )
+                .col(ColumnDef::new(MasterListMember::EmailAddress)
+                .string()
+                .not_null()
+                )
+                .col(ColumnDef::new(MasterListMember::MobileNumber)
+                .string()
+                )
+                .col(ColumnDef::new(MasterListMember::BirthDate)
+                    .date()
                 )
                     .to_owned()
             ).await?;
@@ -229,44 +213,34 @@ impl Migration {
 
 }
 /*
-The Member represents the people endorsed in the MasterList.
- */
-#[derive(Iden)]
-pub enum Member {
-    Table,
-    Id,
-    FirstName,
-    LastName,
-    MiddleName,
-    EmailAddress,
-    BirthDate,
-    MobileNumber,
-}
-/*
-The MasterList represents the uploaded file.
+The MasterList represents every uploaded file.
+We only keep it so we can track who uploaded it, when it was uploaded,
+and where a member came from.
 */
 #[derive(Iden)]
 pub enum MasterList {
     Table,
     Id,
     FileName,
-    FilePath,
     EndorsementId,
-    NumRowsRead,
     UploadedBy,
     UploadDate,
 }
 /*
-The MasterListMember associates the Endorsement MasterList with the Member
+TheMasterListMember lists all members of that MasterList.
  */
 #[derive(Iden)]
 pub enum MasterListMember {
     Table,
     Id,
     MasterListId,
-    RowNumber,
-    MemberId,
-    CardNo,
+    AccountNumber,
+    LastName,
+    FirstName,
+    MiddleName,
+    EmailAddress,
+    BirthDate,
+    MobileNumber,
 }
 #[derive(Iden)]
 pub enum EndorsementRates {

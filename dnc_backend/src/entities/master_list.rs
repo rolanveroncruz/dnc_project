@@ -9,9 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub file_name: String,
-    pub file_path: String,
     pub endorsement_id: Option<i32>,
-    pub num_rows_read: Option<i32>,
     pub uploaded_by: Option<String>,
     pub upload_date: Option<DateTimeWithTimeZone>,
 }
