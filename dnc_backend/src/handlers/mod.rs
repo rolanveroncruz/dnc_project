@@ -60,3 +60,5 @@ pub use api::endorsement_company::{get_endorsement_companies, post_endorsement_c
 
 pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rate, put_endorsement_rate, patch_endorsement_rate};
 pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_count, patch_endorsement_count};
+
+pub use api::endorsement_master_list_upload::upload_endorsement_master_list;
