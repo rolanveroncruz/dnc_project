@@ -21,8 +21,8 @@
             [placeholder]="placeholder"
             [formControl]="ctrl"
             [matAutocomplete]="auto"
-            [disabled]="disabled"
             (keydown.enter)="$event.preventDefault(); onEnterKey()"
+            (blur)="onBlur()"
         />
 
         @if (ctrl.value) {
@@ -32,25 +32,33 @@
                 type="button"
                 aria-label="Clear"
                 (click)="clearInput()"
-                [disabled]="disabled"
+                [disabled]="ctrl.disabled"
             >
                 <mat-icon>close</mat-icon>
             </button>
         }
+        @if (canAddTypedValue()) {
+            <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                aria-label="Add"
+                (click)="addTypedValue()"
+                [disabled]="ctrl.disabled || !canAddTypedValue()"
+                [class.add-visible]="canAddTypedValue()"
+            >
+                <mat-icon>add</mat-icon>
+            </button>
+        }
 
-        <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            aria-label="Add"
-            (click)="addTypedValue()"
-            [disabled]="disabled || !isBusyAddable()"
-            [class.add-visible]="isBusyAddable()"
-        >
-            <mat-icon>add</mat-icon>
-        </button>
-
-        <mat-hint *ngIf="hint">{{ hint }}</mat-hint>
+        @if (hint && !shouldShowCreateFirstHint()){
+            <mat-hint>{{ hint }}</mat-hint>
+        }
+        @if (shouldShowCreateFirstHint()){
+            <mat-error>
+                Select an existing item, or create a new company first.
+            </mat-error>
+        }
 
         <mat-autocomplete
             #auto="matAutocomplete"

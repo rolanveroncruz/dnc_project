@@ -59,7 +59,8 @@ impl MigrationTrait for Migration {
             .await?;
 
         Self::insert_hmo(manager, "AFDR", "AFDR Insurance Brokers, Inc.", true).await?;
-        Self::insert_hmo(manager, "Avega", "Avega Managed Care, Inc.", false).await?;
+        Self::insert_hmo(manager, "Avega", "Avega Managed Care, Inc.", true).await?;
+        Self::insert_hmo( manager, "DNC", "Dental Network Company", true).await?;
         Self::insert_hmo(manager, "Etiqa", "Etiqua Life and General Assurance Philippines, Inc.",true).await?;
         Self::insert_hmo(manager, "Intellicare", "Intellicare", true).await?;
         Self::insert_hmo(manager, "Kaiser", "Kaiser International Healthgroup, Inc.",false).await?;

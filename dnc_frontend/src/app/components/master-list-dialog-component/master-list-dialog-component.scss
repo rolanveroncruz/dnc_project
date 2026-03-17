@@ -1,0 +1,42 @@
+.master-list-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 900px;
+    max-width: 100%;
+    width: 100%;
+
+    max-height: 85vh;
+    padding: 8px 4px 4px;
+    box-sizing: border-box;
+
+}
+
+.dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.subtitle {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.close-btn {
+    flex: 0 0 auto;
+}
+
+.table-wrapper {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+/* Make the active column feel clickable */
+.table-wrapper .mat-column-is_active {
+    cursor: pointer;
+}

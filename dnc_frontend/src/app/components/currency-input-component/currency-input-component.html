@@ -1,0 +1,20 @@
+<mat-form-field class="currency-field" [appearance]="appearance()">
+    <mat-label>{{ label() }}</mat-label>
+
+    <input
+        #textInput
+        matInput
+        inputmode="decimal"
+        autocomplete="off"
+        [placeholder]="placeholder()"
+        [required]="required()"
+        [disabled]="isDisabled()"
+        [value]="displayValue()"
+        (input)="onInput($event)"
+        (blur)="onBlur()"
+    />
+
+    @if (hint()) {
+        <mat-hint>{{ hint() }}</mat-hint>
+    }
+</mat-form-field>
