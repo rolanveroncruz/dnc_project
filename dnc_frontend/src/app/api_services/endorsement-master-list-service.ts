@@ -15,7 +15,7 @@ interface MasterListMetaDataResponse {
     upload_date: string | null;
     total_rows: number | null;
 }
-interface EndorsementMasterListMemberResponse {
+export interface EndorsementMasterListMemberResponse {
     file_name: string;
     master_list_member_id: number;
     account_number: string;
@@ -79,7 +79,7 @@ export class EndorsementMasterListService {
 
     getMasterListForEndorsement( endorsementId: number ): Observable<EndorsementMasterListMemberResponse[]> {
         return this.http.get<EndorsementMasterListMemberResponse[]>(
-            `${this.baseUrl}/api/endorsements/${endorsementId}/master_lists`,
+            `${this.baseUrl}/api/endorsements/${endorsementId}/master_list`,
             { headers: this.authHeaders() }
         );
     }

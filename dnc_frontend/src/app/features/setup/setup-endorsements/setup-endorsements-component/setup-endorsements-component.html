@@ -79,6 +79,7 @@
                         [endorsementId]="endorsementId()"
                         [enabled]="masterListEnabled()"
                         [existing]="masterListMeta()"
+                        [onViewExisting]="onViewMasterList"
                         (saved)="masterListMeta.set($event)"
                         (cleared)="masterListMeta.set(null)"
                         />
@@ -187,3 +188,4 @@
         </section>
     </mat-card-content>
 </mat-card>
+<app-master-list-dialog [members]="masterListMembers()"/>

@@ -10,6 +10,7 @@ import {DentistWithLookupsAndClinicInfo} from '../setup-dentists/setup-dentists'
 
 @Component({
   selector: 'app-setup-endorsements',
+    standalone: true,
     imports: [
         GenericDataTableComponent,
         MatButton,

@@ -37,7 +37,12 @@ import {SpecialServicesFeesTabComponent} from './special-services-fees-tab-compo
 import {SpecialServicesCountsTabComponent} from './special-services-counts-tab-component/special-services-counts-tab-component';
 import {HighEndServicesCountsTabComponent} from './high-end-services-counts-tab-component/high-end-services-counts-tab-component';
 import {HttpErrorResponse} from '@angular/common/http';
-import {EndorsementMasterListService} from '../../../../api_services/endorsement-master-list-service';
+import {
+    EndorsementMasterListMemberResponse,
+    EndorsementMasterListService
+} from '../../../../api_services/endorsement-master-list-service';
+import{ MasterListDialogComponent} from '../../../../components/master-list-dialog-component/master-list-dialog-component';
+import {MatDialog} from '@angular/material/dialog';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
@@ -85,6 +90,7 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         SpecialServicesFeesTabComponent,
         SpecialServicesCountsTabComponent,
         HighEndServicesCountsTabComponent,
+        MasterListDialogComponent,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
@@ -123,6 +129,9 @@ export class SetupEndorsementsComponent implements OnInit{
         this.all_dental_services().filter(s => s.type_id === 2 && s.active));
     readonly highEndServices = computed(() =>
     this.all_dental_services().filter(s => s.type_id === 3 && s.active));
+
+    readonly dialog = inject(MatDialog);
+    readonly masterListMembers = signal<EndorsementMasterListMemberResponse[]>([]);
 
 
     readonly form = this.fb.group({
@@ -757,5 +766,33 @@ export class SetupEndorsementsComponent implements OnInit{
         // Make it “clean” again
         this.form.markAsPristine();
         this.form.markAsUntouched();
+    }
+
+    onViewMasterList = ():void=>{
+        console.log("While in setup-endorsement-component, Viewing master list...");
+        const id = this.endorsementId();
+        if (id == null) return;
+
+        this.endorsementMasterListService.getMasterListForEndorsement(id)
+            .pipe(
+             tap((members:EndorsementMasterListMemberResponse[])=>{
+                 this.masterListMembers.set(members);
+
+                 this.dialog.open(MasterListDialogComponent, {
+                     width: '1100px',
+                     maxWidth: '95vw',
+                     data: {
+                         members: this.masterListMembers()
+                     },
+                 });
+             }),
+                catchError((err)=>{
+                 console.error("Failed to load master list:", err);
+                 this.masterListMembers.set([]);
+                 return of(null);
+                }),
+                takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe();
     }
 }

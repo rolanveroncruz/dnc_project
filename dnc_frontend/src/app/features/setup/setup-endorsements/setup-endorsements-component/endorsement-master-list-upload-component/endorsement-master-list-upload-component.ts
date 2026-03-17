@@ -66,6 +66,7 @@ export class EndorsementMasterListUploadComponent {
 
     @Output() saved = new EventEmitter<ExistingMasterListMeta>();
     @Output() cleared = new EventEmitter<void>();
+    @Input() onViewExisting: (()=>void) | null = null;
 
     readonly hasValidEndorsementId = computed(()=> {
         const id = this.endorsementId;
@@ -140,7 +141,8 @@ export class EndorsementMasterListUploadComponent {
 
 
     viewExisting() {
-        console.log('Preview existing');
+        this.onViewExisting?.();
+
     }
 
     removeExisting() {
