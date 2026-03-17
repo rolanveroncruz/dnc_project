@@ -1,5 +1,5 @@
 import {Component, computed, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {HMO, HMOService, HMOEditable} from '../../../../api_services/hmoservice';
+import {HMO, HMOService, HMOEditable, EndorsementWithLookupsResponse} from '../../../../api_services/hmoservice';
 import {ActivatedRoute, Router} from '@angular/router';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NonNullableFormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -52,43 +52,16 @@ export class HMOPageComponent implements OnInit {
     id: number | null = null;
     private destroyRef = inject(DestroyRef);
 
-    endorsements: Endorsement[] = [
-        {
-            id: 1,
-            company: 'Petron Corp.',
-            additional_benefits: '-',
-            date_start: '2021-01-01',
-            date_end: '2021-01-31',
-            created_by: 'Mhenie',
-            endorsed_by: 'Juan Dela Cruz'
-        },
-        {
-            id: 1,
-            company: 'Golden Arches Corp.',
-            additional_benefits: '-',
-            date_start: '2021-01-01',
-            date_end: '2021-01-31',
-            created_by: 'Mhenie',
-            endorsed_by: 'Juan Dela Cruz'
-        },
-        {
-            id: 1,
-            company: 'Mercury Drug Inc.',
-            additional_benefits: '-',
-            date_start: '2021-01-01',
-            date_end: '2021-01-31',
-            created_by: 'Mhenie',
-            endorsed_by: 'Juan Dela Cruz'
-        },
-    ]
+    readonly endorsements = signal<EndorsementWithLookupsResponse[] | []>([]);
     endorsementColumns: TableColumn[] = [
         {key: 'id', label: 'ID'},
-        {key: 'company', label: 'Company'},
-        {key: 'additional_benefits', label: 'Additional Benefits'},
+        {key: 'endorsement_company_name', label: 'Company'},
+        {key: 'endorsement_type_name', label: 'Endorsement Type'},
         {key: 'date_start', label: 'Date Start', cellTemplateKey: 'date'},
         {key: 'date_end', label: 'Date End', cellTemplateKey: 'date'},
-        {key: 'created_by', label: 'Created By'},
-        {key: 'endorsed_by', label: 'Endorsed By'},
+        {key: 'endorsement_billing_period_type_name', label: 'Billing Period'},
+        {key: 'endorsement_method', label: 'Endorsement Method'},
+        {key: 'master_list_member_count', label: 'Total Members'},
     ];
 
     readonly form = this.fb.group({
@@ -246,6 +219,13 @@ export class HMOPageComponent implements OnInit {
                 error: (err) => {
                     console.log("In getHMOData(), failed to load HMO", err);
                 }
+            })
+
+        this.hmoService.getEndorsements(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (res)=>{this.endorsements.set(res)},
+                error: (err)=>{console.log("In getHMOData(), failed to load endorsements", err)}
             })
     }
 

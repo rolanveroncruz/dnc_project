@@ -35,6 +35,24 @@ export interface HMOOptions{
   long_name: string;
   expect_a_master_list: boolean;
 }
+export interface EndorsementWithLookupsResponse {
+    id: number;
+    hmo_id: number;
+    endorsement_company_id: number;
+    endorsement_company_name: string;
+    endorsement_type_id: number;
+    endorsement_type_name: string;
+    agreement_corp_number: string | null;
+    date_start: string;
+    date_end: string;
+    endorsement_billing_period_type_id: number;
+    endorsement_billing_period_type_name: string;
+    retainer_fee: number | null;
+    remarks: string | null;
+    endorsement_method: string | null;
+    is_active: boolean;
+}
+
 
 @Injectable({
   providedIn: 'root',
@@ -84,4 +102,9 @@ export class HMOService {
     return this.http.patch<HMO>(`${this.apiUrl}/api/hmos/${hmoId}`, hmo, {headers});
   }
 
+  getEndorsements(hmoId:number):Observable<EndorsementWithLookupsResponse[]>{
+    let token = this.LoginService.token();
+    const headers = {'Authorization': `Bearer ${token}`};
+    return this.http.get<EndorsementWithLookupsResponse[]>(`${this.apiUrl}/api/hmos/${hmoId}/endorsements`, {headers});
+  }
 }
