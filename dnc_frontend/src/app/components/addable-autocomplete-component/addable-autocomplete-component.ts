@@ -114,6 +114,9 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
     private _onTouched: () => void = () => {};
     private _disabled = signal(false);
 
+    private _localIdCounter = 0;
+
+
     readonly term = toSignal(
         this.ctrl.valueChanges.pipe(
             startWith(this.ctrl.value),
@@ -318,7 +321,7 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
 
         // Create new (client-side id). Parent should persist & refresh items with real id.
         const created: AddableAutocompleteItem = {
-            id: crypto.randomUUID(),
+            id: this.generateClientId(),
             label,
         };
 
@@ -420,5 +423,10 @@ export class AddableAutocompleteComponent implements ControlValueAccessor {
     private markTouched(): void {
         this.wasTouched.set(true);
         this._onTouched();
+    }
+
+    private generateClientId(): string {
+        this._localIdCounter += 1;
+        return `local-${Date.now()}-${this._localIdCounter}`;
     }
 }
