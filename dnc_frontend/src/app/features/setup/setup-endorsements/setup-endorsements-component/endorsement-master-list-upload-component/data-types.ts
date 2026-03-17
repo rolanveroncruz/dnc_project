@@ -1,6 +1,6 @@
 export type ExistingMasterListMeta = {
     master_list_id: number;
-    original_filename: string;
+    last_file_uploaded: string;
     uploaded_by: string;
     uploaded_at: string; // ISO
     total_rows: number;

@@ -5,9 +5,6 @@ import {Observable, map} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login.service';
 import {AddableAutocompleteItem} from '../components/addable-autocomplete-component/addable-autocomplete-component';
-import {
-    ExistingMasterListMeta, MasterListPreview
-} from '../features/setup/setup-endorsements/setup-endorsements-component/endorsement-master-list-upload-component/data-types';
 
 // If you prefer, rename this to DateString
 export type IsoDate = string; // "YYYY-MM-DD"
@@ -305,7 +302,6 @@ export class EndorsementService {
         );
     }
 
-    // ✅✅✅ ADDED: PUT /api/endorsements/:endorsement_id/rates/:rate_id
     updateEndorsementRatePut(
         endorsementId: number,
         rateId: number,
@@ -318,7 +314,6 @@ export class EndorsementService {
         );
     }
 
-    // ✅✅✅ ADDED: PATCH /api/endorsements/:endorsement_id/rates/:rate_id
     updateEndorsementRatePatch(
         endorsementId: number,
         rateId: number,
@@ -385,23 +380,5 @@ export class EndorsementService {
         if (q.page != null) params = params.set('page', String(q.page));
         if (q.page_size != null) params = params.set('page_size', String(q.page_size));
         return params;
-    }
-
-    getEndorsementMasterListMeta(id: number): Observable<ExistingMasterListMeta> {
-        return this.http.get<ExistingMasterListMeta>(`${this.baseUrl}/api/endorsements/${id}/master_list_meta`, {headers: this.authHeaders()});
-    }
-
-    previewEndorsementMasterList(endorsement_id: number, file: File): Observable<MasterListPreview> {
-        return this.http.get<MasterListPreview>(`${this.baseUrl}/api/endorsements/${endorsement_id}/preview`, {headers: this.authHeaders()});
-    }
-
-    commitEndorsementMasterList(eid: number, temp_upload_id: string): Observable<ExistingMasterListMeta> {
-        return this.http.post<ExistingMasterListMeta>(`${this.baseUrl}/api/endorsements/${eid}/master_list`, {headers: this.authHeaders()});
-
-    }
-
-    deleteEndorsementMasterList(eid: number): Observable<any> {
-        return this.http.delete<any>(`${this.baseUrl}/api/endorsements/${eid}/master_list`, {headers: this.authHeaders()});
-
     }
 }

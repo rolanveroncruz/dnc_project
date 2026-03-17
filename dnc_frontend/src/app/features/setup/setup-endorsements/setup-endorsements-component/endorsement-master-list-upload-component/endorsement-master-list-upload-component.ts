@@ -19,9 +19,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { catchError, finalize, of, tap } from 'rxjs';
-import {EndorsementService} from '../../../../../api_services/endorsement-service';
 import {ExistingMasterListMeta, MasterListPreview, MasterListIssue} from './data-types';
 import {MatDivider} from '@angular/material/list';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {
+    SimpleConfirmDialogComponent
+} from '../../../../../components/simple-confirm-dialog-component/simple-confirm-dialog-component';
+import {EndorsementMasterListService} from '../../../../../api_services/endorsement-master-list-service';
 
 type UploadUiState = 'idle' | 'uploading' | 'preview' | 'saving' | 'saved' | 'error';
 
@@ -39,20 +43,27 @@ type UploadUiState = 'idle' | 'uploading' | 'preview' | 'saving' | 'saved' | 'er
         MatChipsModule,
         MatExpansionModule,
         MatDivider,
+        MatDialogModule,
     ],
     templateUrl: './endorsement-master-list-upload-component.html',
     styleUrls: ['./endorsement-master-list-upload-component.scss'],
 })
+/*
+  The EndorsementMasterListUploadComponent is responsible for uploading a master list for an endorsement.
+  It handles the upload process, previewing the uploaded file, and saving the master list.
+  When a file has not yet been uploaded, it allows continuously uploading a new file to add members.
+
+
+ */
 export class EndorsementMasterListUploadComponent {
     private readonly destroyRef = inject(DestroyRef);
-    private readonly endorsementService = inject(EndorsementService);
+    private readonly endorsementMasterListService = inject(EndorsementMasterListService);
+    private readonly dialog = inject(MatDialog);
 
-    // ✅ Inputs: keep simple for parent
     @Input({ required: true }) endorsementId!: number | null;
     @Input({ required: true }) enabled!: boolean;
     @Input() existing: ExistingMasterListMeta | null = null;
 
-    // ✅ Outputs: parent can update meta
     @Output() saved = new EventEmitter<ExistingMasterListMeta>();
     @Output() cleared = new EventEmitter<void>();
 
@@ -61,21 +72,17 @@ export class EndorsementMasterListUploadComponent {
         return typeof id==='number' && Number.isFinite(id) && id > 0;
     });
 
-    readonly isLocked = computed(()=> !this.enabled || !this.hasValidEndorsementId());
 
     readonly ui = signal<UploadUiState>('idle');
     readonly errorMsg = signal<string | null>(null);
 
-    // ✅ Preview returned by server (parse-only)
     readonly preview = signal<MasterListPreview | null>(null);
 
-    // ✅ derived display
     readonly hasErrors = computed(() => (this.preview()?.issues ?? []).some(i => i.severity === 'error'));
     readonly errorCount = computed(() => (this.preview()?.issues ?? []).filter(i => i.severity === 'error').length);
     readonly warnCount = computed(() => (this.preview()?.issues ?? []).filter(i => i.severity === 'warn').length);
 
-    // ✅ table columns: update once you decide your sheet schema
-    readonly displayedColumns = ['member_id', 'full_name', 'birthdate'];
+    readonly displayedColumns = ['card_no', 'last_name', 'first_name'];
 
     constructor(){
         effect(()=>{
@@ -91,19 +98,18 @@ export class EndorsementMasterListUploadComponent {
         const file = input.files?.[0] ?? null;
         if (!file) return;
 
-        // reset input so selecting same file again triggers change
+        // reset input so selecting the same file again triggers change
         input.value = '';
 
-        this.uploadForPreview(file);
+        this.upload(file);
     }
 
-    uploadForPreview(file: File) {
+    upload(file: File) {
         this.errorMsg.set(null);
         this.preview.set(null);
 
         if (!this.enabled) return;
         if (this.endorsementId == null) {
-            // ✅ Important: must have an endorsement id to attach later.
             this.errorMsg.set('Please save the endorsement first before uploading a master list.');
             this.ui.set('error');
             return;
@@ -111,8 +117,8 @@ export class EndorsementMasterListUploadComponent {
 
         this.ui.set('uploading');
 
-        this.endorsementService
-            .previewEndorsementMasterList(this.endorsementId, file)
+        this.endorsementMasterListService
+            .uploadEndorsementMasterList(this.endorsementId, file)
             .pipe(
                 tap((p) => {
                     this.preview.set(p);
@@ -132,70 +138,57 @@ export class EndorsementMasterListUploadComponent {
             .subscribe();
     }
 
-    commit() {
-        const eid = this.endorsementId;
-        const p = this.preview();
-        if (!this.enabled || eid == null || !p) return;
-        if (this.hasErrors()) return;
 
-        this.ui.set('saving');
-        this.errorMsg.set(null);
-
-        this.endorsementService
-            .commitEndorsementMasterList(eid, p.temp_upload_id)
-            .pipe(
-                tap((meta) => {
-                    this.ui.set('saved');
-                    this.saved.emit(meta);
-                }),
-                catchError((err) => {
-                    console.error('Master list commit failed:', err);
-                    this.errorMsg.set('Save failed. Please try again.');
-                    this.ui.set('error');
-                    return of(null);
-                }),
-                finalize(() => {
-                    if (this.ui() === 'saving') this.ui.set('preview');
-                }),
-                takeUntilDestroyed(this.destroyRef),
-            )
-            .subscribe();
-    }
-
-    replace() {
-        // ✅ Just reset local preview and let user upload again
-        this.preview.set(null);
-        this.errorMsg.set(null);
-        this.ui.set('idle');
+    viewExisting() {
+        console.log('Preview existing');
     }
 
     removeExisting() {
         const eid = this.endorsementId;
         if (eid == null) return;
 
-        this.ui.set('saving');
-        this.errorMsg.set(null);
+        const dialogRef=this.dialog.open(SimpleConfirmDialogComponent, {
+            width: '400px',
+            data: {
+                title: 'Confirm Deletion',
+                message: 'Are you sure you want to delete the existing master list?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+            },
+        });
 
-        this.endorsementService
-            .deleteEndorsementMasterList(eid)
+        dialogRef.afterClosed()
             .pipe(
-                tap(() => {
-                    this.ui.set('idle');
-                    this.preview.set(null);
-                    this.cleared.emit();
-                }),
-                catchError((err) => {
-                    console.error('Delete master list failed:', err);
-                    this.errorMsg.set('Could not remove the master list.');
-                    this.ui.set('error');
-                    return of(null);
-                }),
-                finalize(() => {
-                    if (this.ui() === 'saving') this.ui.set('idle');
-                }),
                 takeUntilDestroyed(this.destroyRef),
             )
-            .subscribe();
+            .subscribe((confirmed)=>{
+                if (!confirmed) return;
+
+                this.ui.set('saving');
+                this.errorMsg.set(null);
+                this.endorsementMasterListService
+                    .deleteEndorsementMasterList(eid)
+                    .pipe(
+                        tap(()=>{
+                            this.ui.set('saved');
+                            this.preview.set(null);
+                            this.cleared.emit();
+                        }),
+                        catchError((err)=>{
+                            console.error('Master list delete failed:', err);
+                            this.errorMsg.set('Delete failed. Please try again.');
+                            this.ui.set('error');
+                            return of(null);
+                        }),
+                        finalize(()=>{
+                            if (this.ui() === 'saving') this.ui.set('idle');
+                        }),
+                        takeUntilDestroyed(this.destroyRef),
+                    )
+                    .subscribe();
+            });
+
+
     }
 
     // ✅ helper for template

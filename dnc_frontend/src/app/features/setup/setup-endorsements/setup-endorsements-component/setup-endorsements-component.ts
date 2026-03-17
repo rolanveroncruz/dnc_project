@@ -36,6 +36,8 @@ import {
 import {SpecialServicesFeesTabComponent} from './special-services-fees-tab-component/special-services-fees-tab-component';
 import {SpecialServicesCountsTabComponent} from './special-services-counts-tab-component/special-services-counts-tab-component';
 import {HighEndServicesCountsTabComponent} from './high-end-services-counts-tab-component/high-end-services-counts-tab-component';
+import {HttpErrorResponse} from '@angular/common/http';
+import {EndorsementMasterListService} from '../../../../api_services/endorsement-master-list-service';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
@@ -94,6 +96,7 @@ export class SetupEndorsementsComponent implements OnInit{
     private destroyRef = inject(DestroyRef);
     private readonly hmoService = inject(HMOService);
     private readonly endorsementService = inject(EndorsementService);
+    private readonly endorsementMasterListService = inject(EndorsementMasterListService);
     private readonly dentalServicesService = inject(DentalServicesService);
 
     readonly loadState = signal<UIState>('idle');
@@ -355,6 +358,13 @@ export class SetupEndorsementsComponent implements OnInit{
         this.loadState.set('idle');
     }
 
+    /*
+    loadExisting accepts an id, the endorsement_id, and pulls
+    1. endorsement_information
+    2. endorsement_rates
+    3. endorsement_counts
+    4. endorsement_master_list_meta
+     */
 
     private loadExisting(id: number | null): void {
         if (id == null) return;
@@ -384,9 +394,13 @@ export class SetupEndorsementsComponent implements OnInit{
                     return of([] as EndorsementCountResponse[]);
                 })
             ),
-            masterListMeta: this.endorsementService.getEndorsementMasterListMeta(id).pipe(
+            masterListMeta: this.endorsementMasterListService.getEndorsementMasterListMeta(id).pipe(
                 catchError((err) => {
-                    console.error('Failed to load endorsement master list meta:', err);
+                    if (err instanceof HttpErrorResponse && err.status === 404){
+                        console.error('Caught : Endorsement master list meta not found:', err);
+                        return of(null);
+                    }
+                    console.error('Caught : Failed to load endorsement master list meta:', err);
                     return of(null);
                 })
             ),
