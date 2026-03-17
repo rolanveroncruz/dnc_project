@@ -65,3 +65,4 @@ pub use api::endorsement_master_list_upload::upload_endorsement_master_list;
 pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_endorsement_id;
 pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
 pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
+pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
