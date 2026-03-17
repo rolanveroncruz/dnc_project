@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub mod dental_services;
 pub mod clinic_capabilities;
 pub mod users;
@@ -25,4 +26,12 @@ pub mod dentist_clinic_position;
 pub mod extended_dental_clinic;
 pub mod endorsement_type;
 pub mod endorsement_billing_period_type;
-mod endorsement_company;
+pub mod endorsement_company;
+pub mod endorsements;
+pub mod endorsement_rates;
+pub mod endorsement_counts;
+pub mod endorsement_master_list_meta_data;
+pub mod endorsement_master_list_upload;
+pub mod endorsement_master_list_delete;
+pub mod endorsement_master_list_member;
+pub mod hmo_endorsement;

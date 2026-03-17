@@ -11,3 +11,6 @@ Routing has been setup properly. Navigating inside setup is ok so far.
 Next need to work on logging-in properly. This means the API upon successful log-in should return a menu-activation object,
 and the navigation items should be activated or deactivated accordingly. Also if login fails, an error message should be displayed.
 
+### Mar 9, 2026
+MOst of the app is already done.
+Working on Endorsements now.

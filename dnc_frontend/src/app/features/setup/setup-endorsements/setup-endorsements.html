@@ -1,0 +1,28 @@
+<mat-card class="setup-card">
+    <mat-card-header class="card-header-center">
+        <div class="title-block">
+            <mat-card-title class="mat-headline-1">Endorsements</mat-card-title>
+            <mat-card-subtitle>Manage endorsements</mat-card-subtitle>
+        </div>
+        <div class="header-actions">
+            <button mat-flat-button type="button" (click)="onNewEndorsement()">
+                New Endorsement
+            </button>
+        </div>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (endorsements(); as ds){
+            @if (ds.length === 0) {
+                <p>No Endorsements Found</p>
+            } @else {
+                <app-generic-data-table
+                    [columnDefs]="columns"
+                    [data]="ds"
+                    [showAddButton]="false"
+                    (rowClicked)="onRowClicked($event)">
+                </app-generic-data-table>
+            }
+        }
+    </mat-card-content>
+</mat-card>

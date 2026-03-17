@@ -1,4 +1,5 @@
 
+#![allow(dead_code)]
 pub mod boiler;
 pub mod login;
 mod structs;
@@ -54,3 +55,14 @@ pub use api::extended_dental_clinic::get_all_clinics_and_capabilities;
 
 pub use api::endorsement_type::get_endorsement_types;
 pub use api::endorsement_billing_period_type::get_endorsement_billing_period_types;
+pub use api::endorsements::{get_all_endorsements, get_endorsement_by_id, create_endorsement, patch_endorsement};
+pub use api::endorsement_company::{get_endorsement_companies, post_endorsement_company};
+
+pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rate, put_endorsement_rate, patch_endorsement_rate};
+pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_count, patch_endorsement_count};
+
+pub use api::endorsement_master_list_upload::upload_endorsement_master_list;
+pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_endorsement_id;
+pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
+pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
+pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;

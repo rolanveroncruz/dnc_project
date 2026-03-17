@@ -1,5 +1,6 @@
-use sea_orm_migration::{prelude::*};
+use crate::m20260108_051749_create_table_hmo::HMO;
 use crate::m20260220_082933_create_endorsement_tables::Endorsement::EndorsementBillingPeriodTypeId;
+use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -31,28 +32,31 @@ impl Migration {
     /*
     Endorsement Companies are the list of companies that are endorsed by HMOs.
      */
-    pub async fn create_endorsement_company_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    pub async fn create_endorsement_company_table(
+        manager: &SchemaManager<'_>,
+    ) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
                     .table(EndorsementCompany::Table)
-                        .if_not_exists()
-                    .col(ColumnDef::new(EndorsementCompany::Id)
-                        .integer()
-                        .not_null()
-                        .primary_key()
-                        .auto_increment()
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(EndorsementCompany::Id)
+                            .integer()
+                            .not_null()
+                            .primary_key()
+                            .auto_increment(),
                     )
-                    .col(ColumnDef::new(EndorsementCompany::Name)
-                        .string()
-                        .not_null()
-                    )
-                    .to_owned()
-            ).await?;
+                    .col(ColumnDef::new(EndorsementCompany::Name).string().not_null())
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
     pub async fn drop_endorsement_company_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(EndorsementCompany::Table).to_owned()).await?;
+        manager
+            .drop_table(Table::drop().table(EndorsementCompany::Table).to_owned())
+            .await?;
         Ok(())
     }
 
@@ -65,74 +69,96 @@ impl Migration {
                 Table::create()
                     .table(EndorsementType::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(EndorsementType::Id)
-                        .integer()
-                        .not_null()
-                        .primary_key()
-                        .auto_increment()
+                    .col(
+                        ColumnDef::new(EndorsementType::Id)
+                            .integer()
+                            .not_null()
+                            .primary_key()
+                            .auto_increment(),
                     )
-                    .col(ColumnDef::new(EndorsementType::Name)
-                        .string()
-                        .not_null()
+                    .col(ColumnDef::new(EndorsementType::Name).string().not_null())
+                    .col(
+                        ColumnDef::new(EndorsementType::IsActive)
+                            .boolean()
+                            .default(true),
                     )
-                    .col(ColumnDef::new(EndorsementType::IsActive)
-                        .boolean()
-                        .default(true)
-                    )
-                    .to_owned()
-            ).await?;
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
-    pub async fn seed_endorsement_type_table(manager: &SchemaManager<'_>, name: &str) -> Result<(), DbErr> {
+    pub async fn seed_endorsement_type_table(
+        manager: &SchemaManager<'_>,
+        name: &str,
+    ) -> Result<(), DbErr> {
         let insert = Query::insert()
-                .into_table(EndorsementType::Table)
-                .columns([EndorsementType::Name])
-                .values_panic([name.into()])
+            .into_table(EndorsementType::Table)
+            .columns([EndorsementType::Name])
+            .values_panic([name.into()])
             .to_owned();
         manager.exec_stmt(insert).await
     }
     pub async fn drop_endorsement_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(EndorsementType::Table).to_owned()).await?;
+        manager
+            .drop_table(Table::drop().table(EndorsementType::Table).to_owned())
+            .await?;
         Ok(())
     }
 
     /*
     Billing Period Types are "Billed Annually" and "Billed Monthly".
      */
-    pub async fn create_endorsement_billing_period_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+    pub async fn create_endorsement_billing_period_type_table(
+        manager: &SchemaManager<'_>,
+    ) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
                     .table(EndorsementBillingPeriodType::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(EndorsementBillingPeriodType::Id)
-                        .integer()
-                        .auto_increment()
-                        .not_null()
-                        .primary_key()
+                    .col(
+                        ColumnDef::new(EndorsementBillingPeriodType::Id)
+                            .integer()
+                            .auto_increment()
+                            .not_null()
+                            .primary_key(),
                     )
-                    .col(ColumnDef::new(EndorsementBillingPeriodType::Name)
-                        .string()
-                        .not_null()
+                    .col(
+                        ColumnDef::new(EndorsementBillingPeriodType::Name)
+                            .string()
+                            .not_null(),
                     )
-                    .col(ColumnDef::new(EndorsementBillingPeriodType::IsActive)
-                        .boolean()
-                        .default(true)
+                    .col(
+                        ColumnDef::new(EndorsementBillingPeriodType::IsActive)
+                            .boolean()
+                            .default(true),
                     )
-                    .to_owned()
-            ).await?;
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
-    pub async fn seed_endorsement_billing_period_type_table(manager: &SchemaManager<'_>, name: &str) -> Result<(), DbErr> {
+    pub async fn seed_endorsement_billing_period_type_table(
+        manager: &SchemaManager<'_>,
+        name: &str,
+    ) -> Result<(), DbErr> {
         let insert = Query::insert()
-                .into_table(EndorsementBillingPeriodType::Table)
-                .columns([EndorsementBillingPeriodType::Name])
-                .values_panic([name.into()])
+            .into_table(EndorsementBillingPeriodType::Table)
+            .columns([EndorsementBillingPeriodType::Name])
+            .values_panic([name.into()])
             .to_owned();
         manager.exec_stmt(insert).await
     }
-    pub async fn drop_endorsement_billing_period_type_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(EndorsementBillingPeriodType::Table).to_owned()).await?;
+    pub async fn drop_endorsement_billing_period_type_table(
+        manager: &SchemaManager<'_>,
+    ) -> Result<(), DbErr> {
+        manager
+            .drop_table(
+                Table::drop()
+                    .table(EndorsementBillingPeriodType::Table)
+                    .to_owned(),
+            )
+            .await?;
         Ok(())
     }
 
@@ -144,100 +170,120 @@ impl Migration {
             .create_table(
                 Table::create()
                     .table(Endorsement::Table)
-                        .if_not_exists()
-                    .col(ColumnDef::new(Endorsement::Id)
-                        .integer()
-                        .not_null()
-                        .primary_key()
-                        .auto_increment()
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Endorsement::Id)
+                            .integer()
+                            .not_null()
+                            .primary_key()
+                            .auto_increment(),
                     )
-                    .col(ColumnDef::new(Endorsement::EndorsementCompanyId)
-                        .integer()
-                        .not_null()
+                    .col(ColumnDef::new(Endorsement::HMOId).integer().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_endorsement_hmo_id")
+                            .from(Endorsement::Table, Endorsement::HMOId)
+                            .to(HMO::Table, HMO::Id),
                     )
-                    .foreign_key(ForeignKey::create()
-                        .name("fk_endorsement_company_id")
-                        .from(Endorsement::Table, Endorsement::EndorsementCompanyId )
-                        .to(EndorsementCompany::Table, EndorsementCompany::Id)
-                        .on_delete(ForeignKeyAction::Restrict)
+                    .col(
+                        ColumnDef::new(Endorsement::EndorsementCompanyId)
+                            .integer()
+                            .not_null(),
                     )
-                    .col(ColumnDef::new(Endorsement::EndorsementTypeId)
-                        .integer()
-                        .not_null()
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_endorsement_company_id")
+                            .from(Endorsement::Table, Endorsement::EndorsementCompanyId)
+                            .to(EndorsementCompany::Table, EndorsementCompany::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
-                    .foreign_key(ForeignKey::create()
-                        .name("fk_endorsement_type_id")
-                        .from(Endorsement::Table, Endorsement::EndorsementTypeId )
-                        .to(EndorsementType::Table, EndorsementType::Id)
-                        .on_delete(ForeignKeyAction::Restrict)
+                    .col(
+                        ColumnDef::new(Endorsement::EndorsementTypeId)
+                            .integer()
+                            .not_null(),
                     )
-                    .col(ColumnDef::new(Endorsement::AgreementCorpNumber)
-                        .string()
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_endorsement_type_id")
+                            .from(Endorsement::Table, Endorsement::EndorsementTypeId)
+                            .to(EndorsementType::Table, EndorsementType::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
-                    .col(ColumnDef::new(Endorsement::DateStart)
-                        .date()
-                        .not_null()
+                    .col(ColumnDef::new(Endorsement::AgreementCorpNumber).string())
+                    .col(ColumnDef::new(Endorsement::DateStart).date().not_null())
+                    .col(ColumnDef::new(Endorsement::DateEnd).date().not_null())
+                    .col(
+                        ColumnDef::new(EndorsementBillingPeriodTypeId)
+                            .integer()
+                            .not_null(),
                     )
-                    .col(ColumnDef::new(Endorsement::DateEnd)
-                        .date()
-                        .not_null()
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_endorsement_billing_period_type_id")
+                            .from(Endorsement::Table, EndorsementBillingPeriodTypeId)
+                            .to(
+                                EndorsementBillingPeriodType::Table,
+                                EndorsementBillingPeriodType::Id,
+                            )
+                            .on_delete(ForeignKeyAction::Restrict),
                     )
-                    .col(ColumnDef::new(EndorsementBillingPeriodTypeId)
-                        .integer()
-                        .not_null()
-                    )
-                    .foreign_key(ForeignKey::create()
-                        .name("fk_endorsement_billing_period_type_id")
-                        .from(Endorsement::Table, EndorsementBillingPeriodTypeId )
-                        .to(EndorsementBillingPeriodType::Table, EndorsementBillingPeriodType::Id)
-                        .on_delete(ForeignKeyAction::Restrict)
-                    )
-                    .col(ColumnDef::new(Endorsement::RetainerFee)
-                        .decimal()
-                    )
-                    .col(ColumnDef::new(Endorsement::Remarks)
-                        .string()
-                    )
-                    .col(ColumnDef::new(Endorsement::EndorsementMethod)
-                        .string()
-                    )
-                    .to_owned()
-            ).await?;
-       Ok(())
+                    .col(ColumnDef::new(Endorsement::RetainerFee).decimal())
+                    .col(ColumnDef::new(Endorsement::Remarks).string())
+                    .col(ColumnDef::new(Endorsement::EndorsementMethod).string())
+                    .col(ColumnDef::new(Endorsement::IsActive).boolean().default(true).not_null())
+                    .to_owned(),
+            )
+            .await?;
+        Ok(())
     }
     pub async fn drop_endorsements_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Endorsement::Table).to_owned()).await?;
+        manager
+            .drop_table(Table::drop().table(Endorsement::Table).to_owned())
+            .await?;
         Ok(())
     }
 
+    /*
+     MasterList related items
+    */
+
 }
+
+/*
+The EndorsementCompany table lists all companies that are endorsed by HMOs. We collect them separately
+so we can reuse them as choices; also, so identification is unified (e.g., not a textbox).
+ */
 #[derive(Iden)]
-pub enum EndorsementCompany{
+pub enum EndorsementCompany {
     Table,
     Id,
     Name,
 }
 
-#[derive(Iden)]
-pub enum EndorsementType{
-    Table,
-    Id,
-    Name,
-    IsActive
-}
-#[derive(Iden)]
-pub enum EndorsementBillingPeriodType{
-    Table,
-    Id,
-    Name,
-    IsActive
-}
+/*
+The Member table lists all members including personal information
+*/
 
+#[derive(Iden)]
+pub enum EndorsementType {
+    Table,
+    Id,
+    Name,
+    IsActive,
+}
+#[derive(Iden)]
+pub enum EndorsementBillingPeriodType {
+    Table,
+    Id,
+    Name,
+    IsActive,
+}
 
 #[derive(Iden)]
 pub enum Endorsement {
     Table,
     Id,
+    HMOId,
     EndorsementCompanyId, //
     EndorsementTypeId,    //
     AgreementCorpNumber,
@@ -247,9 +293,5 @@ pub enum Endorsement {
     RetainerFee,
     Remarks,
     EndorsementMethod,
+    IsActive,
 }
-
-
-
-
-

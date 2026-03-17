@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    pub hmo_id: i32,
     pub endorsement_company_id: i32,
     pub endorsement_type_id: i32,
     pub agreement_corp_number: Option<String>,
@@ -18,6 +19,7 @@ pub struct Model {
     pub retainer_fee: Option<Decimal>,
     pub remarks: Option<String>,
     pub endorsement_method: Option<String>,
+    pub is_active: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -38,6 +40,8 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementCompany,
+    #[sea_orm(has_many = "super::endorsement_rates::Entity")]
+    EndorsementRates,
     #[sea_orm(
         belongs_to = "super::endorsement_type::Entity",
         from = "Column::EndorsementTypeId",
@@ -46,6 +50,16 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementType,
+    #[sea_orm(
+        belongs_to = "super::hmo::Entity",
+        from = "Column::HmoId",
+        to = "super::hmo::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Hmo,
+    #[sea_orm(has_many = "super::master_list::Entity")]
+    MasterList,
 }
 
 impl Related<super::endorsement_billing_period_type::Entity> for Entity {
@@ -60,9 +74,27 @@ impl Related<super::endorsement_company::Entity> for Entity {
     }
 }
 
+impl Related<super::endorsement_rates::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EndorsementRates.def()
+    }
+}
+
 impl Related<super::endorsement_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementType.def()
+    }
+}
+
+impl Related<super::hmo::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Hmo.def()
+    }
+}
+
+impl Related<super::master_list::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::MasterList.def()
     }
 }
 

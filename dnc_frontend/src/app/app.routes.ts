@@ -24,7 +24,8 @@ import {
   DentalClinicComponent
 } from './features/setup/setup-dental-clinics-component/dental-clinic-component/dental-clinic-component';
 import {DentistComponent} from './features/setup/setup-dentists/dentist-component/dentist-component';
-import {SetupEndorsementsComponent} from './features/setup/setup-endorsements-component/setup-endorsements-component';
+import {SetupEndorsementsComponent} from './features/setup/setup-endorsements/setup-endorsements-component/setup-endorsements-component';
+import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
 
 export const routes: Routes = [
   {
@@ -58,7 +59,9 @@ export const routes: Routes = [
           { path: 'dentists', component: SetupDentists, title: 'Dentists'},
           { path: 'dentists/new', component: DentistComponent, title: 'Dentists'},
           { path: 'dentists/:id', component: DentistComponent, title: 'Dentists'},
-          { path: 'endorsements', component: SetupEndorsementsComponent, title: 'Endorsements'},
+          { path: 'endorsements', component: SetupEndorsements, title: 'Endorsements'},
+          { path: 'endorsements/new', component: SetupEndorsementsComponent, title: 'Endorsements'},
+            { path: 'endorsements/:id', component: SetupEndorsementsComponent, title: 'Endorsements'},
 
          ]
       }, // end of 'setup'

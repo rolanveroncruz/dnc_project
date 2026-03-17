@@ -39,7 +39,7 @@ pub async fn get_endorsement_types(
     State(state): State<AppState>,
     Query(q): Query<GetEndorsementTypesQuery>,
 ) -> Result<Json<Vec<EndorsementTypeResponse>>, StatusCode> {
-    let mut stmt = endorsement_type::Entity::find().order_by_asc(endorsement_type::Column::Name);
+    let mut stmt = endorsement_type::Entity::find().order_by_asc(endorsement_type::Column::Id);
 
     // If you prefer "NULL means active", adjust this logic.
     if q.active_only.unwrap_or(false) {
