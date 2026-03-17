@@ -32,4 +32,5 @@ pub mod endorsement_rates;
 pub mod endorsement_counts;
 pub mod endorsement_master_list_meta_data;
 pub mod endorsement_master_list_upload;
-mod endorsement_master_list_delete;
+pub mod endorsement_master_list_delete;
+pub mod endorsement_master_list_member;

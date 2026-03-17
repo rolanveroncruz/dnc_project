@@ -39,6 +39,8 @@ use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
 use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities, get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic, get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic, get_region_by_id, post_region, patch_region, get_all_dentists, get_dentist_from_id, get_clinics_for_dentist_id, get_all_dentist_clinics, get_dentists_for_clinic_id, get_all_dentist_histories, get_all_dentist_status, get_all_tax_classifications, get_all_tax_types, get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id, add_dentist_clinic, remove_dentist_clinic, add_exclusive_to_hmo, remove_exclusive_to_hmo, add_except_for_hmo, remove_except_for_hmo, save_contract_file_for_dentist_id, get_contract_file_for_dentist_id, create_dentist, patch_dentist, get_all_account_types, get_dentist_clinic_positions, get_all_clinics_and_capabilities, get_endorsement_types, get_endorsement_billing_period_types, get_all_endorsements, create_endorsement, get_endorsement_by_id, patch_endorsement, get_endorsement_companies, post_endorsement_company, get_all_endorsement_rates, post_endorsement_rate, get_all_endorsement_counts, post_endorsement_count, put_endorsement_rate, patch_endorsement_rate, put_endorsement_count, patch_endorsement_count, upload_endorsement_master_list};
+use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_master_lists_for_endorsement_id};
+use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -120,7 +122,10 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/counts", get(get_all_endorsement_counts).post(post_endorsement_count))
         .route("/endorsements/{endorsement_id}/counts/{count_id}", put(put_endorsement_count).patch(patch_endorsement_count))
         .route("/endorsements/{endorsement_id}/master_list", post(upload_endorsement_master_list))
-        // .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_metadata_from_endorsement_id))
+        .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_meta_data_for_endorsement_id))
+        .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
+        .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
+    
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
@@ -155,6 +160,7 @@ pub fn build_app(my_state:AppState) ->Router{
                             Method::POST,
                             Method::PATCH,
                             Method::PUT,
+                            Method::DELETE,
                             Method::OPTIONS,])
         // allow headers frontend sends
         .allow_headers(vec![

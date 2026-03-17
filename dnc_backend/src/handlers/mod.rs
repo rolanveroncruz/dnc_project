@@ -62,3 +62,6 @@ pub use api::endorsement_rates::{get_all_endorsement_rates, post_endorsement_rat
 pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_count, patch_endorsement_count};
 
 pub use api::endorsement_master_list_upload::upload_endorsement_master_list;
+pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_endorsement_id;
+pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
+pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
