@@ -4,27 +4,22 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "member")]
+#[sea_orm(table_name = "verification_status")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub first_name: String,
-    pub last_name: String,
-    pub middle_name: Option<String>,
-    pub email_address: Option<String>,
-    pub birth_date: Option<Date>,
-    pub mobile_number: Option<String>,
+    pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::master_list_member::Entity")]
-    MasterListMember,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
-impl Related<super::master_list_member::Entity> for Entity {
+impl Related<super::verification::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::MasterListMember.def()
+        Relation::Verification.def()
     }
 }
 

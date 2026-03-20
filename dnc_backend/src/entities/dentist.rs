@@ -59,6 +59,8 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     DentistStatus,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::dentist_clinic::Entity> for Entity {
@@ -88,6 +90,12 @@ impl Related<super::dentist_hmo_relations::Entity> for Entity {
 impl Related<super::dentist_status::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistStatus.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

@@ -29,11 +29,19 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     MasterList,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::master_list::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterList.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

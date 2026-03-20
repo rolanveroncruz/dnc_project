@@ -20,6 +20,8 @@ mod m20260220_082933_create_endorsement_tables;
 mod m20260220_122937_add_endorsement_permission_and_role_permissions;
 mod m20260307_083354_add_endorsement_rates_masterlists;
 mod m20260309_060904_add_endorsement_rates_mls_permissions_and_role_permissions;
+mod m20260319_052702_add_verification_tables;
+mod m20260320_142702_add_verification_permissions_and_role_permissions;
 
 pub struct Migrator;
 
@@ -47,6 +49,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260220_122937_add_endorsement_permission_and_role_permissions::Migration),
             Box::new(m20260307_083354_add_endorsement_rates_masterlists::Migration),
             Box::new(m20260309_060904_add_endorsement_rates_mls_permissions_and_role_permissions::Migration),
+            Box::new(m20260319_052702_add_verification_tables::Migration),
+            Box::new(m20260320_142702_add_verification_permissions_and_role_permissions::Migration),
         ]
     }
 }

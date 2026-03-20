@@ -31,6 +31,8 @@ pub enum Relation {
     DentistContractServiceRates,
     #[sea_orm(has_many = "super::endorsement_rates::Entity")]
     EndorsementRates,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::dental_service_type::Entity> for Entity {
@@ -48,6 +50,12 @@ impl Related<super::dentist_contract_service_rates::Entity> for Entity {
 impl Related<super::endorsement_rates::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementRates.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

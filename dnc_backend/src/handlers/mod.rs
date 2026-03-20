@@ -33,7 +33,7 @@ pub use api::clinic_capabilities_list::{get_clinic_capabilities_for_clinic,
                                         add_clinic_capability_to_clinic,
                                         remove_clinic_capability_from_clinic,
                                         set_clinic_capabilities_for_clinic};
-pub use api::dentist::{get_all_dentists, get_dentist_from_id, create_dentist, patch_dentist};
+pub use api::dentist::{get_all_dentists, get_dentist_from_id, create_dentist, patch_dentist, get_dentist_names};
 pub use api::dentist_clinic::{get_all_dentist_clinics, get_clinics_for_dentist_id, get_dentists_for_clinic_id,
                               add_dentist_clinic, remove_dentist_clinic};
 pub use api::dentist_history::{get_all_dentist_histories};
@@ -66,3 +66,5 @@ pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_en
 pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
 pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
 pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
+
+pub use api::verification::{get_all_verifications};

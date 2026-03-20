@@ -35,3 +35,4 @@ pub mod endorsement_master_list_upload;
 pub mod endorsement_master_list_delete;
 pub mod endorsement_master_list_member;
 pub mod hmo_endorsement;
+pub mod verification;
