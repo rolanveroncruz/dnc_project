@@ -80,7 +80,6 @@ impl Migration {
                 )
                 .col(ColumnDef::new(MasterListMember::MasterListId)
                     .integer()
-                    .not_null()
                 )
                 .foreign_key(ForeignKey::create()
                     .name("fk_master_list_id")
