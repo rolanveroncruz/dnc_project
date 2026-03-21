@@ -6,7 +6,6 @@ import {Router} from '@angular/router';
 import {EndorsementService, EndorsementListRow} from '../../../api_services/endorsement-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {DentistWithLookupsAndClinicInfo} from '../setup-dentists/setup-dentists';
 
 @Component({
   selector: 'app-setup-endorsements',

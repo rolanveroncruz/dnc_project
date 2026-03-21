@@ -90,7 +90,6 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         SpecialServicesFeesTabComponent,
         SpecialServicesCountsTabComponent,
         HighEndServicesCountsTabComponent,
-        MasterListDialogComponent,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
