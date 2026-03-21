@@ -13,7 +13,7 @@ pub struct Model {
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
     pub birth_date: Option<Date>,
     pub is_active: bool,

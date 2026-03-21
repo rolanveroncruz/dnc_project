@@ -4,9 +4,10 @@ use axum::{
     Json,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, JoinType, QueryOrder,
-    QuerySelect, RelationTrait, Set,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, JoinType, QueryFilter,
+    QueryOrder, QuerySelect, RelationTrait, Set,
 };
+use sea_orm::prelude::Date;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -15,26 +16,19 @@ use crate::{
     entities::{endorsement, master_list, master_list_member},
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, sea_orm::FromQueryResult)]
 pub struct MasterListMemberLookupResponse {
     pub master_list_member_id: i32,
     pub endorsement_id: Option<i32>,
     pub endorsement_agreement_corp_number: Option<String>,
+    pub master_list_member_account_no: String,
     pub master_list_member_last_name: String,
     pub master_list_member_first_name: String,
     pub master_list_member_middle_name: String,
     pub master_list_member_name: String,
-    pub master_list_member_is_active: bool,
-}
-
-#[derive(Debug, sea_orm::FromQueryResult)]
-struct MasterListMemberLookupRow {
-    pub master_list_member_id: i32,
-    pub endorsement_id: Option<i32>,
-    pub endorsement_agreement_corp_number: Option<String>,
-    pub master_list_member_last_name: String,
-    pub master_list_member_first_name: String,
-    pub master_list_member_middle_name: String,
+    pub master_list_member_email_address: Option<String>,
+    pub master_list_member_mobile_number: Option<String>,
+    pub master_list_member_birth_date: Option<Date>,
     pub master_list_member_is_active: bool,
 }
 
@@ -45,22 +39,9 @@ pub struct CreateMasterListMemberRequest {
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
-    pub birth_date: Option<sea_orm::prelude::Date>,
-    pub is_active: bool,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PutMasterListMemberRequest {
-    pub master_list_id: Option<i32>,
-    pub account_number: String,
-    pub last_name: String,
-    pub first_name: String,
-    pub middle_name: String,
-    pub email_address: String,
-    pub mobile_number: Option<String>,
-    pub birth_date: Option<sea_orm::prelude::Date>,
+    pub birth_date: Option<Date>,
     pub is_active: bool,
 }
 
@@ -71,51 +52,24 @@ pub struct PatchMasterListMemberRequest {
     pub last_name: Option<String>,
     pub first_name: Option<String>,
     pub middle_name: Option<String>,
-    pub email_address: Option<String>,
+    pub email_address: Option<Option<String>>,
     pub mobile_number: Option<Option<String>>,
-    pub birth_date: Option<Option<sea_orm::prelude::Date>>,
+    pub birth_date: Option<Option<Date>>,
     pub is_active: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct MasterListMemberResponse {
+pub struct MasterListMemberMutationResponse {
     pub id: i32,
     pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
-    pub birth_date: Option<sea_orm::prelude::Date>,
+    pub birth_date: Option<Date>,
     pub is_active: bool,
-}
-
-impl From<master_list_member::Model> for MasterListMemberResponse {
-    fn from(value: master_list_member::Model) -> Self {
-        Self {
-            id: value.id,
-            master_list_id: value.master_list_id,
-            account_number: value.account_number,
-            last_name: value.last_name,
-            first_name: value.first_name,
-            middle_name: value.middle_name,
-            email_address: value.email_address,
-            mobile_number: value.mobile_number,
-            birth_date: value.birth_date,
-            is_active: value.is_active,
-        }
-    }
-}
-
-fn format_full_name(last_name: &str, first_name: &str, middle_name: &str) -> String {
-    let middle = middle_name.trim();
-
-    if middle.is_empty() {
-        format!("{}, {}", last_name.trim(), first_name.trim())
-    } else {
-        format!("{}, {} {}", last_name.trim(), first_name.trim(), middle)
-    }
 }
 
 #[instrument(skip(state))]
@@ -131,6 +85,10 @@ pub async fn get_all_master_list_members(
             "endorsement_agreement_corp_number",
         )
         .column_as(
+            master_list_member::Column::AccountNumber,
+            "master_list_member_account_no",
+        )
+        .column_as(
             master_list_member::Column::LastName,
             "master_list_member_last_name",
         )
@@ -142,6 +100,24 @@ pub async fn get_all_master_list_members(
             master_list_member::Column::MiddleName,
             "master_list_member_middle_name",
         )
+        .expr_as(
+            sea_orm::sea_query::Expr::cust(
+                r#""master_list_member"."last_name" || ', ' || "master_list_member"."first_name" || ' ' || "master_list_member"."middle_name""#,
+            ),
+            "master_list_member_name",
+        )
+        .column_as(
+            master_list_member::Column::EmailAddress,
+            "master_list_member_email_address",
+        )
+        .column_as(
+            master_list_member::Column::MobileNumber,
+            "master_list_member_mobile_number",
+        )
+        .column_as(
+            master_list_member::Column::BirthDate,
+            "master_list_member_birth_date",
+        )
         .column_as(
             master_list_member::Column::IsActive,
             "master_list_member_is_active",
@@ -150,43 +126,26 @@ pub async fn get_all_master_list_members(
             JoinType::LeftJoin,
             master_list_member::Relation::MasterList.def(),
         )
-        .join(JoinType::LeftJoin, master_list::Relation::Endorsement.def())
+        .join(
+            JoinType::LeftJoin,
+            master_list::Relation::Endorsement.def(),
+        )
         .order_by_asc(master_list_member::Column::LastName)
         .order_by_asc(master_list_member::Column::FirstName)
-        .order_by_asc(master_list_member::Column::MiddleName)
-        .into_model::<MasterListMemberLookupRow>()
+        .into_model::<MasterListMemberLookupResponse>()
         .all(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let response = rows
-        .into_iter()
-        .map(|row| MasterListMemberLookupResponse {
-            master_list_member_id: row.master_list_member_id,
-            endorsement_id: row.endorsement_id,
-            endorsement_agreement_corp_number: row.endorsement_agreement_corp_number,
-            master_list_member_last_name: row.master_list_member_last_name.clone(),
-            master_list_member_first_name: row.master_list_member_first_name.clone(),
-            master_list_member_middle_name: row.master_list_member_middle_name.clone(),
-            master_list_member_name: format_full_name(
-                &row.master_list_member_last_name,
-                &row.master_list_member_first_name,
-                &row.master_list_member_middle_name,
-            ),
-            master_list_member_is_active: row.master_list_member_is_active,
-        })
-        .collect();
-
-    Ok(Json(response))
+    Ok(Json(rows))
 }
 
 #[instrument(skip(state, payload))]
-pub async fn create_master_list_member(
+pub async fn post_master_list_member(
     State(state): State<AppState>,
     Json(payload): Json<CreateMasterListMemberRequest>,
-) -> Result<(StatusCode, Json<MasterListMemberResponse>), StatusCode> {
+) -> Result<(StatusCode, Json<MasterListMemberMutationResponse>), StatusCode> {
     let active_model = master_list_member::ActiveModel {
-        id: sea_orm::ActiveValue::NotSet,
         master_list_id: Set(payload.master_list_id),
         account_number: Set(payload.account_number),
         last_name: Set(payload.last_name),
@@ -196,6 +155,7 @@ pub async fn create_master_list_member(
         mobile_number: Set(payload.mobile_number),
         birth_date: Set(payload.birth_date),
         is_active: Set(payload.is_active),
+        ..Default::default()
     };
 
     let inserted = active_model
@@ -203,39 +163,21 @@ pub async fn create_master_list_member(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok((StatusCode::CREATED, Json(inserted.into())))
-}
-
-#[instrument(skip(state, payload))]
-pub async fn put_master_list_member(
-    State(state): State<AppState>,
-    Path(id): Path<i32>,
-    Json(payload): Json<PutMasterListMemberRequest>,
-) -> Result<Json<MasterListMemberResponse>, StatusCode> {
-    let existing = master_list_member::Entity::find_by_id(id)
-        .one(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-        .ok_or(StatusCode::NOT_FOUND)?;
-
-    let mut active_model = existing.into_active_model();
-
-    active_model.master_list_id = Set(payload.master_list_id);
-    active_model.account_number = Set(payload.account_number);
-    active_model.last_name = Set(payload.last_name);
-    active_model.first_name = Set(payload.first_name);
-    active_model.middle_name = Set(payload.middle_name);
-    active_model.email_address = Set(payload.email_address);
-    active_model.mobile_number = Set(payload.mobile_number);
-    active_model.birth_date = Set(payload.birth_date);
-    active_model.is_active = Set(payload.is_active);
-
-    let updated = active_model
-        .update(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    Ok(Json(updated.into()))
+    Ok((
+        StatusCode::CREATED,
+        Json(MasterListMemberMutationResponse {
+            id: inserted.id,
+            master_list_id: inserted.master_list_id,
+            account_number: inserted.account_number,
+            last_name: inserted.last_name,
+            first_name: inserted.first_name,
+            middle_name: inserted.middle_name,
+            email_address: inserted.email_address,
+            mobile_number: inserted.mobile_number,
+            birth_date: inserted.birth_date,
+            is_active: inserted.is_active,
+        }),
+    ))
 }
 
 #[instrument(skip(state, payload))]
@@ -243,7 +185,7 @@ pub async fn patch_master_list_member(
     State(state): State<AppState>,
     Path(id): Path<i32>,
     Json(payload): Json<PatchMasterListMemberRequest>,
-) -> Result<Json<MasterListMemberResponse>, StatusCode> {
+) -> Result<Json<MasterListMemberMutationResponse>, StatusCode> {
     let existing = master_list_member::Entity::find_by_id(id)
         .one(&state.db)
         .await
@@ -252,32 +194,32 @@ pub async fn patch_master_list_member(
 
     let mut active_model = existing.into_active_model();
 
-    if let Some(value) = payload.master_list_id {
-        active_model.master_list_id = Set(value);
+    if let Some(master_list_id) = payload.master_list_id {
+        active_model.master_list_id = Set(master_list_id);
     }
-    if let Some(value) = payload.account_number {
-        active_model.account_number = Set(value);
+    if let Some(account_number) = payload.account_number {
+        active_model.account_number = Set(account_number);
     }
-    if let Some(value) = payload.last_name {
-        active_model.last_name = Set(value);
+    if let Some(last_name) = payload.last_name {
+        active_model.last_name = Set(last_name);
     }
-    if let Some(value) = payload.first_name {
-        active_model.first_name = Set(value);
+    if let Some(first_name) = payload.first_name {
+        active_model.first_name = Set(first_name);
     }
-    if let Some(value) = payload.middle_name {
-        active_model.middle_name = Set(value);
+    if let Some(middle_name) = payload.middle_name {
+        active_model.middle_name = Set(middle_name);
     }
-    if let Some(value) = payload.email_address {
-        active_model.email_address = Set(value);
+    if let Some(email_address) = payload.email_address {
+        active_model.email_address = Set(email_address);
     }
-    if let Some(value) = payload.mobile_number {
-        active_model.mobile_number = Set(value);
+    if let Some(mobile_number) = payload.mobile_number {
+        active_model.mobile_number = Set(mobile_number);
     }
-    if let Some(value) = payload.birth_date {
-        active_model.birth_date = Set(value);
+    if let Some(birth_date) = payload.birth_date {
+        active_model.birth_date = Set(birth_date);
     }
-    if let Some(value) = payload.is_active {
-        active_model.is_active = Set(value);
+    if let Some(is_active) = payload.is_active {
+        active_model.is_active = Set(is_active);
     }
 
     let updated = active_model
@@ -285,5 +227,16 @@ pub async fn patch_master_list_member(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(updated.into()))
+    Ok(Json(MasterListMemberMutationResponse {
+        id: updated.id,
+        master_list_id: updated.master_list_id,
+        account_number: updated.account_number,
+        last_name: updated.last_name,
+        first_name: updated.first_name,
+        middle_name: updated.middle_name,
+        email_address: updated.email_address,
+        mobile_number: updated.mobile_number,
+        birth_date: updated.birth_date,
+        is_active: updated.is_active,
+    }))
 }

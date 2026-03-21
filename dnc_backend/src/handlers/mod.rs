@@ -69,4 +69,4 @@ pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
 
 pub use api::verification::{get_all_verifications};
 
-pub use api::master_list_member::{get_all_master_list_members, create_master_list_member, patch_master_list_member };
+pub use api::master_list_member::{get_all_master_list_members, post_master_list_member, patch_master_list_member };

@@ -104,7 +104,6 @@ impl Migration {
                 )
                 .col(ColumnDef::new(MasterListMember::EmailAddress)
                 .string()
-                .not_null()
                 )
                 .col(ColumnDef::new(MasterListMember::MobileNumber)
                 .string()

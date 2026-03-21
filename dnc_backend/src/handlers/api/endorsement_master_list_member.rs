@@ -5,8 +5,8 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use sea_orm::prelude::Date;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -34,7 +34,7 @@ pub struct MasterListMemberResponse {
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
     pub birth_date: Option<Date>,
     pub is_active: bool,
@@ -96,7 +96,7 @@ pub async fn get_master_list_for_endorsement(
     Ok(Json(response))
 }
 
-/// patch /api/master_list_members/:master_list_member_id/active
+/// PATCH /api/master_list_members/:master_list_member_id/active
 #[instrument(skip(state), err(Debug))]
 pub async fn set_master_list_member_active(
     State(state): State<AppState>,

@@ -59,7 +59,7 @@ use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_maste
 use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active, get_endorsements_for_hmo_id};
 
 use crate::handlers::{get_all_verifications};
-use crate::handlers::{get_all_master_list_members, create_master_list_member, patch_master_list_member};
+use crate::handlers::{get_all_master_list_members, post_master_list_member, patch_master_list_member};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -147,7 +147,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
         .route("/verifications", get(get_all_verifications))
-        .route("/master_list_members", get(get_all_master_list_members).post(create_master_list_member))
+        .route("/master_list_members", get(get_all_master_list_members).post(post_master_list_member))
         .route("/master_list_members/{id}", patch(patch_master_list_member))
 
 }
