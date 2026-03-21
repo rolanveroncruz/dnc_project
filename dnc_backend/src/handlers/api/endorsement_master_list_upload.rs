@@ -40,7 +40,7 @@ that is a duplicate.
 #[derive(Debug, Serialize)]
 pub struct ExistingDuplicateRow {
     pub id: i32,
-    pub master_list_id: i32,
+    pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
     pub first_name: String,
@@ -309,7 +309,7 @@ pub async fn upload_endorsement_master_list(
         };
 
         let insert_result = master_list_member::ActiveModel {
-            master_list_id: Set(master_list_row.id),
+            master_list_id: Set(Some(master_list_row.id)),
             account_number: Set(pending.account_number),
             last_name: Set(pending.last_name),
             first_name: Set(pending.first_name),

@@ -29,7 +29,7 @@ pub struct EndorsementMasterListMemberResponse {
 #[derive(Debug, Serialize)]
 pub struct MasterListMemberResponse {
     pub id: i32,
-    pub master_list_id: i32,
+    pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
     pub first_name: String,
@@ -77,17 +77,19 @@ pub async fn get_master_list_for_endorsement(
     let response = members
         .into_iter()
         .filter_map(|m| {
-            file_name_by_master_list_id
-                .get(&m.master_list_id)
-                .map(|file_name| EndorsementMasterListMemberResponse {
-                    file_name: file_name.clone(),
-                    master_list_member_id: m.id,
-                    account_number: m.account_number,
-                    last_name: m.last_name,
-                    first_name: m.first_name,
-                    middle_name: m.middle_name,
-                    is_active: m.is_active,
-                })
+            m.master_list_id.and_then(|master_list_id| {
+                file_name_by_master_list_id
+                    .get(&master_list_id)
+                    .map(|file_name| EndorsementMasterListMemberResponse {
+                        file_name: file_name.clone(),
+                        master_list_member_id: m.id,
+                        account_number: m.account_number,
+                        last_name: m.last_name,
+                        first_name: m.first_name,
+                        middle_name: m.middle_name,
+                        is_active: m.is_active,
+                    })
+            })
         })
         .collect();
 
