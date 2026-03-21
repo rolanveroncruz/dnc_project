@@ -12,6 +12,7 @@ pub mod dental_service;
 pub mod dental_service_type;
 pub mod dentist;
 pub mod dentist_clinic;
+pub mod dentist_company_relations;
 pub mod dentist_contract;
 pub mod dentist_contract_service_rates;
 pub mod dentist_history;
