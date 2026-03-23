@@ -14,7 +14,7 @@
     <mat-card-content>
         @if (dentistsAllInfo(); as ds){
             @if (ds.length === 0) {
-                <p>No clinics found.</p>
+                <p>No dentists found.</p>
             } @else {
                 <app-generic-data-table
                     [columnDefs]="columns"

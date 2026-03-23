@@ -56,6 +56,7 @@ import {
     DentistClinicPositionService
 } from '../../../../api_services/dentist-clinic-position-service';
 import {CurrencyInputComponent} from '../../../../components/currency-input-component/currency-input-component';
+import {DentistCompanyRelationsService} from '../../../../api_services/dentist-company-relations-service';
 
 interface CompanyListItem {
     id: number;
@@ -121,6 +122,7 @@ export class DentistComponent implements OnInit, AfterViewInit {
     readonly dialog = inject(MatDialog);
     private readonly accountTypeService = inject(AccountTypeService);
     private readonly dentistClinicPositionService = inject(DentistClinicPositionService);
+    private readonly dentistCompanyRelationsService = inject(DentistCompanyRelationsService);
 
     // ---- State
     readonly loading = signal(false);
@@ -379,6 +381,8 @@ export class DentistComponent implements OnInit, AfterViewInit {
 
         this.fetchExclusiveToHmos(id);
         this.fetchExceptForHmos(id);
+        this.fetchExclusiveToCompanies(id);
+        this.fetchExceptForCompanies(id);
     }
 
 
@@ -394,6 +398,19 @@ export class DentistComponent implements OnInit, AfterViewInit {
                 }
             })
     }
+
+    private fetchExclusiveToCompanies(id: number) {
+        this.dentistCompanyRelationsService.getExclusiveToCompanies(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (exclusiveToCompanies: CompanyListItem[]) => {
+                    this.exclusiveToCompanies.set(exclusiveToCompanies);
+                },
+                error: (error) => {
+                    console.log(`error in fetchExclusiveToCompanies: ${error}`);
+                }
+            })
+    }
     private fetchExceptForHmos(id: number) {
         this.dentistHMORelationsService.getExceptForHmos(id)
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -403,6 +420,18 @@ export class DentistComponent implements OnInit, AfterViewInit {
                 },
                 error: (error) => {
                     console.log(`error: ${error}`);
+                }
+            })
+    }
+    private fetchExceptForCompanies(id: number) {
+        this.dentistCompanyRelationsService.getExceptForCompanies(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (exceptForCompanies: CompanyListItem[]) => {
+                    this.exceptForCompanies.set(exceptForCompanies);
+                },
+                error: (error) => {
+                    console.log(`error in fetchExceptForCompanies: ${error}`);
                 }
             })
     }
@@ -666,16 +695,92 @@ export class DentistComponent implements OnInit, AfterViewInit {
             })
     }
 
-    addExclusiveToCompany() {
+    async addExclusiveToCompany() {
+        const res = await firstValueFrom(this.dentistCompanyRelationsService.getAllCompanies());
+        // Convert CompanyListItem[] to ListDialogItem[]
+        const company_list = res.map((c)=>({id:c.id, label: c.short_name}));
+
+        const data:ListDialogData = {
+            title: 'Select Exclusive to HMO',
+            subtitle: 'Select an HMO',
+            enableGroupFilter:true,
+            items: company_list
+        }
+        const ref = this.dialog.open<ListDialogComponent, ListDialogData, ListDialogResult |null> (
+            ListDialogComponent,
+            {data, width: '720px', maxWidth: '92vw' }
+        );
+        ref.afterClosed().subscribe((res)=>{
+            if (!res) return;
+            console.log('Selected:', res);
+            this.dentistCompanyRelationsService.addExclusiveToCompanies(
+                <number>this.dentistId(),
+                res.selectedId
+            ).subscribe({
+                next: ()=>{
+                    console.log(`Company added successfully`);
+                    this.fetchExclusiveToCompanies(<number>this.dentistId());
+                }
+            })
+        })
     }
 
-    removeExclusiveToCompany(_selected:any) {
+    removeExclusiveToCompany(event:any) {
+        console.log("removeExclusiveToCompany:", event.selected.id);
+        this.dentistCompanyRelationsService.removeExclusiveToCompanies(<number>this.dentistId(), event.selected.id)
+            .subscribe({
+                next: ()=>{
+                    console.log(`HMO removed successfully`);
+                    this.fetchExclusiveToCompanies(<number>this.dentistId());
+                },
+                error: ()=>{
+                    console.log(`HMO remove failed`);
+                }
+            })
     }
 
-    addExceptForCompany() {
+    async addExceptForCompany() {
+        const res = await firstValueFrom(this.dentistCompanyRelationsService.getAllCompanies());
+        // Convert CompanyListItem[] to ListDialogItem[]
+        const company_list = res.map((c)=>({id:c.id, label: c.short_name}));
+
+        const data:ListDialogData = {
+            title: 'Select Exclusive to HMO',
+            subtitle: 'Select an HMO',
+            enableGroupFilter:true,
+            items: company_list
+        }
+        const ref = this.dialog.open<ListDialogComponent, ListDialogData, ListDialogResult |null> (
+            ListDialogComponent,
+            {data, width: '720px', maxWidth: '92vw' }
+        );
+        ref.afterClosed().subscribe((res)=>{
+            if (!res) return;
+            console.log('Selected:', res);
+            this.dentistCompanyRelationsService.addExceptForCompanies(
+                <number>this.dentistId(),
+                res.selectedId
+            ).subscribe({
+                next: ()=>{
+                    console.log(`Company added successfully`);
+                    this.fetchExceptForCompanies(<number>this.dentistId());
+                }
+            })
+        })
     }
 
-    removeExceptForCompany(_selected:any) {
+    removeExceptForCompany(event:any) {
+        console.log("removeExceptForCompany:", event.selected.id);
+        this.dentistCompanyRelationsService.removeExceptForCompanies(<number>this.dentistId(), event.selected.id)
+            .subscribe({
+                next: ()=>{
+                    console.log(`Company removed from Except For successfully`);
+                    this.fetchExceptForCompanies(<number>this.dentistId());
+                },
+                error: ()=>{
+                    console.log(`Company remove failed`);
+                }
+            })
     }
 
     async addClinic(){
