@@ -19,7 +19,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { catchError, finalize, of, tap } from 'rxjs';
-import {ExistingMasterListMeta, MasterListPreview, MasterListIssue} from './data-types';
+import {ExistingMasterListMeta, MasterListPreview } from './data-types';
 import {MatDivider} from '@angular/material/list';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {
@@ -64,7 +64,7 @@ export class EndorsementMasterListUploadComponent {
     @Input({ required: true }) enabled!: boolean;
     @Input() existing: ExistingMasterListMeta | null = null;
 
-    @Output() saved = new EventEmitter<ExistingMasterListMeta>();
+    @Output() saved = new EventEmitter<void>();
     @Output() cleared = new EventEmitter<void>();
     @Input() onViewExisting: (()=>void) | null = null;
 
@@ -79,11 +79,7 @@ export class EndorsementMasterListUploadComponent {
 
     readonly preview = signal<MasterListPreview | null>(null);
 
-    readonly hasErrors = computed(() => (this.preview()?.issues ?? []).some(i => i.severity === 'error'));
-    readonly errorCount = computed(() => (this.preview()?.issues ?? []).filter(i => i.severity === 'error').length);
-    readonly warnCount = computed(() => (this.preview()?.issues ?? []).filter(i => i.severity === 'warn').length);
 
-    readonly displayedColumns = ['card_no', 'last_name', 'first_name'];
 
     constructor(){
         effect(()=>{
@@ -99,7 +95,7 @@ export class EndorsementMasterListUploadComponent {
         const file = input.files?.[0] ?? null;
         if (!file) return;
 
-        // reset input so selecting the same file again triggers change
+        // reset input so selecting the same file again triggers a change
         input.value = '';
 
         this.upload(file);
@@ -122,8 +118,9 @@ export class EndorsementMasterListUploadComponent {
             .uploadEndorsementMasterList(this.endorsementId, file)
             .pipe(
                 tap((p) => {
-                    this.preview.set(p);
-                    this.ui.set('preview');
+                    this.preview.set(null);
+                    this.ui.set('saved');
+                    this.saved.emit();
                 }),
                 catchError((err) => {
                     console.error('Master list preview failed:', err);
@@ -193,6 +190,4 @@ export class EndorsementMasterListUploadComponent {
 
     }
 
-    // ✅ helper for template
-    trackIssue = (_: number, it: MasterListIssue) => `${it.severity}-${it.row ?? 'na'}-${it.message}`;
 }

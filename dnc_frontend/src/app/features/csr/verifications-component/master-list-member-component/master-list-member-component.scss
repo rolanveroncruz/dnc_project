@@ -1,0 +1,37 @@
+.master-list-member-card {
+    width: 100%;
+}
+
+.member-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+.action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.info-message {
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.error-message {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #b3261e;
+}
+
+@media (max-width: 900px) {
+    .member-form {
+        grid-template-columns: 1fr;
+    }
+}

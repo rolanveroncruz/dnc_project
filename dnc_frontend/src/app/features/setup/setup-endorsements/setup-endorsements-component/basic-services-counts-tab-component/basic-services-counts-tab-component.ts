@@ -5,6 +5,7 @@ import {DentalService} from '../../../../../api_services/dental-services-service
 
 @Component({
   selector: 'app-basic-services-counts-tab-component',
+    standalone: true,
     imports: [
         MatFormField,
         MatInput,

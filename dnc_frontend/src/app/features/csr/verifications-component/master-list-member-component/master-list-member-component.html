@@ -1,0 +1,134 @@
+<mat-card class="master-list-member-card">
+    <mat-card-header>
+        <mat-card-title>
+            {{ mode() === 'edit' ? 'Edit Master List Member' : 'Create Master List Member' }}
+        </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+        <form [formGroup]="form" class="member-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Agmt/Corp Number</mat-label>
+                <input
+                    matInput
+                    formControlName="agreement_corp_number"
+                    autocomplete="off"
+                />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Member Account No</mat-label>
+                <input
+                    matInput
+                    formControlName="member_account_no"
+                    autocomplete="off"
+                />
+                @if (form.controls.member_account_no.touched && form.controls.member_account_no.invalid) {
+                    <mat-error>Member account no is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>HMO Name</mat-label>
+                <input matInput formControlName="hmo_name" readonly />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Company Name</mat-label>
+                <input matInput formControlName="company_name" readonly />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Last Name</mat-label>
+                <input
+                    matInput
+                    formControlName="last_name"
+                    autocomplete="off"
+                />
+                @if (form.controls.last_name.touched && form.controls.last_name.invalid) {
+                    <mat-error>Last name is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>First Name</mat-label>
+                <input
+                    matInput
+                    formControlName="first_name"
+                    autocomplete="off"
+                />
+                @if (form.controls.first_name.touched && form.controls.first_name.invalid) {
+                    <mat-error>First name is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Middle Name</mat-label>
+                <input
+                    matInput
+                    formControlName="middle_name"
+                    autocomplete="off"
+                />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Email Address</mat-label>
+                <input
+                    matInput
+                    formControlName="email_address"
+                    autocomplete="off"
+                />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Mobile Number</mat-label>
+                <input
+                    matInput
+                    formControlName="mobile_number"
+                    autocomplete="off"
+                />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Birthdate</mat-label>
+                <input
+                    matInput
+                    type="date"
+                    formControlName="birth_date"
+                />
+            </mat-form-field>
+        </form>
+
+        @if (infoMessage()) {
+            <div class="info-message">
+                {{ infoMessage() }}
+            </div>
+        }
+
+        @if (saveError()) {
+            <div class="error-message">
+                {{ saveError() }}
+            </div>
+        }
+
+        <div class="action-row">
+            <button
+                mat-raised-button
+                type="button"
+                (click)="save()"
+                [disabled]="loading()"
+            >
+                {{ mode() === 'edit' ? 'Save' : 'Create' }}
+            </button>
+
+            <button
+                mat-stroked-button
+                type="button"
+                (click)="clear()"
+                [disabled]="loading()"
+            >
+                Clear
+            </button>
+        </div>
+    </mat-card-content>
+</mat-card>

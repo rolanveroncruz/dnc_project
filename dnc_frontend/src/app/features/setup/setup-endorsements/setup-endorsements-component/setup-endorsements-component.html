@@ -80,8 +80,8 @@
                         [enabled]="masterListEnabled()"
                         [existing]="masterListMeta()"
                         [onViewExisting]="onViewMasterList"
-                        (saved)="masterListMeta.set($event)"
-                        (cleared)="masterListMeta.set(null)"
+                        (saved)="reloadMasterListMeta()"
+                        (cleared)="onMasterListCleared()"
                         />
             </div>
 
@@ -166,7 +166,7 @@
                 @if (basicServicesCountsEnabled()){
                     <mat-tab label="Basic Services Counts">
                         <app-basic-services-counts-tab-component
-                            [services]="basicServices()"
+                            [services]="basicCountServices()"
                             [rows]="basicServicesCountsArr"
                         />
                     </mat-tab>

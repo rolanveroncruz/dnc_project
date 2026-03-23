@@ -5,6 +5,7 @@ import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
 
 @Component({
   selector: 'app-basic-services-fees-tab-component',
+    standalone: true,
     imports: [
         MatFormField,
         MatInput,

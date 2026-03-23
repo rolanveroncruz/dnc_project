@@ -199,6 +199,9 @@ export class SetupEndorsementsComponent implements OnInit{
     readonly specialServicesCountsEnabled = computed(()=>this.enabledSections().has('specialServicesCounts'));
     readonly highEndServicesCountsEnabled = computed(()=>this.enabledSections().has('highEndServicesCounts'));
     readonly additionalBillingRulesEnabled = computed(()=>this.enabledSections().has('additionalBillingRules'));
+    readonly basicCountServices = computed(() =>
+        this.basicServices().filter(s => !s.is_unlimited)
+    );
 
     // for this endorsement, loadedRateRows contain the information of service, rate
     //  then ladedCountRows contain the information of service, count
@@ -502,35 +505,99 @@ export class SetupEndorsementsComponent implements OnInit{
                 takeUntilDestroyed(this.destroyRef),
             ).subscribe();
     }
-    private buildRateRequests(endorsementId: number): Observable<EndorsementRateResponse>[] { // 🔵 CHANGED
-        if (!this.specialServicesFeesEnabled()) return [];
+    private buildRateRequests(endorsementId: number): Observable<EndorsementRateResponse>[] {
+        const requests: Observable<EndorsementRateResponse>[] = [];
 
-        return this.specialServiceFeesArr.controls
-            .map(ctrl => ctrl.getRawValue())
-            .filter(row => row.rate != null)
-            .map(row => {
+        if (this.basicServicesFeesEnabled()) {
+            for (const ctrl of this.basicServicesFeesArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.rate == null) continue;
+
                 const rate = Number(row.rate).toFixed(2);
 
                 if (row.id != null) {
-                    return this.endorsementService.updateEndorsementRatePatch(
-                        endorsementId,
-                        row.id,
-                        { rate }
+                    requests.push(
+                        this.endorsementService.updateEndorsementRatePatch(
+                            endorsementId,
+                            row.id,
+                            { rate }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementRate(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                rate,
+                            }
+                        )
                     );
                 }
+            }
+        }
 
-                return this.endorsementService.createEndorsementRate(
-                    endorsementId,
-                    {
-                        dental_service_id: Number(row.dental_service_id),
-                        rate,
-                    }
-                );
-            });
+        if (this.specialServicesFeesEnabled()) {
+            for (const ctrl of this.specialServiceFeesArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.rate == null) continue;
+
+                const rate = Number(row.rate).toFixed(2);
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementRatePatch(
+                            endorsementId,
+                            row.id,
+                            { rate }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementRate(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                rate,
+                            }
+                        )
+                    );
+                }
+            }
+        }
+
+        return requests;
     }
 
-    private buildCountRequests(endorsementId: number): Observable<EndorsementCountResponse>[] { // ✅🔵 ADDED
+    private buildCountRequests(endorsementId: number): Observable<EndorsementCountResponse>[] {
         const requests: Observable<EndorsementCountResponse>[] = [];
+
+        if (this.basicServicesCountsEnabled()) {
+            for (const ctrl of this.basicServicesCountsArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.limit == null) continue;
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementCountPatch(
+                            endorsementId,
+                            row.id,
+                            { count: Number(row.limit) }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementCount(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                count: Number(row.limit),
+                            }
+                        )
+                    );
+                }
+            }
+        }
 
         if (this.specialServicesCountsEnabled()) {
             for (const ctrl of this.specialServiceCountsArr.controls) {
@@ -588,6 +655,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
         return requests;
     }
+
 
     private saveRuleTabs(endorsementId: number): Observable<{
         rates: EndorsementRateResponse[];
@@ -848,5 +916,17 @@ export class SetupEndorsementsComponent implements OnInit{
                 takeUntilDestroyed(this.destroyRef),
             )
             .subscribe();
+    }
+    reloadMasterListMeta():void{
+        const id = this.endorsementId();
+        if (id == null) return;
+
+        this.endorsementMasterListService
+            .getEndorsementMasterListMeta(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe( meta=>this.masterListMeta.set(meta) );
+    }
+    onMasterListCleared():void{
+        this.masterListMeta.set(null);
     }
 }
