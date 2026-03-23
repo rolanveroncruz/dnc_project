@@ -48,6 +48,10 @@ impl MigrationTrait for Migration {
                         .integer()
                         .not_null()
                     )
+                    .col(ColumnDef::new(DentalService::IsUnlimited)
+                        .boolean()
+                        .default(false)
+                    )
                     .col(ColumnDef::new(DentalService::SortIndex)
                         .integer()
                         .default(99))
@@ -81,25 +85,25 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        Self::create_dental_service(manager, "Cleaning / Oral Prophylaxis", "Basic", false, "system").await?;
-        Self::create_dental_service(manager, "Checkup/ Consultation", "Basic", false, "system").await?;
-        Self::create_dental_service(manager, "Simple Tooth Extraction", "Basic", true, "system").await?;
-        Self::create_dental_service(manager, "Temporary Fillings", "Basic", false, "system").await?;
-        Self::create_dental_service(manager, "Gum Treatment", "Basic", false, "system").await?;
-        Self::create_dental_service(manager, "Recementation of Jacket Crown", "Basic", false, "system").await?;
-        Self::create_dental_service(manager, "Adjustment of Dentures", "Basic", false, "system").await?;
+        Self::create_dental_service(manager, "Cleaning / Oral Prophylaxis", "Basic", false,false, "system").await?;
+        Self::create_dental_service(manager, "Checkup/ Consultation", "Basic", true, false, "system").await?;
+        Self::create_dental_service(manager, "Simple Tooth Extraction", "Basic", true, false, "system").await?;
+        Self::create_dental_service(manager, "Temporary Fillings", "Basic", true, false, "system").await?;
+        Self::create_dental_service(manager, "Gum Treatment", "Basic", true,false, "system").await?;
+        Self::create_dental_service(manager, "Recementation of Jacket Crown", "Basic",true, false, "system").await?;
+        Self::create_dental_service(manager, "Adjustment of Dentures", "Basic", true, false, "system").await?;
 
-        Self::create_dental_service(manager, "Additional Cleaning / Oral Prophylaxis", "Special", false, "system").await?;
-        Self::create_dental_service(manager, "Permanent Fillings (per Tooth)", "Special", true, "system").await?;
-        Self::create_dental_service(manager, "Permanent Fillings (per Surface)", "Special", false, "system").await?;
-        Self::create_dental_service(manager, "Dental Radiography (Periapical)", "Special", false, "system").await?;
-        Self::create_dental_service(manager, "Dental Radiography (Panoramic)", "Special", false, "system").await?;
-        Self::create_dental_service(manager, "Desensitization", "Special", false, "system").await?;
+        Self::create_dental_service(manager, "Additional Cleaning / Oral Prophylaxis", "Special", false,false, "system").await?;
+        Self::create_dental_service(manager, "Permanent Fillings (per Tooth)", "Special", false, true, "system").await?;
+        Self::create_dental_service(manager, "Permanent Fillings (per Surface)", "Special", false, false, "system").await?;
+        Self::create_dental_service(manager, "Dental Radiography (Periapical)", "Special", false, false, "system").await?;
+        Self::create_dental_service(manager, "Dental Radiography (Panoramic)", "Special", false, false, "system").await?;
+        Self::create_dental_service(manager, "Desensitization", "Special", false, false, "system").await?;
 
-        Self::create_dental_service(manager, "Dentures", "High-End", false, "system").await?;
-        Self::create_dental_service(manager, "Odontectomy", "High-End", false, "system").await?;
-        Self::create_dental_service(manager, "Root Canal Treatment", "High-End", false, "system").await?;
-        Self::create_dental_service(manager, "Deep Scaling", "High-End", false, "system").await?;
+        Self::create_dental_service(manager, "Dentures", "High-End", false, false, "system").await?;
+        Self::create_dental_service(manager, "Odontectomy", "High-End", false, false, "system").await?;
+        Self::create_dental_service(manager, "Root Canal Treatment", "High-End",false, false, "system").await?;
+        Self::create_dental_service(manager, "Deep Scaling", "High-End", false, false, "system").await?;
 
         Ok(())
 
@@ -126,7 +130,7 @@ impl Migration {
             .to_owned();
         manager.exec_stmt(insert).await
     }
-    async fn create_dental_service( manager: &SchemaManager<'_>, name: &str, service_type: &str, record_tooth: bool, last_modified_by: &str )->Result<(), DbErr>{
+    async fn create_dental_service( manager: &SchemaManager<'_>, name: &str, service_type: &str, is_unli: bool, record_tooth: bool, last_modified_by: &str )->Result<(), DbErr>{
         use sea_orm_migration::prelude::*;
         use sea_query::{Expr, Query};
         use chrono::Utc;
@@ -153,6 +157,7 @@ impl Migration {
                 DentalService::Name,
                 DentalService::TypeId,
                 DentalService::RecordTooth,
+                DentalService::IsUnlimited,
                 DentalService::LastModifiedBy,
                 DentalService::LastModifiedOn
             ])
@@ -160,6 +165,7 @@ impl Migration {
                 name.into(),
                 service_type_id.into(),
                 record_tooth.into(),
+                is_unli.into(),
                 last_modified_by.into(),
                 Utc::now().naive_utc().into()
             ])
@@ -180,6 +186,7 @@ pub enum DentalService{
     Id,
     Name,
     TypeId,
+    IsUnlimited,
     SortIndex,
     RecordTooth,
     Active, // instead of deleting, active = false effectively deletes it.
