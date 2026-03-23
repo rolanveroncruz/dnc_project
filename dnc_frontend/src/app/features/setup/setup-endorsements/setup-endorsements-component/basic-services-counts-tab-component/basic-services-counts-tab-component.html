@@ -1,0 +1,35 @@
+<div class="counts-tab">
+
+    <div class="list">
+        @for (s of filteredServices(); track trackById($index, s)) {
+            <div class="row">
+                <div class="name">{{ s.name }}</div>
+
+                <mat-form-field appearance="outline" class="limit">
+                    <mat-label>Limit</mat-label>
+
+                    @if (limitControlFor(s.id)) {
+                        <input
+                            matInput
+                            type="number"
+                            inputmode="numeric"
+                            step="1"
+                            min="0"
+                            [formControl]="limitControlFor(s.id)!"
+                            placeholder="0"
+                            (blur)="normalizeLimit(limitControlFor(s.id)!)"
+                        />
+                    } @else {
+                        <input matInput disabled placeholder="(row missing)" />
+                    }
+                </mat-form-field>
+            </div>
+        }
+
+        @if (filteredServices().length === 0) {
+            <div class="empty">
+                No matching services.
+            </div>
+        }
+    </div>
+</div>

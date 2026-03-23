@@ -1,0 +1,38 @@
+<div class="fees-tab">
+
+    <div class="list">
+        @for (s of filteredServices(); track trackById($index, s)) {
+            <div class="row">
+                <div class="name">{{ s.name }}</div>
+
+                <mat-form-field appearance="outline" class="rate">
+                    <mat-label>Rate</mat-label>
+
+                    @if (rateControlFor(s.id)) {
+                        <input
+                            matInput
+                            type="number"
+                            inputmode="decimal"
+                            step="0.01"
+                            min="0"
+                            [formControl]="rateControlFor(s.id)"
+                            placeholder="0.00"
+                        />
+                    } @else {
+                        <input
+                            matInput
+                            disabled
+                            placeholder="(row missing)"
+                        />
+                    }
+                </mat-form-field>
+            </div>
+        }
+
+        @if (filteredServices().length === 0) {
+            <div class="empty">
+                No matching services.
+            </div>
+        }
+    </div>
+</div>

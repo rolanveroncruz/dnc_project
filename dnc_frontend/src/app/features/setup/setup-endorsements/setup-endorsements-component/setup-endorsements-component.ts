@@ -43,9 +43,15 @@ import {
 } from '../../../../api_services/endorsement-master-list-service';
 import{ MasterListDialogComponent} from '../../../../components/master-list-dialog-component/master-list-dialog-component';
 import {MatDialog} from '@angular/material/dialog';
+import {BasicServicesFeesTabComponent} from './basic-services-fees-tab-component/basic-services-fees-tab-component';
+import {
+    BasicServicesCountsTabComponent
+} from './basic-services-counts-tab-component/basic-services-counts-tab-component';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
+    | 'basicServicesFees'
+    | 'basicServicesCounts'
     | 'specialServicesFees'
     | 'specialServicesCounts'
     | 'highEndServicesCounts'
@@ -56,9 +62,16 @@ const ENDORSEMENT_TYPE_ID = {
     RetainerAndFeePerService: 3,
 } as const;
 const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
-    [ENDORSEMENT_TYPE_ID.RetainerOnly]: [],
-    [ENDORSEMENT_TYPE_ID.RetainerWithSpecialServices]: ['specialServicesCounts'],
+    [ENDORSEMENT_TYPE_ID.RetainerOnly]: [
+        'basicServicesCounts',
+    ],
+    [ENDORSEMENT_TYPE_ID.RetainerWithSpecialServices]: [
+        'basicServicesCounts',
+        'specialServicesCounts'
+    ],
     [ENDORSEMENT_TYPE_ID.RetainerAndFeePerService]: [
+        'basicServicesFees',
+        'basicServicesCounts',
         'specialServicesFees',
         'specialServicesCounts',
         'highEndServicesCounts',
@@ -90,6 +103,8 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         SpecialServicesFeesTabComponent,
         SpecialServicesCountsTabComponent,
         HighEndServicesCountsTabComponent,
+        BasicServicesFeesTabComponent,
+        BasicServicesCountsTabComponent,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
@@ -151,6 +166,8 @@ export class SetupEndorsementsComponent implements OnInit{
         endorsement_method: [null as string | null],
 
         // Tab sections
+        basicServicesFees: this.fb.array<FormGroup>([]),
+        basicServicesCounts: this.fb.array<FormGroup>([]),
         specialServicesFees: this.fb.array<FormGroup>([]),
         specialServicesCounts: this.fb.array<FormGroup>([]),
         highEndServicesCounts: this.fb.array<FormGroup>([]),
@@ -176,10 +193,15 @@ export class SetupEndorsementsComponent implements OnInit{
         return new Set(enabled);
 
     });
+    readonly basicServicesFeesEnabled = computed(()=>this.enabledSections().has('basicServicesFees'))
+    readonly basicServicesCountsEnabled = computed(()=>this.enabledSections().has('basicServicesCounts'))
     readonly specialServicesFeesEnabled = computed(()=>this.enabledSections().has('specialServicesFees'));
     readonly specialServicesCountsEnabled = computed(()=>this.enabledSections().has('specialServicesCounts'));
     readonly highEndServicesCountsEnabled = computed(()=>this.enabledSections().has('highEndServicesCounts'));
     readonly additionalBillingRulesEnabled = computed(()=>this.enabledSections().has('additionalBillingRules'));
+
+    // for this endorsement, loadedRateRows contain the information of service, rate
+    //  then ladedCountRows contain the information of service, count
     readonly loadedRateRows = signal<EndorsementRateResponse[]>([]);
     readonly loadedCountRows = signal<EndorsementCountResponse[]>([]);
 
@@ -209,6 +231,12 @@ export class SetupEndorsementsComponent implements OnInit{
         })
     };
 // ✅ NEW: convenience getters
+    get basicServicesFeesArr() {
+        return this.form.controls.basicServicesFees as FormArray<FormGroup>;
+    }
+    get basicServicesCountsArr() {
+        return this.form.controls.basicServicesCounts as FormArray<FormGroup>;
+    }
     get specialServiceFeesArr() {
         return this.form.controls.specialServicesFees as FormArray<FormGroup>;
     }
@@ -220,9 +248,34 @@ export class SetupEndorsementsComponent implements OnInit{
     }
 
     private rebuildRuleMatrices():void{
+        /*
+        rate/count Map are basically maps of service_id to rate/count.
+         */
         const rateMap = new Map(this.loadedRateRows().map(r=>[r.dental_service_id, r] as const));
-
         const countMap = new Map(this.loadedCountRows().map(c=>[c.dental_service_id, c] as const));
+
+        const basicServicesFeesRows = this.basicServices().map(s => {
+            const existing = rateMap.get(s.id);
+            return this.feeRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.rate != null ? Number(existing.rate) : null,
+            );
+        });
+        this.form.setControl('basicServicesFees', this.fb.array(basicServicesFeesRows));
+
+        const basicServicesCountRows = this.basicServices()
+            .filter( s=> !s.is_unlimited)
+            .map(s => {
+            const existing = countMap.get(s.id);
+            return this.countRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.count ?? null,
+            );
+        });
+        this.form.setControl('basicServicesCounts', this.fb.array(basicServicesCountRows));
+
         const specialServicesFeesRows = this.specialServices().map(s=>{
             const existing = rateMap.get(s.id);
             return this.feeRow(
@@ -581,6 +634,8 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: v.remarks ?? '',
             endorsement_method: v.endorsement_method ?? null,
+            basicServicesFees: v.basicServicesFees ?? [],
+            basicServicesCounts: v.basicServicesCounts ?? [],
             specialServicesFees: v.specialServicesFees ?? [],
             specialServicesCounts: v.specialServicesCounts ?? [],
             highEndServicesCounts: v.highEndServicesCounts ?? [],

@@ -151,8 +151,28 @@
         </section>
 
         <!-- Bottom section (tabs) -->
+
         <section class="bottom-tabs">
             <mat-tab-group class="tabs" animationDuration="150ms">
+                @if (basicServicesFeesEnabled()){
+                    <mat-tab label="Basic Services Fees">
+                        <app-basic-services-fees-tab-component
+                            [services]="basicServices()"
+                            [rows]="basicServicesFeesArr"
+                        />
+                    </mat-tab>
+                }
+
+                @if (basicServicesCountsEnabled()){
+                    <mat-tab label="Basic Services Counts">
+                        <app-basic-services-counts-tab-component
+                            [services]="basicServices()"
+                            [rows]="basicServicesCountsArr"
+                        />
+                    </mat-tab>
+                }
+
+
                 @if (specialServicesFeesEnabled()){
                         <mat-tab label="Special Services Fees" [disabled]="!specialServicesFeesEnabled()">
                             <app-special-services-fees-tab-component
