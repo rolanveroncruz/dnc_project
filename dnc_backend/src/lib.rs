@@ -49,6 +49,8 @@ use crate::handlers::{get_all_dentist_histories, get_all_dentist_status, get_all
 use crate::handlers::{get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id, add_dentist_clinic};
 use crate::handlers::{remove_dentist_clinic, add_exclusive_to_hmo, remove_exclusive_to_hmo, add_except_for_hmo};
 use crate::handlers::{remove_except_for_hmo, save_contract_file_for_dentist_id, get_contract_file_for_dentist_id};
+use crate::handlers::{get_exclusive_to_companies_from_dentist_id, add_exclusive_to_company, remove_exclusive_to_company};
+use crate::handlers::{get_not_companies_from_dentist_id, add_except_for_company, remove_except_for_company};
 use crate::handlers::{create_dentist, patch_dentist, get_all_account_types, get_dentist_clinic_positions};
 use crate::handlers::{get_all_clinics_and_capabilities, get_endorsement_types, get_endorsement_billing_period_types};
 use crate::handlers::{get_all_endorsements, create_endorsement, get_endorsement_by_id, patch_endorsement};
@@ -59,7 +61,7 @@ use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_maste
 use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active, get_endorsements_for_hmo_id};
 
 use crate::handlers::{get_all_verifications};
-use crate::handlers::{get_all_master_list_members, post_master_list_member, patch_master_list_member};
+use crate::handlers::{get_all_master_list_members_for_dentist_id, post_master_list_member, patch_master_list_member};
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -122,15 +124,26 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentist_statuses/", get(get_all_dentist_status))
         .route("/tax_classifications/", get(get_all_tax_classifications))
         .route("/tax_types/", get(get_all_tax_types))
+
         .route("/dentists/{:dentist_id}/hmos/exclusive", get(get_exclusive_to_hmos_from_dentist_id))
+        .route("/dentists/{dentist_id}/companies/exclusive", get(get_exclusive_to_companies_from_dentist_id))
         .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", post(add_exclusive_to_hmo))
+        .route("/dentists/{dentist_id}/companies/exclusive/{company_id}", post(add_exclusive_to_company))
         .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", delete(remove_exclusive_to_hmo))
+        .route ("/dentists/{dentist_id}/companies/exclusive/{company_id}", delete(remove_exclusive_to_company))
+
         .route("/dentists/{:dentist_id}/hmos/except", get(get_not_hmos_from_dentist_id))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", post(add_except_for_hmo))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", delete(remove_except_for_hmo))
+        .route("/dentists/{dentist_id}/companies/except", get(get_not_companies_from_dentist_id))
+        .route("/dentists/{dentist_id}/companies/except/{company_id}", post(add_except_for_company))
+        .route("/dentists/{dentist_id}/companies/except/{company_id}", delete(remove_except_for_company))
+
+
         .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id)
             .layer(DefaultBodyLimit::max(100 * 1024 * 1024)),)
         .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
+        .route("/dentists/{dentist_id}/master_list_members", get(get_all_master_list_members_for_dentist_id))
         .route("/dentists/", post(create_dentist))
         .route("/extended_clinics", get(get_all_clinics_and_capabilities))
         .route("/endorsement_types", get(get_endorsement_types))
@@ -147,7 +160,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
         .route("/verifications", get(get_all_verifications))
-        .route("/master_list_members", get(get_all_master_list_members).post(post_master_list_member))
+        .route("/master_list_members", post(post_master_list_member))
         .route("/master_list_members/{id}", patch(patch_master_list_member))
 
 }

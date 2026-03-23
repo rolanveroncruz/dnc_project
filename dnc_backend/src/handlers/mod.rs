@@ -47,6 +47,12 @@ pub use api::dentist_hmo_relations::{get_exclusive_to_hmos_from_dentist_id,
                                      add_except_for_hmo,
                                      remove_except_for_hmo,
 };
+pub use api::dentist_company_relations::{get_exclusive_to_companies_from_dentist_id,
+                                         add_exclusive_to_company,
+                                         remove_exclusive_to_company,
+                                         get_not_companies_from_dentist_id,
+                                         add_except_for_company,
+                                         remove_except_for_company};
 
 pub use api::data_files::{save_contract_file_for_dentist_id, get_contract_file_for_dentist_id};
 pub use api::account_type::get_all_account_types;
@@ -69,4 +75,4 @@ pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
 
 pub use api::verification::{get_all_verifications};
 
-pub use api::master_list_member::{get_all_master_list_members, post_master_list_member, patch_master_list_member };
+pub use api::master_list_member::{get_all_master_list_members_for_dentist_id, post_master_list_member, patch_master_list_member };

@@ -4,8 +4,8 @@ use axum::{
     Json,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, JoinType, QueryFilter,
-    QueryOrder, QuerySelect, RelationTrait, Set,
+    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, JoinType,
+    QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
 };
 use sea_orm::prelude::Date;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ use tracing::instrument;
 use crate::{
     AppState,
     entities::{endorsement, master_list, master_list_member},
+    handlers::api::dentist_relations::get_endorsements_for_dentist_id
 };
 
 #[derive(Debug, Serialize, sea_orm::FromQueryResult)]
@@ -239,4 +240,83 @@ pub async fn patch_master_list_member(
         birth_date: updated.birth_date,
         is_active: updated.is_active,
     }))
+}
+
+#[instrument(skip(state))]
+pub async fn get_all_master_list_members_for_dentist_id(
+    State(state): State<AppState>,
+    Path(dentist_id): Path<i32>,
+) -> Result<Json<Vec<MasterListMemberLookupResponse>>, StatusCode> {
+    let endorsement_ids = get_endorsements_for_dentist_id(&state.db, dentist_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // No allowed endorsements means no allowed master list members.
+    if endorsement_ids.is_empty() {
+        return Ok(Json(vec![]));
+    }
+
+    let rows = master_list_member::Entity::find()
+        .select_only()
+        .column_as(master_list_member::Column::Id, "master_list_member_id")
+        .column_as(master_list::Column::EndorsementId, "endorsement_id")
+        .column_as(
+            endorsement::Column::AgreementCorpNumber,
+            "endorsement_agreement_corp_number",
+        )
+        .column_as(
+            master_list_member::Column::AccountNumber,
+            "master_list_member_account_no",
+        )
+        .column_as(
+            master_list_member::Column::LastName,
+            "master_list_member_last_name",
+        )
+        .column_as(
+            master_list_member::Column::FirstName,
+            "master_list_member_first_name",
+        )
+        .column_as(
+            master_list_member::Column::MiddleName,
+            "master_list_member_middle_name",
+        )
+        .expr_as(
+            sea_orm::sea_query::Expr::cust(
+                r#""master_list_member"."last_name" || ', ' || "master_list_member"."first_name" || ' ' || "master_list_member"."middle_name""#,
+            ),
+            "master_list_member_name",
+        )
+        .column_as(
+            master_list_member::Column::EmailAddress,
+            "master_list_member_email_address",
+        )
+        .column_as(
+            master_list_member::Column::MobileNumber,
+            "master_list_member_mobile_number",
+        )
+        .column_as(
+            master_list_member::Column::BirthDate,
+            "master_list_member_birth_date",
+        )
+        .column_as(
+            master_list_member::Column::IsActive,
+            "master_list_member_is_active",
+        )
+        .join(
+            JoinType::LeftJoin,
+            master_list_member::Relation::MasterList.def(),
+        )
+        .join(
+            JoinType::LeftJoin,
+            master_list::Relation::Endorsement.def(),
+        )
+        .filter(master_list::Column::EndorsementId.is_in(endorsement_ids))
+        .order_by_asc(master_list_member::Column::LastName)
+        .order_by_asc(master_list_member::Column::FirstName)
+        .into_model::<MasterListMemberLookupResponse>()
+        .all(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(rows))
 }
