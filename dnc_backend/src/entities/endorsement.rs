@@ -40,6 +40,8 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementCompany,
+    #[sea_orm(has_many = "super::endorsement_counts::Entity")]
+    EndorsementCounts,
     #[sea_orm(has_many = "super::endorsement_rates::Entity")]
     EndorsementRates,
     #[sea_orm(
@@ -71,6 +73,12 @@ impl Related<super::endorsement_billing_period_type::Entity> for Entity {
 impl Related<super::endorsement_company::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementCompany.def()
+    }
+}
+
+impl Related<super::endorsement_counts::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EndorsementCounts.def()
     }
 }
 

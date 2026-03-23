@@ -16,21 +16,33 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "Entity",
-        from = "Column::Id",
-        to = "Column::Id",
+        belongs_to = "super::dental_service::Entity",
+        from = "Column::DentalServicesId",
+        to = "super::dental_service::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    SelfRef2,
+    DentalService,
     #[sea_orm(
-        belongs_to = "Entity",
-        from = "Column::Id",
-        to = "Column::Id",
+        belongs_to = "super::endorsement::Entity",
+        from = "Column::EndorsementId",
+        to = "super::endorsement::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    SelfRef1,
+    Endorsement,
+}
+
+impl Related<super::dental_service::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentalService.def()
+    }
+}
+
+impl Related<super::endorsement::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Endorsement.def()
+    }
 }
 
 impl ActiveModelBehavior for ActiveModel {}
