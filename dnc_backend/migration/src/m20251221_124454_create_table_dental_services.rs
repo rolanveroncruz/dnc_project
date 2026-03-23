@@ -88,7 +88,7 @@ impl MigrationTrait for Migration {
         Self::create_dental_service(manager, "Cleaning / Oral Prophylaxis", "Basic", false,false, "system").await?;
         Self::create_dental_service(manager, "Checkup/ Consultation", "Basic", true, false, "system").await?;
         Self::create_dental_service(manager, "Simple Tooth Extraction", "Basic", true, false, "system").await?;
-        Self::create_dental_service(manager, "Temporary Fillings", "Basic", true, false, "system").await?;
+        Self::create_dental_service(manager, "Temporary Fillings", "Basic", false, false, "system").await?;
         Self::create_dental_service(manager, "Gum Treatment", "Basic", true,false, "system").await?;
         Self::create_dental_service(manager, "Recementation of Jacket Crown", "Basic",true, false, "system").await?;
         Self::create_dental_service(manager, "Adjustment of Dentures", "Basic", true, false, "system").await?;

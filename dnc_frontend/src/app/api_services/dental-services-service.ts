@@ -14,6 +14,7 @@ export interface DentalServicesPageInfo{
 export interface DentalService {
   id: number;
   name: string;
+  is_unlimited: boolean;
   type_id: number;
   sort_index: number;
   type_name: string;
