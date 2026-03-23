@@ -78,6 +78,12 @@ impl Migration {
                     .primary_key()
                     .auto_increment()
                 )
+                // MasterList Member is always associated with an endorsement.
+                .col(ColumnDef::new(MasterListMember::EndorsementId)
+                    .integer()
+                    .not_null()
+                )
+                // Optionally, a MasterListMember could be associated with a MasterList.
                 .col(ColumnDef::new(MasterListMember::MasterListId)
                     .integer()
                 )
@@ -235,6 +241,7 @@ TheMasterListMember lists all members of that MasterList.
 #[derive(Iden)]
 pub enum MasterListMember {
     Table,
+    EndorsementId,
     Id,
     MasterListId,
     AccountNumber,
