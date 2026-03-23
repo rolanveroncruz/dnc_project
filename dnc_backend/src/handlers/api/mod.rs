@@ -39,3 +39,4 @@ pub mod verification;
 pub mod master_list_member;
 pub mod dentist_company_relations;
 mod dentist_relations;
+mod master_list_member_counts;
