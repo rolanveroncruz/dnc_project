@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
 use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
@@ -159,6 +159,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_meta_data_for_endorsement_id))
         .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
+        .route("/endorsements/{endorsement_id}/billing_rules", get(get_billing_rules_for_endorsement_id).post(post_billing_rule))
+        .route("/endorsements/{endorsement_id}/billing_rules/id", patch(patch_billing_rule).delete(delete_billing_rule))
         .route("/verifications", get(get_all_verifications))
         .route("/master_list_members", post(post_master_list_member))
         .route("/master_list_members/{id}", patch(patch_master_list_member))

@@ -32,6 +32,8 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementBillingPeriodType,
+    #[sea_orm(has_many = "super::endorsement_billing_rule::Entity")]
+    EndorsementBillingRule,
     #[sea_orm(
         belongs_to = "super::endorsement_company::Entity",
         from = "Column::EndorsementCompanyId",
@@ -67,6 +69,12 @@ pub enum Relation {
 impl Related<super::endorsement_billing_period_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementBillingPeriodType.def()
+    }
+}
+
+impl Related<super::endorsement_billing_rule::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EndorsementBillingRule.def()
     }
 }
 

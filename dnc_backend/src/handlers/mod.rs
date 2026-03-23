@@ -76,3 +76,5 @@ pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
 pub use api::verification::{get_all_verifications};
 
 pub use api::master_list_member::{get_all_master_list_members_for_dentist_id, post_master_list_member, patch_master_list_member };
+
+pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};

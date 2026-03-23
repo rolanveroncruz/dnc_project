@@ -20,6 +20,7 @@ pub mod dentist_hmo_relations;
 pub mod dentist_status;
 pub mod endorsement;
 pub mod endorsement_billing_period_type;
+pub mod endorsement_billing_rule;
 pub mod endorsement_company;
 pub mod endorsement_counts;
 pub mod endorsement_rates;
