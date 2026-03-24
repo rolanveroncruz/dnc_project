@@ -1,12 +1,12 @@
 import { Component, computed, inject,OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { MasterListMemberService } from '../../../../api_services/master-list-members-service';
 import { DentistService, DentistNames } from '../../../../api_services/dentist-service';
 import { MatInput } from '@angular/material/input';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger} from '@angular/material/autocomplete';
 import {MatOptionModule} from '@angular/material/core';
+import {MasterListMemberComponent} from '../master-list-member-component/master-list-member-component';
 
 @Component({
     selector: 'app-verification',
@@ -19,15 +19,15 @@ import {MatOptionModule} from '@angular/material/core';
         MatOptionModule,
         MatAutocompleteTrigger,
         MatInput,
+        MasterListMemberComponent,
     ],
     templateUrl: './verification.html',
     styleUrl: './verification.scss',
 })
 export class Verification implements OnInit {
     private readonly route = inject(ActivatedRoute);
-    readonly masterListMemberService = inject(MasterListMemberService);
 
-
+// region: Route path ID, and signals for if new or edit mode
     /******************
      * Route path ID, and signals for if new or edit mode
      ****************/
@@ -59,7 +59,11 @@ export class Verification implements OnInit {
 
         return true;
     });
+// endregion: Route path ID, and signals for if new or edit mode
 
+
+
+// region: For the dentist autocomplete control
     /***************
     * For dentist
      ***************/
@@ -70,8 +74,8 @@ export class Verification implements OnInit {
     readonly loadingDentists = signal<boolean>(false);
     // dentistSearch is the text box value. in ngOnInit(), we subscribe to the valueChanges and set the dentistSearchText signal
     // to the value of dentistSearch's value.
-    // filteredDentists is then computed based on the dentistSearchText signal.
-    readonly dentistSearch = new FormControl<string>('', { nonNullable: true });
+    // filteredDentists is the array then computed based on the dentistSearchText signal.
+    readonly dentistSearch = new FormControl<string|number>('', { nonNullable: true });
     readonly selectedDentistId = signal<number | null>(null);
     readonly dentistSearchText = signal('');
     readonly filteredDentists = computed(() => {
@@ -87,6 +91,33 @@ export class Verification implements OnInit {
         );
     });
 
+    onDentistSelected(event: MatAutocompleteSelectedEvent): void {
+        const selectedId = event.option.value as number;
+        this.selectedDentistId.set(selectedId);
+
+        // reset the selectedMasterListMemberId
+        this.selectedMasterListMemberId.set(null);
+
+        const selectedDentist = this.dentistNames().find(d => d.id === selectedId);
+        if (selectedDentist) {
+            this.dentistSearch.setValue(selectedDentist.full_name, { emitEvent: false });
+        }
+    }
+
+    // endregion: For the dentist autocomplete control
+
+// region for MasterListMember
+
+    readonly selectedMasterListMemberId = signal<number | null>(null);
+
+    onMasterListMemberResolved(memberId: number|null):void{
+        console.log("In onMasterListMemberResolved(), memberId:", memberId);
+        this.selectedMasterListMemberId.set(memberId);
+
+    }
+
+    // endregion for MasterListMember
+
     constructor() {
         this.route.url.subscribe(() => {
             this.routePath.set(this.route.routeConfig?.path);
@@ -94,19 +125,17 @@ export class Verification implements OnInit {
         });
     }
 
-    onDentistSelected(event: MatAutocompleteSelectedEvent): void {
-        const selectedId = event.option.value as number;
-        this.selectedDentistId.set(selectedId);
-
-        const selectedDentist = this.dentistNames().find(d => d.id === selectedId);
-        if (selectedDentist) {
-            this.dentistSearch.setValue(selectedDentist.full_name, { emitEvent: false });
-        }
-    }
     ngOnInit(): void {
         this.loadDentists();
         this.dentistSearch.valueChanges.subscribe(value => {
-            this.dentistSearchText.set((value ?? '').trim().toLowerCase());
+            // value can be string while typing, or number after autocomplete selection
+            const searchText = typeof value ==='string'? value.trim().toLowerCase(): '';
+            this.dentistSearchText.set(searchText);
+
+            if (typeof value === 'string') {
+                this.selectedDentistId.set(null);
+                this.selectedMasterListMemberId.set(null);
+            }
         });
 
     }

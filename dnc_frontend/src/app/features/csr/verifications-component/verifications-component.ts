@@ -9,6 +9,7 @@ import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} f
 
 @Component({
   selector: 'app-verifications-component',
+    standalone: true,
     imports: [
         GenericDataTableComponent,
         MatButton,
@@ -28,7 +29,7 @@ export class VerificationsComponent implements OnInit {
     verifications = signal<VerificationLookupResponse[]>([]);
 
     readonly columns: TableColumn<VerificationLookupResponse>[] = [
-        { key: 'verifications_id', label: 'ID' },
+        { key: 'verification_id', label: 'ID' },
         { key: 'date', label: 'Date', cellTemplateKey: 'date' },
         { key: 'dentist_name', label: 'Dentist'},
         { key: 'member_name', label: 'Member'},
@@ -46,7 +47,8 @@ export class VerificationsComponent implements OnInit {
     }
 
     onNewVerification(){
-        this.router.navigate(['main/csr/verifications/new']).then();
+        const url = this.router.serializeUrl(this.router.createUrlTree(['main/csr/verifications/new']));
+        window.open(url, '_blank');
     }
 
     onRowClicked(row: VerificationLookupResponse) {

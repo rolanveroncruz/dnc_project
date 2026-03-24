@@ -145,6 +145,14 @@ export interface EndorsementRateResponse {
     active: boolean;
     rate: DecimalString;
 }
+export interface DentistEndorsementLookupResponse {
+    endorsement_id: number,
+    endorsement_company_name: string,
+    hmo_short_name: string,
+    agreement_corp_number: string | null,
+    is_active: boolean,
+}
+
 
 /** Mirrors CreateEndorsementRateRequest DTO */
 export interface CreateEndorsementRateRequest {
@@ -217,6 +225,10 @@ export class EndorsementService {
     getEndorsementCompanies(): Observable<EndorsementCompanyOptions[]> {
         return this.http.get<EndorsementCompanyOptions[]>(`${this.baseUrl}/api/endorsements/companies`, {headers: this.authHeaders()});
     }
+
+    getEndorsementsForDentist(dentistId: number): Observable<DentistEndorsementLookupResponse[]> {
+        return this.http.get<DentistEndorsementLookupResponse[]>(`${this.baseUrl}/api/dentists/${dentistId}/endorsements`, {headers: this.authHeaders()});
+    };
 
     /**
      * POST /api/endorsement_companies

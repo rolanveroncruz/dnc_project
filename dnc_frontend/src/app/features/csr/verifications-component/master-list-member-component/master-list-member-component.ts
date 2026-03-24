@@ -1,44 +1,39 @@
 import {
     Component,
     DestroyRef,
-    EventEmitter,
-    Input,
-    OnChanges,
-    OnInit,
-    Output,
-    SimpleChanges,
     computed,
     inject,
     signal,
+    input,
+    output,
+    effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-    FormBuilder,
-    ReactiveFormsModule,
-    Validators,
-} from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MatOption } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
-import { MasterListMemberService, MasterListMemberLookupResponse,
-    PatchMasterListMemberRequest, MasterListMemberMutationResponse,
-    CreateMasterListMemberRequest} from '../../../../api_services/master-list-members-service';
-
-export interface AgreementCorpLookup {
-    agreement_corp_number: string;
-    hmo_name: string;
-    company_name: string;
-    master_list_id?: number | null;
-    endorsement_id?: number | null;
-}
+import {
+    MasterListMemberService,
+    MasterListMemberLookupResponse,
+} from '../../../../api_services/master-list-members-service';
+import {
+    EndorsementService,
+    DentistEndorsementLookupResponse,
+} from '../../../../api_services/endorsement-service';
+import {
+    MatAutocomplete,
+    MatAutocompleteSelectedEvent,
+    MatAutocompleteTrigger,
+} from '@angular/material/autocomplete';
 
 @Component({
-    selector: 'app-master-list-member-component',
+    selector: 'app-master-list-member',
     standalone: true,
     imports: [
         CommonModule,
@@ -49,344 +44,278 @@ export interface AgreementCorpLookup {
         MatDatepickerModule,
         MatNativeDateModule,
         MatCardModule,
+        MatAutocompleteTrigger,
+        MatAutocomplete,
+        MatOption,
     ],
     templateUrl: './master-list-member-component.html',
     styleUrl: './master-list-member-component.scss',
 })
-export class MasterListMemberComponent implements OnInit, OnChanges {
-    private readonly fb = inject(FormBuilder);
+export class MasterListMemberComponent {
     private readonly destroyRef = inject(DestroyRef);
     private readonly masterListMemberService = inject(MasterListMemberService);
+    private readonly endorsementService = inject(EndorsementService);
 
-    @Input({ required: true })
-    masterListMembers: MasterListMemberLookupResponse[] = [];
+    readonly dentistId = input<number | null>(null);
+    readonly selectedMasterListMemberId = input<number | null>(null);
+    readonly selectedMasterListMemberIdChange = output<number | null>();
 
-    @Input()
-    masterListMemberId: number | null = null;
+    /***********************
+     * ✅ Endorsement selection
+     ***********************/
+    readonly endorsementSearch = new FormControl<string | number>('', { nonNullable: true }); // ✅ widened type
+    readonly endorsementSearchText = signal('');
 
-    /**
-     * Needed because MasterListMemberLookupResponse
-     * does not contain hmo_name or company_name.
-     */
-    @Input()
-    agreementLookups: AgreementCorpLookup[] = [];
+    readonly loadingEndorsements = signal(false);
+    readonly endorsements = signal<DentistEndorsementLookupResponse[]>([]);
+    readonly selectedEndorsementId = signal<number | null>(null);
 
-    @Output()
-    saved = new EventEmitter<MasterListMemberMutationResponse>();
+    readonly selectedHmoName = signal<string>('');
+    readonly selectedCompanyName = signal<string>('');
 
-    @Output()
-    cleared = new EventEmitter<void>();
+    readonly filteredEndorsements = computed(() => {
+        const search = this.endorsementSearchText().trim().toLowerCase();
+        const items = this.endorsements();
 
-    @Output()
-    memberResolved = new EventEmitter<MasterListMemberLookupResponse | null>();
+        if (!search) {
+            return items;
+        }
 
-    readonly loading = signal(false);
-    readonly saveError = signal<string | null>(null);
-    readonly infoMessage = signal<string | null>(null);
-
-    private currentResolvedMemberId: number | null = null;
-    private allowCreateForUnknownMemberNo = false;
-
-    readonly form = this.fb.nonNullable.group({
-        agreement_corp_number: [''],
-        member_account_no: ['', Validators.required],
-        hmo_name: [{ value: '', disabled: true }],
-        company_name: [{ value: '', disabled: true }],
-        last_name: ['', Validators.required],
-        first_name: ['', Validators.required],
-        middle_name: [''],
-        email_address: [''],
-        mobile_number: [''],
-        birth_date: [''],
+        return items.filter(item =>
+            (item.agreement_corp_number ?? '').toLowerCase().includes(search)
+        );
     });
 
-    readonly mode = computed(() =>
-        this.currentResolvedMemberId != null ? 'edit' : 'create'
-    );
+    /***********************
+     * ✅ Member account selection
+     ***********************/
+    readonly memberAccountSearch = new FormControl<string | number>('', { nonNullable: true }); // ✅ new
+    readonly memberAccountSearchText = signal(''); // ✅ new
 
-    ngOnInit(): void {
-        this.setupAgreementLookupWatcher();
-        this.setupMemberAccountLookupWatcher();
-        this.loadFromInputId();
-    }
+    readonly loadingMembers = signal(false); // ✅ new
+    readonly members = signal<MasterListMemberLookupResponse[]>([]); // ✅ new
+    readonly resolvedMemberId = signal<number | null>(null); // ✅ new
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (
-            changes['masterListMemberId'] ||
-            changes['masterListMembers']
-        ) {
-            this.loadFromInputId();
-        }
-    }
-
-    private loadFromInputId(): void {
-        if (this.masterListMemberId == null) {
-            this.currentResolvedMemberId = null;
-            return;
-        }
-
-        const found = this.masterListMembers.find(
-            (x) => x.master_list_member_id === this.masterListMemberId
+    readonly filteredMembers = computed(() => {
+        const search = this.memberAccountSearchText().trim().toLowerCase();
+        const items = [...this.members()].sort((a, b) =>
+            (a.master_list_member_last_name ?? '').localeCompare(
+                b.master_list_member_last_name ?? '',
+                undefined,
+                { numeric: true, sensitivity: 'base' }
+            )
         );
 
-        if (!found) {
-            this.saveError.set(
-                `Master list member with ID ${this.masterListMemberId} was not found in the provided list.`
-            );
-            return;
+        if (!search) {
+            console.log('first filtered member:', items[0]);
+            return items;
         }
 
-        this.fillFromExistingMember(found);
-    }
 
-    private setupAgreementLookupWatcher(): void {
-        this.form.controls.agreement_corp_number.valueChanges
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((value) => {
-                const key = (value ?? '').trim();
-
-                if (!key) {
-                    this.form.patchValue(
-                        {
-                            hmo_name: '',
-                            company_name: '',
-                        },
-                        { emitEvent: false }
-                    );
-                    return;
-                }
-
-                const agreement = this.agreementLookups.find(
-                    (x) => x.agreement_corp_number.trim().toLowerCase() === key.toLowerCase()
-                );
-
-                this.form.patchValue(
-                    {
-                        hmo_name: agreement?.hmo_name ?? '',
-                        company_name: agreement?.company_name ?? '',
-                    },
-                    { emitEvent: false }
-                );
-            });
-    }
-
-    private setupMemberAccountLookupWatcher(): void {
-        this.form.controls.member_account_no.valueChanges
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((value) => {
-                const accountNo = (value ?? '').trim();
-
-                if (!accountNo) {
-                    return;
-                }
-
-                const found = this.masterListMembers.find(
-                    (x) =>
-                        x.master_list_member_account_no.trim().toLowerCase() ===
-                        accountNo.toLowerCase()
-                );
-
-                if (found) {
-                    this.allowCreateForUnknownMemberNo = false;
-                    this.fillFromExistingMember(found);
-                    this.infoMessage.set('Existing member found. Fields were filled automatically.');
-                    return;
-                }
-
-                if (this.currentResolvedMemberId != null) {
-                    return;
-                }
-
-                const shouldCreate = window.confirm(
-                    `Member account no "${accountNo}" was not found. Would you like to create a new member?`
-                );
-
-                this.allowCreateForUnknownMemberNo = shouldCreate;
-
-                if (shouldCreate) {
-                    this.currentResolvedMemberId = null;
-                    this.memberResolved.emit(null);
-                    this.infoMessage.set('Creating a new member.');
-                    this.form.patchValue(
-                        {
-                            last_name: '',
-                            first_name: '',
-                            middle_name: '',
-                            email_address: '',
-                            mobile_number: '',
-                            birth_date: '',
-                        },
-                        { emitEvent: false }
-                    );
-                } else {
-                    this.infoMessage.set('Please enter an existing member account number.');
-                }
-            });
-    }
-
-    private fillFromExistingMember(member: MasterListMemberLookupResponse): void {
-        this.currentResolvedMemberId = member.master_list_member_id;
-        this.allowCreateForUnknownMemberNo = false;
-        this.saveError.set(null);
-
-        this.form.patchValue(
-            {
-                agreement_corp_number: member.endorsement_agreement_corp_number ?? '',
-                member_account_no: member.master_list_member_account_no ?? '',
-                last_name: member.master_list_member_last_name ?? '',
-                first_name: member.master_list_member_first_name ?? '',
-                middle_name: member.master_list_member_middle_name ?? '',
-                email_address: member.master_list_member_email_address ?? '',
-                mobile_number: member.master_list_member_mobile_number ?? '',
-                birth_date: member.master_list_member_birth_date ?? '',
-            },
-            { emitEvent: false }
+        return items.filter(item =>
+            (item.master_list_member_account_no ?? '').toLowerCase().includes(search)
         );
+    });
 
-        const agreement = this.findAgreement(member.endorsement_agreement_corp_number ?? '');
-        this.form.patchValue(
-            {
-                hmo_name: agreement?.hmo_name ?? '',
-                company_name: agreement?.company_name ?? '',
-            },
-            { emitEvent: false }
-        );
 
-        this.memberResolved.emit(member);
-    }
+    /***********************
+     * ✅ Member detail fields
+     ***********************/
+    readonly lastName = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly firstName = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly middleName = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly mobileNumber = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly emailAddress = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly birthDate = new FormControl<string>('', { nonNullable: true }); // ✅ new
 
-    private findAgreement(agreementCorpNumber: string): AgreementCorpLookup | undefined {
-        const key = agreementCorpNumber.trim().toLowerCase();
-        return this.agreementLookups.find(
-            (x) => x.agreement_corp_number.trim().toLowerCase() === key
-        );
-    }
+    readonly infoMessage = signal<string>('');
+    readonly saveError = signal<string>('');
+    readonly loading = signal(false);
 
-    save(): void {
-        this.saveError.set(null);
-        this.infoMessage.set(null);
+    constructor() {
+        // ✅ reload endorsements whenever dentist changes
+        effect(() => {
+            const dentistId = this.dentistId();
 
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            return;
-        }
+            this.resetAll();
 
-        const raw = this.form.getRawValue();
-        const agreement = this.findAgreement(raw.agreement_corp_number);
-
-        const normalizedBirthDate = this.normalizeBirthDate(raw.birth_date);
-        const normalizedEmail = this.normalizeNullableString(raw.email_address);
-        const normalizedMobile = this.normalizeNullableString(raw.mobile_number);
-
-        this.loading.set(true);
-
-        if (this.currentResolvedMemberId != null) {
-            const patchPayload: PatchMasterListMemberRequest = {
-                master_list_id: agreement?.master_list_id ?? null,
-                account_number: raw.member_account_no.trim(),
-                last_name: raw.last_name.trim(),
-                first_name: raw.first_name.trim(),
-                middle_name: raw.middle_name.trim(),
-                email_address: normalizedEmail,
-                mobile_number: normalizedMobile,
-                birth_date: normalizedBirthDate,
-                is_active: true,
-            };
-
-            this.masterListMemberService
-                .patchMasterListMember(this.currentResolvedMemberId, patchPayload)
-                .pipe(takeUntilDestroyed(this.destroyRef))
-                .subscribe({
-                    next: (response) => {
-                        this.loading.set(false);
-                        this.infoMessage.set('Member updated successfully.');
-                        this.saved.emit(response);
-                    },
-                    error: () => {
-                        this.loading.set(false);
-                        this.saveError.set('Failed to update member.');
-                    },
-                });
-
-            return;
-        }
-
-        if (!this.allowCreateForUnknownMemberNo && !this.masterListMemberId) {
-            const existing = this.masterListMembers.find(
-                (x) =>
-                    x.master_list_member_account_no.trim().toLowerCase() ===
-                    raw.member_account_no.trim().toLowerCase()
-            );
-
-            if (!existing) {
-                this.loading.set(false);
-                this.saveError.set(
-                    'This member account number does not exist yet. Enter it again and confirm creation when prompted.'
-                );
+            if (dentistId === null) {
                 return;
             }
+
+            this.loadEndorsementsForDentist(dentistId);
+        });
+
+        // ✅ safe subscription for agreement number autocomplete
+        this.endorsementSearch.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(value => {
+                const searchText = typeof value === 'string' ? value.trim().toLowerCase() : '';
+                this.endorsementSearchText.set(searchText);
+
+                // ✅ only clear when user is typing text
+                if (typeof value === 'string') {
+                    this.selectedEndorsementId.set(null);
+                    this.selectedHmoName.set('');
+                    this.selectedCompanyName.set('');
+                    this.clearMemberSection();
+                }
+            });
+
+        // ✅ safe subscription for member account autocomplete
+        this.memberAccountSearch.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(value => {
+                const searchText = typeof value === 'string' ? value.trim().toLowerCase() : '';
+                console.log('memberAccountSearch.valueChanges', value, searchText);
+                this.memberAccountSearchText.set(searchText);
+
+                // ✅ if user is typing manually, this is no longer a resolved existing member
+                if (typeof value === 'string') {
+                    this.resolvedMemberId.set(null);
+                    this.selectedMasterListMemberIdChange.emit(null);
+                    this.clearMemberFieldsOnly();
+                }
+            });
+    }
+
+    // ✅ full reset when dentist changes
+    private resetAll(): void {
+        this.endorsements.set([]);
+        this.endorsementSearch.setValue('', { emitEvent: false });
+        this.endorsementSearchText.set('');
+        this.selectedEndorsementId.set(null);
+        this.selectedHmoName.set('');
+        this.selectedCompanyName.set('');
+        this.clearMemberSection();
+        this.infoMessage.set('');
+        this.saveError.set('');
+    }
+
+    // ✅ clear all member-related state
+    private clearMemberSection(): void {
+        this.members.set([]);
+        this.loadingMembers.set(false);
+        this.memberAccountSearch.setValue('', { emitEvent: false });
+        this.memberAccountSearchText.set('');
+        this.resolvedMemberId.set(null);
+        this.selectedMasterListMemberIdChange.emit(null);
+        this.clearMemberFieldsOnly();
+    }
+
+    // ✅ clear just the detail fields
+    private clearMemberFieldsOnly(): void {
+        this.lastName.setValue('', { emitEvent: false });
+        this.firstName.setValue('', { emitEvent: false });
+        this.middleName.setValue('', { emitEvent: false });
+        this.mobileNumber.setValue('', { emitEvent: false });
+        this.emailAddress.setValue('', { emitEvent: false });
+        this.birthDate.setValue('', { emitEvent: false });
+    }
+
+    private loadEndorsementsForDentist(dentistId: number): void {
+        this.loadingEndorsements.set(true);
+        this.saveError.set('');
+
+        this.endorsementService.getEndorsementsForDentist(dentistId).subscribe({
+            next: (res: DentistEndorsementLookupResponse[]) => {
+                this.endorsements.set(res);
+                this.loadingEndorsements.set(false);
+            },
+            error: (err) => {
+                console.error('Failed to load endorsements for dentist', err);
+                this.saveError.set('Failed to load endorsements.');
+                this.loadingEndorsements.set(false);
+            }
+        });
+    }
+
+    // ✅ load members for selected endorsement
+    private loadMembersForEndorsement(endorsementId: number): void {
+        this.loadingMembers.set(true);
+        this.saveError.set('');
+
+        // ✅ replace this with your actual service method name if different
+        this.masterListMemberService.getMasterListMembersForEndorsement(endorsementId).subscribe({
+            next: (res: MasterListMemberLookupResponse[]) => {
+                this.members.set(res);
+                this.loadingMembers.set(false);
+            },
+            error: (err) => {
+                console.error('Failed to load members for endorsement', err);
+                this.saveError.set('Failed to load members for the selected endorsement.');
+                this.loadingMembers.set(false);
+            }
+        });
+    }
+
+    onEndorsementSelected(event: MatAutocompleteSelectedEvent): void {
+        const endorsementId = event.option.value as number;
+        this.selectedEndorsementId.set(endorsementId);
+
+        const selected = this.endorsements().find(e => e.endorsement_id === endorsementId);
+        if (!selected) {
+            return;
         }
 
-        const createPayload: CreateMasterListMemberRequest = {
-            master_list_id: agreement?.master_list_id ?? null,
-            account_number: raw.member_account_no.trim(),
-            last_name: raw.last_name.trim(),
-            first_name: raw.first_name.trim(),
-            middle_name: raw.middle_name.trim(),
-            email_address: normalizedEmail,
-            mobile_number: normalizedMobile,
-            birth_date: normalizedBirthDate,
-            is_active: true,
-        };
+        // ✅ show agreement number in text box
+        this.endorsementSearch.setValue(selected.agreement_corp_number ?? '', { emitEvent: false });
 
-        this.masterListMemberService
-            .createMasterListMember(createPayload)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-                next: (response) => {
-                    this.loading.set(false);
-                    this.currentResolvedMemberId = response.id;
-                    this.allowCreateForUnknownMemberNo = false;
-                    this.infoMessage.set('Member created successfully.');
-                    this.saved.emit(response);
-                },
-                error: () => {
-                    this.loading.set(false);
-                    this.saveError.set('Failed to create member.');
-                },
-            });
+        // ✅ populate readonly display fields
+        this.selectedCompanyName.set(selected.endorsement_company_name ?? '');
+        this.selectedHmoName.set(selected.hmo_short_name ?? '');
+
+        // ✅ clear previous member state and load matching members
+        this.clearMemberSection();
+        this.loadMembersForEndorsement(endorsementId);
+
+        this.infoMessage.set('Choose an existing Member Account No, or type a new one.');
+    }
+
+    // ✅ when an existing member account is selected
+    onMemberAccountSelected(event: MatAutocompleteSelectedEvent): void {
+        const memberId = event.option.value as number;
+        const selected = this.members().find(m => m.master_list_member_id === memberId);
+
+        if (!selected) {
+            return;
+        }
+
+        this.resolvedMemberId.set(selected.master_list_member_id);
+        this.selectedMasterListMemberIdChange.emit(selected.master_list_member_id);
+
+        // ✅ show account number in the field
+        this.memberAccountSearch.setValue(selected.master_list_member_account_no ?? '', { emitEvent: false });
+
+        // ✅ populate member details
+        this.lastName.setValue(selected.master_list_member_last_name ?? '', { emitEvent: false });
+        this.firstName.setValue(selected.master_list_member_first_name ?? '', { emitEvent: false });
+        this.middleName.setValue(selected.master_list_member_middle_name ?? '', { emitEvent: false });
+        this.mobileNumber.setValue(selected.master_list_member_mobile_number ?? '', { emitEvent: false });
+        this.emailAddress.setValue(selected.master_list_member_email_address ?? '', { emitEvent: false });
+        this.birthDate.setValue(selected.master_list_member_birth_date ?? '', { emitEvent: false });
+
+        this.infoMessage.set(`Selected existing member #${selected.master_list_member_id}.`);
+    }
+
+    // ✅ optional helper if user wants to start fresh
+    startNewMember(): void {
+        this.memberAccountSearch.setValue('', { emitEvent: false });
+        this.memberAccountSearchText.set('');
+        this.resolvedMemberId.set(null);
+        this.selectedMasterListMemberIdChange.emit(null);
+        this.clearMemberFieldsOnly();
+        this.infoMessage.set('Enter a new Member Account No and fill in the member details.');
     }
 
     clear(): void {
-        this.currentResolvedMemberId = null;
-        this.allowCreateForUnknownMemberNo = false;
-        this.saveError.set(null);
-        this.infoMessage.set(null);
-
-        this.form.reset({
-            agreement_corp_number: '',
-            member_account_no: '',
-            hmo_name: '',
-            company_name: '',
-            last_name: '',
-            first_name: '',
-            middle_name: '',
-            email_address: '',
-            mobile_number: '',
-            birth_date: '',
-        });
-
-        this.cleared.emit();
-        this.memberResolved.emit(null);
-    }
-
-    private normalizeNullableString(value: string | null | undefined): string | null {
-        const trimmed = (value ?? '').trim();
-        return trimmed === '' ? null : trimmed;
-    }
-
-    private normalizeBirthDate(value: string | null | undefined): string | null {
-        const trimmed = (value ?? '').trim();
-        return trimmed === '' ? null : trimmed;
+        this.endorsementSearch.setValue('', { emitEvent: false });
+        this.endorsementSearchText.set('');
+        this.selectedEndorsementId.set(null);
+        this.selectedHmoName.set('');
+        this.selectedCompanyName.set('');
+        this.clearMemberSection();
+        this.infoMessage.set('');
+        this.saveError.set('');
     }
 }

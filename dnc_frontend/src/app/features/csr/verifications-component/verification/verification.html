@@ -23,3 +23,15 @@
         }
     </mat-autocomplete>
 </mat-form-field>
+
+@if (selectedDentistId() !== null) {
+    <app-master-list-member
+        [dentistId]="selectedDentistId()"
+        [selectedMasterListMemberId]="selectedMasterListMemberId()"
+        (selectedMasterListMemberIdChange)="onMasterListMemberResolved($event)">
+    </app-master-list-member>
+
+    <p>
+        Selected master_list_member_id: {{ selectedMasterListMemberId() }}
+    </p>
+}
