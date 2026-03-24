@@ -1,1 +1,25 @@
-<p>verification works!</p>
+@if (isInvalidMode()) {
+    <p>Invalid verification route.</p>
+} @else if (isCreateMode()) {
+    <p>Create new verification</p>
+} @else if (isEditMode()) {
+    <p>Editing verification #{{ verificationId() }}</p>
+}
+<mat-form-field appearance="outline">
+    <mat-label>Dentist</mat-label>
+    <input
+        matInput
+        type="text"
+        [formControl]="dentistSearch"
+        [matAutocomplete]="dentistAuto">
+
+    <mat-autocomplete
+        #dentistAuto="matAutocomplete"
+        (optionSelected)="onDentistSelected($event)">
+        @for (dentist of filteredDentists(); track dentist.id) {
+            <mat-option [value]="dentist.id">
+                {{ dentist.full_name }}
+            </mat-option>
+        }
+    </mat-autocomplete>
+</mat-form-field>

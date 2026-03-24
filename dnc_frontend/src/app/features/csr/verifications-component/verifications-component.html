@@ -14,7 +14,7 @@
     <mat-card-content>
         @if (verifications(); as ds){
             @if (ds.length === 0) {
-                <p>No clinics found.</p>
+                <p>No verifications found.</p>
             } @else {
                 <app-generic-data-table
                     [columnDefs]="columns"

@@ -1,9 +1,10 @@
 // src/app/api_services/dentist-service.ts
 import { Injectable, inject } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {map, Observable} from 'rxjs';
 import { environment } from '../../environments/environment';
 import {LoginService} from '../login.service';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Mirrors your Rust DentistWithLookups struct exactly.
@@ -39,6 +40,13 @@ export interface DentistWithLookups {
     account_type_name: string | null;
 }
 
+export interface DentistNames{
+    id: number;
+    last_name: string;
+    given_name: string;
+    middle_name: string | null;
+    full_name: string;
+}
 /**
  * Optional: used later if you add POST/PATCH dentists.
  * Keeping it here is convenient even if unused today.
@@ -122,6 +130,18 @@ export class DentistService {
     getAllDentists(): Observable<DentistWithLookups[]> {
         return this.http.get<DentistWithLookups[]>(this.baseUrl, { headers: this.authHeaders() });
     }
+
+    getAllDentistsNamesOnly():Observable<DentistNames[]>{
+        return this.http.get<DentistWithLookups[]>(this.baseUrl, { headers: this.authHeaders() })
+            .pipe(
+                map((dentists)=> dentists.map((d)=>({
+                    id: d.id,
+                    last_name: d.last_name,
+                    given_name: d.given_name,
+                    middle_name: d.middle_name,
+                    full_name: d.last_name + " " + d.given_name + " " + (d.middle_name ?? "")
+                }))))
+    };
 
     /**
      * GET /dentists/{id}
