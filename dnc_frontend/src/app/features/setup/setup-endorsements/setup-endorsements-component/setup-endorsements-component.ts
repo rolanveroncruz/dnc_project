@@ -47,6 +47,7 @@ import {BasicServicesFeesTabComponent} from './basic-services-fees-tab-component
 import {
     BasicServicesCountsTabComponent
 } from './basic-services-counts-tab-component/basic-services-counts-tab-component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
@@ -105,6 +106,7 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         HighEndServicesCountsTabComponent,
         BasicServicesFeesTabComponent,
         BasicServicesCountsTabComponent,
+        MatSlideToggleModule,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
@@ -164,6 +166,7 @@ export class SetupEndorsementsComponent implements OnInit{
         endorsement_type_id: [null as number| null, [Validators.required]],
         remarks: [''],
         endorsement_method: [null as string | null],
+        is_active: [true],
 
         // Tab sections
         basicServicesFees: this.fb.array<FormGroup>([]),
@@ -409,6 +412,7 @@ export class SetupEndorsementsComponent implements OnInit{
             endorsement_type_id: null,
             remarks: '',
             endorsement_method: null,
+            is_active: true,
         });
 
         this.rebuildRuleMatrices();
@@ -487,6 +491,7 @@ export class SetupEndorsementsComponent implements OnInit{
                         endorsement_type_id: dto.endorsement_type_id !=null? dto.endorsement_type_id : null,
                         remarks: dto.remarks ?? '',
                         endorsement_method: dto.endorsement_method ?? null,
+                        is_active: dto.is_active,
                     });
                     this.rebuildRuleMatrices();
                     this.baseline.set(this.snapshotForm());
@@ -702,6 +707,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: v.remarks ?? '',
             endorsement_method: v.endorsement_method ?? null,
+            is_active: v.is_active,
             basicServicesFees: v.basicServicesFees ?? [],
             basicServicesCounts: v.basicServicesCounts ?? [],
             specialServicesFees: v.specialServicesFees ?? [],
@@ -790,6 +796,7 @@ export class SetupEndorsementsComponent implements OnInit{
             retainer_fee, // string | null
             remarks: (raw.remarks ?? '').trim() || null,
             endorsement_method: (raw.endorsement_method ?? '').trim() || null,
+            is_active: !!raw.is_active,
         };
 
         this.loadState.set('saving');
@@ -823,6 +830,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
                     if ((base.remarks ?? '') !== (raw.remarks ?? '')) patch.remarks = current.remarks;
                     if ((base.endorsement_method ?? null) !== (raw.endorsement_method ?? null)) patch.endorsement_method = current.endorsement_method;
+                    if ((base.is_active ??true) !==(!!raw.is_active)) patch.is_active = current.is_active;
 
                     return patch;
                 })());
@@ -882,6 +890,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: base.remarks ?? '',
             endorsement_method: base.endorsement_method ?? null,
+            is_active: base.is_active ?? true,
         });
 
         this.rebuildRuleMatrices();

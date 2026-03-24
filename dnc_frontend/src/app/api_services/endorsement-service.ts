@@ -30,6 +30,7 @@ export interface EndorsementResponse {
     retainer_fee: DecimalString | null;
     remarks: string | null;
     endorsement_method: string | null;
+    is_active: boolean;
 }
 
 /** Mirrors EndorsementListRow (joined names included) */
@@ -45,6 +46,7 @@ export interface EndorsementListRow {
     retainer_fee: DecimalString | null;
     remarks: string | null;
     endorsement_method: string | null;
+    is_active: boolean;
 
     hmo_name: string | null;
     company_name: string | null;
@@ -64,6 +66,7 @@ export interface CreateEndorsementRequest {
     retainer_fee?: DecimalString | null;
     remarks?: string | null;
     endorsement_method?: string | null;
+    is_active: boolean;
 }
 
 /**
@@ -93,6 +96,7 @@ export interface PatchEndorsementRequest {
 
     remarks?: string | null;
     endorsement_method?: string | null;
+    is_active?: boolean;
 }
 
 export interface ListQuery {
