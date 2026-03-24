@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
 use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
@@ -61,8 +61,7 @@ use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_maste
 use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active, get_endorsements_for_hmo_id};
 
 use crate::handlers::{get_all_verifications};
-use crate::handlers::{get_all_master_list_members_for_dentist_id, post_master_list_member, patch_master_list_member};
-
+use crate::handlers::{get_endorsements_for_dentist_id_handler};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -112,7 +111,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentist-names", get(get_dentist_names))
         .route("/dentists/{:id}", get(get_dentist_from_id))
         .route("/dentists/{:id}", patch(patch_dentist))
-
+        .route("/dentists/{:id}/endorsements", get(get_endorsements_for_dentist_id_handler))
         .route("/dentist_clinics/positions", get(get_dentist_clinic_positions))
 
         .route("/dentist_clinics/", get(get_all_dentist_clinics))
@@ -143,7 +142,6 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id)
             .layer(DefaultBodyLimit::max(100 * 1024 * 1024)),)
         .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
-        .route("/dentists/{dentist_id}/master_list_members", get(get_all_master_list_members_for_dentist_id))
         .route("/dentists/", post(create_dentist))
         .route("/extended_clinics", get(get_all_clinics_and_capabilities))
         .route("/endorsement_types", get(get_endorsement_types))
@@ -158,12 +156,11 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/master_list", post(upload_endorsement_master_list))
         .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_meta_data_for_endorsement_id))
         .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
+        .route("/endorsements/{enodorsement_id}/master_list_members", get(get_master_list_members_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
         .route("/endorsements/{endorsement_id}/billing_rules", get(get_billing_rules_for_endorsement_id).post(post_billing_rule))
         .route("/endorsements/{endorsement_id}/billing_rules/id", patch(patch_billing_rule).delete(delete_billing_rule))
         .route("/verifications", get(get_all_verifications))
-        .route("/master_list_members", post(post_master_list_member))
-        .route("/master_list_members/{id}", patch(patch_master_list_member))
 
 }
 

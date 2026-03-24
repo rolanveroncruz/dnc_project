@@ -45,6 +45,10 @@ pub struct SetMasterListMemberActiveRequest {
     pub is_active: bool,
 }
 
+
+
+// get_master_list_for_endorsement is used when previewing the master list after uploading.
+// it does not include master_list_member_id, phone, birthday and email.
 /// GET /api/endorsements/:endorsement_id/master_lists
 #[instrument(skip(state), err(Debug))]
 pub async fn get_master_list_for_endorsement(

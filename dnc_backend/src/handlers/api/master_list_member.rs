@@ -3,38 +3,40 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, JoinType,
-    QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
-};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, JoinType, IntoActiveModel,
+              QueryFilter, QuerySelect, RelationTrait, Set};
 use sea_orm::prelude::Date;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::{
     AppState,
-    entities::{endorsement, master_list, master_list_member},
-    handlers::api::dentist_relations::get_endorsements_for_dentist_id
+    entities::{
+        master_list_member,
+        endorsement,
+        endorsement_company,
+    },
+
 };
 
-#[derive(Debug, Serialize, sea_orm::FromQueryResult)]
-pub struct MasterListMemberLookupResponse {
-    pub master_list_member_id: i32,
-    pub endorsement_id: Option<i32>,
-    pub endorsement_agreement_corp_number: Option<String>,
-    pub master_list_member_account_no: String,
-    pub master_list_member_last_name: String,
-    pub master_list_member_first_name: String,
-    pub master_list_member_middle_name: String,
-    pub master_list_member_name: String,
-    pub master_list_member_email_address: Option<String>,
-    pub master_list_member_mobile_number: Option<String>,
-    pub master_list_member_birth_date: Option<Date>,
-    pub master_list_member_is_active: bool,
+#[derive(Debug, Serialize)]
+pub struct MasterListMemberResponse {
+    pub id: i32,
+    pub endorsement_id: i32,
+    pub master_list_id: Option<i32>,
+    pub account_number: String,
+    pub last_name: String,
+    pub first_name: String,
+    pub middle_name: String,
+    pub email_address: Option<String>,
+    pub mobile_number: Option<String>,
+    pub birth_date: Option<Date>,
+    pub is_active: bool,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct CreateMasterListMemberRequest {
+    pub endorsement_id: i32,
     pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
@@ -48,6 +50,7 @@ pub struct CreateMasterListMemberRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct PatchMasterListMemberRequest {
+    pub endorsement_id: Option<i32>,
     pub master_list_id: Option<Option<i32>>,
     pub account_number: Option<String>,
     pub last_name: Option<String>,
@@ -59,94 +62,13 @@ pub struct PatchMasterListMemberRequest {
     pub is_active: Option<bool>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct MasterListMemberMutationResponse {
-    pub id: i32,
-    pub master_list_id: Option<i32>,
-    pub account_number: String,
-    pub last_name: String,
-    pub first_name: String,
-    pub middle_name: String,
-    pub email_address: Option<String>,
-    pub mobile_number: Option<String>,
-    pub birth_date: Option<Date>,
-    pub is_active: bool,
-}
-
 #[instrument(skip(state))]
-pub async fn get_all_master_list_members(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<MasterListMemberLookupResponse>>, StatusCode> {
-    let rows = master_list_member::Entity::find()
-        .select_only()
-        .column_as(master_list_member::Column::Id, "master_list_member_id")
-        .column_as(master_list::Column::EndorsementId, "endorsement_id")
-        .column_as(
-            endorsement::Column::AgreementCorpNumber,
-            "endorsement_agreement_corp_number",
-        )
-        .column_as(
-            master_list_member::Column::AccountNumber,
-            "master_list_member_account_no",
-        )
-        .column_as(
-            master_list_member::Column::LastName,
-            "master_list_member_last_name",
-        )
-        .column_as(
-            master_list_member::Column::FirstName,
-            "master_list_member_first_name",
-        )
-        .column_as(
-            master_list_member::Column::MiddleName,
-            "master_list_member_middle_name",
-        )
-        .expr_as(
-            sea_orm::sea_query::Expr::cust(
-                r#""master_list_member"."last_name" || ', ' || "master_list_member"."first_name" || ' ' || "master_list_member"."middle_name""#,
-            ),
-            "master_list_member_name",
-        )
-        .column_as(
-            master_list_member::Column::EmailAddress,
-            "master_list_member_email_address",
-        )
-        .column_as(
-            master_list_member::Column::MobileNumber,
-            "master_list_member_mobile_number",
-        )
-        .column_as(
-            master_list_member::Column::BirthDate,
-            "master_list_member_birth_date",
-        )
-        .column_as(
-            master_list_member::Column::IsActive,
-            "master_list_member_is_active",
-        )
-        .join(
-            JoinType::LeftJoin,
-            master_list_member::Relation::MasterList.def(),
-        )
-        .join(
-            JoinType::LeftJoin,
-            master_list::Relation::Endorsement.def(),
-        )
-        .order_by_asc(master_list_member::Column::LastName)
-        .order_by_asc(master_list_member::Column::FirstName)
-        .into_model::<MasterListMemberLookupResponse>()
-        .all(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    Ok(Json(rows))
-}
-
-#[instrument(skip(state, payload))]
 pub async fn post_master_list_member(
     State(state): State<AppState>,
     Json(payload): Json<CreateMasterListMemberRequest>,
-) -> Result<(StatusCode, Json<MasterListMemberMutationResponse>), StatusCode> {
+) -> Result<(StatusCode, Json<MasterListMemberResponse>), StatusCode> {
     let active_model = master_list_member::ActiveModel {
+        endorsement_id: Set(payload.endorsement_id),
         master_list_id: Set(payload.master_list_id),
         account_number: Set(payload.account_number),
         last_name: Set(payload.last_name),
@@ -166,8 +88,9 @@ pub async fn post_master_list_member(
 
     Ok((
         StatusCode::CREATED,
-        Json(MasterListMemberMutationResponse {
+        Json(MasterListMemberResponse {
             id: inserted.id,
+            endorsement_id: inserted.endorsement_id,
             master_list_id: inserted.master_list_id,
             account_number: inserted.account_number,
             last_name: inserted.last_name,
@@ -181,20 +104,23 @@ pub async fn post_master_list_member(
     ))
 }
 
-#[instrument(skip(state, payload))]
+#[instrument(skip(state))]
 pub async fn patch_master_list_member(
     State(state): State<AppState>,
     Path(id): Path<i32>,
     Json(payload): Json<PatchMasterListMemberRequest>,
-) -> Result<Json<MasterListMemberMutationResponse>, StatusCode> {
-    let existing = master_list_member::Entity::find_by_id(id)
+) -> Result<Json<MasterListMemberResponse>, StatusCode> {
+    let member = master_list_member::Entity::find_by_id(id)
         .one(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    let mut active_model = existing.into_active_model();
+    let mut active_model = member.into_active_model();
 
+    if let Some(endorsement_id) = payload.endorsement_id {
+        active_model.endorsement_id = Set(endorsement_id);
+    }
     if let Some(master_list_id) = payload.master_list_id {
         active_model.master_list_id = Set(master_list_id);
     }
@@ -228,8 +154,9 @@ pub async fn patch_master_list_member(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(MasterListMemberMutationResponse {
+    Ok(Json(MasterListMemberResponse {
         id: updated.id,
+        endorsement_id: updated.endorsement_id,
         master_list_id: updated.master_list_id,
         account_number: updated.account_number,
         last_name: updated.last_name,
@@ -242,81 +169,67 @@ pub async fn patch_master_list_member(
     }))
 }
 
-#[instrument(skip(state))]
-pub async fn get_all_master_list_members_for_dentist_id(
+
+#[derive(Debug, Serialize, sea_orm::FromQueryResult)]
+pub struct MasterListMemberForEndorsementResponse {
+    pub endorsement_company_name: String,
+    pub agreement_corp_number: Option<String>,
+
+    pub id: i32,
+    pub endorsement_id: i32,
+    pub master_list_id: Option<i32>,
+    pub account_number: String,
+    pub last_name: String,
+    pub first_name: String,
+    pub middle_name: String,
+    pub email_address: Option<String>,
+    pub mobile_number: Option<String>,
+    pub birth_date: Option<Date>,
+    pub is_active: bool,
+}
+#[instrument(skip(state), err(Debug))]
+pub async fn get_master_list_members_for_endorsement(
     State(state): State<AppState>,
-    Path(dentist_id): Path<i32>,
-) -> Result<Json<Vec<MasterListMemberLookupResponse>>, StatusCode> {
-    let endorsement_ids = get_endorsements_for_dentist_id(&state.db, dentist_id)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // No allowed endorsements means no allowed master list members.
-    if endorsement_ids.is_empty() {
-        return Ok(Json(vec![]));
-    }
-
+    Path(endorsement_id): Path<i32>,
+) -> Result<Json<Vec<MasterListMemberForEndorsementResponse>>, (StatusCode, String)> {
     let rows = master_list_member::Entity::find()
+        .filter(master_list_member::Column::EndorsementId.eq(endorsement_id))
+        .join(
+            JoinType::InnerJoin,
+            master_list_member::Relation::Endorsement.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
+            endorsement::Relation::EndorsementCompany.def(),
+        )
         .select_only()
-        .column_as(master_list_member::Column::Id, "master_list_member_id")
-        .column_as(master_list::Column::EndorsementId, "endorsement_id")
+        .column_as(
+            endorsement_company::Column::Name,
+            "endorsement_company_name",
+        )
         .column_as(
             endorsement::Column::AgreementCorpNumber,
-            "endorsement_agreement_corp_number",
+            "agreement_corp_number",
         )
-        .column_as(
-            master_list_member::Column::AccountNumber,
-            "master_list_member_account_no",
-        )
-        .column_as(
-            master_list_member::Column::LastName,
-            "master_list_member_last_name",
-        )
-        .column_as(
-            master_list_member::Column::FirstName,
-            "master_list_member_first_name",
-        )
-        .column_as(
-            master_list_member::Column::MiddleName,
-            "master_list_member_middle_name",
-        )
-        .expr_as(
-            sea_orm::sea_query::Expr::cust(
-                r#""master_list_member"."last_name" || ', ' || "master_list_member"."first_name" || ' ' || "master_list_member"."middle_name""#,
-            ),
-            "master_list_member_name",
-        )
-        .column_as(
-            master_list_member::Column::EmailAddress,
-            "master_list_member_email_address",
-        )
-        .column_as(
-            master_list_member::Column::MobileNumber,
-            "master_list_member_mobile_number",
-        )
-        .column_as(
-            master_list_member::Column::BirthDate,
-            "master_list_member_birth_date",
-        )
-        .column_as(
-            master_list_member::Column::IsActive,
-            "master_list_member_is_active",
-        )
-        .join(
-            JoinType::LeftJoin,
-            master_list_member::Relation::MasterList.def(),
-        )
-        .join(
-            JoinType::LeftJoin,
-            master_list::Relation::Endorsement.def(),
-        )
-        .filter(master_list::Column::EndorsementId.is_in(endorsement_ids))
-        .order_by_asc(master_list_member::Column::LastName)
-        .order_by_asc(master_list_member::Column::FirstName)
-        .into_model::<MasterListMemberLookupResponse>()
+        .column(master_list_member::Column::Id)
+        .column(master_list_member::Column::EndorsementId)
+        .column(master_list_member::Column::MasterListId)
+        .column(master_list_member::Column::AccountNumber)
+        .column(master_list_member::Column::LastName)
+        .column(master_list_member::Column::FirstName)
+        .column(master_list_member::Column::MiddleName)
+        .column(master_list_member::Column::EmailAddress)
+        .column(master_list_member::Column::MobileNumber)
+        .column(master_list_member::Column::BirthDate)
+        .column(master_list_member::Column::IsActive)
+        .into_model::<MasterListMemberForEndorsementResponse>()
         .all(&state.db)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(internal_error)?;
 
     Ok(Json(rows))
+}
+
+fn internal_error(err: sea_orm::DbErr) -> (StatusCode, String) {
+    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
