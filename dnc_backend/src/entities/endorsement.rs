@@ -64,6 +64,8 @@ pub enum Relation {
     Hmo,
     #[sea_orm(has_many = "super::master_list::Entity")]
     MasterList,
+    #[sea_orm(has_many = "super::master_list_member::Entity")]
+    MasterListMember,
 }
 
 impl Related<super::endorsement_billing_period_type::Entity> for Entity {
@@ -111,6 +113,12 @@ impl Related<super::hmo::Entity> for Entity {
 impl Related<super::master_list::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterList.def()
+    }
+}
+
+impl Related<super::master_list_member::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::MasterListMember.def()
     }
 }
 

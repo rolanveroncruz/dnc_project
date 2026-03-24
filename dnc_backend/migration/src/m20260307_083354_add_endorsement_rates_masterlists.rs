@@ -83,6 +83,12 @@ impl Migration {
                     .integer()
                     .not_null()
                 )
+                .foreign_key(
+                    ForeignKey::create()
+                        .name("fk_master_list_member_endorsement_id")
+                        .from(MasterListMember::Table, MasterList::EndorsementId)
+                        .to(Endorsement::Table, Endorsement::Id),
+                )
                 // Optionally, a MasterListMember could be associated with a MasterList.
                 .col(ColumnDef::new(MasterListMember::MasterListId)
                     .integer()

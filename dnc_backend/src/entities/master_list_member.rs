@@ -23,6 +23,14 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
+        belongs_to = "super::endorsement::Entity",
+        from = "Column::EndorsementId",
+        to = "super::endorsement::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Endorsement,
+    #[sea_orm(
         belongs_to = "super::master_list::Entity",
         from = "Column::MasterListId",
         to = "super::master_list::Column::Id",
@@ -32,6 +40,12 @@ pub enum Relation {
     MasterList,
     #[sea_orm(has_many = "super::verification::Entity")]
     Verification,
+}
+
+impl Related<super::endorsement::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Endorsement.def()
+    }
 }
 
 impl Related<super::master_list::Entity> for Entity {
