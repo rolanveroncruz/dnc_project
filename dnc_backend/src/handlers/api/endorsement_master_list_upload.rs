@@ -293,7 +293,7 @@ pub async fn upload_endorsement_master_list(
     let new_master_list = master_list::ActiveModel {
         file_name: Set(file_name.clone()),
         endorsement_id: Set(Some(endorsement_id)),
-        uploaded_by: Set(uploaded_by),
+        uploaded_by: Set(uploaded_by.clone()),
         upload_date: Set(Some(Utc::now().fixed_offset())),
         ..Default::default()
     };
@@ -326,6 +326,8 @@ pub async fn upload_endorsement_master_list(
             mobile_number: Set(None),
             birth_date: Set(None),
             is_active: Set(true),
+            last_edited_by: Set(uploaded_by.clone()),
+            last_edited_date: Set(Utc::now().fixed_offset()),
             ..Default::default()
         }
             .insert(&txn)
