@@ -18,6 +18,9 @@ pub struct Model {
     pub mobile_number: Option<String>,
     pub birth_date: Option<Date>,
     pub is_active: bool,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub last_edited_by: Option<String>,
+    pub last_edited_date: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

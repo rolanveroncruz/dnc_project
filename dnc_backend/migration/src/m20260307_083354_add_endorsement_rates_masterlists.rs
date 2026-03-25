@@ -128,6 +128,14 @@ impl Migration {
                     .default(true)
                     .not_null()
                 )
+                .col(ColumnDef::new(MasterListMember::LastEditedBy)
+                    .text()
+                )
+                .col(ColumnDef::new(MasterListMember::LastEditedDate)
+                    .timestamp_with_time_zone()
+                    .not_null()
+                    .default(Expr::current_timestamp())
+                )
                     .to_owned()
             ).await?;
 
@@ -257,6 +265,8 @@ pub enum MasterListMember {
     EmailAddress,
     BirthDate,
     MobileNumber,
+    LastEditedBy,
+    LastEditedDate,
     IsActive,
 }
 #[derive(Iden)]
