@@ -81,4 +81,4 @@ pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, p
 pub use api::dentist_relations::get_endorsements_for_dentist_id_handler;
 
 pub use api::master_list_member::{get_master_list_members_for_endorsement, post_master_list_member, patch_master_list_member};
-pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_counts_for_member_id};
+pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_service_counts_for_member_id};

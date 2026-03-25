@@ -82,9 +82,13 @@ impl Migration {
                         .auto_increment()
                         .primary_key()
                     )
-                    .col(ColumnDef::new(Verification::Date)
+                    .col(ColumnDef::new(Verification::DateCreated)
                         .timestamp_with_time_zone()
                         .default(Expr::current_timestamp())
+                        .not_null()
+                    )
+                    .col(ColumnDef::new(Verification::CreatedBy)
+                        .string()
                         .not_null()
                     )
                     .col(ColumnDef::new(Verification::DentistId)
@@ -115,6 +119,9 @@ impl Migration {
                         .name("fk_verification_table_dental_service_id")
                         .from(Verification::Table, Verification::DentalServiceId)
                         .to(DentalService::Table, DentalService::Id)
+                    )
+                    .col(ColumnDef::new(Verification::DateServicePerformed)
+                        .date()
                     )
                     .col(ColumnDef::new(Verification::StatusId)
                         .integer()
@@ -223,10 +230,12 @@ pub enum VerificationStatus{
 pub enum Verification{
     Table,
     Id,
-    Date,
+    DateCreated,
+    CreatedBy,
     DentistId,
     MemberId,
     DentalServiceId,
+    DateServicePerformed,
     StatusId,
     ApprovalCode,
     ApprovalDate,

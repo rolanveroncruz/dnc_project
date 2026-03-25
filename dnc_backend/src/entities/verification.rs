@@ -8,10 +8,12 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub date: DateTimeWithTimeZone,
+    pub date_created: DateTimeWithTimeZone,
+    pub created_by: String,
     pub dentist_id: i32,
     pub member_id: i32,
     pub dental_service_id: i32,
+    pub date_service_performed: Option<Date>,
     pub status_id: i32,
     pub approved_by: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,

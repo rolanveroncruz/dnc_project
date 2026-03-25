@@ -241,7 +241,7 @@ pub async fn get_used_service_counts_for_member_id(
 }
 
 #[instrument(skip(state), err(Debug))]
-pub async fn get_counts_for_member_id(
+pub async fn get_service_counts_for_member_id(
     State(state): State<AppState>,
     Path(member_id): Path<i32>,
 ) -> Result<Json<Vec<MemberServiceCountSummaryResponse>>, (StatusCode, String)> {

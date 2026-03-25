@@ -98,7 +98,7 @@ pub async fn get_all_verifications(
         )
         .select_only()
         .column_as(verification::Column::Id, "verification_id")
-        .column(verification::Column::Date)
+        .column_as(verification::Column::DateCreated, "date_created")
         .column(verification::Column::DentistId)
         .column_as(dentist::Column::LastName, "dentist_last_name")
         .column_as(dentist::Column::GivenName, "dentist_given_name")
