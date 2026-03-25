@@ -1,8 +1,37 @@
 <mat-card class="master-list-member-card">
     <mat-card-header>
-        <mat-card-title>
-            Master List Member
-        </mat-card-title>
+        <div class="master-list-member-title-row">
+            <mat-card-title>
+                Master List Member
+            </mat-card-title>
+            @if (hasUnsavedChanges()){
+                <mat-chip highlighted>
+                    Unsaved changes
+                </mat-chip>
+            }
+        </div>
+        @if (hasUnsavedChanges()){
+            <div class="header-actions">
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="resetMemberEdits()">
+                    Reset
+                </button>
+                <button
+                    mat-raised-button
+                    type="button"
+                    (click)="saveMemberEdits()">
+                    Save
+                </button>
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="clear()">
+                    Clear
+                </button>
+            </div>
+        }
     </mat-card-header>
 
     <mat-card-content>
@@ -133,24 +162,6 @@
                 </mat-form-field>
             </div>
 
-            <!-- ✅ action row -->
-            @if (selectedEndorsementId() !== null) {
-                <div class="action-row">
-                    <button
-                        mat-raised-button
-                        type="button"
-                        (click)="startNewMember()">
-                        Create New Member
-                    </button>
-
-                    <button
-                        mat-stroked-button
-                        type="button"
-                        (click)="clear()">
-                        Clear
-                    </button>
-                </div>
-            }
         }
 
         @if (infoMessage()) {

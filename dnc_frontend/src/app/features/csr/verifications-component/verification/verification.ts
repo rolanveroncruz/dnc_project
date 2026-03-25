@@ -6,7 +6,7 @@ import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger} from '@angular/material/autocomplete';
 import {MatOptionModule} from '@angular/material/core';
-import {MasterListMemberComponent} from '../master-list-member-component/master-list-member-component';
+import {MasterListMemberComponent} from './master-list-member-component/master-list-member-component';
 
 @Component({
     selector: 'app-verification',

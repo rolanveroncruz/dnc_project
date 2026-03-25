@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatChipsModule} from '@angular/material/chips';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,11 +22,11 @@ import { MatCardModule } from '@angular/material/card';
 import {
     MasterListMemberService,
     MasterListMemberLookupResponse,
-} from '../../../../api_services/master-list-members-service';
+} from '../../../../../api_services/master-list-members-service';
 import {
     EndorsementService,
     DentistEndorsementLookupResponse,
-} from '../../../../api_services/endorsement-service';
+} from '../../../../../api_services/endorsement-service';
 import {
     MatAutocomplete,
     MatAutocompleteSelectedEvent,
@@ -47,6 +48,7 @@ import {
         MatAutocompleteTrigger,
         MatAutocomplete,
         MatOption,
+        MatChipsModule,
     ],
     templateUrl: './master-list-member-component.html',
     styleUrl: './master-list-member-component.scss',
@@ -59,6 +61,61 @@ export class MasterListMemberComponent {
     readonly dentistId = input<number | null>(null);
     readonly selectedMasterListMemberId = input<number | null>(null);
     readonly selectedMasterListMemberIdChange = output<number | null>();
+
+
+    /***********************
+     * ✅ Master List Member info
+     ***********************/
+    readonly memberEditVersion = signal(0);
+
+    readonly memberEditBaseline = signal<{
+        lastName: string;
+        firstName: string;
+        middleName: string;
+        mobileNumber: string;
+        emailAddress: string;
+        birthDate: string;
+    }|null> (null);
+
+    readonly hasUnsavedChanges = signal(false);
+
+    private currentMemberEditSnapshot() {
+        return {
+            lastName: this.lastName.value ?? '',
+            firstName: this.firstName.value ?? '',
+            middleName: this.middleName.value ?? '',
+            mobileNumber: this.mobileNumber.value ?? '',
+            emailAddress: this.emailAddress.value ?? '',
+            birthDate: this.birthDate.value ?? '',
+        };
+    }
+    private setMemberEditBaseline(): void{
+        this.memberEditBaseline.set( this.currentMemberEditSnapshot());
+        this.hasUnsavedChanges.set(false);
+        this.bumpMemberEditVersion();
+    }
+    private bumpMemberEditVersion(): void{
+        this.memberEditVersion.update(v => v + 1);
+    }
+    resetMemberEdits():void{
+        const baseline = this.memberEditBaseline();
+        if (!baseline)return;
+
+        this.lastName.setValue(baseline.lastName, { emitEvent: false });
+        this.firstName.setValue(baseline.firstName, { emitEvent: false });
+        this.middleName.setValue(baseline.middleName, { emitEvent: false });
+        this.mobileNumber.setValue(baseline.mobileNumber, { emitEvent: false });
+        this.emailAddress.setValue(baseline.emailAddress, { emitEvent: false });
+        this.birthDate.setValue(baseline.birthDate, { emitEvent: false });
+
+        this.hasUnsavedChanges.set(false);
+        this.bumpMemberEditVersion();
+    }
+    saveMemberEdits(): void {
+        this.setMemberEditBaseline();
+        this.infoMessage.set('Member changes saved.');
+        this.saveError.set('');
+    }
 
     /***********************
      * ✅ Endorsement selection
@@ -107,7 +164,6 @@ export class MasterListMemberComponent {
         );
 
         if (!search) {
-            console.log('first filtered member:', items[0]);
             return items;
         }
 
@@ -142,9 +198,44 @@ export class MasterListMemberComponent {
             if (dentistId === null) {
                 return;
             }
-
             this.loadEndorsementsForDentist(dentistId);
         });
+        this.lastName.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
+        this.firstName.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
+        this.middleName.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
+        this.mobileNumber.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
+        this.emailAddress.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
+        this.birthDate.valueChanges
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(()=>{
+                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+                this.bumpMemberEditVersion();
+            });
 
         // ✅ safe subscription for agreement number autocomplete
         this.endorsementSearch.valueChanges
@@ -167,7 +258,6 @@ export class MasterListMemberComponent {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(value => {
                 const searchText = typeof value === 'string' ? value.trim().toLowerCase() : '';
-                console.log('memberAccountSearch.valueChanges', value, searchText);
                 this.memberAccountSearchText.set(searchText);
 
                 // ✅ if user is typing manually, this is no longer a resolved existing member
@@ -175,6 +265,7 @@ export class MasterListMemberComponent {
                     this.resolvedMemberId.set(null);
                     this.selectedMasterListMemberIdChange.emit(null);
                     this.clearMemberFieldsOnly();
+                    this.setMemberEditBaseline();
                 }
             });
     }
@@ -190,6 +281,8 @@ export class MasterListMemberComponent {
         this.clearMemberSection();
         this.infoMessage.set('');
         this.saveError.set('');
+        this.memberEditBaseline.set(null);
+        this.hasUnsavedChanges.set(false);
     }
 
     // ✅ clear all member-related state
@@ -201,6 +294,8 @@ export class MasterListMemberComponent {
         this.resolvedMemberId.set(null);
         this.selectedMasterListMemberIdChange.emit(null);
         this.clearMemberFieldsOnly();
+        this.memberEditBaseline.set(null);
+        this.hasUnsavedChanges.set(false);
     }
 
     // ✅ clear just the detail fields
@@ -211,6 +306,8 @@ export class MasterListMemberComponent {
         this.mobileNumber.setValue('', { emitEvent: false });
         this.emailAddress.setValue('', { emitEvent: false });
         this.birthDate.setValue('', { emitEvent: false });
+        this.memberEditBaseline.set(null);
+        this.hasUnsavedChanges.set(false);
     }
 
     private loadEndorsementsForDentist(dentistId: number): void {
@@ -295,6 +392,8 @@ export class MasterListMemberComponent {
         this.emailAddress.setValue(selected.master_list_member_email_address ?? '', { emitEvent: false });
         this.birthDate.setValue(selected.master_list_member_birth_date ?? '', { emitEvent: false });
 
+        this.setMemberEditBaseline();
+
         this.infoMessage.set(`Selected existing member #${selected.master_list_member_id}.`);
     }
 
@@ -305,6 +404,7 @@ export class MasterListMemberComponent {
         this.resolvedMemberId.set(null);
         this.selectedMasterListMemberIdChange.emit(null);
         this.clearMemberFieldsOnly();
+        this.setMemberEditBaseline();
         this.infoMessage.set('Enter a new Member Account No and fill in the member details.');
     }
 
@@ -317,5 +417,7 @@ export class MasterListMemberComponent {
         this.clearMemberSection();
         this.infoMessage.set('');
         this.saveError.set('');
+        this.memberEditBaseline.set(null);
+        this.hasUnsavedChanges.set(false);
     }
 }
