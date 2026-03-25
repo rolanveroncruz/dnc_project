@@ -35,3 +35,14 @@
         Selected master_list_member_id: {{ selectedMasterListMemberId() }}
     </p>
 }
+
+@if(loadingMemberServices()){
+    <p>Loading services...</p>
+}
+
+@if(selectedMasterListMemberId() !== null) {
+    <app-services
+        [services] = "memberServicesCountsSummary()"
+        (checkedIdsChange) = "onCheckedServiceIdsChange($event)"
+    ></app-services>
+}

@@ -7,6 +7,8 @@ import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger} from '@angular/material/autocomplete';
 import {MatOptionModule} from '@angular/material/core';
 import {MasterListMemberComponent} from './master-list-member-component/master-list-member-component';
+import {MemberServicesCountsService, MemberServicesCountsSummary} from '../../../../api_services/member-services-counts-service';
+import {ServicesComponent} from './services-component/services-component';
 
 @Component({
     selector: 'app-verification',
@@ -20,12 +22,46 @@ import {MasterListMemberComponent} from './master-list-member-component/master-l
         MatAutocompleteTrigger,
         MatInput,
         MasterListMemberComponent,
+        ServicesComponent,
     ],
     templateUrl: './verification.html',
     styleUrl: './verification.scss',
 })
 export class Verification implements OnInit {
     private readonly route = inject(ActivatedRoute);
+
+
+// region: Services and Service Counts,
+    /******************
+     * Services and Service Counts
+     ****************/
+
+    private readonly memberServicesCountsService = inject(MemberServicesCountsService);
+    readonly memberServicesCountsSummary = signal<MemberServicesCountsSummary[]>([]);
+    readonly selectedDentalServiceIds = signal<number[]>([]);
+    readonly loadingMemberServices = signal(false);
+
+    onCheckedServiceIdsChange(ids: number[]): void {
+        this.selectedDentalServiceIds.set(ids);
+    }
+
+    private loadMemberServicesCounts(memberId: number): void {
+        console.log("In loadMemberServicesCounts(), memberId:", memberId);
+        this.loadingMemberServices.set(true);
+
+        this.memberServicesCountsService.getMemberServicesCountsSummary(memberId).subscribe({
+            next: (res) => {
+                this.memberServicesCountsSummary.set(res);
+                this.loadingMemberServices.set(false);
+            },
+            error: (err) => {
+                console.error('Failed to load member service counts summary', err);
+                this.memberServicesCountsSummary.set([]);
+                this.loadingMemberServices.set(false);
+            }
+        });
+    }
+    // endregion: Services and Service Counts,
 
 // region: Route path ID, and signals for if new or edit mode
     /******************
@@ -97,6 +133,8 @@ export class Verification implements OnInit {
 
         // reset the selectedMasterListMemberId
         this.selectedMasterListMemberId.set(null);
+        this.memberServicesCountsSummary.set([]);
+        this.selectedDentalServiceIds.set([]);
 
         const selectedDentist = this.dentistNames().find(d => d.id === selectedId);
         if (selectedDentist) {
@@ -114,6 +152,13 @@ export class Verification implements OnInit {
         console.log("In onMasterListMemberResolved(), memberId:", memberId);
         this.selectedMasterListMemberId.set(memberId);
 
+        //clear previous service selection first
+        this.memberServicesCountsSummary.set([]);
+        this.selectedDentalServiceIds.set([]);
+        if(memberId === null){
+            return;
+        }
+        this.loadMemberServicesCounts(memberId);
     }
 
     // endregion for MasterListMember
@@ -135,6 +180,8 @@ export class Verification implements OnInit {
             if (typeof value === 'string') {
                 this.selectedDentistId.set(null);
                 this.selectedMasterListMemberId.set(null);
+                this.memberServicesCountsSummary.set([]);
+                this.selectedDentalServiceIds.set([]);
             }
         });
 

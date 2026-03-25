@@ -1,0 +1,26 @@
+<div class="services-actions">
+    <button mat-stroked-button type="button" (click)="reserveAllBasic()">
+        Reserve all basic
+    </button>
+
+    @if (checkedIds().length > 0) {
+        <button mat-button type="button" (click)="clearAll()">
+            Clear
+        </button>
+    }
+</div>
+
+<div class="services-list">
+    @for (column of serviceColumns; track $index) {
+        <div class="services-column">
+            @for (service of column; track service.dental_service_id) {
+                <mat-checkbox
+                    [checked]="isChecked(service.dental_service_id)"
+                    [disabled]="isDisabled(service)"
+                    (change)="onToggle(service, $event.checked)">
+                    {{ labelFor(service) }}
+                </mat-checkbox>
+            }
+        </div>
+    }
+</div>
