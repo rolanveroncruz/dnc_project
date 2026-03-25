@@ -161,8 +161,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/billing_rules", get(get_billing_rules_for_endorsement_id).post(post_billing_rule))
         .route("/endorsements/{endorsement_id}/billing_rules/id", patch(patch_billing_rule).delete(delete_billing_rule))
         .route("/endorsements/{endorsement_id}/service_counts", get(get_service_counts_for_endorsement_id))
-        .route("/master_list_member/{master_list_member_id}/used_service_counts", get(get_used_service_counts_for_member_id))
-        .route("/master_list_member/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
+        .route("/master_list_members/{master_list_member_id}/used_service_counts", get(get_used_service_counts_for_member_id))
+        .route("/master_list_members/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
         .route("/verifications", get(get_all_verifications))
 
 }
