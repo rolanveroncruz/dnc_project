@@ -5,8 +5,8 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use sea_orm::prelude::Date;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -29,12 +29,12 @@ pub struct EndorsementMasterListMemberResponse {
 #[derive(Debug, Serialize)]
 pub struct MasterListMemberResponse {
     pub id: i32,
-    pub master_list_id: i32,
+    pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
     pub birth_date: Option<Date>,
     pub is_active: bool,
@@ -45,6 +45,10 @@ pub struct SetMasterListMemberActiveRequest {
     pub is_active: bool,
 }
 
+
+
+// get_master_list_for_endorsement is used when previewing the master list after uploading.
+// it does not include master_list_member_id, phone, birthday and email.
 /// GET /api/endorsements/:endorsement_id/master_lists
 #[instrument(skip(state), err(Debug))]
 pub async fn get_master_list_for_endorsement(
@@ -77,24 +81,26 @@ pub async fn get_master_list_for_endorsement(
     let response = members
         .into_iter()
         .filter_map(|m| {
-            file_name_by_master_list_id
-                .get(&m.master_list_id)
-                .map(|file_name| EndorsementMasterListMemberResponse {
-                    file_name: file_name.clone(),
-                    master_list_member_id: m.id,
-                    account_number: m.account_number,
-                    last_name: m.last_name,
-                    first_name: m.first_name,
-                    middle_name: m.middle_name,
-                    is_active: m.is_active,
-                })
+            m.master_list_id.and_then(|master_list_id| {
+                file_name_by_master_list_id
+                    .get(&master_list_id)
+                    .map(|file_name| EndorsementMasterListMemberResponse {
+                        file_name: file_name.clone(),
+                        master_list_member_id: m.id,
+                        account_number: m.account_number,
+                        last_name: m.last_name,
+                        first_name: m.first_name,
+                        middle_name: m.middle_name,
+                        is_active: m.is_active,
+                    })
+            })
         })
         .collect();
 
     Ok(Json(response))
 }
 
-/// patch /api/master_list_members/:master_list_member_id/active
+/// PATCH /api/master_list_members/:master_list_member_id/active
 #[instrument(skip(state), err(Debug))]
 pub async fn set_master_list_member_active(
     State(state): State<AppState>,

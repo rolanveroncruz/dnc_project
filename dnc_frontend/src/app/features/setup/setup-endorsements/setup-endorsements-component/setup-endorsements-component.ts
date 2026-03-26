@@ -43,9 +43,16 @@ import {
 } from '../../../../api_services/endorsement-master-list-service';
 import{ MasterListDialogComponent} from '../../../../components/master-list-dialog-component/master-list-dialog-component';
 import {MatDialog} from '@angular/material/dialog';
+import {BasicServicesFeesTabComponent} from './basic-services-fees-tab-component/basic-services-fees-tab-component';
+import {
+    BasicServicesCountsTabComponent
+} from './basic-services-counts-tab-component/basic-services-counts-tab-component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
+    | 'basicServicesFees'
+    | 'basicServicesCounts'
     | 'specialServicesFees'
     | 'specialServicesCounts'
     | 'highEndServicesCounts'
@@ -56,9 +63,16 @@ const ENDORSEMENT_TYPE_ID = {
     RetainerAndFeePerService: 3,
 } as const;
 const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
-    [ENDORSEMENT_TYPE_ID.RetainerOnly]: [],
-    [ENDORSEMENT_TYPE_ID.RetainerWithSpecialServices]: ['specialServicesCounts'],
+    [ENDORSEMENT_TYPE_ID.RetainerOnly]: [
+        'basicServicesCounts',
+    ],
+    [ENDORSEMENT_TYPE_ID.RetainerWithSpecialServices]: [
+        'basicServicesCounts',
+        'specialServicesCounts'
+    ],
     [ENDORSEMENT_TYPE_ID.RetainerAndFeePerService]: [
+        'basicServicesFees',
+        'basicServicesCounts',
         'specialServicesFees',
         'specialServicesCounts',
         'highEndServicesCounts',
@@ -90,7 +104,9 @@ const RULES_MATRIX: Record<number, readonly RuleSectionKey[]> = {
         SpecialServicesFeesTabComponent,
         SpecialServicesCountsTabComponent,
         HighEndServicesCountsTabComponent,
-        MasterListDialogComponent,
+        BasicServicesFeesTabComponent,
+        BasicServicesCountsTabComponent,
+        MatSlideToggleModule,
     ],
     templateUrl: './setup-endorsements-component.html',
     styleUrls: ['./setup-endorsements-component.scss'],
@@ -150,8 +166,11 @@ export class SetupEndorsementsComponent implements OnInit{
         endorsement_type_id: [null as number| null, [Validators.required]],
         remarks: [''],
         endorsement_method: [null as string | null],
+        is_active: [true],
 
         // Tab sections
+        basicServicesFees: this.fb.array<FormGroup>([]),
+        basicServicesCounts: this.fb.array<FormGroup>([]),
         specialServicesFees: this.fb.array<FormGroup>([]),
         specialServicesCounts: this.fb.array<FormGroup>([]),
         highEndServicesCounts: this.fb.array<FormGroup>([]),
@@ -177,10 +196,18 @@ export class SetupEndorsementsComponent implements OnInit{
         return new Set(enabled);
 
     });
+    readonly basicServicesFeesEnabled = computed(()=>this.enabledSections().has('basicServicesFees'))
+    readonly basicServicesCountsEnabled = computed(()=>this.enabledSections().has('basicServicesCounts'))
     readonly specialServicesFeesEnabled = computed(()=>this.enabledSections().has('specialServicesFees'));
     readonly specialServicesCountsEnabled = computed(()=>this.enabledSections().has('specialServicesCounts'));
     readonly highEndServicesCountsEnabled = computed(()=>this.enabledSections().has('highEndServicesCounts'));
     readonly additionalBillingRulesEnabled = computed(()=>this.enabledSections().has('additionalBillingRules'));
+    readonly basicCountServices = computed(() =>
+        this.basicServices().filter(s => !s.is_unlimited)
+    );
+
+    // for this endorsement, loadedRateRows contain the information of service, rate
+    //  then ladedCountRows contain the information of service, count
     readonly loadedRateRows = signal<EndorsementRateResponse[]>([]);
     readonly loadedCountRows = signal<EndorsementCountResponse[]>([]);
 
@@ -210,6 +237,12 @@ export class SetupEndorsementsComponent implements OnInit{
         })
     };
 // ✅ NEW: convenience getters
+    get basicServicesFeesArr() {
+        return this.form.controls.basicServicesFees as FormArray<FormGroup>;
+    }
+    get basicServicesCountsArr() {
+        return this.form.controls.basicServicesCounts as FormArray<FormGroup>;
+    }
     get specialServiceFeesArr() {
         return this.form.controls.specialServicesFees as FormArray<FormGroup>;
     }
@@ -221,9 +254,34 @@ export class SetupEndorsementsComponent implements OnInit{
     }
 
     private rebuildRuleMatrices():void{
+        /*
+        rate/count Map are basically maps of service_id to rate/count.
+         */
         const rateMap = new Map(this.loadedRateRows().map(r=>[r.dental_service_id, r] as const));
-
         const countMap = new Map(this.loadedCountRows().map(c=>[c.dental_service_id, c] as const));
+
+        const basicServicesFeesRows = this.basicServices().map(s => {
+            const existing = rateMap.get(s.id);
+            return this.feeRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.rate != null ? Number(existing.rate) : null,
+            );
+        });
+        this.form.setControl('basicServicesFees', this.fb.array(basicServicesFeesRows));
+
+        const basicServicesCountRows = this.basicServices()
+            .filter( s=> !s.is_unlimited)
+            .map(s => {
+            const existing = countMap.get(s.id);
+            return this.countRow(
+                s.id,
+                existing?.id ?? null,
+                existing?.count ?? null,
+            );
+        });
+        this.form.setControl('basicServicesCounts', this.fb.array(basicServicesCountRows));
+
         const specialServicesFeesRows = this.specialServices().map(s=>{
             const existing = rateMap.get(s.id);
             return this.feeRow(
@@ -354,6 +412,7 @@ export class SetupEndorsementsComponent implements OnInit{
             endorsement_type_id: null,
             remarks: '',
             endorsement_method: null,
+            is_active: true,
         });
 
         this.rebuildRuleMatrices();
@@ -432,6 +491,7 @@ export class SetupEndorsementsComponent implements OnInit{
                         endorsement_type_id: dto.endorsement_type_id !=null? dto.endorsement_type_id : null,
                         remarks: dto.remarks ?? '',
                         endorsement_method: dto.endorsement_method ?? null,
+                        is_active: dto.is_active,
                     });
                     this.rebuildRuleMatrices();
                     this.baseline.set(this.snapshotForm());
@@ -450,35 +510,99 @@ export class SetupEndorsementsComponent implements OnInit{
                 takeUntilDestroyed(this.destroyRef),
             ).subscribe();
     }
-    private buildRateRequests(endorsementId: number): Observable<EndorsementRateResponse>[] { // 🔵 CHANGED
-        if (!this.specialServicesFeesEnabled()) return [];
+    private buildRateRequests(endorsementId: number): Observable<EndorsementRateResponse>[] {
+        const requests: Observable<EndorsementRateResponse>[] = [];
 
-        return this.specialServiceFeesArr.controls
-            .map(ctrl => ctrl.getRawValue())
-            .filter(row => row.rate != null)
-            .map(row => {
+        if (this.basicServicesFeesEnabled()) {
+            for (const ctrl of this.basicServicesFeesArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.rate == null) continue;
+
                 const rate = Number(row.rate).toFixed(2);
 
                 if (row.id != null) {
-                    return this.endorsementService.updateEndorsementRatePatch(
-                        endorsementId,
-                        row.id,
-                        { rate }
+                    requests.push(
+                        this.endorsementService.updateEndorsementRatePatch(
+                            endorsementId,
+                            row.id,
+                            { rate }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementRate(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                rate,
+                            }
+                        )
                     );
                 }
+            }
+        }
 
-                return this.endorsementService.createEndorsementRate(
-                    endorsementId,
-                    {
-                        dental_service_id: Number(row.dental_service_id),
-                        rate,
-                    }
-                );
-            });
+        if (this.specialServicesFeesEnabled()) {
+            for (const ctrl of this.specialServiceFeesArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.rate == null) continue;
+
+                const rate = Number(row.rate).toFixed(2);
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementRatePatch(
+                            endorsementId,
+                            row.id,
+                            { rate }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementRate(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                rate,
+                            }
+                        )
+                    );
+                }
+            }
+        }
+
+        return requests;
     }
 
-    private buildCountRequests(endorsementId: number): Observable<EndorsementCountResponse>[] { // ✅🔵 ADDED
+    private buildCountRequests(endorsementId: number): Observable<EndorsementCountResponse>[] {
         const requests: Observable<EndorsementCountResponse>[] = [];
+
+        if (this.basicServicesCountsEnabled()) {
+            for (const ctrl of this.basicServicesCountsArr.controls) {
+                const row = ctrl.getRawValue();
+                if (row.limit == null) continue;
+
+                if (row.id != null) {
+                    requests.push(
+                        this.endorsementService.updateEndorsementCountPatch(
+                            endorsementId,
+                            row.id,
+                            { count: Number(row.limit) }
+                        )
+                    );
+                } else {
+                    requests.push(
+                        this.endorsementService.createEndorsementCount(
+                            endorsementId,
+                            {
+                                dental_service_id: Number(row.dental_service_id),
+                                count: Number(row.limit),
+                            }
+                        )
+                    );
+                }
+            }
+        }
 
         if (this.specialServicesCountsEnabled()) {
             for (const ctrl of this.specialServiceCountsArr.controls) {
@@ -537,6 +661,7 @@ export class SetupEndorsementsComponent implements OnInit{
         return requests;
     }
 
+
     private saveRuleTabs(endorsementId: number): Observable<{
         rates: EndorsementRateResponse[];
         counts: EndorsementCountResponse[];
@@ -582,6 +707,9 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: v.remarks ?? '',
             endorsement_method: v.endorsement_method ?? null,
+            is_active: v.is_active,
+            basicServicesFees: v.basicServicesFees ?? [],
+            basicServicesCounts: v.basicServicesCounts ?? [],
             specialServicesFees: v.specialServicesFees ?? [],
             specialServicesCounts: v.specialServicesCounts ?? [],
             highEndServicesCounts: v.highEndServicesCounts ?? [],
@@ -668,6 +796,7 @@ export class SetupEndorsementsComponent implements OnInit{
             retainer_fee, // string | null
             remarks: (raw.remarks ?? '').trim() || null,
             endorsement_method: (raw.endorsement_method ?? '').trim() || null,
+            is_active: !!raw.is_active,
         };
 
         this.loadState.set('saving');
@@ -701,6 +830,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
                     if ((base.remarks ?? '') !== (raw.remarks ?? '')) patch.remarks = current.remarks;
                     if ((base.endorsement_method ?? null) !== (raw.endorsement_method ?? null)) patch.endorsement_method = current.endorsement_method;
+                    if ((base.is_active ??true) !==(!!raw.is_active)) patch.is_active = current.is_active;
 
                     return patch;
                 })());
@@ -760,6 +890,7 @@ export class SetupEndorsementsComponent implements OnInit{
 
             remarks: base.remarks ?? '',
             endorsement_method: base.endorsement_method ?? null,
+            is_active: base.is_active ?? true,
         });
 
         this.rebuildRuleMatrices();
@@ -794,5 +925,17 @@ export class SetupEndorsementsComponent implements OnInit{
                 takeUntilDestroyed(this.destroyRef),
             )
             .subscribe();
+    }
+    reloadMasterListMeta():void{
+        const id = this.endorsementId();
+        if (id == null) return;
+
+        this.endorsementMasterListService
+            .getEndorsementMasterListMeta(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe( meta=>this.masterListMeta.set(meta) );
+    }
+    onMasterListCleared():void{
+        this.masterListMeta.set(null);
     }
 }

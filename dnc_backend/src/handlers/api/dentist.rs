@@ -330,3 +330,49 @@ pub async fn patch_dentist(
         None => Err(StatusCode::NOT_FOUND),
     }
 }
+
+
+#[derive(Debug, Serialize)]
+pub struct DentistNameResponse {
+    pub id: i32,
+    pub last_name: String,
+    pub given_name: String,
+    pub middle_name: Option<String>,
+    pub name: String,
+}
+
+#[instrument(skip(state))]
+pub async fn get_dentist_names(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<DentistNameResponse>>, StatusCode> {
+    let dentists = dentist::Entity::find()
+        .order_by_asc(dentist::Column::LastName)
+        .order_by_asc(dentist::Column::GivenName)
+        .order_by_asc(dentist::Column::MiddleName)
+        .all(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let response = dentists
+        .into_iter()
+        .map(|d| {
+            let middle = d
+                .middle_name
+                .as_deref()
+                .map(str::trim)
+                .filter(|m| !m.is_empty())
+                .map(|m| format!(" {}", m))
+                .unwrap_or_default();
+
+            DentistNameResponse {
+                id: d.id,
+                last_name: d.last_name.clone(),
+                given_name: d.given_name.clone(),
+                middle_name: Some(middle.clone()),
+                name: format!("{}, {}{}", d.last_name, d.given_name, middle),
+            }
+        })
+        .collect();
+
+    Ok(Json(response))
+}

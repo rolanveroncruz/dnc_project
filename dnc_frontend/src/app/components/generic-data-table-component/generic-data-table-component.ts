@@ -12,7 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { TableColumn } from './table-interfaces';
+import { TableColumn,   } from './table-interfaces';
 import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from where you defined it
 
 @Component({
@@ -27,22 +27,33 @@ import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from wher
   styleUrls: ['./generic-data-table-component.scss'],
   encapsulation: ViewEncapsulation.None // Optional: helps with generic styles
 })
-export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
+export class GenericDataTableComponent<T extends object> implements AfterViewInit, OnChanges {
   @ViewChild('defaultCell', { static: true }) defaultCell!: TemplateRef<any>;
   @ViewChild('dateCell', { static: true }) dateCell!: TemplateRef<any>;
   @ViewChild('datetimeCell', { static: true }) dateTimeCell!: TemplateRef<any>;
   @ViewChild('chipsCell', { static: true }) chipsCell!: TemplateRef<any>;
   @ViewChild('checkCell', { static: true }) checkCell!: TemplateRef<any>;
   @ViewChild('checkOnlyCell', { static: true }) checkOnly!: TemplateRef<any>;
+  @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<any>;
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
-  @Input({ required: true }) columnDefs: TableColumn[] = [];
+  @Input({ required: true }) columnDefs: TableColumn<T>[] = [];
   @Input() showAddButton = true;
   @Input() showHeaderFilters=true;
 
   @Output() rowClicked = new EventEmitter<T>();
   @Output() addClicked = new EventEmitter<void>();
+  @Output() primaryActionClicked = new EventEmitter<T>();
+  @Output() secondaryActionClicked = new EventEmitter<T>();
+  @Input() secondaryActionLabel = 'Open';
+  @Input() secondaryActionIcon = 'open_in_new';
+  @Input() hideSecondaryAction?: (row: T)=> boolean;
+  @Input() secondaryActionDisabled: ((row: T) => boolean) | null = null;
 
+
+  isSecondaryActionHidden(row: T): boolean {
+      return !!this.hideSecondaryAction?.(row);
+  }
   // New Configurable paginator inputs
   @Input() pageSize= 15;
   @Input() pageSizeOptions: number[] = [5, 10, 25, 50, 100];
@@ -81,6 +92,34 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
   onAddClicked() {
     this.addClicked.emit();
   }
+  onPrimaryActionClicked(event: MouseEvent, row: T) {
+      event.stopPropagation();
+      this.primaryActionClicked.emit(row);
+  }
+  onSecondaryActionClicked(event: MouseEvent, row: T) {
+      event.stopPropagation();
+      this.secondaryActionClicked.emit(row);
+  }
+  isPrimaryActionHidden(col:TableColumn<T>, row:T):boolean{
+      return !!col.actionButton?.hidden?.(row);
+  }
+  isPrimaryActionDisabled(col:TableColumn<T>, row:T):boolean{
+      return !!col.actionButton?.disabled?.(row);
+  }
+    getPrimaryActionLabel(col: TableColumn<T>, row: T): string {
+      const label = col.actionButton?.label;
+      return typeof label === 'function' ? label(row) : (label ?? '');
+    }
+
+    getPrimaryActionIcon(col: TableColumn<T>, row: T): string {
+      const icon = col.actionButton?.icon;
+      return typeof icon === 'function' ? icon(row) : (icon ?? '');
+    }
+
+  isSecondaryActionDisabled( row:T):boolean{
+      return !!this.secondaryActionDisabled?.(row);
+  }
+
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] ) {
@@ -219,7 +258,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
     }
     return null;
   }
-  getCellTemplate(col:TableColumn): TemplateRef<any>{
+  getCellTemplate(col:TableColumn<T>): TemplateRef<any>{
 
     switch(col.cellTemplateKey){
       case 'date': return this.dateCell;
@@ -228,6 +267,7 @@ export class GenericDataTableComponent<T> implements AfterViewInit, OnChanges {
       case 'check': return this.checkCell;
       case 'checkonly': return this.checkOnly;
       case 'default': return this.defaultCell;
+      case 'actions': return this.actionsCell;
 
     }
     return this.defaultCell;

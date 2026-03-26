@@ -49,6 +49,7 @@ export class DentalServices implements OnInit {
         {key: 'id', label: 'ID'},
         {key: 'name', label: 'Name'},
         {key: 'type_name', label: 'Type'},
+        {key: 'is_unlimited', label: 'Unlimited', cellTemplateKey: 'check'},
         {key: 'sort_index', label: 'Sort Index'},
         {key: 'last_modified_by', label: 'Last Modified By'},
         {key: 'last_modified_on', label: 'Last Modified On', cellTemplateKey: 'datetime'},

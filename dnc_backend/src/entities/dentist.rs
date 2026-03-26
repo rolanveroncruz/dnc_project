@@ -33,6 +33,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::dentist_clinic::Entity")]
     DentistClinic,
+    #[sea_orm(has_many = "super::dentist_company_relations::Entity")]
+    DentistCompanyRelations,
     #[sea_orm(
         belongs_to = "super::dentist_contract::Entity",
         from = "Column::AccreDentistContractId",
@@ -59,11 +61,19 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     DentistStatus,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::dentist_clinic::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistClinic.def()
+    }
+}
+
+impl Related<super::dentist_company_relations::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistCompanyRelations.def()
     }
 }
 
@@ -88,6 +98,12 @@ impl Related<super::dentist_hmo_relations::Entity> for Entity {
 impl Related<super::dentist_status::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistStatus.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

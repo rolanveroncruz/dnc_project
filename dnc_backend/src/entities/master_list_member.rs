@@ -8,19 +8,31 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub master_list_id: i32,
+    pub endorsement_id: i32,
+    pub master_list_id: Option<i32>,
     pub account_number: String,
     pub last_name: String,
     pub first_name: String,
     pub middle_name: String,
-    pub email_address: String,
+    pub email_address: Option<String>,
     pub mobile_number: Option<String>,
     pub birth_date: Option<Date>,
     pub is_active: bool,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub last_edited_by: Option<String>,
+    pub last_edited_date: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::endorsement::Entity",
+        from = "Column::EndorsementId",
+        to = "super::endorsement::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Endorsement,
     #[sea_orm(
         belongs_to = "super::master_list::Entity",
         from = "Column::MasterListId",
@@ -29,11 +41,25 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     MasterList,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
+}
+
+impl Related<super::endorsement::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Endorsement.def()
+    }
 }
 
 impl Related<super::master_list::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterList.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

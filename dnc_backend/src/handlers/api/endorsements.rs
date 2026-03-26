@@ -58,6 +58,7 @@ pub struct EndorsementResponse {
     pub retainer_fee: Option<Decimal>,
     pub remarks: Option<String>,
     pub endorsement_method: Option<String>,
+    pub is_active: bool,
 }
 
 impl From<endorsement::Model> for EndorsementResponse {
@@ -74,6 +75,7 @@ impl From<endorsement::Model> for EndorsementResponse {
             retainer_fee: m.retainer_fee,
             remarks: m.remarks,
             endorsement_method: m.endorsement_method,
+            is_active: m.is_active,
         }
     }
 }
@@ -93,6 +95,7 @@ pub struct EndorsementListRow {
     pub retainer_fee: Option<Decimal>,
     pub remarks: Option<String>,
     pub endorsement_method: Option<String>,
+    pub is_active: bool,
 
     // joined fields
     pub hmo_name: Option<String>,
@@ -114,6 +117,7 @@ pub struct CreateEndorsementRequest {
     pub retainer_fee: Option<Decimal>,
     pub remarks: Option<String>,
     pub endorsement_method: Option<String>,
+    pub is_active: bool,
 }
 
 #[allow(dead_code)]
@@ -129,6 +133,7 @@ pub struct PatchEndorsementRequest {
     pub retainer_fee: Option<Option<Decimal>>,
     pub remarks: Option<Option<String>>,
     pub endorsement_method: Option<Option<String>>,
+    pub is_active: Option<bool>,
 }
 
 //
@@ -181,6 +186,7 @@ pub async fn get_all_endorsements(
         .column(endorsement::Column::RetainerFee)
         .column(endorsement::Column::Remarks)
         .column(endorsement::Column::EndorsementMethod)
+        .column(endorsement::Column::IsActive)
         // joined names (pick the columns you want to represent “name”)
         .column_as(hmo::Column::ShortName, "hmo_name")
         .column_as(endorsement_company::Column::Name, "company_name")
@@ -253,6 +259,7 @@ pub async fn create_endorsement(
         retainer_fee: Set(body.retainer_fee),
         remarks: Set(body.remarks),
         endorsement_method: Set(body.endorsement_method),
+        is_active: Set(body.is_active),
         ..Default::default()
     };
 
@@ -312,6 +319,9 @@ pub async fn patch_endorsement(
     }
     if let Some(v) = body.endorsement_method {
         am.endorsement_method = Set(v);
+    }
+    if let Some(v)=body.is_active {
+        am.is_active = Set(v);
     }
 
     // Optional: validate date range if either changed

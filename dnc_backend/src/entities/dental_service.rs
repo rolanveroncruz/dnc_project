@@ -10,6 +10,7 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub type_id: i32,
+    pub is_unlimited: Option<bool>,
     pub sort_index: Option<i32>,
     pub record_tooth: bool,
     pub active: bool,
@@ -29,8 +30,12 @@ pub enum Relation {
     DentalServiceType,
     #[sea_orm(has_many = "super::dentist_contract_service_rates::Entity")]
     DentistContractServiceRates,
+    #[sea_orm(has_many = "super::endorsement_counts::Entity")]
+    EndorsementCounts,
     #[sea_orm(has_many = "super::endorsement_rates::Entity")]
     EndorsementRates,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::dental_service_type::Entity> for Entity {
@@ -45,9 +50,21 @@ impl Related<super::dentist_contract_service_rates::Entity> for Entity {
     }
 }
 
+impl Related<super::endorsement_counts::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EndorsementCounts.def()
+    }
+}
+
 impl Related<super::endorsement_rates::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementRates.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 

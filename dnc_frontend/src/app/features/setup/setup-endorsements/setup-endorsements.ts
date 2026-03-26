@@ -6,7 +6,6 @@ import {Router} from '@angular/router';
 import {EndorsementService, EndorsementListRow} from '../../../api_services/endorsement-service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {DentistWithLookupsAndClinicInfo} from '../setup-dentists/setup-dentists';
 
 @Component({
   selector: 'app-setup-endorsements',
@@ -43,6 +42,7 @@ export class SetupEndorsements implements OnInit{
         { key: 'date_end', label: 'Date End', cellTemplateKey: 'date' },
         { key: 'type_name', label: 'Type' },
         { key: 'billing_period_type_name', label: 'Billing Period' },
+        { key: 'is_active', label: 'Is Active', cellTemplateKey: 'check' },
     ];
     ngOnInit(): void {
         this.endorsementsService.getAll()
@@ -50,6 +50,7 @@ export class SetupEndorsements implements OnInit{
             .subscribe({
                 next: (res)=>{
                     this.endorsements.set(res.items);
+                    console.log("In ngOnInit(), endorsements:", res.items);
                 },
                 error: (err)=>{
                     console.log("In load(), failed to load users", err);

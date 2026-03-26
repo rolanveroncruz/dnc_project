@@ -26,6 +26,8 @@ import {
 import {DentistComponent} from './features/setup/setup-dentists/dentist-component/dentist-component';
 import {SetupEndorsementsComponent} from './features/setup/setup-endorsements/setup-endorsements-component/setup-endorsements-component';
 import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
+import {VerificationsComponent} from './features/csr/verifications-component/verifications-component';
+import {Verification} from './features/csr/verifications-component/verification/verification';
 
 export const routes: Routes = [
   {
@@ -72,8 +74,13 @@ export const routes: Routes = [
       }, // end of 'dashboard'
       {
         path:'csr',
-        component: CsrHome,
         title: 'CSR Home',
+          children: [
+              { path: '', component: CsrHome, title: 'CSR Home'},
+              { path: 'verifications', component:VerificationsComponent, title: 'Verifications'},
+              { path: 'verifications/new', component:Verification, title: 'Verifications'},
+              { path: 'verifications/:id', component:Verification, title: 'Verifications'},
+          ]
       }, // end of 'csr'
       {
         path: 'reports',

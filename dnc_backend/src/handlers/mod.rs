@@ -33,7 +33,7 @@ pub use api::clinic_capabilities_list::{get_clinic_capabilities_for_clinic,
                                         add_clinic_capability_to_clinic,
                                         remove_clinic_capability_from_clinic,
                                         set_clinic_capabilities_for_clinic};
-pub use api::dentist::{get_all_dentists, get_dentist_from_id, create_dentist, patch_dentist};
+pub use api::dentist::{get_all_dentists, get_dentist_from_id, create_dentist, patch_dentist, get_dentist_names};
 pub use api::dentist_clinic::{get_all_dentist_clinics, get_clinics_for_dentist_id, get_dentists_for_clinic_id,
                               add_dentist_clinic, remove_dentist_clinic};
 pub use api::dentist_history::{get_all_dentist_histories};
@@ -47,6 +47,12 @@ pub use api::dentist_hmo_relations::{get_exclusive_to_hmos_from_dentist_id,
                                      add_except_for_hmo,
                                      remove_except_for_hmo,
 };
+pub use api::dentist_company_relations::{get_exclusive_to_companies_from_dentist_id,
+                                         add_exclusive_to_company,
+                                         remove_exclusive_to_company,
+                                         get_not_companies_from_dentist_id,
+                                         add_except_for_company,
+                                         remove_except_for_company};
 
 pub use api::data_files::{save_contract_file_for_dentist_id, get_contract_file_for_dentist_id};
 pub use api::account_type::get_all_account_types;
@@ -66,3 +72,13 @@ pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_en
 pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
 pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
 pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
+
+pub use api::verification::{get_all_verifications,create_verification, cancel_verification};
+
+
+pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
+
+pub use api::dentist_relations::get_endorsements_for_dentist_id_handler;
+
+pub use api::master_list_member::{get_master_list_members_for_endorsement, post_master_list_member, patch_master_list_member};
+pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_service_counts_for_member_id};

@@ -24,6 +24,7 @@ pub struct DentalServiceRow {
     pub id: i32,
     pub name: String,
     pub active: bool,
+    pub is_unlimited: bool,
     pub type_id: Option<i32>,
     pub type_name: Option<String>, // LEFT JOIN => can be NULL
     pub sort_index: Option<i32>,
@@ -101,6 +102,7 @@ pub async fn get_dental_services(
         .column(dental_service::Column::Name)
         .column(dental_service::Column::Active)
         .column(dental_service::Column::SortIndex)
+        .column(dental_service::Column::IsUnlimited)
         .column_as(dental_service_type::Column::Id, "type_id")
         .column_as(dental_service_type::Column::Name, "type_name")
         .column_as(dental_service::Column::LastModifiedBy, "last_modified_by")

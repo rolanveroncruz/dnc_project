@@ -76,7 +76,7 @@ export class MainComponent implements OnInit {
       { label: 'Activity',  icon: 'timeline',  route: '/home/activity', disabled:true },
     ],
     csr: [
-      { label: 'Orders',    icon: 'shopping_cart', route: '/operations/orders', disabled:true },
+      { label: 'Verifications',    icon: 'shopping_cart', route: '/main/csr/verifications', disabled:true },
       { label: 'Inventory', icon: 'inventory_2',   route: '/operations/inventory',disabled: true },
       { label: 'Customers', icon: 'group',         route: '/operations/customers', disabled:true },
     ],
@@ -144,6 +144,8 @@ export class MainComponent implements OnInit {
     this.router.navigate(['/']);
   }
   configure_setup_menu(){
+      console.log("menu_activation_map", this.menu_activation_map);
+      // if the user has any of these permissions, the topNavItems[4] == 'Setup' is enabled.
     if (
       "dental_service" in this.menu_activation_map ||
       "clinic capability" in this.menu_activation_map ||
@@ -154,28 +156,35 @@ export class MainComponent implements OnInit {
       "clinic" in this.menu_activation_map ||
       "dentist" in this.menu_activation_map ||
       "endorsement" in this.menu_activation_map
-    )
-      this.topNavItems[4].disabled = false;
+    ){
+        this.topNavItems[4].disabled = false;
+        this.activate_item("setup","dental_service", "Dental Services");
+        this.activate_item("setup","clinic_capability", "Clinic Capabilities");
+        this.activate_item("setup","user", "Users");
+        this.activate_item("setup","role", "Roles and Permissions");
+        this.activate_item("setup","hmo", "HMOs");
+        this.activate_item("setup","dentist_contract", "Dentist Contracts");
+        this.activate_item("setup","dental_clinic", "Dental Clinics");
+        this.activate_item("setup","dentist", "Dentists");
+        this.activate_item("setup","endorsements", "Endorsements");
 
-    this.activate_item("dental_service", "Dental Services");
-    this.activate_item("clinic_capability", "Clinic Capabilities");
-    this.activate_item("user", "Users");
-    this.activate_item("role", "Roles and Permissions");
-    this.activate_item("hmo", "HMOs");
-    this.activate_item("dentist_contract", "Dentist Contracts");
-    this.activate_item("dental_clinic", "Dental Clinics");
-    this.activate_item("dentist", "Dentists");
-    this.activate_item("endorsements", "Endorsements");
+    }
+
+    if ("verifications" in this.menu_activation_map) {
+        this.topNavItems[1].disabled = false;
+        this.activate_item("csr","verifications", "Verifications");
+    }
+
   }
 
 
-  activate_item(menu_key:string, side_nav_key:string){
+  activate_item(topnav_item: TopNavKey, menu_key:string, side_nav_key:string){
     const activated_item= menu_key in this.menu_activation_map;
-    this.activate_SideNav(side_nav_key, activated_item);
+    this.activate_SideNav(topnav_item, side_nav_key, activated_item);
   }
 
-  activate_SideNav( key:string, activated:boolean |undefined ){
-    const setup_sidenav = this.sideNavConfig['setup'];
+  activate_SideNav( side_nav_key:TopNavKey, key:string, activated:boolean |undefined ){
+    const setup_sidenav = this.sideNavConfig[side_nav_key] ;
     const sideNavItem = setup_sidenav.find(item => item.label === key);
     if (!sideNavItem) return;
     sideNavItem.disabled = !activated;

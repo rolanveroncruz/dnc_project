@@ -1,0 +1,84 @@
+<div class="verification-page">
+
+    <div class="verification-top-row">
+        <div class="verification-top-left">
+            <p class="date-time">
+                <strong>Date and Time:</strong> {{ currentDateTime() | date:'medium' }}
+            </p>
+
+            @if (isInvalidMode()) {
+                <p>Invalid verification route.</p>
+            } @else if (isCreateMode()) {
+                <p>Create new verification</p>
+            } @else if (isEditMode()) {
+                <p>Editing verification #{{ verificationId() }}</p>
+            }
+        </div>
+
+        <div class="verification-top-right">
+            @if (isCreateMode()) {
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    [disabled]="!canSave()"
+                    (click)="saveVerifications()">
+                    {{ saving() ? 'Saving...' : 'Save' }}
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="dentist-row">
+        <mat-form-field appearance="outline">
+            <mat-label>Dentist</mat-label>
+            <input
+                matInput
+                type="text"
+                [formControl]="dentistSearch"
+                [matAutocomplete]="dentistAuto">
+
+            <mat-autocomplete
+                #dentistAuto="matAutocomplete"
+                (optionSelected)="onDentistSelected($event)">
+                @for (dentist of filteredDentists(); track dentist.id) {
+                    <mat-option [value]="dentist.id">
+                        {{ dentist.full_name }}
+                    </mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+    </div>
+
+    @if (saveSuccessMessage()) {
+        <p class="save-success">{{ saveSuccessMessage() }}</p>
+    }
+
+    @if (saveError()) {
+        <p class="save-error">{{ saveError() }}</p>
+    }
+
+    @if (selectedDentistId() !== null) {
+        <app-master-list-member
+            [dentistId]="selectedDentistId()"
+            [selectedMasterListMemberId]="selectedMasterListMemberId()"
+            (selectedMasterListMemberIdChange)="onMasterListMemberResolved($event)">
+        </app-master-list-member>
+
+        <p class="selected-member-id">
+            Selected master_list_member_id: {{ selectedMasterListMemberId() }}
+        </p>
+    }
+
+    @if (loadingMemberServices()) {
+        <p>Loading services...</p>
+    }
+
+    @if (selectedMasterListMemberId() !== null) {
+        <app-services
+            [services]="memberServicesCountsSummary()"
+            (checkedIdsChange)="onCheckedServiceIdsChange($event)">
+        </app-services>
+    }
+
+</div>

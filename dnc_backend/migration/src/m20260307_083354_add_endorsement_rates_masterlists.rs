@@ -78,9 +78,20 @@ impl Migration {
                     .primary_key()
                     .auto_increment()
                 )
-                .col(ColumnDef::new(MasterListMember::MasterListId)
+                // MasterList Member is always associated with an endorsement.
+                .col(ColumnDef::new(MasterListMember::EndorsementId)
                     .integer()
                     .not_null()
+                )
+                .foreign_key(
+                    ForeignKey::create()
+                        .name("fk_master_list_member_endorsement_id")
+                        .from(MasterListMember::Table, MasterList::EndorsementId)
+                        .to(Endorsement::Table, Endorsement::Id),
+                )
+                // Optionally, a MasterListMember could be associated with a MasterList.
+                .col(ColumnDef::new(MasterListMember::MasterListId)
+                    .integer()
                 )
                 .foreign_key(ForeignKey::create()
                     .name("fk_master_list_id")
@@ -105,7 +116,6 @@ impl Migration {
                 )
                 .col(ColumnDef::new(MasterListMember::EmailAddress)
                 .string()
-                .not_null()
                 )
                 .col(ColumnDef::new(MasterListMember::MobileNumber)
                 .string()
@@ -117,6 +127,14 @@ impl Migration {
                     .boolean()
                     .default(true)
                     .not_null()
+                )
+                .col(ColumnDef::new(MasterListMember::LastEditedBy)
+                    .text()
+                )
+                .col(ColumnDef::new(MasterListMember::LastEditedDate)
+                    .timestamp_with_time_zone()
+                    .not_null()
+                    .default(Expr::current_timestamp())
                 )
                     .to_owned()
             ).await?;
@@ -190,8 +208,8 @@ impl Migration {
                 )
                 .foreign_key(ForeignKey::create()
                     .name("fk_endorsement_count_endorsement_id")
-                    .from(EndorsementCounts::Table, EndorsementCounts::Id)
-                    .to(EndorsementCounts::Table, EndorsementCounts::Id)
+                    .from(EndorsementCounts::Table, EndorsementCounts::EndorsementId)
+                    .to(Endorsement::Table, Endorsement::Id)
                 )
                 .col(ColumnDef::new(EndorsementCounts::DentalServicesId)
                     .integer()
@@ -199,8 +217,8 @@ impl Migration {
                 )
                 .foreign_key(ForeignKey::create()
                     .name("fk_endorsement_count_dental_services_id")
-                    .from(EndorsementCounts::Table, EndorsementCounts::Id)
-                    .to(EndorsementCounts::Table, EndorsementCounts::Id)
+                    .from(EndorsementCounts::Table, EndorsementCounts::DentalServicesId)
+                    .to(DentalService::Table, DentalService::Id)
                 )
                 .col(ColumnDef::new(EndorsementCounts::Count)
                     .integer()
@@ -237,6 +255,7 @@ TheMasterListMember lists all members of that MasterList.
 #[derive(Iden)]
 pub enum MasterListMember {
     Table,
+    EndorsementId,
     Id,
     MasterListId,
     AccountNumber,
@@ -246,6 +265,8 @@ pub enum MasterListMember {
     EmailAddress,
     BirthDate,
     MobileNumber,
+    LastEditedBy,
+    LastEditedDate,
     IsActive,
 }
 #[derive(Iden)]

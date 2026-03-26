@@ -30,6 +30,7 @@ export interface EndorsementResponse {
     retainer_fee: DecimalString | null;
     remarks: string | null;
     endorsement_method: string | null;
+    is_active: boolean;
 }
 
 /** Mirrors EndorsementListRow (joined names included) */
@@ -45,6 +46,7 @@ export interface EndorsementListRow {
     retainer_fee: DecimalString | null;
     remarks: string | null;
     endorsement_method: string | null;
+    is_active: boolean;
 
     hmo_name: string | null;
     company_name: string | null;
@@ -64,6 +66,7 @@ export interface CreateEndorsementRequest {
     retainer_fee?: DecimalString | null;
     remarks?: string | null;
     endorsement_method?: string | null;
+    is_active: boolean;
 }
 
 /**
@@ -93,6 +96,7 @@ export interface PatchEndorsementRequest {
 
     remarks?: string | null;
     endorsement_method?: string | null;
+    is_active?: boolean;
 }
 
 export interface ListQuery {
@@ -141,6 +145,14 @@ export interface EndorsementRateResponse {
     active: boolean;
     rate: DecimalString;
 }
+export interface DentistEndorsementLookupResponse {
+    endorsement_id: number,
+    endorsement_company_name: string,
+    hmo_short_name: string,
+    agreement_corp_number: string | null,
+    is_active: boolean,
+}
+
 
 /** Mirrors CreateEndorsementRateRequest DTO */
 export interface CreateEndorsementRateRequest {
@@ -213,6 +225,10 @@ export class EndorsementService {
     getEndorsementCompanies(): Observable<EndorsementCompanyOptions[]> {
         return this.http.get<EndorsementCompanyOptions[]>(`${this.baseUrl}/api/endorsements/companies`, {headers: this.authHeaders()});
     }
+
+    getEndorsementsForDentist(dentistId: number): Observable<DentistEndorsementLookupResponse[]> {
+        return this.http.get<DentistEndorsementLookupResponse[]>(`${this.baseUrl}/api/dentists/${dentistId}/endorsements`, {headers: this.authHeaders()});
+    };
 
     /**
      * POST /api/endorsement_companies

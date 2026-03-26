@@ -38,10 +38,30 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract, patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities, get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic, get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic, set_clinic_capabilities_for_clinic, get_region_by_id, post_region, patch_region, get_all_dentists, get_dentist_from_id, get_clinics_for_dentist_id, get_all_dentist_clinics, get_dentists_for_clinic_id, get_all_dentist_histories, get_all_dentist_status, get_all_tax_classifications, get_all_tax_types, get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id, add_dentist_clinic, remove_dentist_clinic, add_exclusive_to_hmo, remove_exclusive_to_hmo, add_except_for_hmo, remove_except_for_hmo, save_contract_file_for_dentist_id, get_contract_file_for_dentist_id, create_dentist, patch_dentist, get_all_account_types, get_dentist_clinic_positions, get_all_clinics_and_capabilities, get_endorsement_types, get_endorsement_billing_period_types, get_all_endorsements, create_endorsement, get_endorsement_by_id, patch_endorsement, get_endorsement_companies, post_endorsement_company, get_all_endorsement_rates, post_endorsement_rate, get_all_endorsement_counts, post_endorsement_count, put_endorsement_rate, patch_endorsement_rate, put_endorsement_count, patch_endorsement_count, upload_endorsement_master_list};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification};
+use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
+use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
+use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
+use crate::handlers::{get_clinic_capabilities_for_clinic, add_clinic_capability_to_clinic, remove_clinic_capability_from_clinic};
+use crate::handlers::{set_clinic_capabilities_for_clinic, get_region_by_id, post_region, patch_region, get_all_dentists, get_dentist_names};
+use crate::handlers::{get_dentist_from_id, get_clinics_for_dentist_id, get_all_dentist_clinics, get_dentists_for_clinic_id};
+use crate::handlers::{get_all_dentist_histories, get_all_dentist_status, get_all_tax_classifications, get_all_tax_types};
+use crate::handlers::{get_exclusive_to_hmos_from_dentist_id, get_not_hmos_from_dentist_id, add_dentist_clinic};
+use crate::handlers::{remove_dentist_clinic, add_exclusive_to_hmo, remove_exclusive_to_hmo, add_except_for_hmo};
+use crate::handlers::{remove_except_for_hmo, save_contract_file_for_dentist_id, get_contract_file_for_dentist_id};
+use crate::handlers::{get_exclusive_to_companies_from_dentist_id, add_exclusive_to_company, remove_exclusive_to_company};
+use crate::handlers::{get_not_companies_from_dentist_id, add_except_for_company, remove_except_for_company};
+use crate::handlers::{create_dentist, patch_dentist, get_all_account_types, get_dentist_clinic_positions};
+use crate::handlers::{get_all_clinics_and_capabilities, get_endorsement_types, get_endorsement_billing_period_types};
+use crate::handlers::{get_all_endorsements, create_endorsement, get_endorsement_by_id, patch_endorsement};
+use crate::handlers::{get_endorsement_companies, post_endorsement_company, get_all_endorsement_rates, post_endorsement_rate};
+use crate::handlers::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_rate, patch_endorsement_rate};
+use crate::handlers::{put_endorsement_count, patch_endorsement_count, upload_endorsement_master_list};
 use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_master_lists_for_endorsement_id};
 use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active, get_endorsements_for_hmo_id};
 
+use crate::handlers::{get_all_verifications};
+use crate::handlers::{get_endorsements_for_dentist_id_handler};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -88,9 +108,10 @@ fn protected_routes() ->Router<AppState>{
         .route("/dental/_clinics/{:clinic_id}/capabilities", patch(set_clinic_capabilities_for_clinic))
         .route("/bank_account_types", get(get_all_account_types))
         .route("/dentists/", get(get_all_dentists))
+        .route("/dentist-names", get(get_dentist_names))
         .route("/dentists/{:id}", get(get_dentist_from_id))
         .route("/dentists/{:id}", patch(patch_dentist))
-
+        .route("/dentists/{:id}/endorsements", get(get_endorsements_for_dentist_id_handler))
         .route("/dentist_clinics/positions", get(get_dentist_clinic_positions))
 
         .route("/dentist_clinics/", get(get_all_dentist_clinics))
@@ -102,12 +123,22 @@ fn protected_routes() ->Router<AppState>{
         .route("/dentist_statuses/", get(get_all_dentist_status))
         .route("/tax_classifications/", get(get_all_tax_classifications))
         .route("/tax_types/", get(get_all_tax_types))
+
         .route("/dentists/{:dentist_id}/hmos/exclusive", get(get_exclusive_to_hmos_from_dentist_id))
+        .route("/dentists/{dentist_id}/companies/exclusive", get(get_exclusive_to_companies_from_dentist_id))
         .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", post(add_exclusive_to_hmo))
+        .route("/dentists/{dentist_id}/companies/exclusive/{company_id}", post(add_exclusive_to_company))
         .route("/dentists/{:dentist_id}/hmos/exclusive/{:hmo_id}", delete(remove_exclusive_to_hmo))
+        .route ("/dentists/{dentist_id}/companies/exclusive/{company_id}", delete(remove_exclusive_to_company))
+
         .route("/dentists/{:dentist_id}/hmos/except", get(get_not_hmos_from_dentist_id))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", post(add_except_for_hmo))
         .route("/dentists/{:dentist_id}/hmos/except/{:hmo_id}", delete(remove_except_for_hmo))
+        .route("/dentists/{dentist_id}/companies/except", get(get_not_companies_from_dentist_id))
+        .route("/dentists/{dentist_id}/companies/except/{company_id}", post(add_except_for_company))
+        .route("/dentists/{dentist_id}/companies/except/{company_id}", delete(remove_except_for_company))
+
+
         .route("/dentists/{:dentist_id}/contract-file", post(save_contract_file_for_dentist_id)
             .layer(DefaultBodyLimit::max(100 * 1024 * 1024)),)
         .route("/dentists/{:dentist_id}/contract-file/{:file_name}", get(get_contract_file_for_dentist_id))
@@ -125,7 +156,16 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/master_list", post(upload_endorsement_master_list))
         .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_meta_data_for_endorsement_id))
         .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
+        .route("/endorsements/{endorsement_id}/master_list_members", get(get_master_list_members_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
+        .route("/endorsements/{endorsement_id}/billing_rules", get(get_billing_rules_for_endorsement_id).post(post_billing_rule))
+        .route("/endorsements/{endorsement_id}/billing_rules/id", patch(patch_billing_rule).delete(delete_billing_rule))
+        .route("/endorsements/{endorsement_id}/service_counts", get(get_service_counts_for_endorsement_id))
+        .route("/master_list_members/{master_list_member_id}/used_service_counts", get(get_used_service_counts_for_member_id))
+        .route("/master_list_members/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
+        .route("/verifications", get(get_all_verifications))
+        .route("/verifications", post(create_verification))
+        .route("/verifications/{verification_id}/cancel", post(cancel_verification))
 
 }
 

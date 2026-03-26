@@ -1,0 +1,67 @@
+.fees-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0; // important if parent is flex and you want internal scroll
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .search {
+        flex: 1 1 auto;
+    }
+
+    .meta {
+        flex: 0 0 auto;
+        opacity: 0.75;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+}
+
+.list {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    padding: 8px;
+
+    overflow: auto;
+    min-height: 0;
+    max-height: 420px; // adjust as you like
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 8px 12px;
+    align-items: start;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: center;
+
+    padding: 8px;
+    border-radius: 10px;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .name {
+        font-size: 14px;
+        line-height: 1.2;
+    }
+
+    .rate {
+        width: 100%;
+    }
+}
+
+.empty {
+    padding: 14px;
+    opacity: 0.7;
+    text-align: center;
+}

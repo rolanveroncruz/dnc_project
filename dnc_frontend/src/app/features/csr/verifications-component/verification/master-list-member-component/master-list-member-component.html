@@ -1,0 +1,179 @@
+<mat-card class="master-list-member-card">
+    <mat-card-header>
+        <div class="master-list-member-title-row">
+            <mat-card-title>
+                Master List Member
+            </mat-card-title>
+            @if (hasUnsavedChanges()){
+                <mat-chip highlighted>
+                    Unsaved changes
+                </mat-chip>
+            }
+        </div>
+        @if (hasUnsavedChanges()){
+            <div class="header-actions">
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="resetMemberEdits()">
+                    Reset
+                </button>
+                <button
+                    mat-raised-button
+                    type="button"
+                    (click)="saveMemberEdits()">
+                    Save
+                </button>
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="clear()">
+                    Clear
+                </button>
+            </div>
+        }
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (dentistId() === null) {
+            <p>Select a dentist first.</p>
+        } @else {
+            <!-- ✅ Row 1 -->
+            <div class="form-row form-row-4">
+                <mat-form-field appearance="outline">
+                    <mat-label>Agreement/Corp Number</mat-label>
+                    <input
+                        matInput
+                        type="text"
+                        [formControl]="endorsementSearch"
+                        [matAutocomplete]="endorsementAuto"
+                        autocomplete="off"
+                    />
+
+                    <mat-autocomplete
+                        #endorsementAuto="matAutocomplete"
+                        (optionSelected)="onEndorsementSelected($event)">
+                        @for (endorsement of filteredEndorsements(); track endorsement.endorsement_id) {
+                            <mat-option [value]="endorsement.endorsement_id">
+                                {{ endorsement.agreement_corp_number || '(No agreement number)' }}
+                            </mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>HMO</mat-label>
+                    <input
+                        matInput
+                        [value]="selectedHmoName()"
+                        readonly
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Company</mat-label>
+                    <input
+                        matInput
+                        [value]="selectedCompanyName()"
+                        readonly
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Member Account No</mat-label>
+                    <input
+                        matInput
+                        type="text"
+                        [formControl]="memberAccountSearch"
+                        [matAutocomplete]="memberAccountAuto"
+                        autocomplete="off"
+                        [readonly]="selectedEndorsementId() === null"
+                    />
+
+                    <mat-autocomplete
+                        #memberAccountAuto="matAutocomplete"
+                        (optionSelected)="onMemberAccountSelected($event)">
+                        @for (member of filteredMembers(); track member.master_list_member_id) {
+                            <mat-option [value]="member.master_list_member_id">
+                                {{ member.master_list_member_account_no }}
+                            </mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
+
+            <!-- ✅ Row 2 -->
+            <div class="form-row form-row-3">
+                <mat-form-field appearance="outline">
+                    <mat-label>Member's Last Name</mat-label>
+                    <input
+                        matInput
+                        [formControl]="lastName"
+                        autocomplete="off"
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Member's First Name</mat-label>
+                    <input
+                        matInput
+                        [formControl]="firstName"
+                        autocomplete="off"
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Member's Middle Name</mat-label>
+                    <input
+                        matInput
+                        [formControl]="middleName"
+                        autocomplete="off"
+                    />
+                </mat-form-field>
+            </div>
+
+            <!-- ✅ Row 3 -->
+            <div class="form-row form-row-3">
+                <mat-form-field appearance="outline">
+                    <mat-label>Mobile Number</mat-label>
+                    <input
+                        matInput
+                        [formControl]="mobileNumber"
+                        autocomplete="off"
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input
+                        matInput
+                        [formControl]="emailAddress"
+                        autocomplete="off"
+                    />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Birthdate</mat-label>
+                    <input
+                        matInput
+                        type="date"
+                        [formControl]="birthDate"
+                    />
+                </mat-form-field>
+            </div>
+
+        }
+
+        @if (infoMessage()) {
+            <div class="info-message">
+                {{ infoMessage() }}
+            </div>
+        }
+
+        @if (saveError()) {
+            <div class="error-message">
+                {{ saveError() }}
+            </div>
+        }
+    </mat-card-content>
+</mat-card>
