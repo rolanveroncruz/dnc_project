@@ -1,8 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
-use sea_orm::{
-     EntityTrait, FromQueryResult, JoinType, QuerySelect, RelationTrait,
-};
-use serde::Serialize;
+use sea_orm::{ActiveModelTrait, EntityTrait, FromQueryResult, JoinType, QuerySelect, RelationTrait, Set};
+use serde::{Serialize, Deserialize};
 use tracing::instrument;
 
 use crate::{
@@ -15,11 +13,12 @@ use crate::{
         verification_status,
     },
 };
+use crate::handlers::AuthUser;
 
 #[derive(Debug, Serialize)]
 pub struct VerificationLookupResponse {
     pub verification_id: i32,
-    pub date: sea_orm::prelude::DateTimeWithTimeZone,
+    pub date_created: sea_orm::prelude::DateTimeWithTimeZone,
     pub dentist_id: i32,
     pub dentist_name: String,
     pub master_list_member_id: i32,
@@ -33,7 +32,7 @@ pub struct VerificationLookupResponse {
 #[derive(Debug, FromQueryResult)]
 struct VerificationLookupRow {
     pub verification_id: i32,
-    pub date: sea_orm::prelude::DateTimeWithTimeZone,
+    pub date_created: sea_orm::prelude::DateTimeWithTimeZone,
 
     pub dentist_id: i32,
     pub dentist_last_name: String,
@@ -120,7 +119,7 @@ pub async fn get_all_verifications(
         .into_iter()
         .map(|row| VerificationLookupResponse {
             verification_id: row.verification_id,
-            date: row.date,
+            date_created: row.date_created,
             dentist_id: row.dentist_id,
             dentist_name: format_dentist_name(
                 &row.dentist_last_name,
@@ -142,3 +141,77 @@ pub async fn get_all_verifications(
 
     Ok(Json(response))
 }
+
+
+
+// region: Create Verification
+#[derive(Debug, Deserialize)]
+pub struct CreateVerificationRequest {
+    pub dentist_id: i32,
+    pub member_id: i32,
+    pub dental_service_id: i32,
+}
+#[derive(Debug, Serialize)]
+pub struct CreateVerificationResponse {
+    pub id: i32,
+    pub date_created: sea_orm::prelude::DateTimeWithTimeZone,
+    pub created_by: String,
+    pub dentist_id: i32,
+    pub member_id: i32,
+    pub dental_service_id: i32,
+    pub date_service_performed: Option<sea_orm::prelude::Date>,
+    pub status_id: i32,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
+    pub approval_code: Option<String>,
+}
+
+#[instrument(skip(state), err(Debug))]
+pub async fn create_verification(
+    State(state): State<AppState>,
+    auth_user: AuthUser,
+    Json(payload): Json<CreateVerificationRequest>,
+) -> Result<(StatusCode, Json<CreateVerificationResponse>), (StatusCode, String)> {
+    let now = chrono::Utc::now().fixed_offset();
+
+    let new_verification = verification::ActiveModel {
+        date_created: Set(now),
+        created_by: Set(auth_user.claims.email),
+        dentist_id: Set(payload.dentist_id),
+        member_id: Set(payload.member_id),
+        dental_service_id: Set(payload.dental_service_id),
+        date_service_performed: Set(None),
+        status_id: Set(1), // temporary
+        approved_by: Set(None),
+        approval_date: Set(None),
+        approval_code: Set(None),
+        ..Default::default()
+    };
+
+    let inserted = new_verification
+        .insert(&state.db)
+        .await
+        .map_err(internal_error)?;
+
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateVerificationResponse {
+            id: inserted.id,
+            date_created: inserted.date_created,
+            created_by: inserted.created_by,
+            dentist_id: inserted.dentist_id,
+            member_id: inserted.member_id,
+            dental_service_id: inserted.dental_service_id,
+            date_service_performed: inserted.date_service_performed,
+            status_id: inserted.status_id,
+            approved_by: inserted.approved_by,
+            approval_date: inserted.approval_date,
+            approval_code: inserted.approval_code,
+        }),
+    ))
+}
+
+fn internal_error(err: sea_orm::DbErr) -> (StatusCode, String) {
+    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+}
+// endregion: Create Verification
