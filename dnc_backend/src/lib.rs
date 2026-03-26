@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
 use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
@@ -165,6 +165,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/master_list_members/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
         .route("/verifications", get(get_all_verifications))
         .route("/verifications", post(create_verification))
+        .route("/verifications/{verification_id}/cancel", post(cancel_verification))
 
 }
 

@@ -1,4 +1,5 @@
 use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::Path;
 use sea_orm::{ActiveModelTrait, EntityTrait, FromQueryResult, JoinType, QuerySelect, RelationTrait, Set};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
@@ -93,7 +94,10 @@ pub async fn get_all_verifications(
         )
         .join(
             JoinType::InnerJoin,
-            verification::Relation::VerificationStatus.def(),
+            verification::Entity::belongs_to(verification_status::Entity)
+                .from(verification::Column::StatusId)
+                .to(verification_status::Column::IntCode)
+                .into(),
         )
         .select_only()
         .column_as(verification::Column::Id, "verification_id")
@@ -108,7 +112,7 @@ pub async fn get_all_verifications(
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
         .column_as(verification::Column::DentalServiceId, "dental_service_id")
         .column_as(dental_service::Column::Name, "dental_service_name")
-        .column(verification::Column::StatusId)
+        .column_as(verification_status::Column::IntCode, "status_id")
         .column_as(verification_status::Column::Name, "status_name")
         .into_model::<VerificationLookupRow>()
         .all(&state.db)
@@ -174,6 +178,16 @@ pub async fn create_verification(
 ) -> Result<(StatusCode, Json<CreateVerificationResponse>), (StatusCode, String)> {
     let now = chrono::Utc::now().fixed_offset();
 
+    // find the dental service record
+    let dental_service = dental_service::Entity::find_by_id(payload.dental_service_id)
+        .one(&state.db)
+    .await
+        .map_err(internal_error)?
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Dental service not found".to_string()))?;
+
+    // status_id=2 if dental_service.type_id==3, else 1
+    let status_id = if dental_service.type_id==3 {2} else {1};
+
     let new_verification = verification::ActiveModel {
         date_created: Set(now),
         created_by: Set(auth_user.claims.email),
@@ -181,7 +195,7 @@ pub async fn create_verification(
         member_id: Set(payload.member_id),
         dental_service_id: Set(payload.dental_service_id),
         date_service_performed: Set(None),
-        status_id: Set(1), // temporary
+        status_id: Set(status_id), // temporary
         approved_by: Set(None),
         approval_date: Set(None),
         approval_code: Set(None),
@@ -215,3 +229,44 @@ fn internal_error(err: sea_orm::DbErr) -> (StatusCode, String) {
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
 // endregion: Create Verification
+
+
+// region:Cancel Verification
+#[instrument(skip(state), err(Debug))]
+pub async fn cancel_verification(
+    State(state): State<AppState>,
+    Path(verification_id): Path<i32>,
+) -> Result<Json<verification::Model>, (StatusCode, String)> {
+    tracing::info!("cancel_verification({})", verification_id);
+    let verification = verification::Entity::find_by_id(verification_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to fetch verification: {e}"),
+            )
+        })?
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("Verification with id {verification_id} not found"),
+            )
+        })?;
+
+    let mut verification_active: verification::ActiveModel = verification.into();
+    verification_active.status_id = Set(0);
+
+    let updated = verification_active
+        .update(&state.db)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to cancel verification: {e}"),
+            )
+        })?;
+
+    Ok(Json(updated))
+}
+// endregion: Cancel Verification
