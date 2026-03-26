@@ -20,6 +20,7 @@
                     [columnDefs]="columns"
                     [data]="ds"
                     [showAddButton]="false"
+                    [hideSecondaryAction]="isSecondaryActionHidden"
                     (primaryActionClicked)="onActionButtonClicked($event)"
                     [secondaryActionLabel]="'Cancel'"
                     [secondaryActionIcon]="'cancel'"

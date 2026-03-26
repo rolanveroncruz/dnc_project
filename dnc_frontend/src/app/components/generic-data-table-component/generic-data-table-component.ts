@@ -47,10 +47,13 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
   @Output() secondaryActionClicked = new EventEmitter<T>();
   @Input() secondaryActionLabel = 'Open';
   @Input() secondaryActionIcon = 'open_in_new';
-  @Input() hideSecondaryAction = false;
+  @Input() hideSecondaryAction?: (row: T)=> boolean;
   @Input() secondaryActionDisabled: ((row: T) => boolean) | null = null;
 
 
+  isSecondaryActionHidden(row: T): boolean {
+      return !!this.hideSecondaryAction?.(row);
+  }
   // New Configurable paginator inputs
   @Input() pageSize= 15;
   @Input() pageSizeOptions: number[] = [5, 10, 25, 50, 100];

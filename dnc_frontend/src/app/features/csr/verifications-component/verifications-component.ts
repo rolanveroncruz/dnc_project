@@ -6,6 +6,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {MatButton} from '@angular/material/button';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
+import {SimpleConfirmDialogComponent} from '../../../components/simple-confirm-dialog-component/simple-confirm-dialog-component';
 
 @Component({
   selector: 'app-verifications-component',
@@ -24,6 +26,7 @@ import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} f
 })
 export class VerificationsComponent implements OnInit {
     private readonly router = inject(Router);
+    private readonly dialog = inject(MatDialog);
     private readonly verificationService = inject(VerificationService);
     private readonly destroyRef = inject(DestroyRef);
     verifications = signal<VerificationLookupResponse[]>([]);
@@ -43,6 +46,7 @@ export class VerificationsComponent implements OnInit {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
                 color: 'primary',
+                hidden: (row: VerificationLookupResponse) => row.status_id==0,
                 onClick: function (row: VerificationLookupResponse): void {
                     console.log("In onActionButtonClicked(), row:", row);
                 }
@@ -61,6 +65,9 @@ export class VerificationsComponent implements OnInit {
         console.log("In onActionButtonClicked(), row:", row);
     }
 
+    isSecondaryActionHidden(row: VerificationLookupResponse): boolean {
+        return row.status_id ===0;
+    }
 
     ngOnInit(): void {
         this.loadVerifications();
@@ -89,7 +96,33 @@ export class VerificationsComponent implements OnInit {
     }
 
     onCancelVerification(row: VerificationLookupResponse){
-        console.log("In onCancelVerification()", row);
+        const memberName = row.master_list_member_name || `Member #${row.master_list_member_id}`;
+        const serviceName = row.dental_service_name || `Service #${row.dental_service_id}`;
+
+        this.dialog.open(SimpleConfirmDialogComponent, {
+            width: '400px',
+            data: {
+                title: 'Cancel Verification',
+                message: `Are you sure you want to cancel verification for ${memberName} for ${serviceName}?`,
+                confirmButtonText: 'Cancel Verification',
+                cancelButtonText: 'Keep Verification',
+            }
+        }).afterClosed().subscribe((confirmed:boolean) => {
+            if (!confirmed){
+                return;
+            }
+            this.verificationService.cancelVerification(row.verification_id).subscribe({
+                next: (res) => {
+                    console.log("In onCancelVerification(), cancelled verification for ", memberName, " for ", serviceName);
+                    this.loadVerifications();
+                },
+                error: (err) => {
+                    console.log("In onCancelVerification(), failed to cancel verification for ", memberName, " for ", serviceName, err);
+                }
+            });
+
+        });
+
 
     }
 

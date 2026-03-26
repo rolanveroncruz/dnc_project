@@ -68,4 +68,8 @@ export class VerificationService {
             { headers: this.authHeaders() }
         );
     }
+
+    cancelVerification(id: number): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/${id}/cancel`,{}, {headers: this.authHeaders()});
+    }
 }
