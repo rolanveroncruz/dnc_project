@@ -30,9 +30,9 @@ export class VerificationsComponent implements OnInit {
 
     readonly columns: TableColumn<VerificationLookupResponse>[] = [
         { key: 'verification_id', label: 'ID' },
-        { key: 'date', label: 'Date', cellTemplateKey: 'date' },
+        { key: 'date_created', label: 'Date', cellTemplateKey: 'date' },
         { key: 'dentist_name', label: 'Dentist'},
-        { key: 'member_name', label: 'Member'},
+        { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
     ]
 

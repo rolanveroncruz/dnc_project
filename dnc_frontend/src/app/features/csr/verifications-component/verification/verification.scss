@@ -1,0 +1,61 @@
+.verification-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.verification-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.verification-top-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.verification-top-left p {
+    margin: 0;
+}
+
+.verification-top-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.dentist-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dentist-row mat-form-field {
+    width: 100%;
+    max-width: 420px;
+}
+
+.date-time {
+    font-size: 0.95rem;
+}
+
+.save-success {
+    margin: 0;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.save-error {
+    margin: 0;
+    color: #c62828;
+    font-weight: 500;
+}
+
+.selected-member-id {
+    margin: 0.25rem 0 0 0;
+}

@@ -394,7 +394,6 @@ export class MasterListMemberComponent {
 
         this.setMemberEditBaseline();
 
-        this.infoMessage.set(`Selected existing member #${selected.master_list_member_id}.`);
     }
 
     // ✅ optional helper if user wants to start fresh

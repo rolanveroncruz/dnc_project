@@ -1,4 +1,4 @@
-import { Component, computed, inject,OnInit, signal } from '@angular/core';
+import {Component, computed, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DentistService, DentistNames } from '../../../../api_services/dentist-service';
 import { MatInput } from '@angular/material/input';
@@ -9,6 +9,10 @@ import {MatOptionModule} from '@angular/material/core';
 import {MasterListMemberComponent} from './master-list-member-component/master-list-member-component';
 import {MemberServicesCountsService, MemberServicesCountsSummary} from '../../../../api_services/member-services-counts-service';
 import {ServicesComponent} from './services-component/services-component';
+import {MatButtonModule} from '@angular/material/button';
+import {forkJoin} from 'rxjs';
+import {CreateVerificationResponse, VerificationService} from '../../../../api_services/verification-service';
+import {DatePipe} from '@angular/common';
 
 @Component({
     selector: 'app-verification',
@@ -23,12 +27,23 @@ import {ServicesComponent} from './services-component/services-component';
         MatInput,
         MasterListMemberComponent,
         ServicesComponent,
+        MatButtonModule,
+        DatePipe,
     ],
     templateUrl: './verification.html',
     styleUrl: './verification.scss',
 })
-export class Verification implements OnInit {
+export class Verification implements OnInit,OnDestroy {
     private readonly route = inject(ActivatedRoute);
+    readonly verificationService = inject(VerificationService);
+
+    // region: Current date/time and saving
+    readonly currentDateTime = signal(new Date());
+    readonly saving = signal(false);
+    readonly saveError = signal<string | null>(null);
+    readonly saveSuccessMessage = signal<string |null>(null);
+    private clockIntervalId: ReturnType<typeof setInterval>|null = null;
+    // endregion: Current date/time and saving
 
 
 // region: Services and Service Counts,
@@ -43,6 +58,8 @@ export class Verification implements OnInit {
 
     onCheckedServiceIdsChange(ids: number[]): void {
         this.selectedDentalServiceIds.set(ids);
+        this.saveError.set(null);
+        this.saveSuccessMessage.set(null);
     }
 
     private loadMemberServicesCounts(memberId: number): void {
@@ -135,6 +152,8 @@ export class Verification implements OnInit {
         this.selectedMasterListMemberId.set(null);
         this.memberServicesCountsSummary.set([]);
         this.selectedDentalServiceIds.set([]);
+        this.saveError.set(null);
+        this.saveSuccessMessage.set(null);
 
         const selectedDentist = this.dentistNames().find(d => d.id === selectedId);
         if (selectedDentist) {
@@ -151,6 +170,8 @@ export class Verification implements OnInit {
     onMasterListMemberResolved(memberId: number|null):void{
         console.log("In onMasterListMemberResolved(), memberId:", memberId);
         this.selectedMasterListMemberId.set(memberId);
+        this.saveError.set(null);
+        this.saveSuccessMessage.set(null);
 
         //clear previous service selection first
         this.memberServicesCountsSummary.set([]);
@@ -163,6 +184,8 @@ export class Verification implements OnInit {
 
     // endregion for MasterListMember
 
+    // region: constructor(), ngOnInit, ngOnDestroy
+
     constructor() {
         this.route.url.subscribe(() => {
             this.routePath.set(this.route.routeConfig?.path);
@@ -172,12 +195,20 @@ export class Verification implements OnInit {
 
     ngOnInit(): void {
         this.loadDentists();
+
+        this.clockIntervalId = setInterval(() => {
+            this.currentDateTime.set(new Date());
+        }, 1000);
+
         this.dentistSearch.valueChanges.subscribe(value => {
             // value can be string while typing, or number after autocomplete selection
             const searchText = typeof value ==='string'? value.trim().toLowerCase(): '';
             this.dentistSearchText.set(searchText);
 
             if (typeof value === 'string') {
+                this.saveError.set(null);
+                this.saveSuccessMessage.set(null);
+
                 this.selectedDentistId.set(null);
                 this.selectedMasterListMemberId.set(null);
                 this.memberServicesCountsSummary.set([]);
@@ -187,6 +218,14 @@ export class Verification implements OnInit {
 
     }
 
+    ngOnDestroy(): void {
+        if (this.clockIntervalId) {
+            clearInterval(this.clockIntervalId);
+        }
+    }
+
+
+    //endregion: constructor(), ngOnInit, ngOnDestroy
     private loadDentists():void{
         this.loadingDentists.set(true);
 
@@ -201,4 +240,52 @@ export class Verification implements OnInit {
             }
         })
     };
+
+    // region: Saving
+    readonly canSave = computed(() =>
+        this.isCreateMode() &&
+        this.selectedDentistId() !== null &&
+        this.selectedMasterListMemberId() !== null &&
+        this.selectedDentalServiceIds().length > 0 &&
+        !this.saving()
+    );
+
+    saveVerifications(): void {
+        const dentistId = this.selectedDentistId();
+        const memberId = this.selectedMasterListMemberId();
+        const serviceIds = this.selectedDentalServiceIds();
+
+        if (dentistId === null || memberId === null || serviceIds.length === 0) {
+            this.saveError.set('Please select a dentist, a member, and at least one service.');
+            this.saveSuccessMessage.set(null);
+            return;
+        }
+
+        this.saving.set(true);
+        this.saveError.set(null);
+        this.saveSuccessMessage.set(null);
+
+        const requests = serviceIds.map(dental_service_id =>
+            this.verificationService.createVerification({
+                    dentist_id: dentistId,
+                    member_id: memberId,
+                    dental_service_id: dental_service_id,
+                }
+            ));
+
+        forkJoin(requests).subscribe({
+            next: (responses: CreateVerificationResponse[]) => {
+                this.saving.set(false);
+                this.saveSuccessMessage.set(
+                    `${responses.length} verification(s) created successfully.`
+                );
+            },
+            error: (err) => {
+                console.error('Failed to create verifications', err);
+                this.saving.set(false);
+                this.saveError.set('Failed to save verification(s).');
+            }
+        });
+    }
+    // endregion: Saving
 }
