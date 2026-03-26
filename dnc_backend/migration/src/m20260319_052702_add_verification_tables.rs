@@ -39,6 +39,11 @@ impl Migration {
                         .auto_increment()
                         .primary_key()
                     )
+                    .col(ColumnDef::new(VerificationStatus::IntCode)
+                        .integer()
+                        .not_null()
+                        .unique_key()
+                    )
                     .col(ColumnDef::new(VerificationStatus::Name)
                         .string()
                         .not_null()
@@ -51,20 +56,21 @@ impl Migration {
         manager.drop_table(Table::drop().table(VerificationStatus::Table).to_owned()).await?;
         Ok(())
     }
-    async fn insert_into_verification_status_table(manager: &SchemaManager<'_>, name:&str) -> Result<(), DbErr> {
+    async fn insert_into_verification_status_table(manager: &SchemaManager<'_>, int_code:i32, name:&str) -> Result<(), DbErr> {
         let insert = Query::insert()
             .into_table(VerificationStatus::Table)
-            .columns(vec![VerificationStatus::Name])
-            .values_panic([Expr::val(name)])
+            .columns(vec![VerificationStatus::IntCode,VerificationStatus::Name])
+            .values_panic([Expr::val(int_code),Expr::val(name)])
             .to_owned();
         manager.exec_stmt(insert).await?;
         Ok(())
     }
 
     async fn seed_verification_status_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-        Self::insert_into_verification_status_table(manager, "Waiting").await?;
-        Self::insert_into_verification_status_table(manager, "Pending Approval Code").await?;
-        Self::insert_into_verification_status_table(manager, "Approval Code Released").await?;
+        Self::insert_into_verification_status_table(manager,0, "Cancelled").await?;
+        Self::insert_into_verification_status_table(manager,1, "Waiting for Approval Code").await?;
+        Self::insert_into_verification_status_table(manager, 2,"Waiting for Files").await?;
+        Self::insert_into_verification_status_table(manager, 99,"Done").await?;
         Ok(())
     }
 
@@ -224,6 +230,7 @@ impl Migration {
 pub enum VerificationStatus{
     Table,
     Id,
+    IntCode,
     Name
 }
 #[derive(Iden)]
