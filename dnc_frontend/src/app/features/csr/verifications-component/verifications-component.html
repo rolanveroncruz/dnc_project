@@ -20,7 +20,12 @@
                     [columnDefs]="columns"
                     [data]="ds"
                     [showAddButton]="false"
-                    (rowClicked)="onRowClicked($event)">
+                    (primaryActionClicked)="onActionButtonClicked($event)"
+                    [secondaryActionLabel]="'Cancel'"
+                    [secondaryActionIcon]="'cancel'"
+                    (secondaryActionClicked)="onCancelVerification($event)"
+                >
+
                 </app-generic-data-table>
             }
         }

@@ -134,12 +134,6 @@
 </ng-template>
 
 <!-------------------->
-<!----Date Template--->
-<!-------------------->
-<ng-template #dateCell let-row let-col="col">
-    {{ toDate(row[col.key]) | date:'MMM d, y' }}
-</ng-template>
-<!-------------------->
 <!---Chips Template--->
 <!-------------------->
 <ng-template #chipsCell let-row let-col="col">
@@ -174,4 +168,34 @@
     } @else {
 
     }
+</ng-template>
+<ng-template #actionsCell let-row let-col="col">
+    <div class="action-buttons" (click)="$event.stopPropagation()">
+        @if (col.actionButton && !isPrimaryActionHidden(col, row)) {
+            <button
+                mat-stroked-button
+                type="button"
+                [color]="col.actionButton.color ?? 'primary'"
+                [disabled]="isPrimaryActionDisabled(col, row)"
+                (click)="onPrimaryActionClicked($event, row)">
+                @if (getPrimaryActionIcon(col, row)) {
+                    <mat-icon>{{ getPrimaryActionIcon(col, row) }}</mat-icon>
+                }
+                {{ getPrimaryActionLabel(col, row) }}
+            </button>
+        }
+
+        @if (!hideSecondaryAction) {
+            <button
+                mat-button
+                type="button"
+                [disabled]="isSecondaryActionDisabled(row)"
+                (click)="onSecondaryActionClicked($event, row)">
+                @if (secondaryActionIcon) {
+                    <mat-icon>{{ secondaryActionIcon }}</mat-icon>
+                }
+                {{ secondaryActionLabel }}
+            </button>
+        }
+    </div>
 </ng-template>
