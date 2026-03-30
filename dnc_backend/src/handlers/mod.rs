@@ -73,7 +73,9 @@ pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement
 pub  use api::endorsement_master_list_member::{ set_master_list_member_active};
 pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
 
-pub use api::verification::{get_all_verifications,create_verification, cancel_verification};
+pub use api::verification::{get_all_verifications,create_verification,
+                            cancel_verification,
+                            get_approval_code_for_verification_id};
 
 
 pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
