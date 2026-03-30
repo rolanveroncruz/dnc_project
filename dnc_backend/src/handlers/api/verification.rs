@@ -28,6 +28,9 @@ pub struct VerificationLookupResponse {
     pub dental_service_name: String,
     pub status_id: i32,
     pub status_name: String,
+    pub approval_code: Option<String>,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
 }
 
 #[derive(Debug, FromQueryResult)]
@@ -50,6 +53,10 @@ struct VerificationLookupRow {
 
     pub status_id: i32,
     pub status_name: String,
+
+    pub approval_code: Option<String>,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
 }
 
 fn format_dentist_name(
@@ -114,6 +121,9 @@ pub async fn get_all_verifications(
         .column_as(dental_service::Column::Name, "dental_service_name")
         .column_as(verification_status::Column::IntCode, "status_id")
         .column_as(verification_status::Column::Name, "status_name")
+        .column_as(verification::Column::ApprovalCode, "approval_code")
+        .column_as(verification::Column::ApprovedBy, "approved_by")
+        .column_as(verification::Column::ApprovalDate, "approval_date")
         .into_model::<VerificationLookupRow>()
         .all(&state.db)
         .await
@@ -121,25 +131,35 @@ pub async fn get_all_verifications(
 
     let response = rows
         .into_iter()
-        .map(|row| VerificationLookupResponse {
-            verification_id: row.verification_id,
-            date_created: row.date_created,
-            dentist_id: row.dentist_id,
-            dentist_name: format_dentist_name(
-                &row.dentist_last_name,
-                &row.dentist_given_name,
-                row.dentist_middle_name.as_deref(),
-            ),
-            master_list_member_id: row.master_list_member_id,
-            master_list_member_name: format_member_name(
-                &row.member_last_name,
-                &row.member_first_name,
-                &row.member_middle_name,
-            ),
-            dental_service_id: row.dental_service_id,
-            dental_service_name: row.dental_service_name,
-            status_id: row.status_id,
-            status_name: row.status_name,
+        .map(|row| {
+            let (approval_code, approved_by, approval_date) = if row.status_id==99 {
+                (row.approval_code, row.approved_by, row.approval_date)
+            } else{
+                (None, None, None)
+            };
+            VerificationLookupResponse {
+                verification_id: row.verification_id,
+                date_created: row.date_created,
+                dentist_id: row.dentist_id,
+                dentist_name: format_dentist_name(
+                    &row.dentist_last_name,
+                    &row.dentist_given_name,
+                    row.dentist_middle_name.as_deref(),
+                ),
+                master_list_member_id: row.master_list_member_id,
+                master_list_member_name: format_member_name(
+                    &row.member_last_name,
+                    &row.member_first_name,
+                    &row.member_middle_name,
+                ),
+                dental_service_id: row.dental_service_id,
+                dental_service_name: row.dental_service_name,
+                status_id: row.status_id,
+                status_name: row.status_name,
+                approval_code,
+                approved_by,
+                approval_date,
+            }
         })
         .collect::<Vec<_>>();
 
@@ -339,8 +359,7 @@ const TAG_PART_LEN: usize = 5;
 fn generate_approval_code(verification_id: i32) -> String {
     assert!(verification_id >= 0, "verification_id must be non-negative");
 
-    let secret = std::env::var("APPROVAL_CODE_SECRET")
-        .expect("APPROVAL_CODE_SECRET must be set");
+    let secret = "Dental Network Company's Random Secret";
 
     let id_u64 = verification_id as u64;
 
