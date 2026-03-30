@@ -1,5 +1,5 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {VerificationService, VerificationLookupResponse} from '../../../api_services/verification-service';
+import {VerificationService, ExtendedVerificationLookupResponse} from '../../../api_services/verification-service';
 import {Router} from '@angular/router';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -8,6 +8,11 @@ import {MatButton} from '@angular/material/button';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {MatDialog} from '@angular/material/dialog';
 import {SimpleConfirmDialogComponent} from '../../../components/simple-confirm-dialog-component/simple-confirm-dialog-component';
+import {
+    ApprovalDialogComponent,
+    ApprovalDialogData,
+    ApprovalDialogResult
+} from './approval-dialog-component/approval-dialog-component';
 
 @Component({
   selector: 'app-verifications-component',
@@ -29,44 +34,40 @@ export class VerificationsComponent implements OnInit {
     private readonly dialog = inject(MatDialog);
     private readonly verificationService = inject(VerificationService);
     private readonly destroyRef = inject(DestroyRef);
-    verifications = signal<VerificationLookupResponse[]>([]);
+    verifications = signal<ExtendedVerificationLookupResponse[]>([]);
 
-    getLabelFromRow(row: VerificationLookupResponse): string {
-        return row.status_name;
-    }
-    readonly columns: TableColumn<VerificationLookupResponse>[] = [
+
+    readonly columns: TableColumn<ExtendedVerificationLookupResponse>[] = [
         { key: 'verification_id', label: 'ID' },
         { key: 'date_created', label: 'Date', cellTemplateKey: 'date' },
         { key: 'dentist_name', label: 'Dentist'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
         {key: 'status_name', label: 'Status'},
+        {key: 'approval_string', label: 'Approval Details'},
         { key: 'actions', label:'Actions', sortable: false, cellTemplateKey: 'actions',
             actionButton: {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
                 color: 'primary',
-                hidden: (row: VerificationLookupResponse) => row.status_id==0,
-                onClick: function (row: VerificationLookupResponse): void {
-                    console.log("In onActionButtonClicked(), row:", row);
+                hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99,
+                onClick: function (row: ExtendedVerificationLookupResponse): void {
+                    console.log("In onRowClicked(), row:", row);
                 }
             },
         }
     ]
-    getRowLabel(row: VerificationLookupResponse): string {
+    getRowLabel(row: ExtendedVerificationLookupResponse): string {
         return row.status_id==1 ? 'Approval Code' : 'Upload Files';
     }
 
-    getRowIcon(row: VerificationLookupResponse): string {
+    getRowIcon(row: ExtendedVerificationLookupResponse): string {
         return row.status_id==1 ? 'check' : 'upload';
     }
 
-    onActionButtonClicked(row:VerificationLookupResponse): void {
-        console.log("In onActionButtonClicked(), row:", row);
-    }
 
-    isSecondaryActionHidden(row: VerificationLookupResponse): boolean {
-        return row.status_id ===0;
+    isSecondaryActionHidden(row: ExtendedVerificationLookupResponse): boolean {
+        return row.status_id ===0 || row.status_id ===99;
     }
 
     ngOnInit(): void {
@@ -89,13 +90,8 @@ export class VerificationsComponent implements OnInit {
         window.open(url, '_blank');
     }
 
-    onRowClicked(row: VerificationLookupResponse) {
-        console.log("In onRowClicked(), row:", row);
-        // Route example: /setup/dental-clinics/:id
-        this.router.navigate(['main/csr/verifications/', row.verification_id]).then();
-    }
 
-    onCancelVerification(row: VerificationLookupResponse){
+    onCancelVerification(row: ExtendedVerificationLookupResponse){
         const memberName = row.master_list_member_name || `Member #${row.master_list_member_id}`;
         const serviceName = row.dental_service_name || `Service #${row.dental_service_id}`;
 
@@ -112,7 +108,7 @@ export class VerificationsComponent implements OnInit {
                 return;
             }
             this.verificationService.cancelVerification(row.verification_id).subscribe({
-                next: (res) => {
+                next: () => {
                     console.log("In onCancelVerification(), cancelled verification for ", memberName, " for ", serviceName);
                     this.loadVerifications();
                 },
@@ -126,4 +122,39 @@ export class VerificationsComponent implements OnInit {
 
     }
 
+
+    // region: Get Approval Code
+
+    onGetApprovalCode(row:ExtendedVerificationLookupResponse): void {
+        const dialogData: ApprovalDialogData = {
+            validation_id: row.verification_id,
+            date: row.date_created,
+            dentist_id: row.dentist_id,
+            dentist_name: row.dentist_name,
+            dental_service_id: row.dental_service_id,
+            dental_service_name: row.dental_service_name,
+            master_list_member_id: row.master_list_member_id,
+            master_list_member_name: row.master_list_member_name,
+            service_availed_date: undefined,
+            approval_code: null,
+        }
+
+        const dialogRef = this.dialog.open<
+            ApprovalDialogComponent,
+            ApprovalDialogData,
+            ApprovalDialogResult
+        >(ApprovalDialogComponent, {
+            width: '600px',
+            data: dialogData,
+            disableClose: true,
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            if (!result?.confirmed) {
+                this.loadVerifications();
+                return;
+            }
+            this.loadVerifications();
+        })
+    }
+    // endregion: Get Approval Code
 }
