@@ -1,9 +1,9 @@
 use axum::{extract::State, http::StatusCode, Json};
 use axum::extract::Path;
-use sea_orm::{ActiveModelTrait, EntityTrait, FromQueryResult, JoinType, QuerySelect, RelationTrait, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, QueryFilter, QuerySelect, RelationTrait, Set};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
-
+use chrono::{ Utc};
 use crate::{
     AppState,
     entities::{
@@ -28,6 +28,9 @@ pub struct VerificationLookupResponse {
     pub dental_service_name: String,
     pub status_id: i32,
     pub status_name: String,
+    pub approval_code: Option<String>,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
 }
 
 #[derive(Debug, FromQueryResult)]
@@ -50,6 +53,10 @@ struct VerificationLookupRow {
 
     pub status_id: i32,
     pub status_name: String,
+
+    pub approval_code: Option<String>,
+    pub approved_by: Option<String>,
+    pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
 }
 
 fn format_dentist_name(
@@ -114,6 +121,9 @@ pub async fn get_all_verifications(
         .column_as(dental_service::Column::Name, "dental_service_name")
         .column_as(verification_status::Column::IntCode, "status_id")
         .column_as(verification_status::Column::Name, "status_name")
+        .column_as(verification::Column::ApprovalCode, "approval_code")
+        .column_as(verification::Column::ApprovedBy, "approved_by")
+        .column_as(verification::Column::ApprovalDate, "approval_date")
         .into_model::<VerificationLookupRow>()
         .all(&state.db)
         .await
@@ -121,25 +131,35 @@ pub async fn get_all_verifications(
 
     let response = rows
         .into_iter()
-        .map(|row| VerificationLookupResponse {
-            verification_id: row.verification_id,
-            date_created: row.date_created,
-            dentist_id: row.dentist_id,
-            dentist_name: format_dentist_name(
-                &row.dentist_last_name,
-                &row.dentist_given_name,
-                row.dentist_middle_name.as_deref(),
-            ),
-            master_list_member_id: row.master_list_member_id,
-            master_list_member_name: format_member_name(
-                &row.member_last_name,
-                &row.member_first_name,
-                &row.member_middle_name,
-            ),
-            dental_service_id: row.dental_service_id,
-            dental_service_name: row.dental_service_name,
-            status_id: row.status_id,
-            status_name: row.status_name,
+        .map(|row| {
+            let (approval_code, approved_by, approval_date) = if row.status_id==99 {
+                (row.approval_code, row.approved_by, row.approval_date)
+            } else{
+                (None, None, None)
+            };
+            VerificationLookupResponse {
+                verification_id: row.verification_id,
+                date_created: row.date_created,
+                dentist_id: row.dentist_id,
+                dentist_name: format_dentist_name(
+                    &row.dentist_last_name,
+                    &row.dentist_given_name,
+                    row.dentist_middle_name.as_deref(),
+                ),
+                master_list_member_id: row.master_list_member_id,
+                master_list_member_name: format_member_name(
+                    &row.member_last_name,
+                    &row.member_first_name,
+                    &row.member_middle_name,
+                ),
+                dental_service_id: row.dental_service_id,
+                dental_service_name: row.dental_service_name,
+                status_id: row.status_id,
+                status_name: row.status_name,
+                approval_code,
+                approved_by,
+                approval_date,
+            }
         })
         .collect::<Vec<_>>();
 
@@ -176,7 +196,7 @@ pub async fn create_verification(
     auth_user: AuthUser,
     Json(payload): Json<CreateVerificationRequest>,
 ) -> Result<(StatusCode, Json<CreateVerificationResponse>), (StatusCode, String)> {
-    let now = chrono::Utc::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
 
     // find the dental service record
     let dental_service = dental_service::Entity::find_by_id(payload.dental_service_id)
@@ -270,3 +290,132 @@ pub async fn cancel_verification(
     Ok(Json(updated))
 }
 // endregion: Cancel Verification
+
+
+// region: Get Approval Code
+#[derive(Debug, Deserialize)]
+pub struct GetApprovalCodeRequest {
+    pub date_service_performed: sea_orm::prelude::Date,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetApprovalCodeResponse {
+    pub approval_code: String,
+}
+
+/// Temporary approval code generator.
+/// Replace this later with your real business rule.
+
+#[instrument(skip(state, auth_user, payload), err(Debug))]
+pub async fn get_approval_code_for_verification_id(
+    State(state): State<AppState>,
+    auth_user: AuthUser,
+    Path(verification_id): Path<i32>,
+    Json(payload): Json<GetApprovalCodeRequest>,
+) -> Result<Json<GetApprovalCodeResponse>, (StatusCode, String)> {
+    let verification_model = verification::Entity::find()
+        .filter(verification::Column::Id.eq(verification_id))
+        .one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("Verification {} not found", verification_id),
+            )
+        })?;
+
+    let approval_code = generate_approval_code(verification_id);
+
+    let mut verification_active: verification::ActiveModel = verification_model.into();
+    verification_active.date_service_performed = Set(Some(payload.date_service_performed));
+    verification_active.approved_by = Set(Some(auth_user.claims.email.clone()));
+    verification_active.approval_date = Set(Some(Utc::now().into()));
+    verification_active.approval_code = Set(Some(approval_code.clone()));
+    verification_active.status_id = Set(99);
+
+    verification_active
+        .update(&state.db)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(Json(GetApprovalCodeResponse { approval_code }))
+}
+
+// endregion: Get Approval Code
+
+
+// region: generate_approval_code
+
+use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
+
+type HmacSha256 = Hmac<Sha256>;
+
+const APPROVAL_CODE_ALPHABET: &[u8; 32] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const ID_PART_LEN: usize = 7;
+const TAG_PART_LEN: usize = 5;
+
+fn generate_approval_code(verification_id: i32) -> String {
+    assert!(verification_id >= 0, "verification_id must be non-negative");
+
+    let secret = "Dental Network Company's Random Secret";
+
+    let id_u64 = verification_id as u64;
+
+    let mut mask_mac =
+        <HmacSha256 as KeyInit>::new_from_slice(secret.as_bytes())
+            .expect("invalid HMAC key");
+    mask_mac.update(b"approval-code-mask:v1");
+    let mask_bytes = mask_mac.finalize().into_bytes();
+
+    let mut mask_arr = [0u8; 8];
+    mask_arr.copy_from_slice(&mask_bytes[..8]);
+    let mask_35 = u64::from_be_bytes(mask_arr) & ((1u64 << 35) - 1);
+
+    let obfuscated_id = id_u64 ^ mask_35;
+
+    let mut tag_mac =
+        <HmacSha256 as KeyInit>::new_from_slice(secret.as_bytes())
+            .expect("invalid HMAC key");
+    tag_mac.update(b"approval-code-tag:v1:");
+    tag_mac.update(verification_id.to_string().as_bytes());
+    let tag_bytes = tag_mac.finalize().into_bytes();
+
+    let mut tag_arr = [0u8; 4];
+    tag_arr.copy_from_slice(&tag_bytes[..4]);
+    let tag_25 = (u32::from_be_bytes(tag_arr) >> 7) & ((1u32 << 25) - 1);
+
+    let id_part = encode_base32_fixed(obfuscated_id, ID_PART_LEN);
+    let tag_part = encode_base32_fixed(tag_25 as u64, TAG_PART_LEN);
+
+    let raw = format!("{id_part}{tag_part}");
+    format_approval_code(&raw)
+}
+
+fn encode_base32_fixed(mut value: u64, len: usize) -> String {
+    let mut out = vec!['A'; len];
+
+    for i in (0..len).rev() {
+        let idx = (value & 0b1_1111) as usize;
+        out[i] = APPROVAL_CODE_ALPHABET[idx] as char;
+        value >>= 5;
+    }
+
+    out.into_iter().collect()
+}
+
+fn format_approval_code(raw: &str) -> String {
+    debug_assert_eq!(raw.len(), 12);
+
+    let mut out = String::with_capacity(14);
+    for (i, ch) in raw.chars().enumerate() {
+        if i > 0 && i % 4 == 0 {
+            out.push('-');
+        }
+        out.push(ch);
+    }
+    out
+}
+
+// endregion: generate_approval_code

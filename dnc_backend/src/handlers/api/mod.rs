@@ -41,3 +41,4 @@ pub mod dentist_company_relations;
 pub mod dentist_relations;
 pub mod master_list_member_counts;
 pub mod endorsement_billing_rules;
+pub mod endorsement_master_list_members_post_patch;

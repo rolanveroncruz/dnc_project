@@ -30,30 +30,29 @@ interface MasterListMemberRow{
     middle_name: string,
     email_address: string | null,
     mobile_number: string |null,
-    birth_date: Date | null,
+    birth_date: string| null,
     is_active: boolean,
 }
 
 
+/** Matches Rust CreateMasterListMemberRequest */
 export interface CreateMasterListMemberRequest {
-    master_list_id: number | null;
+    endorsement_id: number;
+    master_list_id?: number | null;
     account_number: string;
     last_name: string;
     first_name: string;
     middle_name: string;
-    email_address: string | null;
-    mobile_number: string | null;
-    birth_date: string | null;
+    email_address?: string | null;
+    mobile_number?: string | null;
+    birth_date?: string | null; // YYYY-MM-DD
     is_active: boolean;
+    last_edited_by?: string | null;
 }
 
-/*
-For Rust Option<Option<T>> fields in PATCH:
-- undefined = do not update
-- null       = explicitly clear the value
-- value      = set the value
-*/
+/** Matches Rust PatchMasterListMemberRequest */
 export interface PatchMasterListMemberRequest {
+    endorsement_id?: number;
     master_list_id?: number | null;
     account_number?: string;
     last_name?: string;
@@ -61,9 +60,11 @@ export interface PatchMasterListMemberRequest {
     middle_name?: string;
     email_address?: string | null;
     mobile_number?: string | null;
-    birth_date?: string | null;
+    birth_date?: string | null; // YYYY-MM-DD
     is_active?: boolean;
+    last_edited_by?: string | null;
 }
+
 
 export interface MasterListMemberMutationResponse {
     id: number;
@@ -91,16 +92,8 @@ export class MasterListMemberService {
     }
 
     // Adjust this if your backend uses a different prefix
-    private readonly baseUrl = `${environment.apiBaseUrl}/master-list-members`;
+    private readonly baseUrl = `${environment.apiBaseUrl}/api/master_list_members`;
 
-    getAllMasterListMembers(): Observable<MasterListMemberLookupResponse[]> {
-        return this.http.get<MasterListMemberLookupResponse[]>(this.baseUrl);
-    }
-
-    getMasterListMembersForDentist(dentistId: number):Observable<MasterListMemberLookupResponse[]>{
-        return this.http.get<MasterListMemberLookupResponse[]>(`${environment.apiBaseUrl}/dentist/${dentistId}/master_list_members`,
-            { headers:this.authHeaders()});
-    }
     getMasterListMembersForEndorsement(endorsement_id: number): Observable<MasterListMemberLookupResponse[]>{
         return this.http.get<MasterListMemberRow[] >(`${environment.apiBaseUrl}/api/endorsements/${endorsement_id}/master_list_members`,
             { headers:this.authHeaders()})
@@ -115,7 +108,7 @@ export class MasterListMemberService {
                 master_list_member_name: member.last_name + ', ' + member.first_name + ' ' + member.middle_name,
                 master_list_member_email_address: member.email_address,
                 master_list_member_mobile_number: member.mobile_number,
-                master_list_member_birth_date: member.birth_date?.toISOString().split('T')[0] ?? null,
+                master_list_member_birth_date: member.birth_date ?? null,
                 master_list_member_is_active: member.is_active,
             }))))
 
@@ -125,7 +118,10 @@ export class MasterListMemberService {
     createMasterListMember(
         payload: CreateMasterListMemberRequest
     ): Observable<MasterListMemberMutationResponse> {
-        return this.http.post<MasterListMemberMutationResponse>(this.baseUrl, payload);
+        return this.http.post<MasterListMemberMutationResponse>(
+            this.baseUrl,
+            payload,
+            { headers: this.authHeaders() });
     }
 
     patchMasterListMember(
@@ -134,7 +130,8 @@ export class MasterListMemberService {
     ): Observable<MasterListMemberMutationResponse> {
         return this.http.patch<MasterListMemberMutationResponse>(
             `${this.baseUrl}/${id}`,
-            payload
+            payload,
+            { headers: this.authHeaders() }
         );
     }
 }

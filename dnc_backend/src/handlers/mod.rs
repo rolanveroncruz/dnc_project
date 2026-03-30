@@ -70,15 +70,18 @@ pub use api::endorsement_counts::{get_all_endorsement_counts, post_endorsement_c
 pub use api::endorsement_master_list_upload::upload_endorsement_master_list;
 pub use api::endorsement_master_list_meta_data::get_master_list_meta_data_for_endorsement_id;
 pub use api::endorsement_master_list_delete::delete_master_lists_for_endorsement_id;
-pub  use api::endorsement_master_list_member::{ get_master_list_for_endorsement, set_master_list_member_active};
+pub  use api::endorsement_master_list_member::{ set_master_list_member_active};
 pub use api:: hmo_endorsement::get_endorsements_for_hmo_id;
 
-pub use api::verification::{get_all_verifications,create_verification, cancel_verification};
+pub use api::verification::{get_all_verifications,create_verification,
+                            cancel_verification,
+                            get_approval_code_for_verification_id};
 
 
 pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 
 pub use api::dentist_relations::get_endorsements_for_dentist_id_handler;
 
-pub use api::master_list_member::{get_master_list_members_for_endorsement, post_master_list_member, patch_master_list_member};
+pub use api::master_list_member::{get_master_list_members_for_endorsement };
 pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_service_counts_for_member_id};
+pub use api:: endorsement_master_list_members_post_patch::{create_master_list_member, patch_master_list_member};

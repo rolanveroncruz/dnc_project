@@ -2,8 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {LoginService} from '../login.service';
 import {environment} from '../../environments/environment';
-import {Observable} from 'rxjs';
-import {EndorsementCompanyOptions} from './endorsement-service';
+import {map, Observable} from 'rxjs';
 
 export interface VerificationLookupResponse {
     verification_id: number;
@@ -16,6 +15,12 @@ export interface VerificationLookupResponse {
     dental_service_name: string;
     status_id: number;
     status_name: string;
+    approval_code: string | null;
+    approved_by: string | null;
+    approval_date: string | null;
+}
+export interface ExtendedVerificationLookupResponse extends VerificationLookupResponse {
+    approval_string: string | null;
 }
 
 export interface CreateVerificationRequest {
@@ -38,7 +43,9 @@ export interface CreateVerificationResponse {
     approval_code: string | null;
 }
 
-
+export interface GetApprovalCodeResponse {
+    approval_code: string | null;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -55,8 +62,21 @@ export class VerificationService {
         const token = this.loginService.token?.() ?? '';
         return new HttpHeaders({Authorization: `Bearer ${token}`});
     }
-    getVerifications(): Observable<VerificationLookupResponse[]> {
-        return this.http.get<VerificationLookupResponse[]>(`${this.baseUrl}`, {headers: this.authHeaders()});
+    getVerifications(): Observable<ExtendedVerificationLookupResponse[]> {
+        return this.http.get<VerificationLookupResponse[]>(`${this.baseUrl}`, {headers: this.authHeaders()})
+            .pipe(
+                map((rows)=>
+                    rows.map((row):ExtendedVerificationLookupResponse =>({
+                            ...row,
+                            approval_string:
+                               row.status_id===99 &&
+                                row.approved_by &&
+                                row.approval_date &&
+                                row.approval_code ?
+                                    `By:${row.approved_by} (on ${new Date(row.approval_date).toLocaleDateString()}) with code: ${row.approval_code}`
+                                   : null,
+                        })))
+            );
     }
 
     createVerification(
@@ -71,5 +91,11 @@ export class VerificationService {
 
     cancelVerification(id: number): Observable<any> {
         return this.http.post<any>(`${this.baseUrl}/${id}/cancel`,{}, {headers: this.authHeaders()});
+    }
+
+
+    requestApprovalCode(validation_id:number, date_service_performed: string): Observable<GetApprovalCodeResponse> {
+        const payload = {date_service_performed};
+        return this.http.post<GetApprovalCodeResponse>(`${this.baseUrl}/${validation_id}/approval_code`,payload, {headers: this.authHeaders()});
     }
 }
