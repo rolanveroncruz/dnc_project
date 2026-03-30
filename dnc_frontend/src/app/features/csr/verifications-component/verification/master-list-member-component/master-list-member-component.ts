@@ -8,17 +8,17 @@ import {
     output,
     effect,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatChipsModule} from '@angular/material/chips';
+import {CommonModule} from '@angular/common';
+import {FormControl, ReactiveFormsModule} from '@angular/forms';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {MatChipsModule} from '@angular/material/chips';
 
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MatOption } from '@angular/material/core';
-import { MatCardModule } from '@angular/material/card';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule, MatOption} from '@angular/material/core';
+import {MatCardModule} from '@angular/material/card';
 import {
     MasterListMemberService,
     MasterListMemberLookupResponse,
@@ -75,7 +75,7 @@ export class MasterListMemberComponent {
         mobileNumber: string;
         emailAddress: string;
         birthDate: string;
-    }|null> (null);
+    } | null>(null);
 
     readonly hasUnsavedChanges = signal(false);
 
@@ -89,38 +89,163 @@ export class MasterListMemberComponent {
             birthDate: this.birthDate.value ?? '',
         };
     }
-    private setMemberEditBaseline(): void{
-        this.memberEditBaseline.set( this.currentMemberEditSnapshot());
+
+    private setMemberEditBaseline(): void {
+        this.memberEditBaseline.set(this.currentMemberEditSnapshot());
         this.hasUnsavedChanges.set(false);
         this.bumpMemberEditVersion();
     }
-    private bumpMemberEditVersion(): void{
+
+    private bumpMemberEditVersion(): void {
         this.memberEditVersion.update(v => v + 1);
     }
-    resetMemberEdits():void{
-        const baseline = this.memberEditBaseline();
-        if (!baseline)return;
 
-        this.lastName.setValue(baseline.lastName, { emitEvent: false });
-        this.firstName.setValue(baseline.firstName, { emitEvent: false });
-        this.middleName.setValue(baseline.middleName, { emitEvent: false });
-        this.mobileNumber.setValue(baseline.mobileNumber, { emitEvent: false });
-        this.emailAddress.setValue(baseline.emailAddress, { emitEvent: false });
-        this.birthDate.setValue(baseline.birthDate, { emitEvent: false });
+    resetMemberEdits(): void {
+        const baseline = this.memberEditBaseline();
+        if (!baseline) return;
+
+        this.lastName.setValue(baseline.lastName, {emitEvent: false});
+        this.firstName.setValue(baseline.firstName, {emitEvent: false});
+        this.middleName.setValue(baseline.middleName, {emitEvent: false});
+        this.mobileNumber.setValue(baseline.mobileNumber, {emitEvent: false});
+        this.emailAddress.setValue(baseline.emailAddress, {emitEvent: false});
+        this.birthDate.setValue(baseline.birthDate, {emitEvent: false});
 
         this.hasUnsavedChanges.set(false);
         this.bumpMemberEditVersion();
     }
+
+    // region: Save Member Edits
+    // Effectively, this is a "save" button.
+    // It will save the current member edits to the database.
+    // It will also clear the member edit baseline.
+    // It will also clear the error message.
+    // It will also clear the info message.
+    // It will also clear the "unsaved changes" flag.
     saveMemberEdits(): void {
-        this.setMemberEditBaseline();
-        this.infoMessage.set('Member changes saved.');
+        const endorsementId = this.selectedEndorsementId();
+        const accountNumber = this.normalizedAccountNumber();
+
+        if (endorsementId === null) {
+            this.saveError.set('Please select an endorsement.');
+            return;
+        }
+        if (!accountNumber) {
+            this.saveError.set('Please provide or select a member account number.');
+            return;
+        }
+        if (!this.normalize(this.lastName.value)) {
+            this.saveError.set('Last name is required.');
+            this.infoMessage.set('');
+            return;
+        }
+
+        if (!this.normalize(this.firstName.value)) {
+            this.saveError.set('First name is required.');
+            this.infoMessage.set('');
+            return;
+        }
+        this.loading.set(true);
         this.saveError.set('');
+        this.infoMessage.set('');
+
+        const payload = {
+            endorsement_id: endorsementId,
+            account_number: accountNumber,
+            last_name: this.normalize(this.lastName.value),
+            first_name: this.normalize(this.firstName.value),
+            middle_name: this.normalize(this.middleName.value),
+            mobile_number: this.normalize(this.mobileNumber.value),
+            email_address: this.normalize(this.emailAddress.value),
+            birth_date: this.normalize(this.birthDate.value),
+            is_active: true,
+            last_edited_by: null,
+        }
+        const existingMemberId = this.resolvedMemberId();
+        if (existingMemberId !== null) {
+            this.masterListMemberService.patchMasterListMember(existingMemberId, payload).subscribe({
+                next: (res) => {
+                    this.resolvedMemberId.set(res.id);
+                    this.selectedMasterListMemberIdChange.emit(res.id);
+
+                    this.memberAccountSearch.setValue(res.account_number, {emitEvent: false});
+                    this.lastName.setValue(res.last_name, {emitEvent: false});
+                    this.firstName.setValue(res.first_name, {emitEvent: false});
+                    this.middleName.setValue(res.middle_name, {emitEvent: false});
+                    this.mobileNumber.setValue(res.mobile_number ?? '', {emitEvent: false});
+                    this.emailAddress.setValue(res.email_address ?? '', {emitEvent: false});
+                    this.birthDate.setValue(res.birth_date ?? '', {emitEvent: false});
+
+                    this.setMemberEditBaseline();
+                    this.infoMessage.set('Member details updated successfully.');
+                    this.saveError.set('');
+                    this.loading.set(false);
+                },
+                error: (err) => {
+                    console.error('Failed to update member', err);
+                    this.saveError.set('Failed to update member.');
+                    this.infoMessage.set('');
+                    this.loading.set(false);
+                }
+            });
+            return;
+        }
+        if (this.isCreatingNewMember()) {
+            this.masterListMemberService.createMasterListMember(payload).subscribe({
+                next: (res) => {
+                    this.resolvedMemberId.set(res.id);
+                    this.selectedMasterListMemberIdChange.emit(res.id);
+
+                    this.memberAccountSearch.setValue(res.account_number, {emitEvent: false});
+                    this.lastName.setValue(res.last_name, {emitEvent: false});
+                    this.firstName.setValue(res.first_name, {emitEvent: false});
+                    this.middleName.setValue(res.middle_name, {emitEvent: false});
+                    this.mobileNumber.setValue(res.mobile_number ?? '', {emitEvent: false});
+                    this.emailAddress.setValue(res.email_address ?? '', {emitEvent: false});
+                    this.birthDate.setValue(res.birth_date ?? '', {emitEvent: false});
+                    this.members.update(list => [
+                        ...list,
+                        {
+                            master_list_member_id: res.id,
+                            endorsement_id: endorsementId,
+                            endorsement_agreement_corp_number: null,
+                            master_list_member_account_no: res.account_number,
+                            master_list_member_last_name: res.last_name,
+                            master_list_member_first_name: res.first_name,
+                            master_list_member_middle_name: res.middle_name,
+                            master_list_member_name: `${res.last_name}, ${res.first_name} ${res.middle_name}`.trim(),
+                            master_list_member_email_address: res.email_address,
+                            master_list_member_mobile_number: res.mobile_number,
+                            master_list_member_birth_date: res.birth_date,
+                            master_list_member_is_active: res.is_active,
+                        }
+                    ]);
+                    this.setMemberEditBaseline();
+                    this.infoMessage.set('Member created successfully.');
+                    this.saveError.set('');
+                    this.loading.set(false);
+                },
+                error: (err) => {
+                    console.error('Failed to create member', err);
+                    this.saveError.set('Failed to create member.');
+                    this.infoMessage.set('');
+                    this.loading.set(false);
+                }
+            });
+            return;
+        }
+        this.saveError.set('Please select an existing member or enter a new account member.');
+        this.infoMessage.set('');
+        this.loading.set(false);
+
     }
+
+    // endregion: Save Member Edits
 
     /***********************
      * ✅ Endorsement selection
      ***********************/
-    readonly endorsementSearch = new FormControl<string | number>('', { nonNullable: true }); // ✅ widened type
+    readonly endorsementSearch = new FormControl<string | number>('', {nonNullable: true}); // ✅ widened type
     readonly endorsementSearchText = signal('');
 
     readonly loadingEndorsements = signal(false);
@@ -146,8 +271,12 @@ export class MasterListMemberComponent {
     /***********************
      * ✅ Member account selection
      ***********************/
-    readonly memberAccountSearch = new FormControl<string | number>('', { nonNullable: true }); // ✅ new
+    readonly memberAccountSearch = new FormControl<string | number>('', {nonNullable: true}); // ✅ new
     readonly memberAccountSearchText = signal(''); // ✅ new
+
+
+
+    // if this is a new member account.
 
     readonly loadingMembers = signal(false); // ✅ new
     readonly members = signal<MasterListMemberLookupResponse[]>([]); // ✅ new
@@ -159,7 +288,7 @@ export class MasterListMemberComponent {
             (a.master_list_member_last_name ?? '').localeCompare(
                 b.master_list_member_last_name ?? '',
                 undefined,
-                { numeric: true, sensitivity: 'base' }
+                {numeric: true, sensitivity: 'base'}
             )
         );
 
@@ -177,12 +306,12 @@ export class MasterListMemberComponent {
     /***********************
      * ✅ Member detail fields
      ***********************/
-    readonly lastName = new FormControl<string>('', { nonNullable: true }); // ✅ new
-    readonly firstName = new FormControl<string>('', { nonNullable: true }); // ✅ new
-    readonly middleName = new FormControl<string>('', { nonNullable: true }); // ✅ new
-    readonly mobileNumber = new FormControl<string>('', { nonNullable: true }); // ✅ new
-    readonly emailAddress = new FormControl<string>('', { nonNullable: true }); // ✅ new
-    readonly birthDate = new FormControl<string>('', { nonNullable: true }); // ✅ new
+    readonly lastName = new FormControl<string>('', {nonNullable: true}); // ✅ new
+    readonly firstName = new FormControl<string>('', {nonNullable: true}); // ✅ new
+    readonly middleName = new FormControl<string>('', {nonNullable: true}); // ✅ new
+    readonly mobileNumber = new FormControl<string>('', {nonNullable: true}); // ✅ new
+    readonly emailAddress = new FormControl<string>('', {nonNullable: true}); // ✅ new
+    readonly birthDate = new FormControl<string>('', {nonNullable: true}); // ✅ new
 
     readonly infoMessage = signal<string>('');
     readonly saveError = signal<string>('');
@@ -202,38 +331,38 @@ export class MasterListMemberComponent {
         });
         this.lastName.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
         this.firstName.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
         this.middleName.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
         this.mobileNumber.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
         this.emailAddress.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
         this.birthDate.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(()=>{
-                if (this.memberEditBaseline()!==null) this.hasUnsavedChanges.set(true);
+            .subscribe(() => {
+                if (this.memberEditBaseline() !== null) this.hasUnsavedChanges.set(true);
                 this.bumpMemberEditVersion();
             });
 
@@ -244,7 +373,7 @@ export class MasterListMemberComponent {
                 const searchText = typeof value === 'string' ? value.trim().toLowerCase() : '';
                 this.endorsementSearchText.set(searchText);
 
-                // ✅ only clear when user is typing text
+                // ✅ only clear when the user is typing text
                 if (typeof value === 'string') {
                     this.selectedEndorsementId.set(null);
                     this.selectedHmoName.set('');
@@ -254,13 +383,14 @@ export class MasterListMemberComponent {
             });
 
         // ✅ safe subscription for member account autocomplete
+        // This is called whenever the user types something.
         this.memberAccountSearch.valueChanges
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(value => {
                 const searchText = typeof value === 'string' ? value.trim().toLowerCase() : '';
                 this.memberAccountSearchText.set(searchText);
 
-                // ✅ if user is typing manually, this is no longer a resolved existing member
+                // ✅ if the user is typing manually, this is no longer a resolved existing member
                 if (typeof value === 'string') {
                     this.resolvedMemberId.set(null);
                     this.selectedMasterListMemberIdChange.emit(null);
@@ -270,10 +400,10 @@ export class MasterListMemberComponent {
             });
     }
 
-    // ✅ full reset when dentist changes
+    // ✅ full reset when the dentist changes
     private resetAll(): void {
         this.endorsements.set([]);
-        this.endorsementSearch.setValue('', { emitEvent: false });
+        this.endorsementSearch.setValue('', {emitEvent: false});
         this.endorsementSearchText.set('');
         this.selectedEndorsementId.set(null);
         this.selectedHmoName.set('');
@@ -289,7 +419,7 @@ export class MasterListMemberComponent {
     private clearMemberSection(): void {
         this.members.set([]);
         this.loadingMembers.set(false);
-        this.memberAccountSearch.setValue('', { emitEvent: false });
+        this.memberAccountSearch.setValue('', {emitEvent: false});
         this.memberAccountSearchText.set('');
         this.resolvedMemberId.set(null);
         this.selectedMasterListMemberIdChange.emit(null);
@@ -300,12 +430,12 @@ export class MasterListMemberComponent {
 
     // ✅ clear just the detail fields
     private clearMemberFieldsOnly(): void {
-        this.lastName.setValue('', { emitEvent: false });
-        this.firstName.setValue('', { emitEvent: false });
-        this.middleName.setValue('', { emitEvent: false });
-        this.mobileNumber.setValue('', { emitEvent: false });
-        this.emailAddress.setValue('', { emitEvent: false });
-        this.birthDate.setValue('', { emitEvent: false });
+        this.lastName.setValue('', {emitEvent: false});
+        this.firstName.setValue('', {emitEvent: false});
+        this.middleName.setValue('', {emitEvent: false});
+        this.mobileNumber.setValue('', {emitEvent: false});
+        this.emailAddress.setValue('', {emitEvent: false});
+        this.birthDate.setValue('', {emitEvent: false});
         this.memberEditBaseline.set(null);
         this.hasUnsavedChanges.set(false);
     }
@@ -355,8 +485,8 @@ export class MasterListMemberComponent {
             return;
         }
 
-        // ✅ show agreement number in text box
-        this.endorsementSearch.setValue(selected.agreement_corp_number ?? '', { emitEvent: false });
+        // ✅ show the agreement number in the text box
+        this.endorsementSearch.setValue(selected.agreement_corp_number ?? '', {emitEvent: false});
 
         // ✅ populate readonly display fields
         this.selectedCompanyName.set(selected.endorsement_company_name ?? '');
@@ -382,33 +512,23 @@ export class MasterListMemberComponent {
         this.selectedMasterListMemberIdChange.emit(selected.master_list_member_id);
 
         // ✅ show account number in the field
-        this.memberAccountSearch.setValue(selected.master_list_member_account_no ?? '', { emitEvent: false });
+        this.memberAccountSearch.setValue(selected.master_list_member_account_no ?? '', {emitEvent: false});
 
         // ✅ populate member details
-        this.lastName.setValue(selected.master_list_member_last_name ?? '', { emitEvent: false });
-        this.firstName.setValue(selected.master_list_member_first_name ?? '', { emitEvent: false });
-        this.middleName.setValue(selected.master_list_member_middle_name ?? '', { emitEvent: false });
-        this.mobileNumber.setValue(selected.master_list_member_mobile_number ?? '', { emitEvent: false });
-        this.emailAddress.setValue(selected.master_list_member_email_address ?? '', { emitEvent: false });
-        this.birthDate.setValue(selected.master_list_member_birth_date ?? '', { emitEvent: false });
+        this.lastName.setValue(selected.master_list_member_last_name ?? '', {emitEvent: false});
+        this.firstName.setValue(selected.master_list_member_first_name ?? '', {emitEvent: false});
+        this.middleName.setValue(selected.master_list_member_middle_name ?? '', {emitEvent: false});
+        this.mobileNumber.setValue(selected.master_list_member_mobile_number ?? '', {emitEvent: false});
+        this.emailAddress.setValue(selected.master_list_member_email_address ?? '', {emitEvent: false});
+        this.birthDate.setValue(selected.master_list_member_birth_date ?? '', {emitEvent: false});
 
         this.setMemberEditBaseline();
 
     }
 
-    // ✅ optional helper if user wants to start fresh
-    startNewMember(): void {
-        this.memberAccountSearch.setValue('', { emitEvent: false });
-        this.memberAccountSearchText.set('');
-        this.resolvedMemberId.set(null);
-        this.selectedMasterListMemberIdChange.emit(null);
-        this.clearMemberFieldsOnly();
-        this.setMemberEditBaseline();
-        this.infoMessage.set('Enter a new Member Account No and fill in the member details.');
-    }
 
     clear(): void {
-        this.endorsementSearch.setValue('', { emitEvent: false });
+        this.endorsementSearch.setValue('', {emitEvent: false});
         this.endorsementSearchText.set('');
         this.selectedEndorsementId.set(null);
         this.selectedHmoName.set('');
@@ -419,4 +539,41 @@ export class MasterListMemberComponent {
         this.memberEditBaseline.set(null);
         this.hasUnsavedChanges.set(false);
     }
+
+    // region Helper Functions
+
+    private normalize(value: string | null | undefined): string {
+        return (value ?? '').trim();
+    }
+
+    private normalizedAccountNumber(): string {
+        return this.normalize(this.memberAccountSearch.value?.toString());
+    }
+
+    private findExistingMemberByAccountNumber(): MasterListMemberLookupResponse | null {
+        const typed = this.normalizedAccountNumber().toLowerCase();
+        if (!typed) return null;
+
+        return this.members().find(
+            m => (m.master_list_member_account_no ?? '').trim().toLowerCase() === typed
+        ) ?? null;
+    }
+
+    private isCreatingNewMember(): boolean {
+        const endorsementId = this.selectedEndorsementId();
+        const typedAccountNo = this.normalizedAccountNumber();
+
+        if (endorsementId === null || !typedAccountNo) {
+            return false;
+        }
+
+        if (this.resolvedMemberId() !== null) {
+            return false;
+        }
+
+        return this.findExistingMemberByAccountNumber() === null;
+    }
+
+    // endregion: Helper Functions
+
 }
