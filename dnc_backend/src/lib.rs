@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_master_list_members_for_endorsement, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member, patch_master_list_member};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
 use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
@@ -57,8 +57,9 @@ use crate::handlers::{get_all_endorsements, create_endorsement, get_endorsement_
 use crate::handlers::{get_endorsement_companies, post_endorsement_company, get_all_endorsement_rates, post_endorsement_rate};
 use crate::handlers::{get_all_endorsement_counts, post_endorsement_count, put_endorsement_rate, patch_endorsement_rate};
 use crate::handlers::{put_endorsement_count, patch_endorsement_count, upload_endorsement_master_list};
-use crate::handlers::{get_master_list_meta_data_for_endorsement_id, delete_master_lists_for_endorsement_id};
-use crate::handlers::{get_master_list_for_endorsement, set_master_list_member_active, get_endorsements_for_hmo_id};
+use crate::handlers::{get_master_list_meta_data_for_endorsement_id};
+// use crate::handlers::{get_master_list_for_endorsement,
+use crate::handlers::{set_master_list_member_active, get_endorsements_for_hmo_id};
 
 use crate::handlers::{get_all_verifications};
 use crate::handlers::{get_endorsements_for_dentist_id_handler};
@@ -155,7 +156,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/counts/{count_id}", put(put_endorsement_count).patch(patch_endorsement_count))
         .route("/endorsements/{endorsement_id}/master_list", post(upload_endorsement_master_list))
         .route("/endorsements/{endorsement_id}/master_list_metadata", get(get_master_list_meta_data_for_endorsement_id))
-        .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
+        // .route("/endorsements/{endorsement_id}/master_list", delete(delete_master_lists_for_endorsement_id).get(get_master_list_for_endorsement))
         .route("/endorsements/{endorsement_id}/master_list_members", get(get_master_list_members_for_endorsement))
         .route("/endorsements/master_list_members/{master_list_member_id}/active", patch(set_master_list_member_active))
         .route("/endorsements/{endorsement_id}/billing_rules", get(get_billing_rules_for_endorsement_id).post(post_billing_rule))
@@ -163,6 +164,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/endorsements/{endorsement_id}/service_counts", get(get_service_counts_for_endorsement_id))
         .route("/master_list_members/{master_list_member_id}/used_service_counts", get(get_used_service_counts_for_member_id))
         .route("/master_list_members/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
+        .route("/master_list_members", post(create_master_list_member))
+        .route("/master_list_members/{id}", patch(patch_master_list_member))
         .route("/verifications", get(get_all_verifications))
         .route("/verifications", post(create_verification))
         .route("/verifications/{verification_id}/cancel", post(cancel_verification))
