@@ -18,6 +18,7 @@ pub struct Model {
     pub approved_by: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,
     pub approval_code: Option<String>,
+    pub tooth_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
