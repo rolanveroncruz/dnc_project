@@ -1,6 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
 use axum::extract::Path;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, QueryFilter, QuerySelect, RelationTrait, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
 use chrono::{ Utc};
@@ -127,6 +127,7 @@ pub async fn get_all_verifications(
         .column_as(verification::Column::ApprovalCode, "approval_code")
         .column_as(verification::Column::ApprovedBy, "approved_by")
         .column_as(verification::Column::ApprovalDate, "approval_date")
+        .order_by_desc(verification::Column::DateCreated)
         .into_model::<VerificationLookupRow>()
         .all(&state.db)
         .await
