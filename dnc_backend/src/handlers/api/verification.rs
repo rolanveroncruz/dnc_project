@@ -26,6 +26,7 @@ pub struct VerificationLookupResponse {
     pub master_list_member_name: String,
     pub dental_service_id: i32,
     pub dental_service_name: String,
+    pub record_tooth: bool,
     pub status_id: i32,
     pub status_name: String,
     pub approval_code: Option<String>,
@@ -50,6 +51,7 @@ struct VerificationLookupRow {
 
     pub dental_service_id: i32,
     pub dental_service_name: String,
+    pub record_tooth: bool,
 
     pub status_id: i32,
     pub status_name: String,
@@ -119,6 +121,7 @@ pub async fn get_all_verifications(
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
         .column_as(verification::Column::DentalServiceId, "dental_service_id")
         .column_as(dental_service::Column::Name, "dental_service_name")
+        .column_as(dental_service::Column::RecordTooth, "record_tooth")
         .column_as(verification_status::Column::IntCode, "status_id")
         .column_as(verification_status::Column::Name, "status_name")
         .column_as(verification::Column::ApprovalCode, "approval_code")
@@ -154,6 +157,7 @@ pub async fn get_all_verifications(
                 ),
                 dental_service_id: row.dental_service_id,
                 dental_service_name: row.dental_service_name,
+                record_tooth: row.record_tooth,
                 status_id: row.status_id,
                 status_name: row.status_name,
                 approval_code,
