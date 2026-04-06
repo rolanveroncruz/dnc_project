@@ -5,15 +5,19 @@ import { environment } from '../../environments/environment';
 import {LoginService} from '../login.service';
 import {MasterListMemberLookupResponse} from './master-list-members-service';
 
-export interface MemberServicesCountsSummary {
+export interface MemberServicesCountsRow {
     dental_service_id: number,
     dental_service_name: string,
     dental_service_type_id: number,
+    record_tooth: boolean,
     counts_allowed: number,
     counts_used: number,
     has_pending: boolean,
     conflict_date: Date | null,
 
+}
+export interface MemberServicesCountsSummary extends MemberServicesCountsRow {
+    verification_counts_allowed: number,
 }
 @Injectable({
   providedIn: 'root',
@@ -28,8 +32,17 @@ export class MemberServicesCountsService {
     }
     private readonly baseUrl = `${environment.apiBaseUrl}/api`;
 
-    getMemberServicesCountsSummary(dentistId: number):Observable<MemberServicesCountsSummary[]>{
-        return this.http.get<MemberServicesCountsSummary[]>(`${this.baseUrl}/master_list_members/${dentistId}/service_counts`,
-            { headers:this.authHeaders()});
+    getMemberServicesCountsSummary(memberId: number):Observable<MemberServicesCountsSummary[]>{
+        return this.http.get<MemberServicesCountsRow[]>(`${this.baseUrl}/master_list_members/${memberId}/service_counts`,
+            { headers:this.authHeaders()}
+        )
+            .pipe(
+                map ( rows=>
+                rows.map(row=>({
+                    ...row,
+                    verification_counts_allowed: row.record_tooth? 3:1,
+                })
+                ))
+            )
     }
 }

@@ -13,6 +13,7 @@ export interface VerificationLookupResponse {
     master_list_member_name: string;
     dental_service_id: number;
     dental_service_name: string;
+    record_tooth:boolean,
     status_id: number;
     status_name: string;
     approval_code: string | null;

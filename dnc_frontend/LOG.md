@@ -14,3 +14,10 @@ and the navigation items should be activated or deactivated accordingly. Also if
 ### Mar 9, 2026
 MOst of the app is already done.
 Working on Endorsements now.
+
+### April 6, 2026
+1. Certain dental_services, specifically, those that record a tooth_id, can be reserved up to 3x per verification. 
+   Need to accommodate for this.
+   a. In the ServicesComponent (used by Verification), the memberServicesCountSummary passes a list of services along with availed/allowed counts.
+       In the list of services, the record_tooth field should be included, to allow reservations of up to 3.
+2. approval codes will be up to 12 characters long.
