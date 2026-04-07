@@ -20,7 +20,8 @@ export class ServicesComponent {
     @Output() checkedServicesChange = new EventEmitter<MemberServicesCountsSummary[]>();
     @Output() checkedIdsChange = new EventEmitter<number[]>();
 
-    readonly checkedIds = signal<number[]>([]);
+    // readonly checkedIds = signal<number[]>([]);
+    readonly selectedQuantities = signal<Record<number, number>>({});
 
     get sortedServices(): MemberServicesCountsSummary[] {
         return [...this.services()].sort((a, b) =>
@@ -67,7 +68,7 @@ export class ServicesComponent {
     }
 
     isChecked(serviceId: number): boolean {
-        return this.checkedIds().includes(serviceId);
+        return (this.selectedQuantities()[serviceId] ?? 0) > 0;
     }
 
     isDisabled(service: MemberServicesCountsSummary): boolean {
@@ -87,38 +88,46 @@ export class ServicesComponent {
             return;
         }
 
-        const current = this.checkedIds();
+        const current = {...this.selectedQuantities() };
+        const serviceId = service.dental_service_id;
+        if (checked) {
+            current[serviceId] = 1;
+        }else{
+            delete current[serviceId];
+        }
 
-        const next = checked
-            ? [...new Set([...current, service.dental_service_id])]
-            : current.filter(id => id !== service.dental_service_id);
-
-        this.checkedIds.set(next);
+        this.selectedQuantities.set(current);
         this.emitSelection();
     }
 
     reserveAllBasic(): void {
-        const basicIds = this.services()
-            .filter(service => service.dental_service_type_id === 1 && !service.has_pending)
-            .map(service => service.dental_service_id);
+        const next = { ...this.selectedQuantities() };
 
-        const merged = [...new Set([...this.checkedIds(), ...basicIds])];
-        this.checkedIds.set(merged);
+        this.services()
+            .filter(service => service.dental_service_type_id === 1 && !service.has_pending)
+            .forEach(service => {
+                next[service.dental_service_id] = 1;
+            });
+
+        this.selectedQuantities.set(next);
         this.emitSelection();
     }
-
     clearAll(): void {
-        this.checkedIds.set([]);
+        this.selectedQuantities.set({});
         this.emitSelection();
     }
 
     private emitSelection(): void {
-        const ids = this.checkedIds();
+        const quantities = this.selectedQuantities();
+
+        const ids = Object.entries(quantities).flatMap(([serviceId, quantity]) =>
+            Array(quantity).fill(Number(serviceId))
+        );
 
         this.checkedIdsChange.emit(ids);
 
         const selectedServices = this.services().filter(service =>
-            ids.includes(service.dental_service_id)
+            (quantities[service.dental_service_id] ?? 0) > 0
         );
         this.checkedServicesChange.emit(selectedServices);
     }
@@ -136,4 +145,61 @@ export class ServicesComponent {
 
         return date.toLocaleDateString();
     }
+
+    getQuantity(serviceId: number): number {
+        return this.selectedQuantities()[serviceId] ?? 0;
+    }
+    isRepeatable(service: MemberServicesCountsSummary): boolean {
+        return service.verification_counts_allowed > 1;
+    }
+
+    canIncrement(service: MemberServicesCountsSummary): boolean {
+        return (
+            !service.has_pending &&
+            this.getQuantity(service.dental_service_id) < service.verification_counts_allowed
+        );
+    }
+    canDecrement(service: MemberServicesCountsSummary): boolean {
+        return !service.has_pending && this.getQuantity(service.dental_service_id) > 0;
+    }
+
+    incrementQuantity(service: MemberServicesCountsSummary): void {
+        if (service.has_pending) {
+            return;
+        }
+
+        const serviceId = service.dental_service_id;
+        const current = { ...this.selectedQuantities() };
+        const currentQty = current[serviceId] ?? 0;
+        const maxQty = service.verification_counts_allowed;
+
+        if (currentQty >= maxQty) {
+            return;
+        }
+
+        current[serviceId] = currentQty + 1;
+        this.selectedQuantities.set(current);
+        this.emitSelection();
+    }
+
+    decrementQuantity(service: MemberServicesCountsSummary): void {
+        if (service.has_pending) {
+            return;
+        }
+
+        const serviceId = service.dental_service_id;
+        const current = { ...this.selectedQuantities() };
+        const currentQty = current[serviceId] ?? 0;
+
+        if (currentQty <= 1) {
+            delete current[serviceId];
+        } else {
+            current[serviceId] = currentQty - 1;
+        }
+
+        this.selectedQuantities.set(current);
+        this.emitSelection();
+    }
+
+    protected readonly Object = Object;
 }
