@@ -71,6 +71,7 @@ impl Migration {
         Self::insert_into_verification_status_table(manager,1, "Waiting for Approval Code").await?;
         Self::insert_into_verification_status_table(manager, 2,"Waiting for Files").await?;
         Self::insert_into_verification_status_table(manager, 99,"Done").await?;
+        Self::insert_into_verification_status_table(manager, 999,"Expired").await?;
         Ok(())
     }
 
