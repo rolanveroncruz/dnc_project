@@ -63,7 +63,7 @@ use crate::handlers::{delete_master_lists_for_endorsement_id};
 use crate::handlers::{get_all_verifications};
 use crate::handlers::{get_endorsements_for_dentist_id_handler};
 use crate::handlers::{get_master_list_members_for_endorsement};
-
+use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -171,6 +171,8 @@ fn protected_routes() ->Router<AppState>{
         .route("/verifications", post(create_verification))
         .route("/verifications/{verification_id}/cancel", post(cancel_verification))
         .route("/verifications/{verification_id}/approval_code", post(get_approval_code_for_verification_id))
+        .route("/tooth_service_types", get(get_tooth_service_types))
+        .route("/tooth_surfaces", get(get_tooth_surfaces))
 
 }
 
