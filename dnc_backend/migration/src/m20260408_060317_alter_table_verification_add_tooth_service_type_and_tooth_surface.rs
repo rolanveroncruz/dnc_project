@@ -8,9 +8,9 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::create_table_tooth_service_type(manager).await?;
         Self::seed_tooth_service_type(manager).await?;
-        Self::alter_table_verification_add_tooth_service_type(manager).await?;
         Self::create_table_tooth_surface(manager).await?;
         Self::seed_tooth_surface(manager).await?;
+        Self::alter_table_verification_add_tooth_service_type(manager).await?;
         Ok(())
     }
 
@@ -50,8 +50,8 @@ impl Migration {
     }
     pub async fn insert_tooth_surface(manager:&SchemaManager<'_>, name:&str)->Result<(),DbErr> {
         let insert = Query::insert()
-            .into_table(ToothServiceType::Table)
-            .columns(vec![ToothServiceType::Name])
+            .into_table(ToothSurface::Table)
+            .columns(vec![ToothSurface::Name])
             .values_panic([Expr::val(name)])
             .to_owned();
         manager.exec_stmt(insert).await?;
@@ -130,8 +130,20 @@ impl Migration {
                         .from_col(Verification::ToothServiceTypeId)
                         .to_tbl(ToothServiceType::Table)
                         .to_col(ToothServiceType::Id)
-                    ).to_owned(),
+                    )
+                    .add_column(ColumnDef::new(Verification::ToothSurfaceId)
+                        .integer()
+                    )
+                    .add_foreign_key(TableForeignKey::new()
+                        .name("fk_verification_table_tooth_surface_id")
+                        .from_tbl(Verification::Table)
+                        .from_col(Verification::ToothSurfaceId)
+                        .to_tbl(ToothSurface::Table)
+                        .to_col(ToothSurface::Id)
+                    )
+                    .to_owned(),
             ).await?;
+
         Ok(())
 
     }
@@ -155,4 +167,5 @@ enum ToothSurface{
 enum Verification {
     Table,
     ToothServiceTypeId,
+    ToothSurfaceId,
 }
