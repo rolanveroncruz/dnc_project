@@ -19,6 +19,7 @@ pub struct Model {
     pub approval_date: Option<DateTimeWithTimeZone>,
     pub approval_code: Option<String>,
     pub tooth_id: Option<String>,
+    pub tooth_service_type_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -51,6 +52,14 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     MasterListMember,
+    #[sea_orm(
+        belongs_to = "super::tooth_service_type::Entity",
+        from = "Column::ToothServiceTypeId",
+        to = "super::tooth_service_type::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    ToothServiceType,
     #[sea_orm(
         belongs_to = "super::verification_status::Entity",
         from = "Column::StatusId",
@@ -88,6 +97,12 @@ impl Related<super::high_end_verification_information::Entity> for Entity {
 impl Related<super::master_list_member::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterListMember.def()
+    }
+}
+
+impl Related<super::tooth_service_type::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ToothServiceType.def()
     }
 }
 

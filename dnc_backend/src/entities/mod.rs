@@ -39,6 +39,8 @@ pub mod role_permission;
 pub mod sea_orm_active_enums;
 pub mod tax_classification;
 pub mod tax_type;
+pub mod tooth_service_type;
+pub mod tooth_surface;
 pub mod user;
 pub mod verification;
 pub mod verification_status;
