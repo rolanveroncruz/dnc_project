@@ -133,6 +133,7 @@ export class VerificationsComponent implements OnInit {
             dentist_name: row.dentist_name,
             dental_service_id: row.dental_service_id,
             dental_service_name: row.dental_service_name,
+            dental_service_record_tooth: row.record_tooth,
             master_list_member_id: row.master_list_member_id,
             master_list_member_name: row.master_list_member_name,
             service_availed_date: undefined,

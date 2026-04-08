@@ -39,6 +39,19 @@
                 <mat-error>Service availed date is required.</mat-error>
             }
         </mat-form-field>
+        @if (data.dental_service_record_tooth) {
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth ID</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    formControlName="tooth_id">
+
+                @if (form.controls.tooth_id.hasError('required')) {
+                    <mat-error>Tooth ID is required.</mat-error>
+                }
+            </mat-form-field>
+        }
 
         <div class="static-field full-width">
             <div class="static-field-label">Approval Code</div>

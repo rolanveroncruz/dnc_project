@@ -79,7 +79,7 @@ export class EndorsementMasterListService {
 
     getMasterListForEndorsement( endorsementId: number ): Observable<EndorsementMasterListMemberResponse[]> {
         return this.http.get<EndorsementMasterListMemberResponse[]>(
-            `${this.baseUrl}/api/endorsements/${endorsementId}/master_list`,
+            `${this.baseUrl}/api/endorsements/${endorsementId}/master_list_members`,
             { headers: this.authHeaders() }
         );
     }

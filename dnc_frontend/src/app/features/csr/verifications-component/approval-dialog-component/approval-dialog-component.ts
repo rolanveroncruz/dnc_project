@@ -28,13 +28,15 @@ export interface ApprovalDialogData {
     master_list_member_name: string;
     dental_service_id: number;
     dental_service_name: string;
+    dental_service_record_tooth: boolean,
     service_availed_date?: string | null;
     approval_code?: string | null;
 }
 
 export interface ApprovalDialogResult {
     confirmed: boolean;
-    service_availed_date: Date | null;
+    service_availed_date: string | null;
+    tooth_id: string | null;
 }
 
 @Component({
@@ -56,11 +58,12 @@ export interface ApprovalDialogResult {
 export class ApprovalDialogComponent {
     readonly verificationService = inject(VerificationService);
 
-    approvalCode: string |null;
+    approvalCode: string | null;
     isRequestingApprovalCode = false;
 
     readonly form: FormGroup<{
-        service_availed_date: FormControl<string| null>;
+        service_availed_date: FormControl<string | null>;
+        tooth_id: FormControl<string | null>;
     }>;
 
     constructor(
@@ -75,6 +78,12 @@ export class ApprovalDialogComponent {
                     validators: [Validators.required],
                 }
             ),
+            tooth_id: new FormControl<string|null>(
+                null,
+                {
+                    validators: this.data.dental_service_record_tooth? [Validators.required]:[],
+                }
+            )
         });
         this.approvalCode = this.data.approval_code ?? null;
     }
@@ -83,6 +92,7 @@ export class ApprovalDialogComponent {
         this.dialogRef.close({
             confirmed: false,
             service_availed_date: null,
+            tooth_id:null,
         });
     }
     hasApprovalCode(): boolean {
@@ -96,8 +106,15 @@ export class ApprovalDialogComponent {
         }
         this.isRequestingApprovalCode = true;
         const serviceDate = this.form.controls.service_availed_date.value;
+        const toothId = this.form.controls.tooth_id.value;
         if (!serviceDate) {
+            this.isRequestingApprovalCode = false;
             this.form.markAllAsTouched();
+            return;
+        }
+        if (this.data.dental_service_record_tooth && !toothId?.trim()) {
+            this.isRequestingApprovalCode = false;
+            this.form.controls.tooth_id.markAsTouched();
             return;
         }
 
