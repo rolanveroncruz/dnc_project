@@ -16,7 +16,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { VerificationService } from '../../../../api_services/verification-service';
+import {
+    GetApprovalCodeRequest,
+    ToothServiceType,
+    ToothSurface,
+    VerificationService
+} from '../../../../api_services/verification-service';
 import { ChangeDetectorRef } from '@angular/core';
 
 export interface ApprovalDialogData {
@@ -31,12 +36,16 @@ export interface ApprovalDialogData {
     dental_service_record_tooth: boolean,
     service_availed_date?: string | null;
     approval_code?: string | null;
+    tooth_surfaces: ToothSurface[];
+    tooth_service_types: ToothServiceType[];
 }
 
 export interface ApprovalDialogResult {
     confirmed: boolean;
     service_availed_date: string | null;
     tooth_id: string | null;
+    tooth_surface_id : number | null;
+    tooth_service_type_id : number | null;
 }
 
 @Component({
@@ -60,10 +69,23 @@ export class ApprovalDialogComponent {
 
     approvalCode: string | null;
     isRequestingApprovalCode = false;
+    readonly toothIds: string[] = [
+        '11', '12', '13', '14', '15', '16', '17', '18',
+        '21', '22', '23', '24', '25', '26', '27', '28',
+        '31', '32', '33', '34', '35', '36', '37', '38',
+        '41', '42', '43', '44', '45', '46', '47', '48',
+        '51', '52', '53', '54', '55',
+        '61', '62', '63', '64', '65',
+        '71', '72', '73', '74', '75',
+        '81', '82', '83', '84', '85',
+
+    ]
 
     readonly form: FormGroup<{
         service_availed_date: FormControl<string | null>;
         tooth_id: FormControl<string | null>;
+        tooth_surface_id: FormControl<number | null>;
+        tooth_service_type_id: FormControl<number | null>;
     }>;
 
     constructor(
@@ -83,7 +105,19 @@ export class ApprovalDialogComponent {
                 {
                     validators: this.data.dental_service_record_tooth? [Validators.required]:[],
                 }
-            )
+            ),
+            tooth_surface_id: new FormControl<number | null>(
+                null,
+                {
+                    validators: this.data.dental_service_record_tooth? [Validators.required]:[],
+                }
+            ),
+            tooth_service_type_id: new FormControl<number | null>(
+                null,
+                {
+                    validators: this.data.dental_service_record_tooth? [Validators.required]:[],
+                }
+            ),
         });
         this.approvalCode = this.data.approval_code ?? null;
     }
@@ -93,6 +127,8 @@ export class ApprovalDialogComponent {
             confirmed: false,
             service_availed_date: null,
             tooth_id:null,
+            tooth_surface_id: null,
+            tooth_service_type_id: null,
         });
     }
     hasApprovalCode(): boolean {
@@ -107,6 +143,8 @@ export class ApprovalDialogComponent {
         this.isRequestingApprovalCode = true;
         const serviceDate = this.form.controls.service_availed_date.value;
         const toothId = this.form.controls.tooth_id.value;
+        const toothSurfaceId = this.form.controls.tooth_surface_id.value;
+        const toothServiceType = this.form.controls.tooth_service_type_id.value;
         if (!serviceDate) {
             this.isRequestingApprovalCode = false;
             this.form.markAllAsTouched();
@@ -117,10 +155,26 @@ export class ApprovalDialogComponent {
             this.form.controls.tooth_id.markAsTouched();
             return;
         }
+        if (this.data.dental_service_record_tooth && !toothSurfaceId ==null) {
+            this.isRequestingApprovalCode = false;
+            this.form.controls.tooth_surface_id.markAsTouched();
+            return;
+        }
+        if (this.data.dental_service_record_tooth && !toothServiceType ==null) {
+            this.isRequestingApprovalCode = false;
+            this.form.controls.tooth_service_type_id.markAsTouched();
+            return;
+        }
 
+        var request:GetApprovalCodeRequest = {
+            date_service_performed: serviceDate,
+            tooth_id: toothId,
+            tooth_surface_id: toothSurfaceId,
+            tooth_service_type_id: toothServiceType,
+        }
 
         this.verificationService
-            .requestApprovalCode(this.data.validation_id, serviceDate as string)
+            .requestApprovalCode(this.data.validation_id, request)
             .subscribe({
                 next: (response) => {
                     this.approvalCode = response.approval_code ?? null;
@@ -134,4 +188,6 @@ export class ApprovalDialogComponent {
                 },
             })
     }
+
+
 }

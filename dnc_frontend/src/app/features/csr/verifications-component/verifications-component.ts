@@ -1,5 +1,9 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {VerificationService, ExtendedVerificationLookupResponse} from '../../../api_services/verification-service';
+import {
+    VerificationService,
+    ExtendedVerificationLookupResponse,
+    ToothSurface, ToothServiceType
+} from '../../../api_services/verification-service';
 import {Router} from '@angular/router';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -13,6 +17,7 @@ import {
     ApprovalDialogData,
     ApprovalDialogResult
 } from './approval-dialog-component/approval-dialog-component';
+import {forkJoin} from 'rxjs';
 
 @Component({
   selector: 'app-verifications-component',
@@ -35,11 +40,14 @@ export class VerificationsComponent implements OnInit {
     private readonly verificationService = inject(VerificationService);
     private readonly destroyRef = inject(DestroyRef);
     verifications = signal<ExtendedVerificationLookupResponse[]>([]);
+    tooth_surfaces = signal<ToothSurface[]>([]);
+    tooth_service_types= signal<ToothServiceType[]>([]);
 
 
     readonly columns: TableColumn<ExtendedVerificationLookupResponse>[] = [
         { key: 'verification_id', label: 'ID' },
         { key: 'date_created', label: 'Date', cellTemplateKey: 'date' },
+        {key: 'endorsement_agreement_corp_number', label: 'Agmt/Corp Number'},
         { key: 'dentist_name', label: 'Dentist'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
@@ -72,6 +80,8 @@ export class VerificationsComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadVerifications();
+        this.loadToothLookups();
+
 
     }
 
@@ -83,6 +93,22 @@ export class VerificationsComponent implements OnInit {
                 error:(err)=> console.log("In load(), failed to load verifications",err )
             })
 
+    }
+    loadToothLookups(){
+            forkJoin({
+                toothSurfaces: this.verificationService.getToothSurfaces(),
+                toothServiceTypes: this.verificationService.getToothServiceType(),
+    }).subscribe({
+            next: ({ toothSurfaces, toothServiceTypes }) => {
+                this.tooth_surfaces.set(toothSurfaces);
+                this.tooth_service_types.set(toothServiceTypes);
+            },
+            error: (err) => {
+                console.error('Failed to load tooth lookups', err);
+                this.tooth_surfaces.set([]);
+                this.tooth_service_types.set([]);
+            },
+        });
     }
 
     onNewVerification(){
@@ -138,6 +164,8 @@ export class VerificationsComponent implements OnInit {
             master_list_member_name: row.master_list_member_name,
             service_availed_date: undefined,
             approval_code: null,
+            tooth_surfaces: this.tooth_surfaces(),
+            tooth_service_types: this.tooth_service_types(),
         }
 
         const dialogRef = this.dialog.open<

@@ -40,15 +40,50 @@
             }
         </mat-form-field>
         @if (data.dental_service_record_tooth) {
+            <!--
+            Tooth ID is required when record tooth is true.
+            -->
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Tooth ID</mat-label>
-                <input
-                    matInput
-                    type="text"
-                    formControlName="tooth_id">
+            <select matNativeControl formControlName="tooth_id">
+                <option [value]="''">Select tooth</option>
+                @for (toothId of toothIds; track toothId) {
+                    <option [value]="toothId">{{ toothId }}</option>
+                }
+            </select>
 
                 @if (form.controls.tooth_id.hasError('required')) {
                     <mat-error>Tooth ID is required.</mat-error>
+                }
+            </mat-form-field>
+            <!--
+            Tooth Surface ID is required when record tooth is true.
+            -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth Surface</mat-label>
+                <select matNativeControl formControlName="tooth_surface_id">
+                    <option [ngValue]="null"></option>
+                    @for (surface of data.tooth_surfaces; track surface.id) {
+                        <option [ngValue]="surface.id">{{ surface.name }}</option>
+                    }
+                </select>
+                @if (form.controls.tooth_surface_id.hasError('required')) {
+                    <mat-error>Tooth surface is required.</mat-error>
+                }
+            </mat-form-field>
+            <!--
+            Tooth Service Type ID is required when record tooth is true.
+            -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth Service Type</mat-label>
+                <select matNativeControl formControlName="tooth_service_type_id">
+                    <option [ngValue]="null"></option>
+                    @for (serviceType of data.tooth_service_types; track serviceType.id) {
+                        <option [ngValue]="serviceType.id">{{ serviceType.name }}</option>
+                    }
+                </select>
+                @if (form.controls.tooth_service_type_id.hasError('required')) {
+                    <mat-error>Tooth service type is required.</mat-error>
                 }
             </mat-form-field>
         }
@@ -62,13 +97,13 @@
 
 <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">
-        {{ hasApprovalCode() ? 'Close' : 'Cancel'}}
+        {{ hasApprovalCode() ? 'Close' : 'Cancel' }}
     </button>
     <button
         mat-flat-button
         color="primary"
         type="button"
-        [disabled] = "form.invalid || isRequestingApprovalCode || hasApprovalCode()"
+        [disabled]="form.invalid || isRequestingApprovalCode || hasApprovalCode()"
         (click)="getApprovalCode()">
         Get Approval Code
     </button>
