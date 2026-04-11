@@ -210,7 +210,7 @@ impl Migration {
                     )
                     .foreign_key(ForeignKey::create()
                         .name("fk_high_end_files_table_verification_id")
-                        .from(HighEndFiles::Table, HighEndFiles::Id)
+                        .from(HighEndFiles::Table, HighEndFiles::VerificationId)
                         .to(Verification::Table, Verification::Id)
                     )
                     .col(ColumnDef::new(HighEndFiles::Filename)

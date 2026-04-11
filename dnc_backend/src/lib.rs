@@ -64,6 +64,7 @@ use crate::handlers::{get_all_verifications};
 use crate::handlers::{get_endorsements_for_dentist_id_handler};
 use crate::handlers::{get_master_list_members_for_endorsement};
 use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
+use crate::handlers::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -173,6 +174,9 @@ fn protected_routes() ->Router<AppState>{
         .route("/verifications/{verification_id}/approval_code", post(get_approval_code_for_verification_id))
         .route("/tooth_service_types", get(get_tooth_service_types))
         .route("/tooth_surfaces", get(get_tooth_surfaces))
+        .route("/verifications/{verification_id}/high_end_files", post(upload_high_end_file).get(list_uploaded_high_end_files))
+        .route("/high_end_files/{high_end_file_id}/download", get(download_high_end_file))
+
 
 }
 

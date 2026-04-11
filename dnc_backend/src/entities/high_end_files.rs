@@ -16,7 +16,7 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::verification::Entity",
-        from = "Column::Id",
+        from = "Column::VerificationId",
         to = "super::verification::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"

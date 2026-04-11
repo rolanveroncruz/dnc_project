@@ -85,3 +85,4 @@ pub use api::master_list_member::{get_master_list_members_for_endorsement };
 pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_service_counts_for_member_id};
 pub use api::endorsement_master_list_members_post_patch::{create_master_list_member, patch_master_list_member};
 pub use api::verification_tooth_specifics::{get_tooth_surfaces, get_tooth_service_types};
+pub use api::high_end_verification_uploading_and_approval::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};

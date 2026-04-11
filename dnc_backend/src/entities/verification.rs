@@ -41,7 +41,10 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     Dentist,
-    #[sea_orm(has_one = "super::high_end_files::Entity")]
+    #[sea_orm(
+        has_one = "super::high_end_files::Entity",
+        has_many = "super::high_end_files::Entity"
+    )]
     HighEndFiles,
     #[sea_orm(has_many = "super::high_end_verification_information::Entity")]
     HighEndVerificationInformation,
