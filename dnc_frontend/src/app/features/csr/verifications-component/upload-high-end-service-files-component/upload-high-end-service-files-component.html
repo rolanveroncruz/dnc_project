@@ -1,0 +1,83 @@
+<h2 mat-dialog-title>Upload High-End Service Files</h2>
+
+<mat-dialog-content>
+    <div class="details-grid">
+        <div class="detail-row">
+            <span class="label">Date</span>
+            <span class="value">{{ data.date | date:'medium' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Dentist Name</span>
+            <span class="value">{{ data.dentist_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Member Name</span>
+            <span class="value">{{ data.master_list_member_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Dental Service Name</span>
+            <span class="value">{{ data.dental_service_name }}</span>
+        </div>
+    </div>
+
+    <form [formGroup]="form" class="form-section">
+        <div class="upload-section full-width">
+            <label class="upload-label" for="high-end-files">
+                Upload files
+            </label>
+
+            <input
+                id="high-end-files"
+                type="file"
+                multiple
+                (change)="onFilesSelected($event)"
+            />
+
+            <div class="upload-hint">
+                You may upload 1 up to 3 files.
+            </div>
+
+            @if (form.controls.files.touched && form.controls.files.hasError('minFiles')) {
+                <div class="upload-error">At least 1 file is required.</div>
+            }
+
+            @if (form.controls.files.touched && form.controls.files.hasError('maxFiles')) {
+                <div class="upload-error">You can upload up to 3 files only.</div>
+            }
+
+            @if (selectedFiles.length > 0) {
+                <div class="selected-files">
+                    @for (file of selectedFiles; track file.name; let i = $index) {
+                        <div class="file-row">
+                            <span class="file-name">{{ file.name }}</span>
+                            <button
+                                mat-button
+                                type="button"
+                                color="warn"
+                                (click)="removeFile(i)">
+                                Remove
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">
+        Cancel
+    </button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="form.invalid"
+        (click)="submit()">
+        Upload
+    </button>
+</mat-dialog-actions>

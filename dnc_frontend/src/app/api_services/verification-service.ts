@@ -16,6 +16,7 @@ export interface VerificationLookupResponse {
     record_tooth:boolean,
     endorsement_id: number;
     endorsement_agreement_corp_number: string | null;
+    dental_service_is_high_end:boolean,
     status_id: number;
     status_name: string;
     approval_code: string | null;

@@ -25,7 +25,7 @@ import {
 import { ChangeDetectorRef } from '@angular/core';
 
 export interface ApprovalDialogData {
-    validation_id: number;
+    verification_id: number;
     date: string | Date;
     dentist_id: number;
     dentist_name: string;
@@ -174,7 +174,7 @@ export class ApprovalDialogComponent {
         }
 
         this.verificationService
-            .requestApprovalCode(this.data.validation_id, request)
+            .requestApprovalCode(this.data.verification_id, request)
             .subscribe({
                 next: (response) => {
                     this.approvalCode = response.approval_code ?? null;

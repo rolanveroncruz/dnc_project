@@ -17,6 +17,11 @@ import {
     ApprovalDialogData,
     ApprovalDialogResult
 } from './approval-dialog-component/approval-dialog-component';
+import {
+    UploadHighEndServiceFilesComponent,
+    UploadHighEndServiceFilesDialogData,
+    UploadHighEndServiceFilesDialogResult
+} from './upload-high-end-service-files-component/upload-high-end-service-files-component';
 import {forkJoin} from 'rxjs';
 
 @Component({
@@ -66,7 +71,12 @@ export class VerificationsComponent implements OnInit {
         }
     ]
     getRowLabel(row: ExtendedVerificationLookupResponse): string {
-        return row.status_id==1 ? 'Approval Code' : 'Upload Files';
+        if (row.status_id==1) {
+            return 'Get Approval';
+        } else if (row.status_id==2) {
+            return 'Upload  file';
+        }
+        return 'Get AppCode';
     }
 
     getRowIcon(row: ExtendedVerificationLookupResponse): string {
@@ -74,8 +84,9 @@ export class VerificationsComponent implements OnInit {
     }
 
 
+    // if status_id==0 (Cancelled) or status_id==99 (Done) or status_id=999 (Expired), hide Cancel button.
     isSecondaryActionHidden(row: ExtendedVerificationLookupResponse): boolean {
-        return row.status_id ===0 || row.status_id ===99;
+        return row.status_id ===0 || row.status_id ===99 || row.status_id ===999;
     }
 
     ngOnInit(): void {
@@ -149,11 +160,21 @@ export class VerificationsComponent implements OnInit {
     }
 
 
+    onClickActionButton(row:ExtendedVerificationLookupResponse){
+
+        if (row.status_id == 1){
+            this.openApprovalCodeDialog(row);
+
+        }else if (row.status_id == 2) {
+            this.openUploadXRayFile(row);
+
+        }
+    }
     // region: Get Approval Code
 
-    onGetApprovalCode(row:ExtendedVerificationLookupResponse): void {
+    openApprovalCodeDialog(row:ExtendedVerificationLookupResponse): void {
         const dialogData: ApprovalDialogData = {
-            validation_id: row.verification_id,
+            verification_id: row.verification_id,
             date: row.date_created,
             dentist_id: row.dentist_id,
             dentist_name: row.dentist_name,
@@ -186,4 +207,28 @@ export class VerificationsComponent implements OnInit {
         })
     }
     // endregion: Get Approval Code
+
+    openUploadXRayFile(row:ExtendedVerificationLookupResponse): void{
+        const dialogData: UploadHighEndServiceFilesDialogData = {
+            verification_id: row.verification_id,
+            date: row.date_created,
+            dentist_id: row.dentist_id,
+            dentist_name: row.dentist_name,
+            dental_service_id: row.dental_service_id,
+            dental_service_name: row.dental_service_name,
+            master_list_member_id: row.master_list_member_id,
+            master_list_member_name: row.master_list_member_name,
+        }
+        const dialogRef = this.dialog.open<
+            UploadHighEndServiceFilesComponent,
+            UploadHighEndServiceFilesDialogData,
+            UploadHighEndServiceFilesDialogResult
+        >(UploadHighEndServiceFilesComponent, {
+            width: '600px',
+            data: dialogData,
+            disableClose: true,
+        });
+
+    }
+
 }
