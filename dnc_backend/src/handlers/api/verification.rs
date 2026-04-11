@@ -1,6 +1,7 @@
 use axum::{extract::State, http::StatusCode, Json};
 use axum::extract::Path;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, JoinType, QueryFilter, QueryOrder, QuerySelect, PaginatorTrait, RelationTrait, Set, Condition};
+use sea_orm::sea_query::{Expr,ExprTrait};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
 use chrono::{ Utc};
@@ -17,7 +18,7 @@ use crate::{
     },
 };
 use crate::handlers::AuthUser;
-use sea_orm::prelude::Date;
+use sea_orm::prelude::{Date};
 // region: get all verifications
 #[derive(Debug, Serialize)]
 pub struct VerificationLookupResponse {
@@ -29,6 +30,7 @@ pub struct VerificationLookupResponse {
     pub master_list_member_name: String,
     pub dental_service_id: i32,
     pub dental_service_name: String,
+    pub dental_service_is_high_end:bool,
     pub record_tooth: bool,
     pub endorsement_id:i32,
     pub endorsement_agreement_corp_number:Option<String>,
@@ -56,6 +58,7 @@ struct VerificationLookupRow {
 
     pub dental_service_id: i32,
     pub dental_service_name: String,
+    pub dental_service_is_high_end:bool,
     pub record_tooth: bool,
 
     pub endorsement_id:i32,
@@ -133,6 +136,10 @@ pub async fn get_all_verifications(
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
         .column_as(verification::Column::DentalServiceId, "dental_service_id")
         .column_as(dental_service::Column::Name, "dental_service_name")
+        .expr_as(
+            Expr::col(dental_service::Column::TypeId).eq(3),
+            "dental_service_is_high_end"
+        )
         .column_as(dental_service::Column::RecordTooth, "record_tooth")
         .column_as(master_list_member::Column::EndorsementId, "endorsement_id")
         .column_as(endorsement::Column::AgreementCorpNumber, "endorsement_agreement_corp_number")
@@ -172,6 +179,7 @@ pub async fn get_all_verifications(
                 ),
                 dental_service_id: row.dental_service_id,
                 dental_service_name: row.dental_service_name,
+                dental_service_is_high_end: row.dental_service_is_high_end,
                 record_tooth: row.record_tooth,
                 endorsement_id: row.endorsement_id,
                 endorsement_agreement_corp_number: row.endorsement_agreement_corp_number,
