@@ -24,44 +24,48 @@
     </div>
 
     <form [formGroup]="form" class="form-section">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <input
+                matInput
+                type="text"
+                formControlName="description"
+                maxlength="255"
+            />
+            <mat-hint>Optional description for the uploaded file</mat-hint>
+        </mat-form-field>
+
         <div class="upload-section full-width">
             <label class="upload-label" for="high-end-files">
-                Upload files
+                Upload file
             </label>
 
             <input
                 id="high-end-files"
                 type="file"
-                multiple
                 (change)="onFilesSelected($event)"
             />
 
             <div class="upload-hint">
-                You may upload 1 up to 3 files.
+                You may upload 1 file only.
             </div>
 
-            @if (form.controls.files.touched && form.controls.files.hasError('minFiles')) {
-                <div class="upload-error">At least 1 file is required.</div>
+            @if (form.controls.file.touched && form.controls.file.hasError('requiredFile')) {
+                <div class="upload-error">A file is required.</div>
             }
 
-            @if (form.controls.files.touched && form.controls.files.hasError('maxFiles')) {
-                <div class="upload-error">You can upload up to 3 files only.</div>
-            }
-
-            @if (selectedFiles.length > 0) {
+            @if (selectedFile) {
                 <div class="selected-files">
-                    @for (file of selectedFiles; track file.name; let i = $index) {
-                        <div class="file-row">
-                            <span class="file-name">{{ file.name }}</span>
-                            <button
-                                mat-button
-                                type="button"
-                                color="warn"
-                                (click)="removeFile(i)">
-                                Remove
-                            </button>
-                        </div>
-                    }
+                    <div class="file-row">
+                        <span class="file-name">{{ selectedFile.name }}</span>
+                        <button
+                            mat-button
+                            type="button"
+                            color="warn"
+                            (click)="clearFile()">
+                            Remove
+                        </button>
+                    </div>
                 </div>
             }
         </div>
@@ -76,7 +80,7 @@
         mat-flat-button
         color="primary"
         type="button"
-        [disabled]="form.invalid"
+        [disabled]="form.invalid || isUploading"
         (click)="submit()">
         Upload
     </button>

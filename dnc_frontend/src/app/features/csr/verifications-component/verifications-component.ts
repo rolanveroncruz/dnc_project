@@ -63,7 +63,7 @@ export class VerificationsComponent implements OnInit {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
                 color: 'primary',
-                hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99,
+                hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99 || row.status_id == 999 || row.status_id == 21,
                 onClick: function (row: ExtendedVerificationLookupResponse): void {
                     console.log("In onRowClicked(), row:", row);
                 }
@@ -74,7 +74,7 @@ export class VerificationsComponent implements OnInit {
         if (row.status_id==1) {
             return 'Get Approval';
         } else if (row.status_id==2) {
-            return 'Upload  file';
+            return 'Upload X-Ray';
         }
         return 'Get AppCode';
     }
@@ -86,7 +86,7 @@ export class VerificationsComponent implements OnInit {
 
     // if status_id==0 (Cancelled) or status_id==99 (Done) or status_id=999 (Expired), hide Cancel button.
     isSecondaryActionHidden(row: ExtendedVerificationLookupResponse): boolean {
-        return row.status_id ===0 || row.status_id ===99 || row.status_id ===999;
+        return row.status_id ===0 || row.status_id ===99 || row.status_id ===999 || row.status_id ===21;
     }
 
     ngOnInit(): void {
@@ -228,6 +228,13 @@ export class VerificationsComponent implements OnInit {
             data: dialogData,
             disableClose: true,
         });
+        dialogRef.afterClosed().subscribe(result => {
+            if (!result?.confirmed) {
+                this.loadVerifications();
+                return;
+            }
+            this.loadVerifications();
+        })
 
     }
 

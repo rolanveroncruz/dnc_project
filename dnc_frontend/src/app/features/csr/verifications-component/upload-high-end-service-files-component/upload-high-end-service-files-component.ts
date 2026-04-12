@@ -1,10 +1,9 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Component, Inject} from '@angular/core';
 import {
     FormControl,
     FormGroup,
     ReactiveFormsModule,
-    Validators,
     ValidationErrors,
     AbstractControl,
 } from '@angular/forms';
@@ -13,9 +12,11 @@ import {
     MatDialogModule,
     MatDialogRef,
 } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {HighEndFilesService} from '../../../../api_services/high-end-files-service';
+import {finalize} from 'rxjs';
 
 export interface UploadHighEndServiceFilesDialogData {
     verification_id: number;
@@ -30,27 +31,15 @@ export interface UploadHighEndServiceFilesDialogData {
 
 export interface UploadHighEndServiceFilesDialogResult {
     confirmed: boolean;
-    files: File[];
+    file: File | null;
+    description: string | null;
 }
 
-function fileCountValidator(
-    min: number,
-    max: number
-) {
-    return (control: AbstractControl): ValidationErrors | null => {
-        const files = control.value as File[] | null;
-
-        if (!files || files.length < min) {
-            return { minFiles: true };
-        }
-
-        if (files.length > max) {
-            return { maxFiles: true };
-        }
-
-        return null;
-    };
+function fileRequiredValidator(control: AbstractControl): ValidationErrors | null {
+    const file = control.value as File | null;
+    return file ? null : {requiredFile: true};
 }
+
 
 @Component({
     selector: 'app-upload-high-end-service-files',
@@ -67,10 +56,11 @@ function fileCountValidator(
     styleUrl: './upload-high-end-service-files-component.scss',
 })
 export class UploadHighEndServiceFilesComponent {
-    readonly maxFiles = 3;
+    isUploading = false;
 
     readonly form: FormGroup<{
-        files: FormControl<File[] | null>;
+        file: FormControl<File | null>;
+        description: FormControl<string | null>;
     }>;
 
     constructor(
@@ -79,51 +69,58 @@ export class UploadHighEndServiceFilesComponent {
             UploadHighEndServiceFilesDialogResult
         >,
         @Inject(MAT_DIALOG_DATA) public data: UploadHighEndServiceFilesDialogData,
+        private highEndFilesService: HighEndFilesService,
     ) {
         this.form = new FormGroup({
-            files: new FormControl<File[] | null>(null, {
-                validators: [fileCountValidator(1, 3)],
+            file: new FormControl<File | null>(null, {
+                validators: [fileRequiredValidator]
             }),
+            description: new FormControl<string | null>(null),
         });
     }
 
-    get selectedFiles(): File[] {
-        return this.form.controls.files.value ?? [];
+    get description(): string | null {
+        const value = this.form.controls.description.value;
+        return value?.trim() ? value.trim() : null;
+    }
+
+    get selectedFile(): File | null {
+        return this.form.controls.file.value;
     }
 
     onFilesSelected(event: Event): void {
         const input = event.target as HTMLInputElement;
         const fileList = input.files;
 
-        if (!fileList) {
-            this.form.controls.files.setValue(null);
-            this.form.controls.files.markAsTouched();
+        if (!fileList || fileList.length === 0) {
+            this.form.controls.file.setValue(null);
+            this.form.controls.file.markAsTouched();
+            this.form.controls.file.updateValueAndValidity();
             return;
         }
 
-        const files = Array.from(fileList).slice(0, this.maxFiles);
-        this.form.controls.files.setValue(files);
-        this.form.controls.files.markAsTouched();
-        this.form.controls.files.updateValueAndValidity();
+        const file = fileList[0];
+        this.form.controls.file.setValue(file);
+        this.form.controls.file.markAsTouched();
+        this.form.controls.file.updateValueAndValidity();
 
         input.value = '';
     }
 
-    removeFile(index: number): void {
-        const updatedFiles = [...this.selectedFiles];
-        updatedFiles.splice(index, 1);
-
-        this.form.controls.files.setValue(updatedFiles.length ? updatedFiles : null);
-        this.form.controls.files.markAsTouched();
-        this.form.controls.files.updateValueAndValidity();
+    clearFile(): void {
+        this.form.controls.file.setValue(null);
+        this.form.controls.file.markAsTouched();
+        this.form.controls.file.updateValueAndValidity();
     }
 
     cancel(): void {
         this.dialogRef.close({
             confirmed: false,
-            files: [],
+            file: null,
+            description: null,
         });
     }
+
 
     submit(): void {
         if (this.form.invalid) {
@@ -131,9 +128,33 @@ export class UploadHighEndServiceFilesComponent {
             return;
         }
 
-        this.dialogRef.close({
-            confirmed: true,
-            files: this.selectedFiles,
-        });
+        const file = this.selectedFile;
+        if (!file) {
+            this.form.markAllAsTouched();
+            return;
+        }
+
+        this.isUploading = true;
+
+        this.highEndFilesService
+            .uploadHighEndFile(this.data.verification_id, file, this.description)
+            .pipe(
+                finalize(() => {
+                    this.isUploading = false;
+                })
+            )
+            .subscribe({
+                next: () => {
+                    this.dialogRef.close({
+                        confirmed: true,
+                        file,
+                        description: this.description,
+                    });
+                },
+                error: (error) => {
+                    console.error('Error uploading file:', error);
+                },
+            });
     }
+
 }

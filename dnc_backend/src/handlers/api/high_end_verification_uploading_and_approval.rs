@@ -186,7 +186,7 @@ pub async fn upload_high_end_file(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
 
-    // 8. Save to the database.
+    // ---- 8. Prepare model for insertion.
     let active_model = high_end_files::ActiveModel {
         verification_id: Set(verification_id),
         filename: Set(stored_filename.clone()),
@@ -196,11 +196,28 @@ pub async fn upload_high_end_file(
         ..Default::default()
     };
 
+    // ---- 9. Insert into db.
     let inserted = active_model
         .insert(db)
         .await
         .map_err(internal_error)?;
 
+    // ---- 10. Update the verification model.
+    let verification_model = verification::Entity::find_by_id(verification_id)
+        .one(db)
+        .await
+        .map_err(internal_error)?
+        .ok_or((StatusCode::NOT_FOUND, "Verification not found".to_string()))?;
+
+    let mut verification_active_model : verification::ActiveModel = verification_model.into();
+    verification_active_model.status_id= Set(21);
+
+    verification_active_model
+        .update(db)
+        .await
+        .map_err(internal_error)?;
+
+    // ---- 11. Return the result.
     Ok(Json(UploadedHighEndFileResponse {
         id: inserted.id,
         verification_id: inserted.verification_id,

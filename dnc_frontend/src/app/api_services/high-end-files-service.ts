@@ -8,6 +8,7 @@ export interface HighEndFileResponse {
     id: number;
     verification_id: number;
     filename: string;
+    original_filename: string;
 }
 
 @Injectable({
@@ -28,12 +29,19 @@ export class HighEndFilesService {
 
 
     // upload a file for a given verification
-    uploadHighEndFile(verificationId: number, file: File): Observable<HighEndFileResponse> {
+    uploadHighEndFile(verificationId: number,
+                      file: File,
+                      description?:string | null
+                      ): Observable<HighEndFileResponse> {
         const formData = new FormData();
         formData.append('file', file);
 
+        if (description !== undefined && description !== null) {
+            formData.append('description', description.trim());
+        }
+
         return this.http.post<HighEndFileResponse>(
-            `${this.baseVerificationsUrl}/${verificationId}/upload`,
+            `${this.baseVerificationsUrl}/${verificationId}/high_end_files`,
             formData,
             {
                 headers: this.authHeaders(),
