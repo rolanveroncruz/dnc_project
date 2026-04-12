@@ -359,6 +359,10 @@ impl ValidationCheckResult {
         }
     }
 }
+// check_approval_code_release() checks if an approval code could be released. The checks are:
+// 1. The endorsement limit has not been reached.
+// 2. Only up to 3 approval codes can be released in the same date_service_performed day.
+// 3. No same tooth_id and surface if dentists are different.
 async fn check_approval_code_release(
     db: &DatabaseConnection,
     verification_id: i32,
@@ -396,6 +400,7 @@ async fn check_approval_code_release(
 
     Ok(ValidationCheckResult::ok())
 }
+
 // check_service_allowed_by_endorsement_limit() checks if the member can still avail of the service
 // given the limits set by the endorsement.
 async fn check_service_allowed_by_endorsement_limit(
@@ -493,8 +498,10 @@ async fn check_other_released_approval_codes_for_same_date(
         .filter(verification::Column::StatusId.eq(99))
         .count(db)
         .await?;
+        tracing::info!("DentistId:{} MemberID:{} Date:{} have {} occurrences.",
+            current_verification.dental_service_id, current_verification.member_id, date_service_performed,count);
 
-        if count > 3 {
+        if count >= 3 {
             return Ok(ValidationCheckResult {
                 code: 3,
                 message: "approval code release limit exceeded for this dentist, member, and service date",
@@ -655,11 +662,6 @@ pub async fn get_approval_code_for_verification_id(
         approval_code: Some(approval_code),
     }))
 }
-
-
-
-
-
 
 // endregion: Get Approval Code for Verification ID
 

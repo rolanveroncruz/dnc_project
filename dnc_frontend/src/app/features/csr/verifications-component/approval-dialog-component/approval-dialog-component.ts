@@ -68,6 +68,7 @@ export class ApprovalDialogComponent {
     readonly verificationService = inject(VerificationService);
 
     approvalCode: string | null;
+    rejectMessage: string | null = null;
     isRequestingApprovalCode = false;
     readonly toothIds: string[] = [
         '11', '12', '13', '14', '15', '16', '17', '18',
@@ -140,6 +141,8 @@ export class ApprovalDialogComponent {
             this.form.markAllAsTouched();
             return;
         }
+        this.rejectMessage = null;
+        this.approvalCode = null;
         this.isRequestingApprovalCode = true;
         const serviceDate = this.form.controls.service_availed_date.value;
         const toothId = this.form.controls.tooth_id.value;
@@ -177,12 +180,20 @@ export class ApprovalDialogComponent {
             .requestApprovalCode(this.data.verification_id, request)
             .subscribe({
                 next: (response) => {
-                    this.approvalCode = response.approval_code ?? null;
+                    if ( response.reject_code === 0){
+                        this.approvalCode = response.approval_code ?? null;
+                        this.rejectMessage = null;
+                    } else{
+                        this.approvalCode = null;
+                        this.rejectMessage = response.reject_message ?? 'Approval Code Request Rejected.';
+                    }
                     this.isRequestingApprovalCode = false;
                     this.cdr.detectChanges();
                 },
                 error: (error) => {
                     console.error('Error requesting approval code:', error);
+                    this.approvalCode = null;
+                    this.rejectMessage = 'Error requesting approval code. Please try again.';
                     this.isRequestingApprovalCode = false;
                     this.cdr.detectChanges();
                 },
