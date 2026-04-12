@@ -92,6 +92,11 @@
             <div class="static-field-label">Approval Code</div>
             <div class="static-field-value">{{ approvalCode ?? '' }}</div>
         </div>
+        @if(rejectMessage) {
+            <div class="full-width" style="color: #c62828; margin-top: 8px;">
+                {{ rejectMessage }}
+            </div>
+        }
     </form>
 </mat-dialog-content>
 
