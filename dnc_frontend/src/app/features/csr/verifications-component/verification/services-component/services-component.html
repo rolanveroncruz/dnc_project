@@ -3,7 +3,7 @@
         Reserve all basic
     </button>
 
-    @if (checkedIds().length > 0) {
+    @if (Object.keys(selectedQuantities()).length > 0) {
         <button mat-button type="button" (click)="clearAll()">
             Clear
         </button>
@@ -14,12 +14,38 @@
     @for (column of serviceColumns; track $index) {
         <div class="services-column">
             @for (service of column; track service.dental_service_id) {
-                <mat-checkbox
-                    [checked]="isChecked(service.dental_service_id)"
-                    [disabled]="isDisabled(service)"
-                    (change)="onToggle(service, $event.checked)">
-                    {{ labelFor(service) }}
-                </mat-checkbox>
+                <div class="service-row">
+                    <mat-checkbox
+                        [checked]="isChecked(service.dental_service_id)"
+                        [disabled]="isDisabled(service)"
+                        (change)="onToggle(service, $event.checked)">
+                        {{ labelFor(service) }}
+                    </mat-checkbox>
+
+                    @if (isRepeatable(service) && isChecked(service.dental_service_id)) {
+                        <div class="service-quantity-controls">
+                            <button
+                                mat-stroked-button
+                                type="button"
+                                [disabled]="!canDecrement(service)"
+                                (click)="decrementQuantity(service)">
+                                -
+                            </button>
+
+                            <span class="service-quantity">
+                {{ getQuantity(service.dental_service_id) }}
+            </span>
+
+                            <button
+                                mat-stroked-button
+                                type="button"
+                                [disabled]="!canIncrement(service)"
+                                (click)="incrementQuantity(service)">
+                                +
+                            </button>
+                        </div>
+                    }
+                </div>
             }
         </div>
     }

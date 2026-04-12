@@ -37,3 +37,19 @@ Dec 20, 2025
 
 ### Dec 21, 2025
 * inserted migration for Admin to access all menu items in setup.
+
+### April 7, 2026
+* adding "Expired" VerificationStatus row to represent system-expired verifications.
+
+### April 8, 2026
+* Fixed get_approval_code_for_verification_id() to have checks before releasing approval code.
+  - approval_code is now 9 characters AAA-BBB-CCC.
+  - checks include not ALREADY having the same count(dentist+member+service_date) >=3.
+* Cleaned up get_master_list_for_endorsement vs get_master_list_members_for_endorsement_id.
+
+### April 9, 2026
+* migrations for creation and alteration, as well as generations for 
+  - tooth_service_type (First time, Root Cleaning, Retreatment)
+  - tooth_surface, (Distal, Facial, Incisal, Lingual, Mesial, etc) and 
+  - verification 
+* added API for get_tooth_service_types() and get_tooth_surfaces()

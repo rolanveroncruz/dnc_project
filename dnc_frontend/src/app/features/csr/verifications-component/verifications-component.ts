@@ -1,5 +1,9 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
-import {VerificationService, ExtendedVerificationLookupResponse} from '../../../api_services/verification-service';
+import {
+    VerificationService,
+    ExtendedVerificationLookupResponse,
+    ToothSurface, ToothServiceType
+} from '../../../api_services/verification-service';
 import {Router} from '@angular/router';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -13,6 +17,12 @@ import {
     ApprovalDialogData,
     ApprovalDialogResult
 } from './approval-dialog-component/approval-dialog-component';
+import {
+    UploadHighEndServiceFilesComponent,
+    UploadHighEndServiceFilesDialogData,
+    UploadHighEndServiceFilesDialogResult
+} from './upload-high-end-service-files-component/upload-high-end-service-files-component';
+import {forkJoin} from 'rxjs';
 
 @Component({
   selector: 'app-verifications-component',
@@ -35,11 +45,14 @@ export class VerificationsComponent implements OnInit {
     private readonly verificationService = inject(VerificationService);
     private readonly destroyRef = inject(DestroyRef);
     verifications = signal<ExtendedVerificationLookupResponse[]>([]);
+    tooth_surfaces = signal<ToothSurface[]>([]);
+    tooth_service_types= signal<ToothServiceType[]>([]);
 
 
     readonly columns: TableColumn<ExtendedVerificationLookupResponse>[] = [
         { key: 'verification_id', label: 'ID' },
         { key: 'date_created', label: 'Date', cellTemplateKey: 'date' },
+        {key: 'endorsement_agreement_corp_number', label: 'Agmt/Corp Number'},
         { key: 'dentist_name', label: 'Dentist'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
@@ -50,7 +63,7 @@ export class VerificationsComponent implements OnInit {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
                 color: 'primary',
-                hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99,
+                hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99 || row.status_id == 999 || row.status_id == 21,
                 onClick: function (row: ExtendedVerificationLookupResponse): void {
                     console.log("In onRowClicked(), row:", row);
                 }
@@ -58,7 +71,12 @@ export class VerificationsComponent implements OnInit {
         }
     ]
     getRowLabel(row: ExtendedVerificationLookupResponse): string {
-        return row.status_id==1 ? 'Approval Code' : 'Upload Files';
+        if (row.status_id==1) {
+            return 'Get Approval';
+        } else if (row.status_id==2) {
+            return 'Upload X-Ray';
+        }
+        return 'Get AppCode';
     }
 
     getRowIcon(row: ExtendedVerificationLookupResponse): string {
@@ -66,12 +84,15 @@ export class VerificationsComponent implements OnInit {
     }
 
 
+    // if status_id==0 (Cancelled) or status_id==99 (Done) or status_id=999 (Expired), hide Cancel button.
     isSecondaryActionHidden(row: ExtendedVerificationLookupResponse): boolean {
-        return row.status_id ===0 || row.status_id ===99;
+        return row.status_id ===0 || row.status_id ===99 || row.status_id ===999 || row.status_id ===21;
     }
 
     ngOnInit(): void {
         this.loadVerifications();
+        this.loadToothLookups();
+
 
     }
 
@@ -83,6 +104,22 @@ export class VerificationsComponent implements OnInit {
                 error:(err)=> console.log("In load(), failed to load verifications",err )
             })
 
+    }
+    loadToothLookups(){
+            forkJoin({
+                toothSurfaces: this.verificationService.getToothSurfaces(),
+                toothServiceTypes: this.verificationService.getToothServiceType(),
+    }).subscribe({
+            next: ({ toothSurfaces, toothServiceTypes }) => {
+                this.tooth_surfaces.set(toothSurfaces);
+                this.tooth_service_types.set(toothServiceTypes);
+            },
+            error: (err) => {
+                console.error('Failed to load tooth lookups', err);
+                this.tooth_surfaces.set([]);
+                this.tooth_service_types.set([]);
+            },
+        });
     }
 
     onNewVerification(){
@@ -123,20 +160,33 @@ export class VerificationsComponent implements OnInit {
     }
 
 
+    onClickActionButton(row:ExtendedVerificationLookupResponse){
+
+        if (row.status_id == 1){
+            this.openApprovalCodeDialog(row);
+
+        }else if (row.status_id == 2) {
+            this.openUploadXRayFile(row);
+
+        }
+    }
     // region: Get Approval Code
 
-    onGetApprovalCode(row:ExtendedVerificationLookupResponse): void {
+    openApprovalCodeDialog(row:ExtendedVerificationLookupResponse): void {
         const dialogData: ApprovalDialogData = {
-            validation_id: row.verification_id,
+            verification_id: row.verification_id,
             date: row.date_created,
             dentist_id: row.dentist_id,
             dentist_name: row.dentist_name,
             dental_service_id: row.dental_service_id,
             dental_service_name: row.dental_service_name,
+            dental_service_record_tooth: row.record_tooth,
             master_list_member_id: row.master_list_member_id,
             master_list_member_name: row.master_list_member_name,
             service_availed_date: undefined,
             approval_code: null,
+            tooth_surfaces: this.tooth_surfaces(),
+            tooth_service_types: this.tooth_service_types(),
         }
 
         const dialogRef = this.dialog.open<
@@ -157,4 +207,35 @@ export class VerificationsComponent implements OnInit {
         })
     }
     // endregion: Get Approval Code
+
+    openUploadXRayFile(row:ExtendedVerificationLookupResponse): void{
+        const dialogData: UploadHighEndServiceFilesDialogData = {
+            verification_id: row.verification_id,
+            date: row.date_created,
+            dentist_id: row.dentist_id,
+            dentist_name: row.dentist_name,
+            dental_service_id: row.dental_service_id,
+            dental_service_name: row.dental_service_name,
+            master_list_member_id: row.master_list_member_id,
+            master_list_member_name: row.master_list_member_name,
+        }
+        const dialogRef = this.dialog.open<
+            UploadHighEndServiceFilesComponent,
+            UploadHighEndServiceFilesDialogData,
+            UploadHighEndServiceFilesDialogResult
+        >(UploadHighEndServiceFilesComponent, {
+            width: '600px',
+            data: dialogData,
+            disableClose: true,
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            if (!result?.confirmed) {
+                this.loadVerifications();
+                return;
+            }
+            this.loadVerifications();
+        })
+
+    }
+
 }

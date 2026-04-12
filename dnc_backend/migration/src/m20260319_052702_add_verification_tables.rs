@@ -71,6 +71,7 @@ impl Migration {
         Self::insert_into_verification_status_table(manager,1, "Waiting for Approval Code").await?;
         Self::insert_into_verification_status_table(manager, 2,"Waiting for Files").await?;
         Self::insert_into_verification_status_table(manager, 99,"Done").await?;
+        Self::insert_into_verification_status_table(manager, 999,"Expired").await?;
         Ok(())
     }
 
@@ -209,7 +210,7 @@ impl Migration {
                     )
                     .foreign_key(ForeignKey::create()
                         .name("fk_high_end_files_table_verification_id")
-                        .from(HighEndFiles::Table, HighEndFiles::Id)
+                        .from(HighEndFiles::Table, HighEndFiles::VerificationId)
                         .to(Verification::Table, Verification::Id)
                     )
                     .col(ColumnDef::new(HighEndFiles::Filename)

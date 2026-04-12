@@ -13,6 +13,10 @@ export interface VerificationLookupResponse {
     master_list_member_name: string;
     dental_service_id: number;
     dental_service_name: string;
+    record_tooth:boolean,
+    endorsement_id: number;
+    endorsement_agreement_corp_number: string | null;
+    dental_service_is_high_end:boolean,
     status_id: number;
     status_name: string;
     approval_code: string | null;
@@ -42,9 +46,26 @@ export interface CreateVerificationResponse {
     approval_date: string | null;       // ISO datetime or null
     approval_code: string | null;
 }
+export interface GetApprovalCodeRequest{
+    date_service_performed: string;
+    tooth_id: string | null
+    tooth_surface_id: number | null;
+    tooth_service_type_id: number | null;
+}
 
 export interface GetApprovalCodeResponse {
+    reject_code: number | null;
+    reject_message: string | null;
     approval_code: string | null;
+}
+
+export interface ToothSurface{
+    id: number,
+    name: string,
+}
+export interface ToothServiceType{
+    id: number,
+    name: string,
 }
 
 @Injectable({
@@ -56,14 +77,15 @@ export class VerificationService {
 
     // Make sure environment.apiBaseUrl is something like "https://example.com/api"
     // and your routes are mounted at /endorsements under that base.
-    private readonly baseUrl = `${environment.apiBaseUrl}/api/verifications`;
+    private readonly baseUrl = `${environment.apiBaseUrl}/api`;
+    private readonly baseVerificationUrl = `${environment.apiBaseUrl}/api/verifications`;
 
     private authHeaders(): HttpHeaders {
         const token = this.loginService.token?.() ?? '';
         return new HttpHeaders({Authorization: `Bearer ${token}`});
     }
     getVerifications(): Observable<ExtendedVerificationLookupResponse[]> {
-        return this.http.get<VerificationLookupResponse[]>(`${this.baseUrl}`, {headers: this.authHeaders()})
+        return this.http.get<VerificationLookupResponse[]>(`${this.baseVerificationUrl}`, {headers: this.authHeaders()})
             .pipe(
                 map((rows)=>
                     rows.map((row):ExtendedVerificationLookupResponse =>({
@@ -83,19 +105,26 @@ export class VerificationService {
         payload: CreateVerificationRequest
     ): Observable<CreateVerificationResponse> {
         return this.http.post<CreateVerificationResponse>(
-            `${this.baseUrl}`,
+            `${this.baseVerificationUrl}`,
             payload,
             { headers: this.authHeaders() }
         );
     }
 
     cancelVerification(id: number): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/${id}/cancel`,{}, {headers: this.authHeaders()});
+        return this.http.post<any>(`${this.baseVerificationUrl}/${id}/cancel`,{}, {headers: this.authHeaders()});
     }
 
 
-    requestApprovalCode(validation_id:number, date_service_performed: string): Observable<GetApprovalCodeResponse> {
-        const payload = {date_service_performed};
-        return this.http.post<GetApprovalCodeResponse>(`${this.baseUrl}/${validation_id}/approval_code`,payload, {headers: this.authHeaders()});
+    requestApprovalCode(verification_id:number, payload: GetApprovalCodeRequest): Observable<GetApprovalCodeResponse> {
+
+        return this.http.post<GetApprovalCodeResponse>(`${this.baseVerificationUrl}/${verification_id}/approval_code`,payload, {headers: this.authHeaders()});
+    }
+
+    getToothSurfaces():Observable<ToothSurface[]>{
+        return this.http.get<ToothSurface[]>(`${this.baseUrl}/tooth_surfaces`, {headers: this.authHeaders()});
+    }
+    getToothServiceType():Observable<ToothServiceType[]>{
+        return this.http.get<ToothServiceType[]>(`${this.baseUrl}/tooth_service_types`, {headers: this.authHeaders()});
     }
 }

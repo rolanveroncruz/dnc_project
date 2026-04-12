@@ -4,25 +4,16 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "high_end_files")]
+#[sea_orm(table_name = "tooth_surface")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub verification_id: i32,
-    pub filename: String,
-    pub description: Option<String>,
-    pub original_filename: Option<String>,
+    pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::verification::Entity",
-        from = "Column::VerificationId",
-        to = "super::verification::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
+    #[sea_orm(has_many = "super::verification::Entity")]
     Verification,
 }
 

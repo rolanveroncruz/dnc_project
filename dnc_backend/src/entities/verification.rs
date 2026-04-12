@@ -18,6 +18,9 @@ pub struct Model {
     pub approved_by: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,
     pub approval_code: Option<String>,
+    pub tooth_id: Option<String>,
+    pub tooth_service_type_id: Option<i32>,
+    pub tooth_surface_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -38,7 +41,10 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     Dentist,
-    #[sea_orm(has_one = "super::high_end_files::Entity")]
+    #[sea_orm(
+        has_one = "super::high_end_files::Entity",
+        has_many = "super::high_end_files::Entity"
+    )]
     HighEndFiles,
     #[sea_orm(has_many = "super::high_end_verification_information::Entity")]
     HighEndVerificationInformation,
@@ -50,6 +56,22 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     MasterListMember,
+    #[sea_orm(
+        belongs_to = "super::tooth_service_type::Entity",
+        from = "Column::ToothServiceTypeId",
+        to = "super::tooth_service_type::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    ToothServiceType,
+    #[sea_orm(
+        belongs_to = "super::tooth_surface::Entity",
+        from = "Column::ToothSurfaceId",
+        to = "super::tooth_surface::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    ToothSurface,
     #[sea_orm(
         belongs_to = "super::verification_status::Entity",
         from = "Column::StatusId",
@@ -87,6 +109,18 @@ impl Related<super::high_end_verification_information::Entity> for Entity {
 impl Related<super::master_list_member::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MasterListMember.def()
+    }
+}
+
+impl Related<super::tooth_service_type::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ToothServiceType.def()
+    }
+}
+
+impl Related<super::tooth_surface::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ToothSurface.def()
     }
 }
 

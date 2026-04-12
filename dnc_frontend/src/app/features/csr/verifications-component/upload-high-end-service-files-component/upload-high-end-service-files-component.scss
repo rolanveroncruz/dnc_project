@@ -1,0 +1,70 @@
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.label {
+    font-weight: 600;
+}
+
+.value {
+    word-break: break-word;
+}
+
+.form-section {
+    margin-top: 12px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upload-label {
+    font-weight: 600;
+}
+
+.upload-hint {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.upload-error {
+    color: #d32f2f;
+    font-size: 12px;
+}
+
+.selected-files {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.file-name {
+    word-break: break-word;
+}

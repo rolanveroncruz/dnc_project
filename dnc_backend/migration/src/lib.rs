@@ -25,6 +25,12 @@ mod m20260320_142702_add_verification_permissions_and_role_permissions;
 mod m20260321_115732_add_dentist_company_relations;
 mod m20260323_150430_endorsement_billing_rule_table;
 mod m20260326_172948_alter_table_verifications_fk_status_id;
+mod m20260331_062346_update_dental_services_that_need_tooth_for_verification;
+mod m20260331_160341_alter_table_verification_add_tooth_id_column;
+mod m20260408_060317_alter_table_verification_add_tooth_service_type_and_tooth_surface;
+mod m20260412_120637_alter_table_high_end_files_add_description;
+mod m20260412_132526_alter_table_high_end_files_add_orignal_filename;
+mod m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval;
 
 pub struct Migrator;
 
@@ -57,6 +63,12 @@ impl MigratorTrait for Migrator {
             Box::new(m20260321_115732_add_dentist_company_relations::Migration),
             Box::new(m20260323_150430_endorsement_billing_rule_table::Migration),
             Box::new(m20260326_172948_alter_table_verifications_fk_status_id::Migration),
+            Box::new(m20260331_062346_update_dental_services_that_need_tooth_for_verification::Migration),
+            Box::new(m20260331_160341_alter_table_verification_add_tooth_id_column::Migration),
+            Box::new(m20260408_060317_alter_table_verification_add_tooth_service_type_and_tooth_surface::Migration),
+            Box::new(m20260412_120637_alter_table_high_end_files_add_description::Migration),
+            Box::new(m20260412_132526_alter_table_high_end_files_add_orignal_filename::Migration),
+            Box::new(m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval::Migration),
         ]
     }
 }

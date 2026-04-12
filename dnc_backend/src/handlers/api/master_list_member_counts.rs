@@ -29,16 +29,6 @@ pub struct MemberUsedServiceCountResponse {
     pub count_used: i32,
 }
 
-#[derive(Debug, Serialize, Clone)]
-pub struct MemberServiceCountSummaryResponse {
-    pub dental_service_id: i32,
-    pub dental_service_name: String,
-    pub dental_service_type_id: i32,
-    pub counts_allowed: i32,
-    pub counts_used: i32,
-    pub has_pending: bool,
-    pub conflict_date: Option<Date>,
-}
 
 /* =========================================================
 Rule helpers
@@ -232,6 +222,18 @@ async fn build_pending_conflicts_for_member(
     Ok(pending_map)
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct MemberServiceCountSummaryResponse {
+    pub dental_service_id: i32,
+    pub dental_service_name: String,
+    pub dental_service_type_id: i32,
+    pub record_tooth: bool,
+    pub counts_allowed: i32,
+    pub counts_used: i32,
+    pub has_pending: bool,
+    pub conflict_date: Option<Date>,
+}
+
 async fn build_count_summary_for_member(
     db: &DatabaseConnection,
     member_id: i32,
@@ -249,9 +251,14 @@ async fn build_count_summary_for_member(
         .map(|row| (row.dental_service_id, row.count_used))
         .collect();
 
-    let service_type_map: HashMap<i32, i32> = dental_services
+    let service_type_map: HashMap<i32, i32> = dental_services.clone()
         .into_iter()
         .map(|svc| (svc.id, svc.type_id))
+        .collect();
+
+    let record_tooth_map: HashMap<i32, bool>=dental_services
+        .iter()
+        .map(|svc| (svc.id, svc.record_tooth))
         .collect();
 
     let rows = allowed_rows
@@ -276,6 +283,10 @@ async fn build_count_summary_for_member(
                 .get(&allowed.dental_service_id)
                 .copied()
                 .unwrap_or(0),
+            record_tooth: record_tooth_map
+                .get(&allowed.dental_service_id)
+                .copied()
+                .unwrap_or(false),
             counts_allowed: allowed.counts,
             counts_used: used_map
                 .get(&allowed.dental_service_id)

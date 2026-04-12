@@ -15,16 +15,6 @@ use crate::{
     entities::{master_list, master_list_member},
 };
 
-#[derive(Debug, Serialize)]
-pub struct EndorsementMasterListMemberResponse {
-    pub file_name: String,
-    pub master_list_member_id: i32,
-    pub account_number: String,
-    pub last_name: String,
-    pub first_name: String,
-    pub middle_name: String,
-    pub is_active: bool,
-}
 
 #[derive(Debug, Serialize)]
 pub struct MasterListMemberResponse {
@@ -46,6 +36,16 @@ pub struct SetMasterListMemberActiveRequest {
 }
 
 
+#[derive(Debug, Serialize)]
+pub struct EndorsementMasterListMemberResponse {
+    pub file_name: String,
+    pub master_list_member_id: i32,
+    pub account_number: String,
+    pub last_name: String,
+    pub first_name: String,
+    pub middle_name: String,
+    pub is_active: bool,
+}
 
 // get_master_list_for_endorsement is used when previewing the master list after uploading.
 // it does not include master_list_member_id, phone, birthday and email.
