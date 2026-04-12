@@ -27,6 +27,7 @@ pub struct UploadedHighEndFileResponse {
     pub id: i32,
     pub verification_id: i32,
     pub filename: String,
+    pub original_filename: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -41,6 +42,9 @@ fn high_end_files_dir() -> PathBuf {
     PathBuf::from("./uploads/high_end_files")
 }
 
+
+// sanitize_filename() takes the original filename and replaces some characters with '_'.
+// This is meant to prevent filesystem issues.
 fn sanitize_filename(filename: &str) -> String {
     filename
         .chars()
@@ -54,6 +58,7 @@ fn sanitize_filename(filename: &str) -> String {
         .collect()
 }
 
+// make_stored_filename takes the sanitized original filename and prepends it with a timestamp, and the uuid.
 fn make_stored_filename(original_filename: &str) -> String {
     let sanitized = sanitize_filename(original_filename);
     let timestamp = Utc::now().timestamp();
@@ -99,7 +104,8 @@ pub async fn upload_high_end_file(
 ) -> Result<Json<UploadedHighEndFileResponse>, (StatusCode, String)> {
     let db: &DatabaseConnection = &state.db;
 
-    // 1. confirm that the verification_id leads to a legit verification record
+    // ---- 1. confirm that the verification_id leads to a legit verification record.
+    // If it doesn't exist, return 404.
     let verification_exists = verification::Entity::find_by_id(verification_id)
         .one(db)
         .await
@@ -110,29 +116,67 @@ pub async fn upload_high_end_file(
         return Err((StatusCode::NOT_FOUND, "Verification not found".to_string()));
     }
 
+    // ---- 2. Before writing, ensure the high_end_files_dir (./uploads/high_end_files/ exists,
+    // else return 500
     ensure_high_end_files_dir_exists()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let field = multipart
+    // ---- 3. declare variables to collect multipart data.
+    let mut uploaded_file_bytes: Option<bytes::Bytes> = None;
+    let mut uploaded_original_filename: Option<String> = None;
+    let mut description: Option<String> = None;
+
+
+    // ---- 4. Loop through all multipart fields.
+    while let Some(field) = multipart
         .next_field()
         .await
         .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?
-        .ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
+    {
+        // ---- 4a. Capture field metadata before consuming the field.
+        let field_name = field.name().map(|s| s.to_string());
+        let file_name = field.file_name().map(|s| s.to_string());
 
-    let original_filename = field
-        .file_name()
-        .map(|s| s.to_string())
+        // ---- 4b. If this part has a filename, treat it as the uploaded file.
+        if let Some(original_filename) = file_name {
+            let bytes = field
+                .bytes()
+                .await
+                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+
+            uploaded_original_filename = Some(original_filename);
+            uploaded_file_bytes = Some(bytes);
+            continue;
+        }
+        // ---- 4c. Otherwise, if this is the "description" field, read it as text.
+        if field_name.as_deref() == Some("description") {
+            let text = field
+                .text()
+                .await
+                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+            let trimmed = text.trim().to_string();
+            description = if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed)
+            };
+        }
+    } // end of while
+
+
+    //---- 5. Require that a file was provided.
+    let original_filename = uploaded_original_filename
         .ok_or((StatusCode::BAD_REQUEST, "Uploaded file has no filename".to_string()))?;
 
-    let bytes = field
-        .bytes()
-        .await
-        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let bytes = uploaded_file_bytes
+        .ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
 
+    // ---- 6. Create a unique and sanitized filename and path from the original filename.
     let stored_filename = make_stored_filename(&original_filename);
     let full_path = high_end_files_dir().join(&stored_filename);
 
+    // 7. Create the file and save the bytes.
     let mut file = fs::File::create(&full_path)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -141,9 +185,14 @@ pub async fn upload_high_end_file(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+
+    // 8. Save to the database.
     let active_model = high_end_files::ActiveModel {
         verification_id: Set(verification_id),
         filename: Set(stored_filename.clone()),
+        original_filename: Set(Some(original_filename.clone())),
+        // ✅ 9. Save description too.
+        description: Set(description),
         ..Default::default()
     };
 
@@ -156,6 +205,7 @@ pub async fn upload_high_end_file(
         id: inserted.id,
         verification_id: inserted.verification_id,
         filename: inserted.filename,
+        original_filename,
     }))
 }
 // endregion: upload_high_end_file()
