@@ -10,6 +10,7 @@ pub struct Model {
     pub id: i32,
     pub verification_id: i32,
     pub filename: String,
+    pub description: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
