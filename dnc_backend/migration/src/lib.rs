@@ -33,6 +33,7 @@ mod m20260412_132526_alter_table_high_end_files_add_orignal_filename;
 mod m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval;
 mod m20260413_070829_insert_high_end_verification_dataobject;
 mod m20260413_151404_alter_table_high_end_verification_info_add_col_dentist_notes;
+mod m20260413_190143_alter_table_high_end_verification_info_create_unique_index_on_verification_id;
 
 pub struct Migrator;
 
@@ -73,6 +74,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval::Migration),
             Box::new(m20260413_070829_insert_high_end_verification_dataobject::Migration),
             Box::new(m20260413_151404_alter_table_high_end_verification_info_add_col_dentist_notes::Migration),
+            Box::new(m20260413_190143_alter_table_high_end_verification_info_create_unique_index_on_verification_id::Migration),
         ]
     }
 }
