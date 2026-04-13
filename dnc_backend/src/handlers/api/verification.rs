@@ -15,10 +15,11 @@ use crate::{
         verification,
         verification_status,
         endorsement_counts,
+        high_end_verification_information,
     },
 };
 use crate::handlers::AuthUser;
-use sea_orm::prelude::{Date};
+use sea_orm::prelude::{Date, Decimal};
 // region: get all verifications
 #[derive(Debug, Serialize)]
 pub struct VerificationLookupResponse {
@@ -39,6 +40,9 @@ pub struct VerificationLookupResponse {
     pub approval_code: Option<String>,
     pub approved_by: Option<String>,
     pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
+
+    pub approved_amount: Option<Decimal>,
+    pub dentist_notes: Option<String>,
 }
 
 #[derive(Debug, FromQueryResult)]
@@ -70,6 +74,9 @@ struct VerificationLookupRow {
     pub approval_code: Option<String>,
     pub approved_by: Option<String>,
     pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
+
+    pub approved_amount: Option<Decimal>,
+    pub dentist_notes: Option<String>,
 }
 
 fn format_dentist_name(
@@ -123,6 +130,9 @@ pub async fn get_all_verifications(
                 .to(verification_status::Column::IntCode)
                 .into(),
         )
+        .join(JoinType::LeftJoin,
+              verification::Relation::HighEndVerificationInformation.def(),
+        )
         .select_only()
         .column_as(verification::Column::Id, "verification_id")
         .column_as(verification::Column::DateCreated, "date_created")
@@ -148,6 +158,13 @@ pub async fn get_all_verifications(
         .column_as(verification::Column::ApprovalCode, "approval_code")
         .column_as(verification::Column::ApprovedBy, "approved_by")
         .column_as(verification::Column::ApprovalDate, "approval_date")
+        .column_as(
+            high_end_verification_information::Column::ApprovedCost,
+            "approved_amount",
+        )
+        .column_as(high_end_verification_information::Column::DentistNotes,
+                   "dentist_notes"
+        )
         .order_by_desc(verification::Column::DateCreated)
         .into_model::<VerificationLookupRow>()
         .all(&state.db)
@@ -188,6 +205,8 @@ pub async fn get_all_verifications(
                 approval_code,
                 approved_by,
                 approval_date,
+                approved_amount: row.approved_amount,
+                dentist_notes: row.dentist_notes,
             }
         })
         .collect::<Vec<_>>();
@@ -670,7 +689,7 @@ pub async fn get_approval_code_for_verification_id(
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 
- type HmacSha256 = Hmac<Sha256>;
+type HmacSha256 = Hmac<Sha256>;
 
  const APPROVAL_CODE_ALPHABET: &[u8; 32] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ID_PART_LEN: usize = 5;
