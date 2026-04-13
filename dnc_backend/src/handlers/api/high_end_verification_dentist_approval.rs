@@ -183,6 +183,7 @@ pub async fn get_high_end_verifications(
 #[derive(Debug, Deserialize)]
 pub struct PostHighEndVerificationApprovalRequest {
     pub approved_cost: Decimal,
+    pub dentist_notes: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -192,18 +193,19 @@ pub struct PostHighEndVerificationApprovalResponse {
     pub approved_by: Option<String>,
     pub approved_cost: Option<Decimal>,
     pub approval_date: Option<chrono::NaiveDateTime>,
+    pub dentist_notes: Option<String>,
     pub verification_status_id: i32,
 }
 
 pub async fn post_high_end_verification_approval(
     State(state): State<AppState>,
     Path(verification_id): Path<i32>,
-    // ✅ Adjust `AuthUser` and `.email` if your auth type differs.
     auth: AuthUser,
     Json(payload): Json<PostHighEndVerificationApprovalRequest>,
 ) -> Result<Json<PostHighEndVerificationApprovalResponse>, (StatusCode, String)> {
     let db: &DatabaseConnection = &state.db;
 
+    // 1 --- Start a database transaction.
     let txn = db
         .begin()
         .await
@@ -228,6 +230,7 @@ pub async fn post_high_end_verification_approval(
         approved_by: Set(Some(auth.claims.email.clone())),
         approved_cost: Set(Some(payload.approved_cost)),
         approval_date: Set(Some(now)),
+        dentist_notes: Set(payload.dentist_notes.clone()),
         ..Default::default()
     }
         .insert(&txn)
@@ -253,6 +256,7 @@ pub async fn post_high_end_verification_approval(
         approved_by: inserted.approved_by,
         approved_cost: inserted.approved_cost,
         approval_date: inserted.approval_date,
+        dentist_notes: inserted.dentist_notes,
         verification_status_id: 1,
     }))
 }

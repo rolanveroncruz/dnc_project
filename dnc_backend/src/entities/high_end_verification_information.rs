@@ -12,6 +12,7 @@ pub struct Model {
     pub approved_by: Option<String>,
     pub approved_cost: Option<Decimal>,
     pub approval_date: Option<DateTime>,
+    pub dentist_notes: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
