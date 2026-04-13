@@ -3,17 +3,20 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType, QueryFilter,
-    QuerySelect, RelationTrait,
-};
-use serde::Serialize;
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType, QueryFilter, QuerySelect, RelationTrait, Set, TransactionTrait};
+use serde::{ Deserialize, Serialize};
 use std::collections::BTreeMap;
-
+use axum::extract::Path;
+use chrono::Utc;
+use rust_decimal::Decimal;
 use crate::AppState;
-use crate::entities::{
-    dental_service, dentist, endorsement, high_end_files, hmo, master_list_member,
+use crate::{
+    entities::{
+    dental_service, dentist, endorsement, high_end_files, high_end_verification_information,
+    hmo, master_list_member,
     verification, verification_status,
+},
+    handlers::AuthUser
 };
 
 #[derive(Debug, Serialize)]
@@ -83,6 +86,8 @@ fn format_member_name(
         format!("{}, {} {}", last_name, first_name, middle_name)
     }
 }
+
+
 // region: get_high_end_verifications
 pub async fn get_high_end_verifications(
     State(state): State<AppState>,
@@ -172,4 +177,83 @@ pub async fn get_high_end_verifications(
     Ok(Json(response))
 }
 
-// region: get_high_end_verifications
+// endregion: get_high_end_verifications
+
+// region: post_high_end_verification_approval
+#[derive(Debug, Deserialize)]
+pub struct PostHighEndVerificationApprovalRequest {
+    pub approved_cost: Decimal,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PostHighEndVerificationApprovalResponse {
+    pub id: i32,
+    pub verification_id: i32,
+    pub approved_by: Option<String>,
+    pub approved_cost: Option<Decimal>,
+    pub approval_date: Option<chrono::NaiveDateTime>,
+    pub verification_status_id: i32,
+}
+
+pub async fn post_high_end_verification_approval(
+    State(state): State<AppState>,
+    Path(verification_id): Path<i32>,
+    // ✅ Adjust `AuthUser` and `.email` if your auth type differs.
+    auth: AuthUser,
+    Json(payload): Json<PostHighEndVerificationApprovalRequest>,
+) -> Result<Json<PostHighEndVerificationApprovalResponse>, (StatusCode, String)> {
+    let db: &DatabaseConnection = &state.db;
+
+    let txn = db
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // ✅ Confirm the verification exists first.
+    let existing_verification = verification::Entity::find_by_id(verification_id)
+        .one(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let Some(verification_model) = existing_verification else {
+        return Err((StatusCode::NOT_FOUND, "Verification not found".to_string()));
+    };
+
+    // ✅ Current datetime for approval_date.
+    let now = Utc::now().naive_utc();
+
+    // ✅ Insert into high_end_verification_information.
+    let inserted = high_end_verification_information::ActiveModel {
+        verification_id: Set(verification_id),
+        approved_by: Set(Some(auth.claims.email.clone())),
+        approved_cost: Set(Some(payload.approved_cost)),
+        approval_date: Set(Some(now)),
+        ..Default::default()
+    }
+        .insert(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // ✅ Update verification.status_id to 1.
+    let mut verification_am: verification::ActiveModel = verification_model.into();
+    verification_am.status_id = Set(1);
+
+    verification_am
+        .update(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    txn.commit()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(PostHighEndVerificationApprovalResponse {
+        id: inserted.id,
+        verification_id: inserted.verification_id,
+        approved_by: inserted.approved_by,
+        approved_cost: inserted.approved_cost,
+        approval_date: inserted.approval_date,
+        verification_status_id: 1,
+    }))
+}
+// endregion: post_high_end_verification_approval
