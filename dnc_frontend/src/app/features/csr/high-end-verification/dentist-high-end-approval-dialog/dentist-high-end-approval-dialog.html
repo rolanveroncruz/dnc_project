@@ -1,0 +1,105 @@
+<h2 mat-dialog-title>High End Verification Details</h2>
+
+<mat-dialog-content>
+    <div class="details-grid">
+        <div class="detail-row">
+            <span class="label">HMO</span>
+            <span class="value">{{ data.hmo_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Dentist Name</span>
+            <span class="value">{{ data.dentist_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Dental Service</span>
+            <span class="value">{{ data.dental_service_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Member Name</span>
+            <span class="value">{{ data.member_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="value">{{ data.status_name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Date Created</span>
+            <span class="value">{{ data.date_created | date:'medium' }}</span>
+        </div>
+    </div>
+
+    <div class="files-section">
+        <h3>Attached Files</h3>
+
+        @if (data.files.length === 0) {
+            <p>No files uploaded.</p>
+        } @else {
+            <div class="file-list">
+                @for (file of data.files; track file.id) {
+                    <div class="file-card">
+                        <div class="file-row">
+                            <span class="file-label">Filename</span>
+                            <span class="file-value">
+                                {{ file.original_filename || 'Unnamed file' }}
+                            </span>
+                        </div>
+
+                        <div class="file-row">
+                            <span class="file-label">Description</span>
+                            <span class="file-value">
+                                {{ file.description || 'No description' }}
+                            </span>
+                        </div>
+                        <div class="file-actions">
+                            <button
+                                mat-stroked-button
+                                type="button"
+                                (click)="downloadFile(file)"
+                            >
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    <form [formGroup]="form" class="form-section">
+        <h3>Approval Details</h3>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Amount</mat-label>
+            <input
+                matInput
+                type="text"
+                step="0.01"
+                formControlName="approved_cost"
+                (blur)="formatApprovedCost()"
+            />
+            @if (form.controls.approved_cost.hasError('pattern') && form.controls.approved_cost.touched) {
+                <mat-error>Please enter a valid decimal amount.</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dentist Notes</mat-label>
+            <textarea
+                matInput
+                rows="2"
+                formControlName="dentist_notes"
+            ></textarea>
+        </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="close()">Close</button>
+    <button mat-flat-button color="primary" type="button" (click)="submit()">
+        Submit and Close
+    </button>
+</mat-dialog-actions>

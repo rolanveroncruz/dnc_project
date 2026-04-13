@@ -46,7 +46,11 @@ pub enum Relation {
         has_many = "super::high_end_files::Entity"
     )]
     HighEndFiles,
-    #[sea_orm(has_many = "super::high_end_verification_information::Entity")]
+    // NOTE: adjusted manually after codegen.
+    // verification_id should be unique.
+    #[sea_orm(
+        has_one = "super::high_end_verification_information::Entity"
+    )]
     HighEndVerificationInformation,
     #[sea_orm(
         belongs_to = "super::master_list_member::Entity",

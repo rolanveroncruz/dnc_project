@@ -1,0 +1,26 @@
+<mat-card class="setup-card">
+    <mat-card-header class="card-header-center">
+        <div class="title-block">
+            <mat-card-title class="mat-headline-1">High End Verifications</mat-card-title>
+            <mat-card-subtitle>Dental Services waiting for Dentists' Approval</mat-card-subtitle>
+        </div>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (high_end_verifications(); as ds){
+            @if (ds.length === 0) {
+                <p>No verifications found.</p>
+            } @else {
+                <app-generic-data-table
+                    [columnDefs]="columns"
+                    [data]="ds"
+                    [showAddButton]="false"
+                    [hideSecondaryAction]="hideSecondary"
+                    (rowClicked)="onRowClicked($event)"
+                >
+
+                </app-generic-data-table>
+            }
+        }
+    </mat-card-content>
+</mat-card>

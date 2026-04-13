@@ -22,6 +22,8 @@ export interface VerificationLookupResponse {
     approval_code: string | null;
     approved_by: string | null;
     approval_date: string | null;
+    approved_amount: number | null;
+    dentist_notes: string | null;
 }
 export interface ExtendedVerificationLookupResponse extends VerificationLookupResponse {
     approval_string: string | null;

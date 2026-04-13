@@ -28,6 +28,7 @@ import {SetupEndorsementsComponent} from './features/setup/setup-endorsements/se
 import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endorsements';
 import {VerificationsComponent} from './features/csr/verifications-component/verifications-component';
 import {Verification} from './features/csr/verifications-component/verification/verification';
+import {HighEndVerification} from './features/csr/high-end-verification/high-end-verification';
 
 export const routes: Routes = [
   {
@@ -80,6 +81,7 @@ export const routes: Routes = [
               { path: 'verifications', component:VerificationsComponent, title: 'Verifications'},
               { path: 'verifications/new', component:Verification, title: 'Verifications'},
               { path: 'verifications/:id', component:Verification, title: 'Verifications'},
+              { path: 'high_end_verification', component:HighEndVerification, title: 'High End Verifications'},
           ]
       }, // end of 'csr'
       {

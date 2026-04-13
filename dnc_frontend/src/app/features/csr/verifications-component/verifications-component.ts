@@ -187,6 +187,8 @@ export class VerificationsComponent implements OnInit {
             approval_code: null,
             tooth_surfaces: this.tooth_surfaces(),
             tooth_service_types: this.tooth_service_types(),
+            approved_amount: row.approved_amount,
+            dentist_notes: row.dentist_notes,
         }
 
         const dialogRef = this.dialog.open<
