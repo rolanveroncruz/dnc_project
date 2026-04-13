@@ -38,6 +38,8 @@ export interface ApprovalDialogData {
     approval_code?: string | null;
     tooth_surfaces: ToothSurface[];
     tooth_service_types: ToothServiceType[];
+    approved_amount: number |null;
+    dentist_notes: string | null;
 }
 
 export interface ApprovalDialogResult {

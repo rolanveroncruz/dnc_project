@@ -25,6 +25,18 @@
             <span class="label">Dental Service Name</span>
             <span class="value">{{ data.dental_service_name }}</span>
         </div>
+        @if(data.approved_amount !== null){
+            <div class="detail-row">
+                <span class="label">Approved Amount</span>
+                <span class="value">{{ data.approved_amount | currency:'PHP':'symbol':'1.2-2' }}</span>
+            </div>
+        }
+        @if(data.dentist_notes !== null){
+            <div class="detail-row">
+                <span class="label">Dentist Notes</span>
+                <span class="value">{{ data.dentist_notes }}</span>
+            </div>
+        }
     </div>
 
     <form [formGroup]="form" class="form-section">
