@@ -1,0 +1,51 @@
+.details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.label,
+.file-label {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.value,
+.file-value {
+    word-break: break-word;
+}
+
+.files-section {
+    margin-top: 16px;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.file-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.file-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.file-row:last-child {
+    margin-bottom: 0;
+}
