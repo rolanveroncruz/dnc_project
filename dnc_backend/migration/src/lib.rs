@@ -31,6 +31,7 @@ mod m20260408_060317_alter_table_verification_add_tooth_service_type_and_tooth_s
 mod m20260412_120637_alter_table_high_end_files_add_description;
 mod m20260412_132526_alter_table_high_end_files_add_orignal_filename;
 mod m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval;
+mod m20260413_070829_insert_high_end_verification_dataobject;
 
 pub struct Migrator;
 
@@ -69,6 +70,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260412_120637_alter_table_high_end_files_add_description::Migration),
             Box::new(m20260412_132526_alter_table_high_end_files_add_orignal_filename::Migration),
             Box::new(m20260412_150517_alter_insert_verification_status_waiting_for_dentist_approval::Migration),
+            Box::new(m20260413_070829_insert_high_end_verification_dataobject::Migration),
         ]
     }
 }
