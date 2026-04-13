@@ -1,14 +1,19 @@
+.dialog-content {
+    max-height: none;
+    overflow: hidden;
+    padding-top: 0;
+}
 .details-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .detail-row {
     display: grid;
-    grid-template-columns: 160px 1fr;
-    gap: 12px;
+    grid-template-columns: 140px 1fr;
+    gap: 8px;
     align-items: start;
 }
 
@@ -24,28 +29,45 @@
 }
 
 .files-section {
-    margin-top: 16px;
+    margin-top: 12px;
+}
+
+.files-section h3,
+.form-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
 }
 
 .file-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .file-card {
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 12px;
+    padding: 8px 12px;
 }
 
 .file-row {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 12px;
-    margin-bottom: 8px;
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
 .file-row:last-child {
     margin-bottom: 0;
+}
+
+.form-section {
+    margin-top: 12px;
+}
+
+.full-width {
+    width: 100%;
+}
+.file-actions {
+    margin-top: 4px;
 }

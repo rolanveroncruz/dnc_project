@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member, patch_master_list_member, get_approval_code_for_verification_id, get_high_end_verifications};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule, get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id, get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member, patch_master_list_member, get_approval_code_for_verification_id, get_high_end_verifications, post_high_end_verification_approval};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
 use crate::handlers::{get_dental_clinics, get_dental_clinic_by_id, create_dental_clinic, patch_dental_clinic};
@@ -65,6 +65,7 @@ use crate::handlers::{get_endorsements_for_dentist_id_handler};
 use crate::handlers::{get_master_list_members_for_endorsement};
 use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
 use crate::handlers::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};
+
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -177,6 +178,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/verifications/{verification_id}/high_end_files", post(upload_high_end_file).get(list_uploaded_high_end_files))
         .route("/high_end_files/{high_end_file_id}/download", get(download_high_end_file))
         .route("/high_end_verifications", get(get_high_end_verifications))
+        .route("/high_end_verifications/{verification_id}/approval", post(post_high_end_verification_approval))
 
 
 }

@@ -1,19 +1,17 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
-import {MatButton} from '@angular/material/button';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
-import {HighEndVerificationsService, HighEndVerificationResponse, HighEndFileResponse} from '../../../api_services/high-end-verifications-service';
+import {HighEndVerificationsService, HighEndVerificationResponse, } from '../../../api_services/high-end-verifications-service';
 import {MatDialog} from '@angular/material/dialog';
 import {
-    DentistHighEndApprovalDialogComponent
+    DentistHighEndApprovalDialogComponent, DentistHighEndApprovalDialogResult
 } from './dentist-high-end-approval-dialog/dentist-high-end-approval-dialog';
 
 @Component({
   selector: 'app-high-end-verification',
     imports: [
         GenericDataTableComponent,
-        MatButton,
         MatCard,
         MatCardContent,
         MatCardHeader,
@@ -63,11 +61,17 @@ export class HighEndVerification implements OnInit {
 
     onRowClicked(res: HighEndVerificationResponse) {
         console.log("In onRowClicked(), res:", res);
-        this.dialog.open(DentistHighEndApprovalDialogComponent,{
+        const dialogRef = this.dialog.open(DentistHighEndApprovalDialogComponent,{
             data: res,
             width: '720px',
             maxWidth: '95vw',
-        })
+        });
+        dialogRef.afterClosed().subscribe((result: DentistHighEndApprovalDialogResult| undefined) => {
+            console.log("Dialog closed with result:", result);
+            if (!result?.confirmed){
+                return;
+            }
+        });
     }
 }
 

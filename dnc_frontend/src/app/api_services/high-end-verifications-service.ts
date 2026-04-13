@@ -21,6 +21,20 @@ export interface HighEndVerificationResponse {
     dental_service_name: string,
     files: HighEndFileResponse[],
 }
+export interface PostHighEndVerificationApprovalRequest {
+    approved_cost: number,
+    dentist_notes: string | null,
+}
+
+export interface PostHighEndVerificationApprovalResponse {
+    id: number,
+    verification_id: number,
+    approved_by: string | null,
+    approved_cost: number | null,
+    approval_date: string | null,
+    dentist_notes: string | null,
+    verification_status_id: number,
+}
 
 @Injectable({
   providedIn: 'root',
@@ -32,6 +46,7 @@ export class HighEndVerificationsService {
 
 
     private readonly baseHighEndVerificationsUrl = `${environment.apiBaseUrl}/api/high_end_verifications`;
+    private readonly baseHighEndFilesUrl = `${environment.apiBaseUrl}/api/high_end_files`;
 
     private authHeaders(): HttpHeaders {
         const token = this.loginService.token?.() ?? '';
@@ -41,6 +56,26 @@ export class HighEndVerificationsService {
     getAllHighEndVerifications(): Observable<HighEndVerificationResponse[]> {
         return this.http.get<HighEndVerificationResponse[]>(
             `${this.baseHighEndVerificationsUrl}`, { headers: this.authHeaders(), }
+        );
+    }
+    downloadHighEndFile(fileId: number): Observable<Blob> {
+        return this.http.get(
+            `${this.baseHighEndFilesUrl}/${fileId}/download`,
+            {
+                headers: this.authHeaders(),
+                responseType: 'blob',
+            }
+        );
+    }
+
+
+    postHighEndVerificationInformation(verification_id:number, dentist_notes: string, approved_cost: number):
+        Observable<PostHighEndVerificationApprovalResponse> {
+        const payload: PostHighEndVerificationApprovalRequest = {dentist_notes, approved_cost};
+        return this.http.post<PostHighEndVerificationApprovalResponse>(
+            `${this.baseHighEndVerificationsUrl}/${verification_id}/approval`,
+            payload,
+            {headers: this.authHeaders()}
         );
     }
 }

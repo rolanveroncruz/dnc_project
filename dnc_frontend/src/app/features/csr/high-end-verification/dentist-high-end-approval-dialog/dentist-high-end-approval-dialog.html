@@ -55,13 +55,51 @@
                                 {{ file.description || 'No description' }}
                             </span>
                         </div>
+                        <div class="file-actions">
+                            <button
+                                mat-stroked-button
+                                type="button"
+                                (click)="downloadFile(file)"
+                            >
+                                Download
+                            </button>
+                        </div>
                     </div>
                 }
             </div>
         }
     </div>
+    <form [formGroup]="form" class="form-section">
+        <h3>Approval Details</h3>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Amount</mat-label>
+            <input
+                matInput
+                type="text"
+                step="0.01"
+                formControlName="approved_cost"
+                (blur)="formatApprovedCost()"
+            />
+            @if (form.controls.approved_cost.hasError('pattern') && form.controls.approved_cost.touched) {
+                <mat-error>Please enter a valid decimal amount.</mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dentist Notes</mat-label>
+            <textarea
+                matInput
+                rows="2"
+                formControlName="dentist_notes"
+            ></textarea>
+        </mat-form-field>
+  </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
     <button mat-button (click)="close()">Close</button>
+    <button mat-flat-button color="primary" type="button" (click)="submit()">
+        Submit and Close
+    </button>
 </mat-dialog-actions>
