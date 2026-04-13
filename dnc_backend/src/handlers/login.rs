@@ -155,6 +155,7 @@ pub async fn login_handler(
         })?;
 
     let menu_activation_map = build_menu_activation_map(& state.db, role.id).await.unwrap();
+    tracing::info!("MENU activation map for role_id:{:?}: is {:?}", role.id, menu_activation_map);
 
     // 4. Return LoginResponse with JWT included
     let response = LoginResponse {
