@@ -22,7 +22,7 @@ export interface HighEndVerificationResponse {
     files: HighEndFileResponse[],
 }
 export interface PostHighEndVerificationApprovalRequest {
-    approved_cost: number,
+    approved_cost: string,
     dentist_notes: string | null,
 }
 
@@ -69,7 +69,7 @@ export class HighEndVerificationsService {
     }
 
 
-    postHighEndVerificationInformation(verification_id:number, dentist_notes: string, approved_cost: number):
+    postHighEndVerificationInformation(verification_id:number, dentist_notes: string|null, approved_cost: string):
         Observable<PostHighEndVerificationApprovalResponse> {
         const payload: PostHighEndVerificationApprovalRequest = {dentist_notes, approved_cost};
         return this.http.post<PostHighEndVerificationApprovalResponse>(

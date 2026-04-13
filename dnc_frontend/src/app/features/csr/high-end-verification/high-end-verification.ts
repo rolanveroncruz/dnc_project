@@ -71,6 +71,17 @@ export class HighEndVerification implements OnInit {
             if (!result?.confirmed){
                 return;
             }
+            this.highEndVerificationsService
+                .postHighEndVerificationInformation(res.verification_id, result.dentist_notes, result.approved_cost)
+                .subscribe({
+                    next: (res) => {
+                        console.log("In postHighEndVerificationInformation(), res:", res);
+                        this.ngOnInit();
+                    },
+                    error: (err) => {
+                        console.log("In postHighEndVerificationInformation(), failed to post high end verification information", err);
+                    }
+                })
         });
     }
 }

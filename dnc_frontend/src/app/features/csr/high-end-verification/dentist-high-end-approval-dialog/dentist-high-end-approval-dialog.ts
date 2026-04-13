@@ -12,7 +12,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 export interface DentistHighEndApprovalDialogResult{
     confirmed: boolean;
-    approved_cost: string | null;
+    approved_cost: string;
     dentist_notes: string | null;
 }
 @Component({
@@ -110,7 +110,7 @@ export class DentistHighEndApprovalDialogComponent {
 
         this.dialogRef.close({
             confirmed: true,
-            approved_cost: amountValue === '' ? null : amountValue,
+            approved_cost: amountValue,
             dentist_notes: notesValue === '' ? null : notesValue,
         } satisfies DentistHighEndApprovalDialogResult);
     }
