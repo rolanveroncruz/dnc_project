@@ -1,4 +1,4 @@
-import {inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {LoginService} from '../login.service';
 import {environment} from '../../environments/environment';
@@ -26,8 +26,9 @@ export interface HighEndVerificationResponse {
   providedIn: 'root',
 })
 export class HighEndVerificationsService {
-    private http = inject(HttpClient);
-    private loginService = inject(LoginService);
+    constructor(
+    private readonly http:HttpClient,
+    private readonly loginService:LoginService){}
 
 
     private readonly baseHighEndVerificationsUrl = `${environment.apiBaseUrl}/api/high_end_verifications`;
