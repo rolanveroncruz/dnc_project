@@ -1,6 +1,7 @@
 #[allow(unused_imports, dead_code)]
 mod db;
 mod entities;
+mod jobs;
 use std::error::Error;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -68,6 +69,10 @@ async fn main()-> Result<(), Box<dyn Error>> {
     let file_appender = tracing_appender::rolling::daily("logs/", "app.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
+    //2b. Setup a separate File Appender for background jobs
+    let jobs_file_appender = tracing_appender::rolling::daily("logs/", "jobs.log");
+    let (jobs_non_blocking, _jobs_guard) = tracing_appender::non_blocking(jobs_file_appender);
+
     // 3. Define the Layers
     let filter =EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("info,axum=debug,tower_http=debug,h2=off,hyper=off,tower=off"));
@@ -81,6 +86,7 @@ async fn main()-> Result<(), Box<dyn Error>> {
         .with_ansi(false)
         .with_filter(filter.clone());
 
+
     let stdout_layer = tracing_subscriber::fmt::layer()
         .with_writer  (std::io::stdout)
         .with_ansi(true)
@@ -91,6 +97,14 @@ async fn main()-> Result<(), Box<dyn Error>> {
         .with(telemetry_layer)
         .with(stdout_layer)
         .with(file_layer)
+        .with(tracing_subscriber::fmt::layer()
+            .with_writer(jobs_non_blocking)
+            .with_ansi(false)
+            .with_filter(
+                tracing_subscriber::filter::Targets::new()
+                    .with_target("jobs", tracing::Level::TRACE)
+            )
+        )
         .init();
 
     tracing::info!("Tracing initialized. Console, File, and OpenTelemetry are active");
@@ -113,6 +127,9 @@ async fn main()-> Result<(), Box<dyn Error>> {
     let the_state= AppState::new().await;
     let db = &the_state.db;
     check_db(&db).await;
+
+    let _daily_worker = jobs::start_daily_worker(the_state.clone());
+
     let app=build_app(the_state);
     let addr= SocketAddr::from(([0,0,0,0], port));
     let listener=TcpListener::bind(addr)
@@ -122,7 +139,6 @@ async fn main()-> Result<(), Box<dyn Error>> {
     tracing::info!("Listening on {}", addr);
 
     axum::serve(listener, app)
-        .await
-        .unwrap();
+        .await?;
     Ok(())
 }
