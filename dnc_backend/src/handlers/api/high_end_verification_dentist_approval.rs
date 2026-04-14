@@ -237,9 +237,9 @@ pub async fn post_high_end_verification_approval(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // ✅ Update verification.status_id to 1.
+    // ✅ Update verification.status_id to 3:"dentist quoted; waiting for approval code".
     let mut verification_am: verification::ActiveModel = verification_model.into();
-    verification_am.status_id = Set(1);
+    verification_am.status_id = Set(3);
 
     verification_am
         .update(&txn)
