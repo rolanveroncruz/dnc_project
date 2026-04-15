@@ -63,6 +63,9 @@ export class VerificationsComponent implements OnInit {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
                 color: 'primary',
+                // hide the button if status_id==0 (Canceled)
+                // or status_id==99 (Done) or status_id=999 (Expired)
+                // row_status_id==21(Waiting for dentist approval),
                 hidden: (row: ExtendedVerificationLookupResponse) => row.status_id == 0 || row.status_id == 99 || row.status_id == 999 || row.status_id == 21,
                 onClick: function (row: ExtendedVerificationLookupResponse): void {
                     console.log("In onRowClicked(), row:", row);
