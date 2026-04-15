@@ -16,6 +16,7 @@ use crate::{
         verification_status,
         endorsement_counts,
         high_end_verification_information,
+        tooth_surface,
     },
 };
 use crate::handlers::AuthUser;
@@ -33,6 +34,7 @@ pub struct VerificationLookupResponse {
     pub dental_service_name: String,
     pub dental_service_is_high_end:bool,
     pub record_tooth: bool,
+    pub record_surface: bool,
     pub endorsement_id:i32,
     pub endorsement_agreement_corp_number:Option<String>,
     pub status_id: i32,
@@ -40,6 +42,10 @@ pub struct VerificationLookupResponse {
     pub approval_code: Option<String>,
     pub approved_by: Option<String>,
     pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
+
+    pub date_service_performed: Option<Date>,
+    pub tooth_id: Option<String>,
+    pub tooth_surface_name: Option<String>,
 
     pub approved_amount: Option<Decimal>,
     pub dentist_notes: Option<String>,
@@ -64,6 +70,7 @@ struct VerificationLookupRow {
     pub dental_service_name: String,
     pub dental_service_is_high_end:bool,
     pub record_tooth: bool,
+    pub record_surface: bool,
 
     pub endorsement_id:i32,
     pub endorsement_agreement_corp_number:Option<String>,
@@ -74,6 +81,10 @@ struct VerificationLookupRow {
     pub approval_code: Option<String>,
     pub approved_by: Option<String>,
     pub approval_date: Option<sea_orm::prelude::DateTimeWithTimeZone>,
+
+    pub date_service_performed: Option<Date>,
+    pub tooth_id: Option<String>,
+    pub tooth_surface_name: Option<String>,
 
     pub approved_amount: Option<Decimal>,
     pub dentist_notes: Option<String>,
@@ -133,6 +144,10 @@ pub async fn get_all_verifications(
         .join(JoinType::LeftJoin,
               verification::Relation::HighEndVerificationInformation.def(),
         )
+        .join(
+            JoinType::LeftJoin,
+            verification::Relation::ToothSurface.def(),
+        )
         .select_only()
         .column_as(verification::Column::Id, "verification_id")
         .column_as(verification::Column::DateCreated, "date_created")
@@ -151,6 +166,7 @@ pub async fn get_all_verifications(
             "dental_service_is_high_end"
         )
         .column_as(dental_service::Column::RecordTooth, "record_tooth")
+        .column_as(dental_service::Column::RecordSurface, "record_surface")
         .column_as(master_list_member::Column::EndorsementId, "endorsement_id")
         .column_as(endorsement::Column::AgreementCorpNumber, "endorsement_agreement_corp_number")
         .column_as(verification_status::Column::IntCode, "status_id")
@@ -158,6 +174,9 @@ pub async fn get_all_verifications(
         .column_as(verification::Column::ApprovalCode, "approval_code")
         .column_as(verification::Column::ApprovedBy, "approved_by")
         .column_as(verification::Column::ApprovalDate, "approval_date")
+        .column_as(verification::Column::DateServicePerformed, "date_service_performed")
+        .column_as(verification::Column::ToothId, "tooth_id")
+        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(
             high_end_verification_information::Column::ApprovedCost,
             "approved_amount",
@@ -179,6 +198,10 @@ pub async fn get_all_verifications(
             } else{
                 (None, None, None)
             };
+            let tooth_surface_name = row
+                .tooth_surface_name
+                .map(|name| name.chars().take(3).collect::<String>());
+
             VerificationLookupResponse {
                 verification_id: row.verification_id,
                 date_created: row.date_created,
@@ -198,6 +221,7 @@ pub async fn get_all_verifications(
                 dental_service_name: row.dental_service_name,
                 dental_service_is_high_end: row.dental_service_is_high_end,
                 record_tooth: row.record_tooth,
+                record_surface: row.record_surface,
                 endorsement_id: row.endorsement_id,
                 endorsement_agreement_corp_number: row.endorsement_agreement_corp_number,
                 status_id: row.status_id,
@@ -205,6 +229,9 @@ pub async fn get_all_verifications(
                 approval_code,
                 approved_by,
                 approval_date,
+                date_service_performed: row.date_service_performed,
+                tooth_id: row.tooth_id,
+                tooth_surface_name,
                 approved_amount: row.approved_amount,
                 dentist_notes: row.dentist_notes,
             }
