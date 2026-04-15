@@ -14,6 +14,7 @@ export interface VerificationLookupResponse {
     dental_service_id: number;
     dental_service_name: string;
     record_tooth:boolean,
+    record_surface:boolean,
     endorsement_id: number;
     endorsement_agreement_corp_number: string | null;
     dental_service_is_high_end:boolean,
@@ -24,6 +25,9 @@ export interface VerificationLookupResponse {
     approval_date: string | null;
     approved_amount: number | null;
     dentist_notes: string | null;
+    date_service_performed: string | null;
+    tooth_id: number | null;
+    tooth_surface_name: string | null;
 }
 export interface ExtendedVerificationLookupResponse extends VerificationLookupResponse {
     approval_string: string | null;

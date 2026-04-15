@@ -34,6 +34,7 @@ export interface ApprovalDialogData {
     dental_service_id: number;
     dental_service_name: string;
     dental_service_record_tooth: boolean,
+    dental_service_record_surface: boolean,
     service_availed_date?: string | null;
     approval_code?: string | null;
     tooth_surfaces: ToothSurface[];

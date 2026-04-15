@@ -68,6 +68,8 @@
                     <mat-error>Tooth ID is required.</mat-error>
                 }
             </mat-form-field>
+        }
+        @if (data.dental_service_record_surface) {
             <!--
             Tooth Surface ID is required when record tooth is true.
             -->
@@ -83,6 +85,7 @@
                     <mat-error>Tooth surface is required.</mat-error>
                 }
             </mat-form-field>
+        }
             <!--
             Tooth Service Type ID is required when record tooth is true.
             -->
@@ -98,7 +101,6 @@
                     <mat-error>Tooth service type is required.</mat-error>
                 }
             </mat-form-field>
-        }
 
         <div class="static-field full-width">
             <div class="static-field-label">Approval Code</div>

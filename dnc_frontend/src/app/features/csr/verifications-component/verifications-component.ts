@@ -56,7 +56,10 @@ export class VerificationsComponent implements OnInit {
         { key: 'dentist_name', label: 'Dentist'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
+        {key: 'tooth_id', label: 'Tooth'},
+        {key: 'tooth_surface_name', label: 'Surface'},
         {key: 'status_name', label: 'Status'},
+        {key: 'date_service_performed', label: 'Service Date', cellTemplateKey: 'date'},
         {key: 'approval_string', label: 'Approval Details'},
         { key: 'actions', label:'Actions', sortable: false, cellTemplateKey: 'actions',
             actionButton: {
@@ -184,6 +187,7 @@ export class VerificationsComponent implements OnInit {
             dental_service_id: row.dental_service_id,
             dental_service_name: row.dental_service_name,
             dental_service_record_tooth: row.record_tooth,
+            dental_service_record_surface: row.record_surface,
             master_list_member_id: row.master_list_member_id,
             master_list_member_name: row.master_list_member_name,
             service_availed_date: undefined,
@@ -193,6 +197,7 @@ export class VerificationsComponent implements OnInit {
             approved_amount: row.approved_amount,
             dentist_notes: row.dentist_notes,
         }
+        console.log("In openApprovalCodeDialog(), dialogData:", dialogData);
 
         const dialogRef = this.dialog.open<
             ApprovalDialogComponent,
