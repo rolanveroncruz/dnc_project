@@ -27,7 +27,6 @@ tracing-opentelemetry = "0.32.0"
 opentelemetry = {"version"="0.31.0", features = ["metrics", "logs","trace"]}
 opentelemetry_sdk = { version="0.31.0", features = ["rt-tokio", "trace"] }
 opentelemetry-otlp = {version="0.31.0", features = ["grpc-tonic", "trace"]}
-opentelemetry-http = { version="0.31.0" }
 axum-tracing-opentelemetry = { version="0.32.2" }
 tracing-appender = "0.2.4"
 reqwest = { version = "0.12.26", features = ["json"] }
@@ -35,7 +34,6 @@ serde_json = "1.0.148"
 serde_with="3.16.1"
 calamine = "0.32.0"
 rust_decimal = "1.40.0"
-rust_decimal_macros = "1.40.0"
 hmac = "0.13.0"
 sha2 = "0.11.0"
 uuid = { version = "1.18.1", features = ["v4"] }
