@@ -11,16 +11,6 @@ import {DentalServiceDialogData} from './add-edit-dental-services/dental-service
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
-// export interface DentalService {
-//     id: number;
-//     name: string;
-//     type_name: string;
-//     sort_index: number;
-//     record_tooth: boolean;
-//     active: boolean;
-//     last_modified_by: string;
-//     last_modified_on: Date;
-// }
 
 @Component({
     selector: 'app-setup-dental-services',
@@ -49,6 +39,8 @@ export class DentalServices implements OnInit {
         {key: 'id', label: 'ID'},
         {key: 'name', label: 'Name'},
         {key: 'type_name', label: 'Type'},
+        {key: 'record_tooth', label: 'Record Tooth', cellTemplateKey: 'check'},
+        {key: 'record_surface', label: 'Record Surface', cellTemplateKey: 'check'},
         {key: 'is_unlimited', label: 'Unlimited', cellTemplateKey: 'check'},
         {key: 'sort_index', label: 'Sort Index'},
         {key: 'last_modified_by', label: 'Last Modified By'},

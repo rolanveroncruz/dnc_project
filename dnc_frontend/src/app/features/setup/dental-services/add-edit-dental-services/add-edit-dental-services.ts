@@ -47,6 +47,7 @@ export class DentalServiceDialogComponent {
         type_id: [null as number | null, [Validators.required]],
         sort_index: [0 as number, [Validators.required, Validators.min(0), Validators.max(999_999_999)]],
         record_tooth: [false],
+        record_surface: [false],
         active: [true],
     });
 
@@ -82,6 +83,7 @@ export class DentalServiceDialogComponent {
             type_id: this.data.typeOptions?.[0]?.id ?? null,
             sort_index: 99,
             record_tooth: false,
+            record_surface: false,
             active: true,
         };
 
@@ -91,6 +93,7 @@ export class DentalServiceDialogComponent {
                 type_id: s.type_id,
                 sort_index: (s as any).sort_index ?? 99,
                 record_tooth: s.record_tooth,
+                record_surface: s.record_surface,
                 active: s.active,
             }
             : createDefaults;
@@ -122,6 +125,7 @@ export class DentalServiceDialogComponent {
             name: raw.name!.trim(),
             type_id: raw.type_id!,
             record_tooth: !!raw.record_tooth,
+            record_surface: !!raw.record_surface,
             sort_index: sortIndex,
             active: !!raw.active,
         };
