@@ -16,6 +16,7 @@ pub struct Model {
     pub active: bool,
     pub last_modified_by: String,
     pub last_modified_on: DateTimeWithTimeZone,
+    pub record_surface: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
