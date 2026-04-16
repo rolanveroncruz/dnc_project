@@ -113,7 +113,7 @@ export class ApprovalDialogComponent {
             tooth_surface_id: new FormControl<number | null>(
                 null,
                 {
-                    validators: this.data.dental_service_record_tooth? [Validators.required]:[],
+                    validators: this.data.dental_service_record_surface? [Validators.required]:[],
                 }
             ),
             tooth_service_type_id: new FormControl<number | null>(
