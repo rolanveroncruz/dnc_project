@@ -130,7 +130,7 @@ impl Migration {
             .to_owned();
         manager.exec_stmt(insert).await
     }
-    async fn create_dental_service( manager: &SchemaManager<'_>, name: &str, service_type: &str, is_unli: bool, record_tooth: bool, last_modified_by: &str )->Result<(), DbErr>{
+    pub(crate) async fn create_dental_service(manager: &SchemaManager<'_>, name: &str, service_type: &str, is_unli: bool, record_tooth: bool, last_modified_by: &str ) ->Result<(), DbErr>{
         use sea_orm_migration::prelude::*;
         use sea_query::{Expr, Query};
         use chrono::Utc;
