@@ -27,9 +27,9 @@ export interface DataObjectOption {
   label?: string; // optional friendly label
 }
 
-export type AddEditRolePermissionMode = 'add' | 'edit';
+export type AddEditRolePermissionMode = 'create' | 'edit';
 
-export interface AddEditRolePermissionsDialogData {
+export interface AddEditRolePermissionsDialogInputData {
   mode: AddEditRolePermissionMode;
 
   // for edit:
@@ -40,10 +40,10 @@ export interface AddEditRolePermissionsDialogData {
   objects: DataObjectOption[];
 }
 
-export interface AddEditRolePermissionsDialogResult {
+export interface AddEditRolePermissionsDialogOutputResult {
   mode: AddEditRolePermissionMode;
 
-  // if edit, include id
+  // if an edit, include id
   id?: number;
 
   role_id: number;
@@ -57,7 +57,6 @@ type EditableSnapshot = {
   data_object_id: number | null;
   actions: { create: boolean; read: boolean; update: boolean };
 };
-
 @Component({
   selector: 'app-add-edit-role-permissions-dialog',
   standalone: true,
@@ -82,12 +81,12 @@ export class AddEditRolePermissionsDialogComponent {
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
   private dialogRef =
-    inject(MatDialogRef<AddEditRolePermissionsDialogComponent, AddEditRolePermissionsDialogResult>);
-  readonly data = inject<AddEditRolePermissionsDialogData>(MAT_DIALOG_DATA);
+    inject(MatDialogRef<AddEditRolePermissionsDialogComponent, AddEditRolePermissionsDialogOutputResult>);
+  readonly data = inject<AddEditRolePermissionsDialogInputData>(MAT_DIALOG_DATA);
 
   mode: AddEditRolePermissionMode = this.data.mode;
 
-  // --- Editable form only (audit is displayed from data.row on the right) ---
+  // --- Editable form only (audit is displayed from the data.row on the right) ---
   form = this.fb.group({
     role_id: this.fb.control<number | null>(null, { validators: [Validators.required] }),
     data_object_id: this.fb.control<number | null>(null, { validators: [Validators.required] }),
@@ -98,9 +97,9 @@ export class AddEditRolePermissionsDialogComponent {
     }),
   });
 
-  title = computed(() => (this.mode === 'add' ? 'Add Role Permission' : 'Edit Role Permission'));
+  title = computed(() => (this.mode === 'create' ? 'Add Role Permission' : 'Edit Role Permission'));
   subtitle = computed(() =>
-    this.mode === 'add'
+    this.mode === 'create'
       ? 'Define what a role can do for a specific data object.'
       : 'Update the permissions for this role and object.'
   );
@@ -115,7 +114,7 @@ export class AddEditRolePermissionsDialogComponent {
     if (this.mode === 'edit' && this.data.row) {
       this.patchFromRow(this.data.row);
     } else {
-      // defaults for add
+      // defaults for 'create'
       this.form.controls.actions.patchValue({ read: true }, { emitEvent: false });
       this.commitBaseline();
     }
@@ -165,7 +164,7 @@ export class AddEditRolePermissionsDialogComponent {
 
   private recomputeFlags() {
     const cur = this.snapshot();
-    this.hasAnyAction = !!(cur.actions.create || cur.actions.read || cur.actions.update);
+    this.hasAnyAction = cur.actions.create || cur.actions.read || cur.actions.update;
     this.hasChanges = !this.deepEqual(cur, this.baseline);
   }
 
@@ -189,19 +188,21 @@ export class AddEditRolePermissionsDialogComponent {
     if (v.actions?.update) actions.push('update');
     if (actions.length === 0) return;
 
-    this.dialogRef.close({
-      mode: this.mode,
-      id: this.data.row?.id,
-      role_id: v.role_id!,
-      data_object_id: v.data_object_id!,
-      actions,
-    });
+
+    const result: AddEditRolePermissionsDialogOutputResult = {
+          mode: this.mode,
+            id: this.data.row?.id,
+          role_id: v.role_id!,
+          data_object_id: v.data_object_id!,
+          actions,
+      };
+
+    this.dialogRef.close(result);
   }
 
   // convenience for template
   get roleCtrl() { return this.form.controls.role_id; }
   get objectCtrl() { return this.form.controls.data_object_id; }
-  get actionsGroup() { return this.form.controls.actions; }
 
   get selectedRoleName(): string {
     const id = this.roleCtrl.value;

@@ -8,7 +8,10 @@ import {
 import {DataObject, DataObjectsService} from '../../../../api_services/data-objects-service';
 import {MatDialog} from '@angular/material/dialog';
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
-import {AddEditRolePermissionsDialogComponent} from '../add-edit-role-permissions/add-edit-role-permissions.dialog';
+import {
+    AddEditRolePermissionsDialogComponent,
+    AddEditRolePermissionsDialogInputData, AddEditRolePermissionsDialogOutputResult
+} from '../add-edit-role-permissions/add-edit-role-permissions.dialog';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 
@@ -106,13 +109,16 @@ export class RolePermissionsTabComponent implements OnInit{
   private dialog = inject(MatDialog);
   openRolePermissionRowDialog(row:ModifiedRolePermission){
     console.log("In openRoleRowDialog():",row);
-    const ref = this.dialog.open(AddEditRolePermissionsDialogComponent, {
+    const ref = this.dialog.open<
+        AddEditRolePermissionsDialogComponent,
+    AddEditRolePermissionsDialogInputData,
+    AddEditRolePermissionsDialogOutputResult>(AddEditRolePermissionsDialogComponent, {
       autoFocus: false,
       data:{
         mode: 'edit',
         row,
-        roles:this.roles(),
-        objects: this.data_objects(),
+        roles:this.roles()??[],
+        objects: this.data_objects()??[],
       },
       width: '720px',
       maxWidth: '95vw',
@@ -123,6 +129,31 @@ export class RolePermissionsTabComponent implements OnInit{
       console.log('The dialog was closed');
       if (!result) return;
     });
+  }
+
+  openNewRolePermissionRowDialog(){
+      const dialogRef = this.dialog.open<
+      AddEditRolePermissionsDialogComponent,
+      AddEditRolePermissionsDialogInputData,
+      AddEditRolePermissionsDialogOutputResult>
+      (AddEditRolePermissionsDialogComponent, {
+          autoFocus: false,
+          data:{
+            mode: 'create',
+            roles:this.roles()??[],
+            objects: this.data_objects()?? [],
+          },
+          width: '720px',
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          disableClose : true,
+      });
+      dialogRef.afterClosed().subscribe(result => {
+          console.log('The dialog was closed');
+          if (!result) return;
+
+      })
+
   }
   convertToRolePermissions(rows: Array<RolePermission> | null): Array<ModifiedRolePermission> | null {
     if (rows == null) return null;
