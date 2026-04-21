@@ -40,6 +40,7 @@ mod m20260420_153627_edit_tooth_service_type_labels;
 mod m20260420_153657_add_dental_service_root_canal_retreatment;
 mod m20260421_041419_add_verification_limit_to_dental_service;
 mod m20260421_055136_create_table_accomplishment_reconciliation;
+mod m20260421_090717_add_acc_reconciliation_permission_and_role_permissions;
 
 pub struct Migrator;
 
@@ -87,6 +88,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260420_153657_add_dental_service_root_canal_retreatment::Migration),
             Box::new(m20260421_041419_add_verification_limit_to_dental_service::Migration),
             Box::new(m20260421_055136_create_table_accomplishment_reconciliation::Migration),
+            Box::new(m20260421_090717_add_acc_reconciliation_permission_and_role_permissions::Migration),
         ]
     }
 }
