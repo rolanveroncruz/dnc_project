@@ -94,8 +94,9 @@ export class MainComponent implements OnInit {
             {label: 'Performance', icon: 'insights', route: '/reports/performance', disabled: true},
         ],
         billing: [
-            {label: 'Invoices', icon: 'receipt', route: '/billing/invoices', disabled: true},
-            {label: 'Payments', icon: 'payments', route: '/billing/payments', disabled: true},
+            {label: 'Accomplishment Reporting', icon: 'receipt', route: '/main/billing/acc_recon', disabled: true},
+            {label: 'HMO Billing', icon: 'receipt', route: '/main/billing/invoices', disabled: true},
+            {label: 'Dentist Payments', icon: 'payments', route: '/main/billing/payments', disabled: true},
         ],
         setup: [
             {label: 'Roles and Permissions', icon: 'security', route: '/main/setup/roles', disabled: true},
@@ -137,6 +138,7 @@ export class MainComponent implements OnInit {
         this.user_initials = this.getInitials();
         this.configure_setup_menu();
         this.configure_csr_menu();
+        this.configure_billing_menu();
         console.log("Manual span ended!");
     }
 
@@ -191,6 +193,13 @@ export class MainComponent implements OnInit {
             this.topNavItems[1].disabled = false;
             this.activate_item("csr", "high_end_verification_information", "HighEndVerification");
         }
+    }
+    configure_billing_menu(){
+        if ("acc_reconciliation" in this.menu_activation_map){
+            this.topNavItems[3].disabled = false;
+            this.activate_item("billing", "acc_reconciliation", "Accomplishment Reporting");
+        }
+
     }
 
 

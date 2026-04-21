@@ -29,6 +29,9 @@ import {SetupEndorsements} from './features/setup/setup-endorsements/setup-endor
 import {VerificationsComponent} from './features/csr/verifications-component/verifications-component';
 import {Verification} from './features/csr/verifications-component/verification/verification';
 import {HighEndVerification} from './features/csr/high-end-verification/high-end-verification';
+import {
+    AccomplishmentReconcilingComponent
+} from './features/billing/accomplishment-reconciling-component/accomplishment-reconciling-component';
 
 export const routes: Routes = [
   {
@@ -91,8 +94,13 @@ export const routes: Routes = [
       }, // end of 'reports'
       {
         path: 'billing',
-        component: BillingHome,
         title: 'Billing Home',
+          children: [
+              {path: '', component: BillingHome, title: 'Billing Home'},
+              {path: 'acc_recon', component: AccomplishmentReconcilingComponent, title: 'Accomplishment Reconciling'}
+
+          ]
+
       } // end of 'billing'
 
     ]
