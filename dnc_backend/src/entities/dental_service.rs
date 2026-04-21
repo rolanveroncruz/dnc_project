@@ -17,10 +17,13 @@ pub struct Model {
     pub last_modified_by: String,
     pub last_modified_on: DateTimeWithTimeZone,
     pub record_surface: bool,
+    pub verification_limit: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::acc_reconciliation::Entity")]
+    AccReconciliation,
     #[sea_orm(
         belongs_to = "super::dental_service_type::Entity",
         from = "Column::TypeId",
@@ -37,6 +40,12 @@ pub enum Relation {
     EndorsementRates,
     #[sea_orm(has_many = "super::verification::Entity")]
     Verification,
+}
+
+impl Related<super::acc_reconciliation::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AccReconciliation.def()
+    }
 }
 
 impl Related<super::dental_service_type::Entity> for Entity {

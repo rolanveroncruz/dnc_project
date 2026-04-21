@@ -1,0 +1,37 @@
+use sea_orm_migration::{prelude::* };
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(DentalService::Table)
+                    .add_column(ColumnDef::new(DentalService::VerificationLimit)
+                        .integer()
+                        .default(1)
+                        .not_null()
+                    ).to_owned(),
+            ).await?;
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .alter_table(
+                Table::alter()
+                    .table(DentalService::Table)
+                    .drop_column(DentalService::VerificationLimit)
+                    .to_owned(),
+            ).await?;
+        Ok(())
+    }
+}
+#[derive(Iden)]
+pub enum DentalService{
+    Table,
+    VerificationLimit
+}

@@ -151,14 +151,14 @@ impl Migration {
     // endregion Alter table verification
 }
 #[derive(Iden)]
-enum ToothServiceType {
+pub(crate) enum ToothServiceType {
     Table,
     Id,
     Name
 }
 
 #[derive(Iden)]
-enum ToothSurface{
+pub enum ToothSurface{
     Table,
     Id,
     Name

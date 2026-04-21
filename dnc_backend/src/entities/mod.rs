@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod acc_reconciliation;
 pub mod account_type;
 pub mod city;
 pub mod clinic_capabilities_list;
