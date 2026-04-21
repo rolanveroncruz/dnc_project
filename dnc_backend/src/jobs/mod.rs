@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Days, LocalResult, TimeZone, Utc, Weekday};
+use chrono::{DateTime, Datelike, Days, LocalResult, TimeZone, Utc};
 use chrono_tz::Asia::Manila;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
@@ -13,9 +13,9 @@ use crate::{entities::{verification}};
 /// Starts the in-process background worker.
 ///
 /// Behavior:
-/// - runs once immediately on startup
-/// - then sleeps until the next midnight in Asia/Manila
-/// - repeats forever
+/// - Runs once immediately on startup
+/// - Then sleeps until the next midnight in Asia/Manila
+/// - Repeats forever
 pub fn start_daily_worker(state: AppState) -> JoinHandle<()> {
     tokio::spawn(async move {
         info!(target: "jobs", "Daily worker started");
@@ -31,10 +31,9 @@ pub fn start_daily_worker(state: AppState) -> JoinHandle<()> {
             let next_run_utc = next_manila_midnight_utc(now_utc);
             let next_run_manila = next_run_utc.with_timezone(&Manila);
 
-            let sleep_duration = match (next_run_utc - now_utc).to_std() {
-                Ok(duration) => duration,
-                Err(_) => std::time::Duration::from_secs(60),
-            };
+            let sleep_duration = (next_run_utc - now_utc)
+                .to_std()
+                .unwrap_or(std::time::Duration::from_secs(60));
 
             info!(
                 target: "jobs",
@@ -90,7 +89,7 @@ async fn run_daily_job_once(
     // ---- 0. setup variables.
     let db = &state.db;
 
-    let now_manila = chrono::Utc::now().with_timezone(&Manila);
+    let now_manila = Utc::now().with_timezone(&Manila);
     let today_manila = now_manila.date_naive();
 
     info!(
