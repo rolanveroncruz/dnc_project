@@ -7,7 +7,11 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait,
 };
 
 use crate::entities::{
-    dental_service, dentist, master_list_member, tooth_service_type, tooth_surface, verification,
+    acc_reconciliation,
+    dental_service, dentist, endorsement,
+    endorsement_company,
+    master_list_member, tooth_service_type,
+    tooth_surface, verification,
 };
 use chrono::{Utc};
 
@@ -19,6 +23,8 @@ pub struct DoneVerificationResponse {
     pub dentist_name: String,
     pub member_name: String,
     pub dental_service_name: String,
+    pub agreement_corp_number: Option<String>,
+    pub company_name: String,
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
     pub tooth_surface_name: Option<String>,
@@ -47,6 +53,8 @@ struct DoneVerificationRow {
     pub member_middle_name: Option<String>,
 
     pub dental_service_name: String,
+    pub agreement_corp_number: Option<String>,
+    pub company_name: String,
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
     pub tooth_surface_name: Option<String>,
@@ -68,6 +76,8 @@ pub async fn get_done_verifications(
         .join(JoinType::InnerJoin, verification::Relation::Dentist.def())
         .join(JoinType::InnerJoin, verification::Relation::MasterListMember.def())
         .join(JoinType::InnerJoin, verification::Relation::DentalService.def())
+        .join(JoinType::InnerJoin, master_list_member::Relation::Endorsement.def())
+        .join(JoinType::InnerJoin, endorsement::Relation::EndorsementCompany.def())
         .join(JoinType::LeftJoin, verification::Relation::ToothSurface.def())
         .join(JoinType::LeftJoin, verification::Relation::ToothServiceType.def())
         .select_only()
@@ -86,6 +96,8 @@ pub async fn get_done_verifications(
         .column_as(master_list_member::Column::LastName, "member_last_name")
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
         .column_as(dental_service::Column::Name, "dental_service_name")
+        .column_as(endorsement::Column::AgreementCorpNumber, "agreement_corp_number")
+        .column_as(endorsement_company::Column::Name, "company_name")
         .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(tooth_service_type::Column::Name, "tooth_service_type_name")
         .order_by_desc(verification::Column::DateCreated)
@@ -106,6 +118,8 @@ pub async fn get_done_verifications(
                 row.member_middle_name.as_deref(),
             ),
             dental_service_name: row.dental_service_name,
+            agreement_corp_number: row.agreement_corp_number,
+            company_name: row.company_name,
             date_service_performed: row.date_service_performed,
             tooth_id: row.tooth_id,
             tooth_surface_name: row.tooth_surface_name,
@@ -205,6 +219,8 @@ pub async fn reconcile_verification(
                 row.member_middle_name.as_deref(),
             ),
             dental_service_name: row.dental_service_name,
+            agreement_corp_number: row.agreement_corp_number,
+            company_name: row.company_name,
             date_service_performed: row.date_service_performed,
             tooth_id: row.tooth_id,
             tooth_surface_name: row.tooth_surface_name,
@@ -219,3 +235,54 @@ pub async fn reconcile_verification(
         Ok(Json(response))
 }
 // endregion: Reconcile Verification
+
+
+// region: Add Accomplishment Reconciliation
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateAccReconciliationRequest {
+    pub dentist_id: i32,
+    pub member_id: i32,
+    pub dental_service_id: i32,
+    pub date_service_performed: Option<Date>,
+    pub approval_code: Option<String>,
+
+    pub tooth_id: Option<String>,
+    pub tooth_service_type_id: Option<i32>,
+    pub tooth_surface_id: Option<i32>,
+}
+
+pub async fn create_acc_reconciliation(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<CreateAccReconciliationRequest>,
+) -> Result<Json<acc_reconciliation::Model>, (StatusCode, String)> {
+    let db = &state.db;
+
+    let new_reconciliation = acc_reconciliation::ActiveModel {
+        id: Default::default(),
+        date_created:  Set(Utc::now().fixed_offset()),
+        created_by:  Set(user.claims.email),
+
+        dentist_id:  Set(payload.dentist_id),
+        member_id:  Set(payload.member_id),
+        dental_service_id:  Set(payload.dental_service_id),
+        date_service_performed:  Set(payload.date_service_performed),
+
+        approved_by:  Set(None),
+        approval_date:  Set(None),
+        approval_code:  Set(payload.approval_code),
+
+        tooth_id:  Set(payload.tooth_id),
+        tooth_service_type_id: Set(payload.tooth_service_type_id),
+        tooth_surface_id:  Set(payload.tooth_surface_id),
+    };
+
+    let inserted = new_reconciliation
+        .insert(db)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(Json(inserted))
+}
+
+// endregion: Add Accomplishment Reconciliation
