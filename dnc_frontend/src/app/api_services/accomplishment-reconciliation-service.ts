@@ -7,9 +7,11 @@ import {VerificationLookupResponse} from './verification-service';
 
 export interface CreateAccReconciliationRequest {
     dentist_id: number,
-    member_id: number,
+    company_id: number,
+    member_id: number | null,
+    member_name: string | null,
     dental_service_id: number,
-    date_service_performed: Date | null,
+    date_service_performed: string | null,
     approval_code: string | null,
     tooth_id: string | null,
     tooth_service_type_id: number | null,
@@ -60,6 +62,13 @@ export class AccomplishmentReconciliationService {
             {},
             {headers: this.authHeaders()}
         )
+    }
+
+    postAccReconciliation(request: CreateAccReconciliationRequest): Observable<DoneVerificationResponse> {
+        return this.http.post<DoneVerificationResponse>(`${this.baseUrl}`,
+            request,
+            {headers: this.authHeaders()}
+        );
     }
 
 }

@@ -33,6 +33,14 @@ interface MasterListMemberRow{
     birth_date: string| null,
     is_active: boolean,
 }
+// This is returned when calling get_all_members_for_company_id
+export interface MemberNameResponse {
+    id: number,
+    full_name: string,
+    last_name: string,
+    first_name: string,
+    middle_name: string,
+}
 
 
 /** Matches Rust CreateMasterListMemberRequest */
@@ -133,5 +141,11 @@ export class MasterListMemberService {
             payload,
             { headers: this.authHeaders() }
         );
+    }
+
+
+    getAllMemberNamesFromCompany(company_id:number): Observable<MemberNameResponse[]>{
+        return this.http.get<MemberNameResponse[]>(`${environment.apiBaseUrl}/api/endorsements/companies/${company_id}/members`,
+            {headers: this.authHeaders()});
     }
 }

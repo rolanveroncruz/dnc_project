@@ -1,1 +1,206 @@
-<p>add-acc-reconciliation-dialog works!</p>
+<h2 mat-dialog-title>Add ACC Reconciliation</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="form" class="dialog-form">
+        <div class="grid">
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Company</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    [formControl]="companySearch"
+                    [matAutocomplete]="companyAuto" />
+                @if (companySearch.value) {
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Clear company"
+                        (click)="clearCompany()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                }
+                <mat-autocomplete #companyAuto="matAutocomplete">
+                    @if (filteredCompanies$ | async; as companyOptions) {
+                        @for (option of companyOptions; track option.id) {
+                            <mat-option
+                                [value]="option.label"
+                                (onSelectionChange)="onCompanySelected(option)">
+                                {{ option.label }}
+                            </mat-option>
+                        }
+                    }
+                </mat-autocomplete>
+                @if (form.controls.company_id.touched && form.controls.company_id.hasError('required')) {
+                    <mat-error>Company is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Dentist</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    [formControl]="dentistSearch"
+                    [matAutocomplete]="dentistAuto" />
+                @if (dentistSearch.value) {
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Clear dentist"
+                        (click)="clearDentist()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                }
+                <mat-autocomplete #dentistAuto="matAutocomplete">
+                    @if (filteredDentists$ | async; as dentistOptions) {
+                        @for (option of dentistOptions; track option.id) {
+                            <mat-option
+                                [value]="option.label"
+                                (onSelectionChange)="onDentistSelected(option)">
+                                {{ option.label }}
+                            </mat-option>
+                        }
+                    }
+                </mat-autocomplete>
+                @if (form.controls.dentist_id.touched && form.controls.dentist_id.hasError('required')) {
+                    <mat-error>Dentist is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Member</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    [formControl]="memberSearch"
+                    [matAutocomplete]="memberAuto"
+                    [disabled]="!form.controls.company_id.value"
+                    (input)="onMemberInput()" />
+                @if (memberSearch.value) {
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Clear member"
+                        (click)="clearMember()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                }
+                <mat-autocomplete #memberAuto="matAutocomplete">
+                    @if (filteredMembers$ | async; as memberOptions) {
+                        @for (option of memberOptions; track option.id) {
+                            <mat-option
+                                [value]="option.label"
+                                (onSelectionChange)="onMemberSelected(option)">
+                                {{ option.label }}
+                            </mat-option>
+                        }
+                    }
+                </mat-autocomplete>
+                @if (!form.controls.company_id.value) {
+                    <mat-hint>Select a company first.</mat-hint>
+                } @else if (isLoadingMembers.value) {
+                    <mat-hint>Loading members...</mat-hint>
+                } @else {
+                    <mat-hint>Select an existing member or type a new member name.</mat-hint>
+                }
+                @if (memberSearch.touched && memberSearch.hasError('required')) {
+                    <mat-error>Member is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Dental Service</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    [formControl]="dentalServiceSearch"
+                    [matAutocomplete]="dentalServiceAuto" />
+                @if (dentalServiceSearch.value) {
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        aria-label="Clear dental service"
+                        (click)="clearDentalService()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                }
+                <mat-autocomplete #dentalServiceAuto="matAutocomplete">
+                    @if (filteredDentalServices$ | async; as dentalServiceOptions) {
+                        @for (option of dentalServiceOptions; track option.id) {
+                            <mat-option
+                                [value]="option.label"
+                                (onSelectionChange)="onDentalServiceSelected(option)">
+                                {{ option.label }}
+                            </mat-option>
+                        }
+                    }
+                </mat-autocomplete>
+                @if (form.controls.dental_service_id.touched && form.controls.dental_service_id.hasError('required')) {
+                    <mat-error>Dental service is required.</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Date Service Performed</mat-label>
+                <input
+                    matInput
+                    type="date"
+                    formControlName="date_service_performed" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Approval Code</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    formControlName="approval_code"
+                    placeholder="Optional" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth ID</mat-label>
+                <input
+                    matInput
+                    type="text"
+                    formControlName="tooth_id"
+                    placeholder="Optional" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth Service Type</mat-label>
+                <mat-select formControlName="tooth_service_type_id">
+                    <mat-option [value]="null">None</mat-option>
+                    @for (option of data.tooth_service_types; track option.id) {
+                        <mat-option [value]="option.id">
+                            {{ option.label }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tooth Surface</mat-label>
+                <mat-select formControlName="tooth_surface_id">
+                    <mat-option [value]="null">None</mat-option>
+                    @for (option of data.tooth_surfaces; track option.id) {
+                        <mat-option [value]="option.id">
+                            {{ option.label }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+
+    <button mat-flat-button color="primary" type="button" (click)="save()">
+        Save
+    </button>
+</mat-dialog-actions>
