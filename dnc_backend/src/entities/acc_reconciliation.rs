@@ -21,6 +21,7 @@ pub struct Model {
     pub tooth_surface_id: Option<i32>,
     pub member_id: Option<i32>,
     pub member_name: Option<String>,
+    pub company_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -41,6 +42,14 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     Dentist,
+    #[sea_orm(
+        belongs_to = "super::endorsement_company::Entity",
+        from = "Column::CompanyId",
+        to = "super::endorsement_company::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Restrict"
+    )]
+    EndorsementCompany,
     #[sea_orm(
         belongs_to = "super::tooth_service_type::Entity",
         from = "Column::ToothServiceTypeId",
@@ -68,6 +77,12 @@ impl Related<super::dental_service::Entity> for Entity {
 impl Related<super::dentist::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Dentist.def()
+    }
+}
+
+impl Related<super::endorsement_company::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EndorsementCompany.def()
     }
 }
 

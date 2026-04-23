@@ -42,6 +42,7 @@ mod m20260421_041419_add_verification_limit_to_dental_service;
 mod m20260421_055136_create_table_accomplishment_reconciliation;
 mod m20260421_090717_add_acc_reconciliation_permission_and_role_permissions;
 mod m20260423_055557_alter_acc_reconciliation_for_member_info;
+mod m20260423_121709_alter_acc_reconciliation_add_company_id;
 
 pub struct Migrator;
 
@@ -91,6 +92,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260421_055136_create_table_accomplishment_reconciliation::Migration),
             Box::new(m20260421_090717_add_acc_reconciliation_permission_and_role_permissions::Migration),
             Box::new(m20260423_055557_alter_acc_reconciliation_for_member_info::Migration),
+            Box::new(m20260423_121709_alter_acc_reconciliation_add_company_id::Migration),
         ]
     }
 }
