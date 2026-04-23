@@ -237,11 +237,13 @@ pub async fn reconcile_verification(
 // endregion: Reconcile Verification
 
 
+
 // region: Add Accomplishment Reconciliation
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateAccReconciliationRequest {
     pub dentist_id: i32,
-    pub member_name: String,
+    pub member_id: Option<i32>,
+    pub member_name: Option<String>,
     pub dental_service_id: i32,
     pub date_service_performed: Option<Date>,
     pub approval_code: Option<String>,
@@ -264,6 +266,7 @@ pub async fn create_acc_reconciliation(
         created_by:  Set(user.claims.email),
 
         dentist_id:  Set(payload.dentist_id),
+        member_id:  Set(payload.member_id),
         member_name:  Set(payload.member_name),
         dental_service_id:  Set(payload.dental_service_id),
         date_service_performed:  Set(payload.date_service_performed),
