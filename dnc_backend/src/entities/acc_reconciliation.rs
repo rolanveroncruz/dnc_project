@@ -19,7 +19,8 @@ pub struct Model {
     pub tooth_id: Option<String>,
     pub tooth_service_type_id: Option<i32>,
     pub tooth_surface_id: Option<i32>,
-    pub member_name: String,
+    pub member_id: Option<i32>,
+    pub member_name: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
