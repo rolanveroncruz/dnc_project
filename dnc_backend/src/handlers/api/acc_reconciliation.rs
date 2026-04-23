@@ -259,6 +259,7 @@ pub async fn create_acc_reconciliation(
     user: AuthUser,
     Json(payload): Json<CreateAccReconciliationRequest>,
 ) -> Result<Json<acc_reconciliation::Model>, (StatusCode, String)> {
+    tracing::info!("in create_acc_reconciliation()");
     let db = &state.db;
 
     let new_reconciliation = acc_reconciliation::ActiveModel {
@@ -282,11 +283,13 @@ pub async fn create_acc_reconciliation(
         tooth_surface_id:  Set(payload.tooth_surface_id),
     };
 
+    tracing::info!("inserting new_reconciliation");
     let inserted = new_reconciliation
         .insert(db)
         .await
         .map_err(internal_error)?;
 
+    tracing::info!("returning inserted");
     Ok(Json(inserted))
 }
 
