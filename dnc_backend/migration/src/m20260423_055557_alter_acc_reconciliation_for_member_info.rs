@@ -11,8 +11,7 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(AccReconciliation::Table)
                     .add_column(ColumnDef::new(AccReconciliation::MemberName)
-                        .boolean()
-                        .default(false)
+                        .string()
                         .not_null()
                     ).to_owned(),
             ).await?;
@@ -32,8 +31,7 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(AccReconciliation::Table)
                     .add_column(ColumnDef::new(AccReconciliation::MemberId)
-                        .boolean()
-                        .default(false)
+                        .integer()
                         .not_null()
                     ).to_owned(),
             ).await?;
