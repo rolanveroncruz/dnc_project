@@ -71,4 +71,8 @@ export class AccomplishmentReconciliationService {
         );
     }
 
+    getAccReconciliation(): Observable<DoneVerificationResponse[]> {
+        return this.http.get<DoneVerificationResponse[]>(`${this.baseUrl}`, {headers: this.authHeaders()})
+    }
+
 }

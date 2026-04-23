@@ -29,6 +29,7 @@ export class AccomplishmentReconcilingComponent implements OnInit {
     readonly accomplishment_reconciliation_service = inject(AccomplishmentReconciliationService);
     dialog = inject(MatDialog);
     readonly done_verifications = signal<DoneVerificationResponse[]>([]);
+    readonly accomplishment_reconciliations = signal<DoneVerificationResponse[]>([]);
 
     // region: Dialog Data Services
     endorsementService = inject(EndorsementService);
@@ -65,9 +66,20 @@ export class AccomplishmentReconcilingComponent implements OnInit {
             }
         }
     ];
+    AddlAccomplishmentReportsCols: TableColumn[] = [
+        {key: 'id', label: 'ID'},
+        {key: 'agreement_corp_number', label: 'Agmt/Corp Number'},
+        {key: 'company_name', label: 'Company'},
+        {key: 'dentist_name', label: 'Dentist'},
+        {key: 'member_name', label: 'Member'},
+        {key: 'dental_service_name', label: 'Procedure',},
+        {key: 'date_service_performed', label: 'Service Date'},
+        {key: 'approval_code', label: 'Approval Code'},
+    ];
 
     ngOnInit(): void {
         this.loadDoneVerifications();
+        this.loadAccReconciliations();
         this.loadDentists();
         this.loadCompanies();
         this.loadDentalServices();
@@ -86,6 +98,18 @@ export class AccomplishmentReconcilingComponent implements OnInit {
                 console.log("In load(), failed to load done verifications", err);
             }
         })
+    }
+
+    loadAccReconciliations(){
+        this.accomplishment_reconciliation_service.getAccReconciliation()
+            .subscribe({
+                next: (res)=>{
+                    this.accomplishment_reconciliations.set(res);
+                },
+                error: (err)=>{
+                    console.log("In loadAccReconciliations(), failed to load accomplishment reconciliations", err);
+                }
+            })
     }
 
     // region: Load Dialog Data
