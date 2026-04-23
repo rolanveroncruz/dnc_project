@@ -89,5 +89,5 @@ pub use api::high_end_verification_uploading_and_approval::{upload_high_end_file
 pub use api::high_end_verification_dentist_approval::{get_high_end_verifications, post_high_end_verification_approval};
 
 
-pub use api::acc_reconciliation::{get_done_verifications, reconcile_verification, create_acc_reconciliation};
+pub use api::acc_reconciliation::{get_done_verifications, reconcile_verification, create_acc_reconciliation, get_acc_recons};
 pub use api::endorsement_company_master_list_members::{get_all_member_names_from_company};

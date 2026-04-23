@@ -294,3 +294,132 @@ pub async fn create_acc_reconciliation(
 }
 
 // endregion: Add Accomplishment Reconciliation
+
+
+// region: Get Accomplishment Reconciliations
+// ✅ region: Get Acc Reconciliations
+
+#[derive(Debug, FromQueryResult)]
+struct AccReconQueryRow {
+    pub id: i32,
+    pub date_created: DateTimeWithTimeZone,
+
+    pub dentist_first_name: String,
+    pub dentist_last_name: String,
+
+    pub member_first_name: Option<String>,
+    pub member_last_name: Option<String>,
+    pub member_middle_name: Option<String>,
+    pub typed_member_name: Option<String>,
+
+    pub dental_service_name: String,
+    pub company_name: String,
+    pub date_service_performed: Option<Date>,
+    pub tooth_id: Option<String>,
+    pub tooth_surface_name: Option<String>,
+    pub tooth_service_type_name: Option<String>,
+    pub approval_code: Option<String>,
+    pub approval_date: Option<DateTimeWithTimeZone>,
+}
+
+pub async fn get_acc_recons(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<DoneVerificationResponse>>, (StatusCode, String)> {
+    let db = &state.db;
+
+    let rows: Vec<AccReconQueryRow> = acc_reconciliation::Entity::find()
+        .join(JoinType::InnerJoin, acc_reconciliation::Relation::Dentist.def())
+        .join(JoinType::InnerJoin, acc_reconciliation::Relation::DentalService.def())
+        .join(
+            JoinType::InnerJoin,
+            acc_reconciliation::Relation::EndorsementCompany.def(),
+        )
+        // ✅ optional join to member when member_id exists
+        .join(
+            JoinType::LeftJoin,
+            acc_reconciliation::Entity::belongs_to(master_list_member::Entity)
+                .from(acc_reconciliation::Column::MemberId)
+                .to(master_list_member::Column::Id)
+                .into(),
+        )
+        .join(JoinType::LeftJoin, acc_reconciliation::Relation::ToothSurface.def())
+        .join(
+            JoinType::LeftJoin,
+            acc_reconciliation::Relation::ToothServiceType.def(),
+        )
+        .select_only()
+        .column(acc_reconciliation::Column::Id)
+        .column(acc_reconciliation::Column::DateCreated)
+        .column(acc_reconciliation::Column::DateServicePerformed)
+        .column(acc_reconciliation::Column::ToothId)
+        .column(acc_reconciliation::Column::ApprovalCode)
+        .column(acc_reconciliation::Column::ApprovalDate)
+        .column_as(dentist::Column::GivenName, "dentist_first_name")
+        .column_as(dentist::Column::LastName, "dentist_last_name")
+        .column_as(master_list_member::Column::FirstName, "member_first_name")
+        .column_as(master_list_member::Column::LastName, "member_last_name")
+        .column_as(master_list_member::Column::MiddleName, "member_middle_name")
+        .column_as(acc_reconciliation::Column::MemberName, "typed_member_name")
+        .column_as(dental_service::Column::Name, "dental_service_name")
+        .column_as(endorsement_company::Column::Name, "company_name")
+        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
+        .column_as(tooth_service_type::Column::Name, "tooth_service_type_name")
+        .order_by_desc(acc_reconciliation::Column::DateCreated)
+        .into_model::<AccReconQueryRow>()
+        .all(db)
+        .await
+        .map_err(internal_error)?;
+
+    let result = rows
+        .into_iter()
+        .map(|row| {
+            // ✅ prefer the typed member_name from acc_reconciliation
+            let member_name = match row.typed_member_name {
+                Some(name) if !name.trim().is_empty() => name,
+                _ => build_member_name_optional(
+                    row.member_last_name.as_deref(),
+                    row.member_first_name.as_deref(),
+                    row.member_middle_name.as_deref(),
+                ),
+            };
+
+            DoneVerificationResponse {
+                id: row.id,
+                date_created: row.date_created,
+                dentist_name: format!("{}, {}", row.dentist_last_name, row.dentist_first_name),
+                member_name,
+                dental_service_name: row.dental_service_name,
+                agreement_corp_number: Some("-----".to_string()), // ✅ hard-coded
+                company_name: row.company_name,
+                date_service_performed: row.date_service_performed,
+                tooth_id: row.tooth_id,
+                tooth_surface_name: row.tooth_surface_name,
+                tooth_service_type_name: row.tooth_service_type_name,
+                approval_code: row.approval_code,
+                approval_date: row.approval_date,
+                is_reconciled: None,         // ✅ not present on acc_reconciliation
+                reconciled_by: None,         // ✅ not present on acc_reconciliation
+                reconciliation_date: None,   // ✅ not present on acc_reconciliation
+            }
+        })
+        .collect();
+
+    Ok(Json(result))
+}
+
+fn build_member_name_optional(
+    last: Option<&str>,
+    first: Option<&str>,
+    middle: Option<&str>,
+) -> String {
+    match (last, first) {
+        (Some(last), Some(first)) => match middle {
+            Some(m) if !m.trim().is_empty() => format!("{}, {} {}", last, first, m),
+            _ => format!("{}, {}", last, first),
+        },
+        _ => "-----".to_string(),
+    }
+}
+// ✅ endregion: Get Acc Reconciliations
+
+// endregion: Get Accomplishment Reconciliations
