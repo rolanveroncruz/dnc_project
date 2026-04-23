@@ -25,8 +25,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::acc_reconciliation::Entity")]
-    AccReconciliation,
     #[sea_orm(
         belongs_to = "super::endorsement::Entity",
         from = "Column::EndorsementId",
@@ -45,12 +43,6 @@ pub enum Relation {
     MasterList,
     #[sea_orm(has_many = "super::verification::Entity")]
     Verification,
-}
-
-impl Related<super::acc_reconciliation::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::AccReconciliation.def()
-    }
 }
 
 impl Related<super::endorsement::Entity> for Entity {
