@@ -228,6 +228,7 @@ pub struct MemberServiceCountSummaryResponse {
     pub dental_service_name: String,
     pub dental_service_type_id: i32,
     pub record_tooth: bool,
+    pub verification_limit: i32,
     pub counts_allowed: i32,
     pub counts_used: i32,
     pub has_pending: bool,
@@ -260,6 +261,10 @@ async fn build_count_summary_for_member(
         .iter()
         .map(|svc| (svc.id, svc.record_tooth))
         .collect();
+    let verification_limit_map:HashMap<i32,i32> = dental_services
+        .iter()
+        .map(|svc| (svc.id, svc.verification_limit))
+        .collect();
 
     let rows = allowed_rows
         .into_iter()
@@ -287,6 +292,10 @@ async fn build_count_summary_for_member(
                 .get(&allowed.dental_service_id)
                 .copied()
                 .unwrap_or(false),
+            verification_limit: verification_limit_map
+                .get(&allowed.dental_service_id)
+                .copied()
+                .unwrap_or(1),
             counts_allowed: allowed.counts,
             counts_used: used_map
                 .get(&allowed.dental_service_id)
