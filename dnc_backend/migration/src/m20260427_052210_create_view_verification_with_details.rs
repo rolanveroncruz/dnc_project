@@ -50,7 +50,7 @@ impl Migration{
                     on e.endorsement_company_id = ec.id
                 JOIN dental_service ds
                     on v.dental_service_id = ds.id
-                JOIN tooth_surface ts
+                LEFT JOIN tooth_surface ts
                     on v.tooth_surface_id = ts.id
                 WHERE v.status_id=99
                 "#
@@ -98,7 +98,7 @@ impl Migration{
                     on ar.member_id = mlm.id
                 JOIN dental_service ds
                     on ar.dental_service_id = ds.id
-                JOIN tooth_surface ts
+                LEFT JOIN tooth_surface ts
                     on ar.tooth_surface_id = ts.id
 
                 "#
