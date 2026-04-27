@@ -58,6 +58,33 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full">
+                <mat-label>Verification Limit</mat-label>
+                <input
+                    matInput
+                    type="number"
+                    inputmode="numeric"
+                    step="1"
+                    min="0"
+                    formControlName="verification_limit"
+                    autocomplete="off"/>
+
+                <mat-hint>Maximum allowed verifications for this service.</mat-hint>
+
+                @if (form.controls.verification_limit.invalid && form.controls.verification_limit.touched) {
+                    @if (form.controls.verification_limit.hasError('required')) {
+                        <mat-error>Verification limit is required</mat-error>
+                    }
+                    @if (form.controls.verification_limit.hasError('min')) {
+                        <mat-error>Must be 0 or higher</mat-error>
+                    }
+                    @if (form.controls.verification_limit.hasError('max')) {
+                        <mat-error>Value is too large</mat-error>
+                    }
+                }
+            </mat-form-field>
+
+
+            <mat-form-field appearance="outline" class="full">
                 <mat-label>Sort Index </mat-label>
                 <input
                     matInput

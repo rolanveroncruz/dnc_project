@@ -41,6 +41,7 @@ export class DentalServices implements OnInit {
         {key: 'type_name', label: 'Type'},
         {key: 'record_tooth', label: 'Record Tooth', cellTemplateKey: 'check'},
         {key: 'record_surface', label: 'Record Surface', cellTemplateKey: 'check'},
+        {key: 'verification_limit', label: 'Verification Limit'},
         {key: 'is_unlimited', label: 'Unlimited', cellTemplateKey: 'check'},
         {key: 'sort_index', label: 'Sort Index'},
         {key: 'last_modified_by', label: 'Last Modified By'},

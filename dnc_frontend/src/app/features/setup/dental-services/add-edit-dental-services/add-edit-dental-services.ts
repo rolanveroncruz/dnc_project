@@ -46,6 +46,7 @@ export class DentalServiceDialogComponent {
         name: ['', [Validators.required, Validators.maxLength(120)]],
         type_id: [null as number | null, [Validators.required]],
         sort_index: [0 as number, [Validators.required, Validators.min(0), Validators.max(999_999_999)]],
+        verification_limit: [1 as number, [Validators.required, Validators.min(0), Validators.max(999_999_999)]],
         record_tooth: [false],
         record_surface: [false],
         active: [true],
@@ -82,6 +83,7 @@ export class DentalServiceDialogComponent {
             name: '',
             type_id: this.data.typeOptions?.[0]?.id ?? null,
             sort_index: 99,
+            verification_limit: 1,
             record_tooth: false,
             record_surface: false,
             active: true,
@@ -92,6 +94,7 @@ export class DentalServiceDialogComponent {
                 name: s.name,
                 type_id: s.type_id,
                 sort_index: (s as any).sort_index ?? 99,
+                verification_limit: (s as any).verification_limit ?? 1,
                 record_tooth: s.record_tooth,
                 record_surface: s.record_surface,
                 active: s.active,
@@ -120,6 +123,8 @@ export class DentalServiceDialogComponent {
         const sortIndex = Number.isFinite(raw.sort_index)
             ? Math.trunc(raw.sort_index!)
             : 99;
+        const verificationLimit = Number.isFinite(raw.verification_limit)?
+            Math.trunc(raw.verification_limit!):1;
 
         const payload = {
             name: raw.name!.trim(),
@@ -128,6 +133,7 @@ export class DentalServiceDialogComponent {
             record_surface: !!raw.record_surface,
             sort_index: sortIndex,
             active: !!raw.active,
+            verification_limit: verificationLimit,
         };
 
         this.dialogRef.close({action: 'save', payload});

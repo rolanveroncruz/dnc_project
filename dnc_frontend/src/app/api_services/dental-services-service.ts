@@ -20,6 +20,7 @@ export interface DentalService {
   type_name: string;
   record_tooth: boolean;
   record_surface: boolean;
+  verification_limit: number;
   active: boolean;
   last_modified_by: string;
   last_modified_on: Date;
