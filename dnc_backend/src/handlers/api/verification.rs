@@ -368,6 +368,7 @@ pub async fn cancel_verification(
 
 
 // region: Get Approval Code
+
 #[derive(Debug, Deserialize)]
 pub struct GetApprovalCodeRequest {
     pub date_service_performed: Date,
@@ -713,6 +714,7 @@ pub async fn get_approval_code_for_verification_id(
 
 
 // region: generate_approval_code
+
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 
@@ -785,4 +787,119 @@ fn format_approval_code(raw: &str) -> String {
 
 // endregion: generate_approval_code
 
-// endregion: Get Approval Code
+
+// region HTTP Check Approval Code
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CheckApprovalCodeResponse {
+    pub is_approval_code: bool,
+    pub verification_id: Option<i32>,
+}
+
+pub async fn check_approval_code(
+    Path(code): Path<String>,
+) -> Result<Json<CheckApprovalCodeResponse>, (StatusCode, String)> {
+    tracing::info!("check_approval_code: {}", code);
+    let verification_id = decode_approval_code(&code);
+
+    Ok(Json(CheckApprovalCodeResponse {
+        is_approval_code: verification_id.is_some(),
+        verification_id,
+    }))
+}
+
+// endregion HTTP Check Approval Code
+
+
+// region: Check Approval Code
+pub fn decode_approval_code(code: &str) -> Option<i32> {
+    let secret = "Dental Network Company's Random Secret";
+
+    // 1. Check format: AAA-BBB-CCC
+    if code.len() != 11 {
+        return None;
+    }
+
+    let bytes = code.as_bytes();
+    if bytes[3] != b'-' || bytes[7] != b'-' {
+        return None;
+    }
+
+    // 2. Remove hyphens
+    let raw: String = code.chars().filter(|&c| c != '-').collect();
+    if raw.len() != ID_PART_LEN + TAG_PART_LEN {
+        return None;
+    }
+
+    let id_part = &raw[..ID_PART_LEN];
+    let tag_part = &raw[ID_PART_LEN..];
+
+    // 3. Decode both parts from your custom base32 alphabet
+    let obfuscated_id = decode_base32_fixed(id_part)?;
+    let supplied_tag = decode_base32_fixed(tag_part)? as u32;
+
+    // 4. Rebuild the same 25-bit mask
+    let mut mask_mac =
+        <HmacSha256 as KeyInit>::new_from_slice(secret.as_bytes())
+            .expect("invalid HMAC key");
+    mask_mac.update(b"approval-code-mask:v1");
+    let mask_bytes = mask_mac.finalize().into_bytes();
+
+    let mut mask_arr = [0u8; 8];
+    mask_arr.copy_from_slice(&mask_bytes[..8]);
+    let mask_25 = u64::from_be_bytes(mask_arr) & ((1u64 << 25) - 1);
+
+    // 5. Reverse the obfuscation
+    let verification_id_u64 = obfuscated_id ^ mask_25;
+
+    // Must fit in i32 and be non-negative
+    if verification_id_u64 > i32::MAX as u64 {
+        return None;
+    }
+    let verification_id = verification_id_u64 as i32;
+
+    // 6. Recompute expected 20-bit tag
+    let mut tag_mac =
+        <HmacSha256 as KeyInit>::new_from_slice(secret.as_bytes())
+            .expect("invalid HMAC key");
+    tag_mac.update(b"approval-code-tag:v1:");
+    tag_mac.update(verification_id.to_string().as_bytes());
+    let tag_bytes = tag_mac.finalize().into_bytes();
+
+    let mut tag_arr = [0u8; 4];
+    tag_arr.copy_from_slice(&tag_bytes[..4]);
+    let expected_tag = (u32::from_be_bytes(tag_arr) >> 12) & ((1u32 << 20) - 1);
+
+    // 7. Compare supplied vs expected tag
+    if supplied_tag != expected_tag {
+        return None;
+    }
+
+    Some(verification_id)
+}
+
+pub fn is_approval_code(code: &str) -> bool {
+    decode_approval_code(code).is_some()
+}
+
+fn decode_base32_fixed(s: &str) -> Option<u64> {
+    let mut value = 0u64;
+
+    for ch in s.chars() {
+        let idx = approval_code_char_index(ch)?;
+        value = (value << 5) | idx as u64;
+    }
+
+    Some(value)
+}
+
+fn approval_code_char_index(ch: char) -> Option<u8> {
+    let upper = ch.to_ascii_uppercase() as u8;
+    APPROVAL_CODE_ALPHABET
+        .iter()
+        .position(|&c| c == upper)
+        .map(|i| i as u8)
+}
+
+
+// endregion: Check Approval Code

@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code};
 use crate::handlers::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id};
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
@@ -190,6 +190,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/acc_recon/{id}/reconcile", post(reconcile_verification))
         .route("/endorsements/companies/{company_id}/members", get(get_all_member_names_from_company))
         .route("/acc_recon", post(create_acc_reconciliation).get(get_acc_recons))
+        .route("/approval_codes/check/{code}", get(check_approval_code))
 
 
 }
