@@ -72,7 +72,7 @@ use crate::handlers::{get_endorsements_for_dentist_id_handler};
 use crate::handlers::{get_master_list_members_for_endorsement};
 use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
 use crate::handlers::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};
-
+use crate::handlers::{save_member_name_for_company};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -188,7 +188,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/high_end_verifications/{verification_id}/approval", post(post_high_end_verification_approval))
         .route("/acc_recon/verifications",get(get_done_verifications))
         .route("/acc_recon/{id}/reconcile", post(reconcile_verification))
-        .route("/endorsements/companies/{company_id}/members", get(get_all_member_names_from_company))
+        .route("/endorsements/companies/{company_id}/members", get(get_all_member_names_from_company).post(save_member_name_for_company))
         .route("/acc_recon", post(create_acc_reconciliation).get(get_acc_recons))
         .route("/approval_codes/check/{code}", get(check_approval_code))
 

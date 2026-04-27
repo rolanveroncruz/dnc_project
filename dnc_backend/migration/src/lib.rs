@@ -43,6 +43,8 @@ mod m20260421_055136_create_table_accomplishment_reconciliation;
 mod m20260421_090717_add_acc_reconciliation_permission_and_role_permissions;
 mod m20260423_055557_alter_acc_reconciliation_for_member_info;
 mod m20260423_121709_alter_acc_reconciliation_add_company_id;
+mod m20260427_052210_create_view_verification_with_details;
+mod m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation;
 
 pub struct Migrator;
 
@@ -93,6 +95,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260421_090717_add_acc_reconciliation_permission_and_role_permissions::Migration),
             Box::new(m20260423_055557_alter_acc_reconciliation_for_member_info::Migration),
             Box::new(m20260423_121709_alter_acc_reconciliation_add_company_id::Migration),
+            Box::new(m20260427_052210_create_view_verification_with_details::Migration),
+            Box::new(m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation::Migration),
         ]
     }
 }

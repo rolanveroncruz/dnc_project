@@ -9,7 +9,7 @@ members=[".", "migration"]
 
 [dependencies]
 migration={path="migration"}
-axum = { version="0.8.7", features = ["multipart"] }
+axum = { version="0.8.7", features = ["multipart", "macros"] }
 tokio = { version="1.48.0", features = ["full", "macros", "rt-multi-thread", "fs", "io-util"] }
 serde = {version="1.0.228", features = ["derive"]}
 dotenvy = "0.15.7"
