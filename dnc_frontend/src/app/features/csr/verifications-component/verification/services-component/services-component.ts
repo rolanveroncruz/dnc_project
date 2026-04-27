@@ -156,7 +156,8 @@ export class ServicesComponent {
     canIncrement(service: MemberServicesCountsSummary): boolean {
         return (
             !service.has_pending &&
-            this.getQuantity(service.dental_service_id) < service.verification_counts_allowed
+            this.getQuantity(service.dental_service_id) < service.verification_counts_allowed &&
+            this.getQuantity(service.dental_service_id) < service.counts_allowed
         );
     }
     canDecrement(service: MemberServicesCountsSummary): boolean {

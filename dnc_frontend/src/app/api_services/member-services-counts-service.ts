@@ -9,6 +9,7 @@ export interface MemberServicesCountsRow {
     dental_service_id: number,
     dental_service_name: string,
     dental_service_type_id: number,
+    verification_limit:number,
     record_tooth: boolean,
     counts_allowed: number,
     counts_used: number,
@@ -40,7 +41,7 @@ export class MemberServicesCountsService {
                 map ( rows=>
                 rows.map(row=>({
                     ...row,
-                    verification_counts_allowed: row.record_tooth? 3:1,
+                    verification_counts_allowed: row.verification_limit,
                 })
                 ))
             )
