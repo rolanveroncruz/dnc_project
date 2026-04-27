@@ -72,12 +72,16 @@
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Member</mat-label>
                 <input
+                    #memberInput
                     matInput
                     type="text"
                     [formControl]="memberSearch"
                     [matAutocomplete]="memberAuto"
                     [disabled]="!form.controls.company_id.value"
-                    (input)="onMemberInput()" />
+                    (input)="onMemberInput()"
+                    (focusout)="onMemberBlur()"
+                />
+
                 @if (memberSearch.value) {
                     <button
                         mat-icon-button
@@ -104,10 +108,13 @@
                 } @else if (isLoadingMembers.value) {
                     <mat-hint>Loading members...</mat-hint>
                 } @else {
-                    <mat-hint>Select an existing member or type a new member name.</mat-hint>
+                    <mat-hint>Select an existing member or type: LASTNAME, FIRSTNAME MIDDLENAME.</mat-hint>
                 }
                 @if (memberSearch.touched && memberSearch.hasError('required')) {
                     <mat-error>Member is required.</mat-error>
+                }
+                @if (memberSearch.touched && memberSearch.hasError('memberNameFormat')) {
+                    <mat-error>Use Format: LASTNAME, FIRSTNAME MIDDLENAME.</mat-error>
                 }
             </mat-form-field>
 
@@ -148,8 +155,16 @@
                 <mat-label>Date Service Performed</mat-label>
                 <input
                     matInput
-                    type="date"
-                    formControlName="date_service_performed" />
+                    [matDatepicker]="servicePerformedPicker"
+                    formControlName="date_service_performed"
+                    (click)="servicePerformedPicker.open()"
+                />
+            <mat-datepicker-toggle
+                matSuffix
+                [for]="servicePerformedPicker">
+            </mat-datepicker-toggle>
+
+            <mat-datepicker #servicePerformedPicker></mat-datepicker>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
@@ -171,7 +186,7 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tooth Service Type</mat-label>
+                <mat-label>Service Comment</mat-label>
                 <mat-select formControlName="tooth_service_type_id">
                     <mat-option [value]="null">None</mat-option>
                     @for (option of data.tooth_service_types; track option.id) {
@@ -200,7 +215,11 @@
 <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">Cancel</button>
 
-    <button mat-flat-button color="primary" type="button" (click)="save()">
+    <button mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="isSavingMember.value"
+            (click)="save()">
         Save
     </button>
 </mat-dialog-actions>

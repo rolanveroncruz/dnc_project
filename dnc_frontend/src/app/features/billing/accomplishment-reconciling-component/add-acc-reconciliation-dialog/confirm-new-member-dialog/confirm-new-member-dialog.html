@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Add Member to Master List?</h2>
+
+<mat-dialog-content>
+    <p>
+        <strong>{{ data.name }}</strong> was not found in the member list.
+        Do you want to add this name to the Master List?
+    </p>
+
+    <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Account Number</mat-label>
+        <input
+            matInput
+            type="text"
+            [formControl]="accountNumber"
+            placeholder="Optional" />
+    </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="decline()">No</button>
+    <button mat-flat-button color="primary" type="button" (click)="confirm()">
+        Yes, add member
+    </button>
+</mat-dialog-actions>

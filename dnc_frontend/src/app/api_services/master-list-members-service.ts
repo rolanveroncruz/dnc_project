@@ -86,6 +86,10 @@ export interface MasterListMemberMutationResponse {
     birth_date: string | null;
     is_active: boolean;
 }
+export interface SaveMemberNameRequest {
+    name: string,
+    account_number: string | null,
+}
 
 @Injectable({
     providedIn: 'root',
@@ -148,4 +152,12 @@ export class MasterListMemberService {
         return this.http.get<MemberNameResponse[]>(`${environment.apiBaseUrl}/api/endorsements/companies/${company_id}/members`,
             {headers: this.authHeaders()});
     }
+
+    saveMemberForCompany(company_id:number, payload: SaveMemberNameRequest): Observable<any>{
+        return this.http.post<any>(`${environment.apiBaseUrl}/api/endorsements/companies/${company_id}/members`,
+            payload,
+            {headers: this.authHeaders()}
+        )
+    }
+
 }
