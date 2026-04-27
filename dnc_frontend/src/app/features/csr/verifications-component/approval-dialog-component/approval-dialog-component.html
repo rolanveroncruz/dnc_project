@@ -44,8 +44,15 @@
             <mat-label>Service Availed Date</mat-label>
             <input
                 matInput
-                type="date"
+                [matDatepicker]="serviceAvailedDatePicker"
                 formControlName="service_availed_date">
+
+            <mat-datepicker-toggle
+                matIconSuffix
+                [for]="serviceAvailedDatePicker">
+            </mat-datepicker-toggle>
+
+            <mat-datepicker #serviceAvailedDatePicker></mat-datepicker>
 
             @if (form.controls.service_availed_date.hasError('required')) {
                 <mat-error>Service availed date is required.</mat-error>
@@ -89,8 +96,9 @@
             <!--
             Tooth Service Type ID is required when record tooth is true.
             -->
+        @if (data.dental_service_record_tooth || data.dental_service_record_surface){
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tooth Service Type</mat-label>
+                <mat-label>Comments...</mat-label>
                 <select matNativeControl formControlName="tooth_service_type_id">
                     <option [ngValue]="null"></option>
                     @for (serviceType of data.tooth_service_types; track serviceType.id) {
@@ -101,6 +109,7 @@
                     <mat-error>Tooth service type is required.</mat-error>
                 }
             </mat-form-field>
+        }
 
         <div class="static-field full-width">
             <div class="static-field-label">Approval Code</div>

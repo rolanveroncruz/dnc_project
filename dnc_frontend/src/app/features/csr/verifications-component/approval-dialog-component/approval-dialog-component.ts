@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import {
     GetApprovalCodeRequest,
     ToothServiceType,
@@ -62,8 +62,8 @@ export interface ApprovalDialogResult {
         MatFormFieldModule,
         MatInputModule,
         MatDatepickerModule,
-        MatNativeDateModule,
     ],
+    providers: [provideNativeDateAdapter()],
     templateUrl: './approval-dialog-component.html',
     styleUrl: './approval-dialog-component.scss',
 })
@@ -86,7 +86,7 @@ export class ApprovalDialogComponent {
     ]
 
     readonly form: FormGroup<{
-        service_availed_date: FormControl<string | null>;
+        service_availed_date: FormControl<Date | null>;
         tooth_id: FormControl<string | null>;
         tooth_surface_id: FormControl<number | null>;
         tooth_service_type_id: FormControl<number | null>;
@@ -98,8 +98,9 @@ export class ApprovalDialogComponent {
         @Inject(MAT_DIALOG_DATA) public data: ApprovalDialogData,
     ) {
         this.form = new FormGroup({
-            service_availed_date: new FormControl<string | null>(
-                this.data.service_availed_date ?? null,
+            service_availed_date: new FormControl<Date | null>(
+                this.data.service_availed_date ?
+                    new Date(this.data.service_availed_date):null,
                 {
                     validators: [Validators.required],
                 }
@@ -119,7 +120,7 @@ export class ApprovalDialogComponent {
             tooth_service_type_id: new FormControl<number | null>(
                 null,
                 {
-                    validators: this.data.dental_service_record_tooth? [Validators.required]:[],
+                    validators: [],
                 }
             ),
         });
@@ -147,7 +148,13 @@ export class ApprovalDialogComponent {
         this.rejectMessage = null;
         this.approvalCode = null;
         this.isRequestingApprovalCode = true;
-        const serviceDate = this.form.controls.service_availed_date.value;
+        const serviceDateValue = this.form.controls.service_availed_date.value;
+        if (!serviceDateValue) {
+            this.isRequestingApprovalCode = false;
+            this.form.markAllAsTouched();
+            return;
+        }
+        const serviceDate = this.toDateOnlyString(serviceDateValue);
         const toothId = this.form.controls.tooth_id.value;
         const toothSurfaceId = this.form.controls.tooth_surface_id.value;
         const toothServiceType = this.form.controls.tooth_service_type_id.value;
@@ -164,11 +171,6 @@ export class ApprovalDialogComponent {
         if (this.data.dental_service_record_tooth && !toothSurfaceId ==null) {
             this.isRequestingApprovalCode = false;
             this.form.controls.tooth_surface_id.markAsTouched();
-            return;
-        }
-        if (this.data.dental_service_record_tooth && !toothServiceType ==null) {
-            this.isRequestingApprovalCode = false;
-            this.form.controls.tooth_service_type_id.markAsTouched();
             return;
         }
 
@@ -201,6 +203,13 @@ export class ApprovalDialogComponent {
                     this.cdr.detectChanges();
                 },
             })
+    }
+
+    private toDateOnlyString(date:Date): string{
+        const year = date.getFullYear();
+        const month = String(date.getMonth()+1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
 
