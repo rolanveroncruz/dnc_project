@@ -58,7 +58,7 @@ pub async fn get_all_member_names_from_company(
         .into_iter()
         .map(|row| {
             let full_name = format!(
-                "{} {} {}",
+                "{}, {} {}",
                 row.last_name.trim(),
                 row.first_name.trim(),
                 row.middle_name.trim()
