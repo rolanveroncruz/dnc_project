@@ -33,6 +33,7 @@ pub struct DentalServiceRow {
     pub last_modified_on: chrono::DateTime<Utc>,
     pub record_tooth: bool,
     pub record_surface: bool,
+    pub verification_limit: i32,
 }
 
 #[instrument(
@@ -109,6 +110,7 @@ pub async fn get_dental_services(
         .column_as(dental_service::Column::LastModifiedOn, "last_modified_on")
         .column_as(dental_service::Column::RecordTooth, "record_tooth")
         .column_as(dental_service::Column::RecordSurface, "record_surface")
+        .column_as(dental_service::Column::VerificationLimit, "verification_limit")
         .into_model::<DentalServiceRow>();
 
     // 5. Paginate
@@ -153,6 +155,7 @@ pub struct CreateDentalServiceRequest {
     pub type_id: i32,
     pub record_tooth: bool,
     pub record_surface: bool,
+    pub verification_limit: i32,
     pub sort_index: Option<i32>,
     // optional; default true if omitted
     pub active: Option<bool>,
@@ -164,6 +167,7 @@ pub struct DentalServiceResponse {
     pub name: String,
     pub type_id: i32,
     pub sort_index: Option<i32>,
+    pub verification_limit: i32,
     pub record_tooth: bool,
     pub record_surface: bool,
     pub active: bool,
@@ -180,6 +184,7 @@ impl From<dental_service::Model> for DentalServiceResponse {
             sort_index: m.sort_index,
             record_tooth: m.record_tooth,
             record_surface: m.record_surface,
+            verification_limit: m.verification_limit,
             active: m.active,
             last_modified_by: m.last_modified_by,
             last_modified_on: m.last_modified_on,
@@ -219,6 +224,10 @@ pub async fn post_dental_service(
         return Err(StatusCode::BAD_REQUEST);
     }
 
+    if payload.verification_limit <= 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
     // 3) Insert
     let now = now_tz_utc();
     // Adjust this to whatever you store (email/name). I’m using an email-like field name.
@@ -230,6 +239,7 @@ pub async fn post_dental_service(
         sort_index: Set(payload.sort_index),
         record_tooth: Set(payload.record_tooth),
         record_surface: Set(payload.record_surface),
+        verification_limit: Set(payload.verification_limit),
         active: Set(payload.active.unwrap_or(true)),
         last_modified_by: Set(actor),
         last_modified_on: Set(now),
@@ -258,6 +268,7 @@ pub struct PatchDentalServiceRequest {
     pub sort_index: Option<i32>,
     pub record_tooth: Option<bool>,
     pub record_surface: Option<bool>,
+    pub verification_limit: Option<i32>,
     pub active: Option<bool>,
 }
 
@@ -310,6 +321,7 @@ pub async fn patch_dental_service(
         || payload.sort_index.is_some()
         || payload.record_tooth.is_some()
         || payload.record_surface.is_some()
+        || payload.verification_limit.is_some()
         || payload.active.is_some();
     if !sent_any {
         return Err(StatusCode::BAD_REQUEST);
@@ -340,6 +352,12 @@ pub async fn patch_dental_service(
         am.record_surface = Set(record_surface);
     }
 
+    if let Some(verification_limit) = payload.verification_limit {
+        if verification_limit <= 0 {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+        am.verification_limit = Set(verification_limit);
+    }
     if let Some(active) = payload.active {
         am.active = Set(active);
     }
