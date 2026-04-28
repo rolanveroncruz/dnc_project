@@ -40,6 +40,12 @@ import {
 } from './features/billing/HMOBilling/billing-statements-component/billing-statements-component';
 import {DentistClaims} from './features/billing/DentistPayments/dentist-claims/dentist-claims';
 import {DentistRetainerFees} from './features/billing/DentistPayments/dentist-retainer-fees/dentist-retainer-fees';
+import {
+    DashboardOperationsComponent
+} from './features/dashboard/dashboard-operations-component/dashboard-operations-component';
+import {
+    DashboardOutliersComponent
+} from './features/dashboard/dashboard-outliers-component/dashboard-outliers-component';
 
 export const routes: Routes = [
   {
@@ -81,8 +87,12 @@ export const routes: Routes = [
       }, // end of 'setup'
       {
         path:'dashboard',
-        component: DashboardHome,
         title: 'Dashboard Home',
+          children: [
+              { path: '', component: DashboardHome, title: 'Dashboard Home'},
+              { path: 'operations', component:DashboardOperationsComponent, title: 'Operations'},
+              { path: 'outliers', component:DashboardOutliersComponent, title: 'Outliers'}
+          ]
       }, // end of 'dashboard'
       {
         path:'csr',

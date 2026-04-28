@@ -87,8 +87,8 @@ export class MainComponent implements OnInit {
 
     sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
         dashboard: [
-            { label: 'Overview', icon: 'dashboard', route: '/home/overview', disabled: true },
-            { label: 'Activity', icon: 'timeline', route: '/home/activity', disabled: true },
+            { label: 'Operations', icon: 'dashboard', route: '/main/dashboard/operations', disabled: true },
+            { label: 'Outliers', icon: 'timeline', route: '/main/dashboard/outliers', disabled: true },
         ],
 
         csr: [
@@ -206,6 +206,8 @@ export class MainComponent implements OnInit {
         this.configure_setup_menu();
         this.configure_csr_menu();
         this.configure_billing_menu();
+        this.configure_dashboard_menu();
+
 
         span.end(); // ✅ actually end the span
         console.log('Manual span ended!');
@@ -307,6 +309,14 @@ export class MainComponent implements OnInit {
         // ✅ If any child is enabled, enable the parent submenu automatically
         this.enableParentIfAnyChildEnabled('billing', 'HMO Billing');
         this.enableParentIfAnyChildEnabled('billing', 'Dentist Payments');
+    }
+
+    configure_dashboard_menu(){
+        if ('dashboard' in this.menu_activation_map) {
+            this.topNavItems[0].disabled = false;
+            this.activate_item('dashboard', 'dashboard', 'Operations');
+            this.activate_item('dashboard', 'dashboard', 'Outliers');
+        }
     }
 
     activate_item(topnav_item: TopNavKey, menu_key: string, side_nav_key: string) {
