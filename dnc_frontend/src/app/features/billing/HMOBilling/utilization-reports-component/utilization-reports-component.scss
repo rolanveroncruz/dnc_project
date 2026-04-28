@@ -22,3 +22,47 @@
         grid-template-columns: 1fr;
     }
 }
+.download-excel-button {
+    margin-top: 12px;
+    margin-bottom: 16px;
+
+    height: 42px;
+    padding: 0 20px;
+
+    border-radius: 10px;
+
+    font-weight: 600;
+    letter-spacing: 0.2px;
+
+    background: #1f7a3f;
+    color: white;
+
+    box-shadow: 0 3px 8px rgba(31, 122, 63, 0.25);
+
+    transition:
+        background 150ms ease,
+        box-shadow 150ms ease,
+        transform 150ms ease;
+}
+
+.download-excel-button:hover:not(:disabled) {
+    background: #176332;
+    box-shadow: 0 5px 12px rgba(31, 122, 63, 0.35);
+    transform: translateY(-1px);
+}
+
+.download-excel-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(31, 122, 63, 0.25);
+}
+
+.download-excel-button:disabled {
+    background: #c8c8c8;
+    color: #777;
+    box-shadow: none;
+}
+.download-excel-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
