@@ -14,8 +14,8 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        RoleTable::drop_role(manager, "Accounting").await?;
         RolePermissionTable::del_role_all_permissions(manager, "Accounting", "acc_reconciliation").await?;
+        RoleTable::drop_role(manager, "Accounting").await?;
         Ok(())
     }
 }

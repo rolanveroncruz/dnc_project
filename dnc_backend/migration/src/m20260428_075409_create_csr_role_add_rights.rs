@@ -14,8 +14,8 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        CreateTableRole::drop_role(manager, "CSR" ).await?;
         RolePermission::del_role_all_permissions(manager, "CSR", "verifications").await?;
+        CreateTableRole::drop_role(manager, "CSR" ).await?;
         Ok(())
     }
 }

@@ -38,7 +38,7 @@ impl Migration{
                     CONCAT_WS(' ', mlm.first_name, mlm.middle_name, mlm.last_name) as member_name,
                     ds.name as dental_service_name,
                     v.date_service_performed,
-                    CONCAT_WS('', v.tooth_id, ts.name) as tooth
+                    v.tooth_id as tooth
                 FROM verification v
                 JOIN dentist d
                     on v.dentist_id = d.id
@@ -50,9 +50,7 @@ impl Migration{
                     on e.endorsement_company_id = ec.id
                 JOIN dental_service ds
                     on v.dental_service_id = ds.id
-                LEFT JOIN tooth_surface ts
-                    on v.tooth_surface_id = ts.id
-                WHERE v.status_id=99
+                WHERE v.status_id=99 and is_reconciled=true
                 "#
             ).await?;
         Ok(())
@@ -88,7 +86,7 @@ impl Migration{
                     CONCAT_WS(' ', mlm.first_name, mlm.middle_name, mlm.last_name) as member_name,
                     ds.name as dental_service_name,
                     ar.date_service_performed,
-                    CONCAT_WS('', ar.tooth_id, ts.name) as tooth
+                    ar.tooth_id as tooth
                 FROM acc_reconciliation ar
                 JOIN dentist d
                     on ar.dentist_id = d.id
@@ -98,8 +96,6 @@ impl Migration{
                     on ar.member_id = mlm.id
                 JOIN dental_service ds
                     on ar.dental_service_id = ds.id
-                LEFT JOIN tooth_surface ts
-                    on ar.tooth_surface_id = ts.id
 
                 "#
             ) .await?;
