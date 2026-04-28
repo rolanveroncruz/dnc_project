@@ -48,13 +48,22 @@ impl MigrationTrait for Migration {
     }
 }
 impl Migration{
-    async fn insert_role(manager:&SchemaManager<'_>, role_name:&str, description:&str)->Result<(), DbErr>{
+    pub async fn insert_role(manager:&SchemaManager<'_>, role_name:&str, description:&str)->Result<(), DbErr>{
         let insert = Query::insert()
             .into_table(Role::Table)
             .columns([Role::Name, Role::Description])
             .values_panic([Expr::val(role_name), Expr::val(description)])
             .to_owned();
         manager.exec_stmt(insert).await?;
+        Ok(())
+    }
+    pub async fn drop_role(manager:&SchemaManager<'_>,role_name:&str)->Result<(), DbErr>{
+        let delete = Query::delete()
+            .from_table(Role::Table)
+            .and_where(Expr::col(Role::Name).eq(role_name))
+            .to_owned();
+
+        manager.exec_stmt(delete).await?;
         Ok(())
     }
 
