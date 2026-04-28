@@ -47,3 +47,5 @@ pub mod high_end_verification_uploading_and_approval;
 pub mod high_end_verification_dentist_approval;
 pub mod acc_reconciliation;
 pub mod endorsement_company_master_list_members;
+pub mod hmo_billing;
+pub mod hmo_utilization;
