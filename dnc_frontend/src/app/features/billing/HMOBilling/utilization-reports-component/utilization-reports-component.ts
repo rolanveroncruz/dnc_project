@@ -40,6 +40,7 @@ export class UtilizationReportsComponent implements OnInit {
 
     selected_hmo_id = signal<number | null>(null);
     selected_company_id = signal<number | null>(null);
+    selected_company_name = signal<string | null>(null);
     loading_hmos = signal<boolean>(false);
     loading_companies = signal<boolean>(false);
     data = signal<UtilizationReportRow[]>([]);
@@ -80,6 +81,7 @@ export class UtilizationReportsComponent implements OnInit {
 
         //  Reset company selection whenever HMO changes
         this.selected_company_id.set(null);
+        this.selected_company_name.set(null);
         this.endorsement_companies.set([]);
 
         this.loadCompaniesForHmo(hmoId);
@@ -103,6 +105,10 @@ export class UtilizationReportsComponent implements OnInit {
 
     onCompanySelected(companyId: number) {
         this.selected_company_id.set(companyId);
+        const selectedCompany = this.endorsement_companies()
+            .find(company => company.id === companyId);
+
+        this.selected_company_name.set(selectedCompany?.name ?? null);
 
         // Later, this is where you will load the next data from the server.
         console.log('Selected company_id:', companyId);
@@ -135,7 +141,7 @@ export class UtilizationReportsComponent implements OnInit {
 
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `utilization-report-company-${companyId}.xlsx`;
+                    a.download = `utilization-report-${this.selected_company_name()}.xlsx`;
                     a.click();
 
                     window.URL.revokeObjectURL(url);
