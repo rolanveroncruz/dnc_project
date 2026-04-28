@@ -47,6 +47,7 @@ mod m20260427_052210_create_view_verification_with_details;
 mod m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation;
 mod m20260428_075409_create_csr_role_add_rights;
 mod m20260428_081748_create_accounting_role_add_rights;
+mod m20260428_142434_create_dashboard_object_and_permissions;
 
 pub struct Migrator;
 
@@ -101,6 +102,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation::Migration),
             Box::new(m20260428_075409_create_csr_role_add_rights::Migration),
             Box::new(m20260428_081748_create_accounting_role_add_rights::Migration),
+            Box::new(m20260428_142434_create_dashboard_object_and_permissions::Migration),
         ]
     }
 }
