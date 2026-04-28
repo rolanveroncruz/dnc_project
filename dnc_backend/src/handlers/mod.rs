@@ -94,3 +94,4 @@ pub use api::endorsement_company_master_list_members::{get_all_member_names_from
 pub use api::verification::{check_approval_code};
 
 pub use api::hmo_utilization::{get_utilization_report,download_utilization_report};
+pub use api::hmo_billing::{get_hmo_billing};
