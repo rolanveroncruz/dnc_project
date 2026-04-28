@@ -11,6 +11,7 @@ pub struct Model {
     pub date_created: DateTimeWithTimeZone,
     pub created_by: String,
     pub dentist_id: i32,
+    pub member_id: Option<i32>,
     pub dental_service_id: i32,
     pub date_service_performed: Option<Date>,
     pub approved_by: Option<String>,
@@ -19,7 +20,6 @@ pub struct Model {
     pub tooth_id: Option<String>,
     pub tooth_service_type_id: Option<i32>,
     pub tooth_surface_id: Option<i32>,
-    pub member_id: Option<i32>,
     pub member_name: Option<String>,
     pub company_id: i32,
 }
@@ -50,6 +50,14 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     EndorsementCompany,
+    #[sea_orm(
+        belongs_to = "super::master_list_member::Entity",
+        from = "Column::MemberId",
+        to = "super::master_list_member::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Restrict"
+    )]
+    MasterListMember,
     #[sea_orm(
         belongs_to = "super::tooth_service_type::Entity",
         from = "Column::ToothServiceTypeId",
@@ -83,6 +91,12 @@ impl Related<super::dentist::Entity> for Entity {
 impl Related<super::endorsement_company::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EndorsementCompany.def()
+    }
+}
+
+impl Related<super::master_list_member::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::MasterListMember.def()
     }
 }
 

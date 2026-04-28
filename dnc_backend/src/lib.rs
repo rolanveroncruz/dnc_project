@@ -38,7 +38,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code, get_companies_for_hmo_id};
 use crate::handlers::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id};
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
@@ -97,6 +97,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/hmos/{:id}", patch(patch_hmo))
         .route("/hmos/{:id}/endorsements", get(get_endorsements_for_hmo_id))
         .route("/hmos/", post(post_hmo))
+        .route("/hmos/{hmo_id}/companies", get(get_companies_for_hmo_id))
         .route("/dentist_contracts",get(get_all_dentist_contracts))
         .route("/dentist_contracts/{:id}",get(get_dentist_contract))
         .route("/dentist_contracts/",post(post_dentist_contract))

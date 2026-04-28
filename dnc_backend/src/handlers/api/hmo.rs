@@ -1,12 +1,11 @@
 use axum::{extract::{Query, State}, http::StatusCode, Json};
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ActiveModelTrait, ActiveValue::NotSet,ColumnTrait, Condition, EntityTrait, FromQueryResult, Order,
-              PaginatorTrait, QueryFilter, QueryOrder, Set};
+use sea_orm::{ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, Condition, DatabaseConnection, EntityTrait, FromQueryResult, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set};
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
-use crate::entities::{hmo};
+use crate::entities::{hmo, endorsement, endorsement_company};
 use crate::entities::sea_orm_active_enums::PermissionActionEnum;
 use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
@@ -234,7 +233,7 @@ fn now_utc() -> DateTimeWithTimeZone {
     chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
 }
 
-// ---------- POST /hmos ----------
+// region POST /hmos ----------
 
 #[instrument(skip(state, auth, body), err(Debug))]
 pub async fn post_hmo(
@@ -295,7 +294,9 @@ pub async fn post_hmo(
     Ok((StatusCode::CREATED, Json(created.into())))
 }
 
-// ---------- PATCH /hmos/:id ----------
+// endregion POST /hmos ----------
+
+// region PATCH /hmos/:id ----------
 
 #[instrument(skip(state, auth, body), err(Debug))]
 pub async fn patch_hmo(
@@ -380,3 +381,44 @@ pub async fn patch_hmo(
 
     Ok(Json(updated.into()))
 }
+
+// endregion PATCH /hmos/:id ----------
+
+// region Get Companies For HMO id
+
+#[derive(Debug, Serialize, Deserialize, FromQueryResult)]
+pub struct CompanyForHmoResponse {
+    pub id: i32,
+    pub name: String,
+}
+
+// ✅ Handler: get companies for hmo_id
+pub async fn get_companies_for_hmo_id(
+    State(state): State<AppState>,
+    Path(hmo_id): Path<i32>,
+) -> Result<Json<Vec<CompanyForHmoResponse>>, (StatusCode, String)> {
+    let db: &DatabaseConnection = &state.db;
+
+    let companies = endorsement_company::Entity::find()
+        .inner_join(endorsement::Entity)
+        .filter(endorsement::Column::HmoId.eq(hmo_id))
+        // ✅ Optional: uncomment if you only want companies from active endorsements
+        // .filter(endorsement::Column::IsActive.eq(true))
+        .select_only()
+        .column(endorsement_company::Column::Id)
+        .column(endorsement_company::Column::Name)
+        .distinct()
+        .order_by_asc(endorsement_company::Column::Name)
+        .into_model::<CompanyForHmoResponse>()
+        .all(db)
+        .await
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to get companies for hmo_id {}: {}", hmo_id, err),
+            )
+        })?;
+
+    Ok(Json(companies))
+}
+// endregion Get Companies For HMO id
