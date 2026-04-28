@@ -1,0 +1,59 @@
+<mat-card class="utilization-reports-card">
+    <mat-card-header>
+        <mat-card-title>Utilization Reports</mat-card-title>
+        <mat-card-subtitle>
+            Choose an HMO and company to generate utilization reports.
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <div class="form-grid">
+
+            <mat-form-field appearance="outline">
+                <mat-label>HMO</mat-label>
+
+                <mat-select
+                    [value]="selected_hmo_id()"
+                    (selectionChange)="onHmoSelected($event.value)"
+                >
+                    @for (hmo of hmos(); track hmo.id) {
+                        <mat-option [value]="hmo.id">
+                            {{ hmo.short_name }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Company</mat-label>
+
+                <mat-select
+                    [value]="selected_company_id()"
+                    (selectionChange)="onCompanySelected($event.value)"
+                    [disabled]="selected_hmo_id() === null || loading_companies()"
+                >
+                    @for (company of endorsement_companies(); track company.id) {
+                        <mat-option [value]="company.id">
+                            {{ company.name }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+        </div>
+
+        @if (loading_hmos()) {
+            <div class="loading-row">
+                <mat-spinner diameter="30"></mat-spinner>
+                <span>Loading HMOs...</span>
+            </div>
+        }
+
+        @if (loading_companies()) {
+            <div class="loading-row">
+                <mat-spinner diameter="30"></mat-spinner>
+                <span>Loading companies...</span>
+            </div>
+        }
+    </mat-card-content>
+</mat-card>

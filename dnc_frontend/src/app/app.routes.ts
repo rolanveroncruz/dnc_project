@@ -32,6 +32,14 @@ import {HighEndVerification} from './features/csr/high-end-verification/high-end
 import {
     AccomplishmentReconcilingComponent
 } from './features/billing/accomplishment-reconciling-component/accomplishment-reconciling-component';
+import {
+    UtilizationReportsComponent
+} from './features/billing/HMOBilling/utilization-reports-component/utilization-reports-component';
+import {
+    BillingStatementsComponent
+} from './features/billing/HMOBilling/billing-statements-component/billing-statements-component';
+import {DentistClaims} from './features/billing/DentistPayments/dentist-claims/dentist-claims';
+import {DentistRetainerFees} from './features/billing/DentistPayments/dentist-retainer-fees/dentist-retainer-fees';
 
 export const routes: Routes = [
   {
@@ -97,7 +105,33 @@ export const routes: Routes = [
         title: 'Billing Home',
           children: [
               {path: '', component: BillingHome, title: 'Billing Home'},
-              {path: 'acc_recon', component: AccomplishmentReconcilingComponent, title: 'Accomplishment Reconciling'}
+              {path: 'acc_recon', component: AccomplishmentReconcilingComponent, title: 'Accomplishment Reconciling'},
+              {path: 'hmo_billing',
+              children: [
+                  {
+                      path: 'utils',
+                      component: UtilizationReportsComponent,
+                      title: 'Utilization Reports',
+                  },{
+                        path:'statements',
+                      component: BillingStatementsComponent,
+                      title: 'HMO Billing Statements',
+
+                  }]
+              },
+              {path: 'dentists',
+              children:[
+                  {
+                      path:'claims',
+                      component: DentistClaims,
+                      title: 'Dentist Claims',
+                  },
+                  {
+                      path:'retainer_fees',
+                      component: DentistRetainerFees,
+                      title: 'Dentist Retainer Fees',
+                  }
+              ]}
 
           ]
 

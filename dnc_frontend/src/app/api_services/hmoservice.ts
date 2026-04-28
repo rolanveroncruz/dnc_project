@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {environment} from '../../environments/environment';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {EMPTY, Observable,map} from 'rxjs';
 import {LoginService} from '../login.service';
 
@@ -52,6 +52,11 @@ export interface EndorsementWithLookupsResponse {
     endorsement_method: string | null;
     is_active: boolean;
 }
+export interface EndorsementCompanies{
+    id: number,
+    name: string,
+}
+
 
 
 @Injectable({
@@ -60,6 +65,11 @@ export interface EndorsementWithLookupsResponse {
 export class HMOService {
   private apiUrl = environment.apiUrl;
   constructor(private http: HttpClient, private LoginService:LoginService) {}
+
+    private authHeaders(): HttpHeaders {
+        const token = this.LoginService.token?.() ?? '';
+        return new HttpHeaders({ Authorization: `Bearer ${token}` });
+    }
 
   getHMOs():Observable<HMOPageInfo>{
     let token = this.LoginService.token();
@@ -106,5 +116,9 @@ export class HMOService {
     let token = this.LoginService.token();
     const headers = {'Authorization': `Bearer ${token}`};
     return this.http.get<EndorsementWithLookupsResponse[]>(`${this.apiUrl}/api/hmos/${hmoId}/endorsements`, {headers});
+  }
+  getCompanies(hmoId:number): Observable<EndorsementCompanies[]>{
+      return this.http.get<EndorsementCompanies[]>(`${this.apiUrl}/api/hmos/${hmoId}/companies`,
+          {headers: this.authHeaders()});
   }
 }
