@@ -24,6 +24,7 @@ impl Migration{
                 r#"
             CREATE VIEW unified_approved AS
                 SELECT
+                    'V' as source,
                     id,
                     date_created,
                     dentist_id,
@@ -39,6 +40,7 @@ impl Migration{
                 FROM verification_with_details
             UNION ALL
                 SELECT
+                    'A' as source,
                     id,
                     date_created,
                     dentist_id,
