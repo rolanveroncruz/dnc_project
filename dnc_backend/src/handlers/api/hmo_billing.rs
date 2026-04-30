@@ -34,20 +34,16 @@ pub struct HMOBillingRow {
     pub retainer_fee: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HMOBillingResponse {
-    pub items: Vec<HMOBillingRow>,
-}
 
 // ✅ GET /api/v1/hmo-billing/:hmo_id
 pub async fn get_hmo_billing(
     State(state): State<AppState>,
     Path(hmo_id): Path<i32>,
-) -> Result<Json<HMOBillingResponse>, (StatusCode, String)> {
+) -> Result<Json<Vec<HMOBillingRow>>, (StatusCode, String)> {
     let db: &DatabaseConnection = &state.db;
 
     let items = get_hmo_billing_rows(db, hmo_id).await?;
-    Ok(Json(HMOBillingResponse { items }))
+    Ok(Json(items))
 }
 
 // endregion Get HMO Billing
@@ -82,12 +78,13 @@ pub async fn download_hmo_billing(
     Path(hmo_id): Path<i32>,
 ) -> Result<Response, (StatusCode, String)> {
     let db: &DatabaseConnection = &state.db;
+    tracing::info!("download_hmo_billing {}", hmo_id);
 
     // ✅ 1. Get data
     let rows = get_hmo_billing_rows(db, hmo_id).await?;
 
     // ✅ 2. Load existing template XLSX
-    let template_path = "templates/hmo_billing_template.xlsx";
+    let template_path = "billing_templates/HMO_Billing_Template.xlsx";
 
     let mut book = umya_spreadsheet::reader::xlsx::read(template_path)
         .map_err(|e| {
@@ -100,7 +97,7 @@ pub async fn download_hmo_billing(
     // ✅ 3. Pick worksheet
     // Change "Sheet1" to the actual worksheet name in your template.
     let sheet = book
-        .get_sheet_by_name_mut("Sheet1")
+        .get_sheet_by_name_mut("summary")
         .ok_or_else(|| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -155,16 +152,16 @@ pub async fn download_hmo_billing(
             .set_value(row.retainer_fee.clone().unwrap_or_default());
     }
 
-    // ✅ 6. Write workbook to bytes
-    let mut buffer: Vec<u8> = Vec::new();
+    // ✅ 6. Write the workbook directly to bytes
+    let mut buffer : Vec<u8> = Vec::new();
 
     umya_spreadsheet::writer::xlsx::write_writer(&book, &mut buffer)
-        .map_err(|e| {
+        .map_err(|e|{
             (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to write XLSX output: {}", e),
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to write XLSX output: {}", e),
             )
-        })?;
+    })?;
 
     // ✅ 7. Return as downloadable XLSX
     let filename = format!("hmo_billing_{}.xlsx", hmo_id);
