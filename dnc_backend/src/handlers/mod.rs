@@ -81,7 +81,14 @@ pub use api::endorsement_billing_rules::{get_billing_rules_for_endorsement_id, p
 
 pub use api::dentist_relations::get_endorsements_for_dentist_id_handler;
 
-pub use api::master_list_member::{get_master_list_members_for_endorsement };
+/*
+ master_list_member::get_master_list_members_for_endorsement and
+ master_list_member::get_master_lists_with_members_for_endorsement
+ both return the list of master list members for the endorsement_id. However,
+ the former returns the list of master list members as a flat list, while the latter
+ returns the list of uploaded master lists each with its own members.
+ */
+pub use api::master_list_member::{get_master_list_members_for_endorsement, get_master_lists_with_members_for_endorsement };
 pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_used_service_counts_for_member_id, get_service_counts_for_member_id};
 pub use api::endorsement_master_list_members_post_patch::{create_master_list_member, patch_master_list_member};
 pub use api::verification_tooth_specifics::{get_tooth_surfaces, get_tooth_service_types};
