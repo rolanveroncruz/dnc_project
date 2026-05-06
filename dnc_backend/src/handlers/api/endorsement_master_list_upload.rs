@@ -138,7 +138,7 @@ pub async fn upload_endorsement_master_list(
     let file_name = uploaded_file_name.unwrap_or_else(|| "uploaded_master_list.xlsx".to_string());
     let file_bytes = uploaded_file_bytes.ok_or(StatusCode::BAD_REQUEST)?;
 
-    // 4) Parse XLSX
+    // 4) Parse XLSX as an Excel worksbook, reading the first sheet.
     let cursor = Cursor::new(file_bytes);
     let mut workbook: Xlsx<_> = Xlsx::new(cursor).map_err(|_| StatusCode::BAD_REQUEST)?;
 
@@ -155,7 +155,7 @@ pub async fn upload_endorsement_master_list(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let uploaded_by = Some(auth_user.claims.email.clone());
-
+    // ------5a) Prepare variable vectors for duplicates, pending rows, and inserted rows
     let mut duplicates: Vec<DuplicateRowResponse> = Vec::new();
     let mut pending_rows: Vec<PendingMasterListMemberRow> = Vec::new();
     let mut pending_account_numbers: HashSet<String> = HashSet::new();
@@ -283,11 +283,10 @@ pub async fn upload_endorsement_master_list(
         });
     }
 
-    // Only create master_list if at least one row will be inserted
-    if pending_rows.is_empty() {
-        let _ = txn.rollback().await;
-        return Err(StatusCode::BAD_REQUEST);
-    }
+    tracing::info!(pending_rows_count = pending_rows.len(),
+    duplicates_count = duplicates.len(),
+    skipped_corporate_number_mismatch_count = skipped_corporate_number_mismatch_count,
+    "finished parsing uploaded file");
 
     // 6) Create master_list
     let new_master_list = master_list::ActiveModel {
@@ -349,8 +348,14 @@ pub async fn upload_endorsement_master_list(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+    let status = if inserted_count >0 {
+        StatusCode::CREATED
+    } else{
+        StatusCode::OK
+    };
+
     Ok((
-        StatusCode::CREATED,
+        status,
         Json(UploadEndorsementMasterListResponse {
             master_list_id: master_list_row.id,
             file_name,

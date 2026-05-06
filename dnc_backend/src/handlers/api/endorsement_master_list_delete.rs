@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use sea_orm::{
-    ColumnTrait, EntityTrait, QueryFilter, TransactionTrait,
+    ColumnTrait, Condition, EntityTrait, QueryFilter, TransactionTrait,
 };
 use serde::Serialize;
 use tracing::instrument;
@@ -30,6 +30,7 @@ pub async fn delete_master_lists_for_endorsement_id(
         .begin()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
     tracing::info!("delete_master_lists_for_endorsement_id: {} called", &endorsement_id);
 
     // 1. Get all master lists with endorsement_id = endorsement_id.
@@ -43,13 +44,28 @@ pub async fn delete_master_lists_for_endorsement_id(
     let master_list_ids: Vec<i32> = master_lists.iter().map(|ml| ml.id).collect();
 
     let deleted_master_list_members = if master_list_ids.is_empty() {
-        0
-    } else {
         master_list_member::Entity::delete_many()
-            .filter(master_list_member::Column::MasterListId.is_in(master_list_ids.clone()))
+            .filter(master_list_member::Column::EndorsementId.eq(endorsement_id))
             .exec(&txn)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .map_err(|e| {
+                tracing::error!( error=?e, endorsement_id, "Failed to delete master_list_members by endorsement_id. ");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?
+            .rows_affected
+    } else {
+        master_list_member::Entity::delete_many()
+            .filter(
+                Condition::any()
+                    .add(master_list_member::Column::MasterListId.is_in(master_list_ids.clone()))
+                    .add(master_list_member::Column::EndorsementId.eq(endorsement_id)),
+            )
+            .exec(&txn)
+            .await
+            .map_err(|e|{
+                tracing::error!( error=?e, endorsement_id, "Failed to delete master_list_member rows.");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?
             .rows_affected
     };
 
@@ -60,13 +76,19 @@ pub async fn delete_master_lists_for_endorsement_id(
             .filter(master_list::Column::Id.is_in(master_list_ids))
             .exec(&txn)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+            .map_err(|e|{
+                tracing::error!( error=?e, endorsement_id, "Failed to delete master_lists.");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?
             .rows_affected
     };
 
     txn.commit()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| {
+            tracing::error!(endorsement_id, "Failed to commit transaction.");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     Ok(Json(DeleteMasterListsForEndorsementResponse {
         endorsement_id,
