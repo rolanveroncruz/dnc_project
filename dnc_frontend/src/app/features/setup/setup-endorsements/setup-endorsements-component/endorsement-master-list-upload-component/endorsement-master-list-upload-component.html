@@ -23,6 +23,12 @@
                     </div>
 
                     <div class="existing-actions">
+                        <input #fileInput type="file" accept=".xlsx,.xls" hidden (change)="onPickFile(fileInput)" />
+
+                        <button mat-raised-button type="button" (click)="fileInput.click()">
+                            <mat-icon>upload</mat-icon>
+                                Upload Additional List (in .xlsx)
+                        </button>
                         <button mat-stroked-button type="button" (click)="viewExisting()">
                             View Existing
                         </button>
@@ -35,20 +41,22 @@
                 <mat-divider></mat-divider>
             }
 
-            @if (!existing){
+            @if (!existing) {
                 <div class="upload-row">
                     <input #fileInput type="file" accept=".xlsx,.xls" hidden (change)="onPickFile(fileInput)" />
 
                     <button mat-raised-button type="button" (click)="fileInput.click()">
                         <mat-icon>upload</mat-icon>
-                        Upload Excel
+                        @if (existing){
+                            Upload Additional List(in .xlsx)
+                        } @else {
+                            Upload New List(in .xlsx file)
+                        }
                     </button>
-
-                    <span class="hint">.xlsx recommended</span>
                 </div>
-
-
             }
+
+
             @if (ui() === 'uploading' || ui() === 'saving') {
                 <mat-progress-bar mode="indeterminate"></mat-progress-bar>
             }

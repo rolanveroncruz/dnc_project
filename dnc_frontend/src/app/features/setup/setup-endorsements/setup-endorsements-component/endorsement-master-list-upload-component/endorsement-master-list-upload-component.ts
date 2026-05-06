@@ -28,6 +28,7 @@ import {
 import {EndorsementMasterListService} from '../../../../../api_services/endorsement-master-list-service';
 
 type UploadUiState = 'idle' | 'uploading' | 'preview' | 'saving' | 'saved' | 'error';
+import {UploadStatisticsDialog} from './upload-statistics-dialog/upload-statistics-dialog';
 
 @Component({
     selector: 'app-endorsement-masterlist-upload',
@@ -59,6 +60,7 @@ export class EndorsementMasterListUploadComponent {
     private readonly destroyRef = inject(DestroyRef);
     private readonly endorsementMasterListService = inject(EndorsementMasterListService);
     private readonly dialog = inject(MatDialog);
+    private readonly uploadStatisticsDialog = inject(MatDialog);
 
     @Input({ required: true }) endorsementId!: number | null;
     @Input({ required: true }) enabled!: boolean;
@@ -117,10 +119,14 @@ export class EndorsementMasterListUploadComponent {
         this.endorsementMasterListService
             .uploadEndorsementMasterList(this.endorsementId, file)
             .pipe(
-                tap((p) => {
+                tap((res) => {
                     this.preview.set(null);
                     this.ui.set('saved');
                     this.saved.emit();
+                    this.dialog.open(UploadStatisticsDialog, {
+                        width: '800px',
+                        data:res,
+                    });
                 }),
                 catchError((err) => {
                     console.error('Master list preview failed:', err);
@@ -150,7 +156,7 @@ export class EndorsementMasterListUploadComponent {
             width: '400px',
             data: {
                 title: 'Confirm Deletion',
-                message: 'Are you sure you want to delete the existing master list?',
+                message: 'Are you sure you want to delete the existing master list? This action will delete all uploaded lists cannot be undone.',
                 confirmText: 'Delete',
                 cancelText: 'Cancel',
             },

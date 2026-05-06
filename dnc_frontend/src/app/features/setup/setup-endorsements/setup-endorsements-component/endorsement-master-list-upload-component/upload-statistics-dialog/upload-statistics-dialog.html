@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Upload Statistics</h2>
+
+<mat-dialog-content>
+    <div class="stats-grid">
+
+        <div class="stat-row">
+            <span class="label">Master List ID</span>
+            <span class="value">{{ data.master_list_id }}</span>
+        </div>
+
+        <div class="stat-row">
+            <span class="label">File Name</span>
+            <span class="value">{{ data.file_name }}</span>
+        </div>
+
+        <div class="stat-row">
+            <span class="label">Endorsement ID</span>
+            <span class="value">{{ data.endorsement_id }}</span>
+        </div>
+
+        <div class="stat-row">
+            <span class="label">Inserted Rows</span>
+            <span class="value">{{ data.inserted_count }}</span>
+        </div>
+
+        <div class="stat-row">
+            <span class="label">Skipped Corporate Number Mismatch</span>
+            <span class="value">{{ data.skipped_corporate_number_mismatch_count }}</span>
+        </div>
+
+        <div class="stat-row">
+            <span class="label">Duplicate Rows</span>
+            <span class="value">{{ data.duplicate_count }}</span>
+        </div>
+
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button color="primary" type="button" (click)="close()">
+        Close
+    </button>
+</mat-dialog-actions>

@@ -1,8 +1,9 @@
 import {inject, Injectable} from '@angular/core';
 
 import {
-    ExistingMasterListMeta, MasterListPreview
+    ExistingMasterListMeta, MasterListPreview,
 } from '../features/setup/setup-endorsements/setup-endorsements-component/endorsement-master-list-upload-component/data-types';
+import { UploadEndorsementMasterListResponse } from './endorsement-master-list-service-types';
 import {map, Observable} from 'rxjs';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {LoginService} from '../login.service';
@@ -64,10 +65,10 @@ export class EndorsementMasterListService {
             })))
     }
 
-    uploadEndorsementMasterList(endorsement_id: number, file: File): Observable<MasterListPreview> {
+    uploadEndorsementMasterList(endorsement_id: number, file: File): Observable<UploadEndorsementMasterListResponse> {
         const formData = new FormData();
         formData.append('file', file, file.name);
-        return this.http.post<MasterListPreview>(`${this.baseUrl}/api/endorsements/${endorsement_id}/master_list`,
+        return this.http.post<UploadEndorsementMasterListResponse>(`${this.baseUrl}/api/endorsements/${endorsement_id}/master_list`,
             formData,
             {headers: this.authHeaders()});
     }
