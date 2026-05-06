@@ -60,3 +60,11 @@ mat-icon.avatar-icon > svg,
   width: $avatar-size !important;
   height: $avatar-size !important;
 }
+.master-list-dialog-panel .mat-mdc-dialog-container {
+    border-radius: 16px; // ✅
+}
+
+.master-list-dialog-panel .mdc-dialog__surface {
+    border-radius: 20px !important; // ✅ actual Material dialog surface
+    overflow: visible; // ✅
+}

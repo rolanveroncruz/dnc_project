@@ -3,7 +3,7 @@ import {inject, Injectable} from '@angular/core';
 import {
     ExistingMasterListMeta, MasterListPreview,
 } from '../features/setup/setup-endorsements/setup-endorsements-component/endorsement-master-list-upload-component/data-types';
-import { UploadEndorsementMasterListResponse } from './endorsement-master-list-service-types';
+import { UploadEndorsementMasterListResponse, MasterListsForEndorsementResponse } from './endorsement-master-list-service-types';
 import {map, Observable} from 'rxjs';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {LoginService} from '../login.service';
@@ -81,6 +81,13 @@ export class EndorsementMasterListService {
     getMasterListForEndorsement( endorsementId: number ): Observable<EndorsementMasterListMemberResponse[]> {
         return this.http.get<EndorsementMasterListMemberResponse[]>(
             `${this.baseUrl}/api/endorsements/${endorsementId}/master_list_members`,
+            { headers: this.authHeaders() }
+        );
+    }
+
+    getMasterListsWithMembersForEndorsement( endorsementId: number ): Observable<MasterListsForEndorsementResponse> {
+        return this.http.get<MasterListsForEndorsementResponse>(
+            `${this.baseUrl}/api/endorsements/${endorsementId}/master_lists_with_members`,
             { headers: this.authHeaders() }
         );
     }

@@ -2,7 +2,15 @@
     <div class="dialog-header">
         <div>
             <h2 mat-dialog-title>Master List Members</h2>
-            <div class="subtitle">{{ rows.length }} record(s)</div>
+
+            @if (data) {
+                <div class="subtitle">
+                    {{ data.endorsement_company_name }}
+                    @if (data.agreement_corp_number) {
+                        — {{ data.agreement_corp_number }}
+                    }
+                </div>
+            }
         </div>
 
         <button
@@ -15,15 +23,42 @@
         </button>
     </div>
 
-    <div class="table-wrapper" (click)="onTableClick($event)">
-        <app-generic-data-table
-            [data]="rows"
-            [columnDefs]="columnDefs"
-            [showAddButton]="false"
-            [showHeaderFilters]="true"
-            [pageSize]="15"
-            [pageSizeOptions]="[5, 10, 15, 25, 50, 100]"
-        >
-        </app-generic-data-table>
-    </div>
+    @if (rowsByMasterList.length === 0) {
+        <div class="empty-state">
+            No master lists uploaded yet.
+        </div>
+    } @else {
+        <mat-tab-group>
+            @for (masterList of rowsByMasterList; track masterList.master_list_id ?? masterList.file_name ?? $index) {
+                <mat-tab>
+                    <ng-template mat-tab-label>
+                        {{ masterList.file_name ?? 'Untitled Master List' }}
+                        @if(masterList.date_uploaded) {
+                            - {{masterList.date_uploaded | date:'shortDate'}}
+                        }
+                    </ng-template>
+
+                    <div class="tab-meta">
+                        <div>{{ masterList.rows.length }} record(s)</div>
+
+                        @if (masterList.date_uploaded) {
+                            <div>Uploaded: {{ masterList.date_uploaded | date:'medium' }}</div>
+                        }
+                    </div>
+
+                    <div class="table-wrapper" (click)="onTableClick($event, $index)">
+                        <app-generic-data-table
+                            [data]="masterList.rows"
+                            [columnDefs]="columnDefs"
+                            [showAddButton]="false"
+                            [showHeaderFilters]="true"
+                            [pageSize]="15"
+                            [pageSizeOptions]="[5, 10, 15, 25, 50, 100]"
+                        >
+                        </app-generic-data-table>
+                    </div>
+                </mat-tab>
+            }
+        </mat-tab-group>
+    }
 </div>

@@ -48,6 +48,7 @@ import {
     BasicServicesCountsTabComponent
 } from './basic-services-counts-tab-component/basic-services-counts-tab-component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {MasterListsForEndorsementResponse} from '../../../../api_services/endorsement-master-list-service-types';
 
 type UIState = 'idle' | 'loading' | 'saving' | 'error';
 type RuleSectionKey =
@@ -147,7 +148,7 @@ export class SetupEndorsementsComponent implements OnInit{
     this.all_dental_services().filter(s => s.type_id === 3 && s.active));
 
     readonly dialog = inject(MatDialog);
-    readonly masterListMembers = signal<EndorsementMasterListMemberResponse[]>([]);
+    readonly masterListMembers = signal<MasterListsForEndorsementResponse|null>(null);
 
 
     readonly form = this.fb.group({
@@ -904,22 +905,23 @@ export class SetupEndorsementsComponent implements OnInit{
         const id = this.endorsementId();
         if (id == null) return;
 
-        this.endorsementMasterListService.getMasterListForEndorsement(id)
+        this.endorsementMasterListService.getMasterListsWithMembersForEndorsement(id)
             .pipe(
-             tap((members:EndorsementMasterListMemberResponse[])=>{
-                 this.masterListMembers.set(members);
+             tap((res)=>{
+                 this.masterListMembers.set(res);
 
                  this.dialog.open(MasterListDialogComponent, {
                      width: '1100px',
                      maxWidth: '95vw',
+                     panelClass: 'master-list-dialog-panel',
                      data: {
-                         members: this.masterListMembers()
+                         data: res
                      },
                  });
              }),
                 catchError((err)=>{
                  console.error("Failed to load master list:", err);
-                 this.masterListMembers.set([]);
+                 this.masterListMembers.set(null);
                  return of(null);
                 }),
                 takeUntilDestroyed(this.destroyRef),

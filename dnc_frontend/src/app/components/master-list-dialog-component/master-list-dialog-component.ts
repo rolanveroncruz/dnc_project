@@ -1,14 +1,12 @@
 import {
     Component,
-    Input,
-    Output,
-    EventEmitter,
     OnChanges,
+    QueryList,
     SimpleChanges,
-    ViewChild,
+    ViewChildren,
     ChangeDetectionStrategy,
     inject,
-    OnInit,
+    OnInit, Output, EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -16,8 +14,25 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { GenericDataTableComponent } from '../generic-data-table-component/generic-data-table-component';
 import { TableColumn } from '../generic-data-table-component/table-interfaces';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MasterListsForEndorsementResponse,  MasterListMemberForEndorsementMemberResponse} from '../../api_services/endorsement-master-list-service-types';
 
-export interface EndorsementMasterListMemberResponse {
+interface MasterListDialogData {
+    data: MasterListsForEndorsementResponse;
+}
+interface MasterListDialogRow extends MasterListMemberForEndorsementMemberResponse {
+    file_name: string |null;
+    date_uploaded: string |null;
+    account_number_last_name: string;
+}
+
+interface MasterListTabViewModel{
+    master_list_id: number | null;
+    file_name: string |null;
+    date_uploaded: string |null;
+    rows: MasterListDialogRow[];
+}
+export interface MasterListMemberActiveClickEvent {
     file_name: string;
     master_list_member_id: number;
     account_number: string;
@@ -26,14 +41,6 @@ export interface EndorsementMasterListMemberResponse {
     middle_name: string;
     is_active: boolean;
 }
-
-interface MasterListDialogRow extends EndorsementMasterListMemberResponse {
-    account_number_last_name: string;
-}
-interface MasterListDialogData {
-    members: EndorsementMasterListMemberResponse[];
-}
-
 @Component({
     selector: 'app-master-list-dialog',
     standalone: true,
@@ -41,6 +48,7 @@ interface MasterListDialogData {
         CommonModule,
         MatDialogModule,
         MatButtonModule,
+        MatTabsModule,
         GenericDataTableComponent,
     ],
     templateUrl: './master-list-dialog-component.html',
@@ -48,22 +56,20 @@ interface MasterListDialogData {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MasterListDialogComponent implements OnInit, OnChanges {
-    @Input({ required: true }) members: EndorsementMasterListMemberResponse[] = [];
     private readonly dialogData = inject<MasterListDialogData | null>(MAT_DIALOG_DATA, { optional: true });
-
+    protected data: MasterListsForEndorsementResponse | null = null;
+    protected rowsByMasterList: MasterListTabViewModel[] = [];
+    @Output() isActiveClicked = new EventEmitter<MasterListMemberActiveClickEvent>(); // ✅
     /**
      * Parent can bind to this:
      * (isActiveClicked)="onIsActiveClicked($event)"
      */
-    @Output() isActiveClicked = new EventEmitter<EndorsementMasterListMemberResponse>();
-
-    @ViewChild(GenericDataTableComponent)
-    table?: GenericDataTableComponent<MasterListDialogRow>;
+    @ViewChildren(GenericDataTableComponent)
+    tables?: QueryList<GenericDataTableComponent<MasterListDialogRow>>;
 
     protected rows: MasterListDialogRow[] = [];
 
     protected readonly columnDefs: TableColumn[] = [
-        { key: 'file_name', label: 'File Name', },
         { key: 'account_number', label: 'Account Number', },
         {key: 'last_name', label: 'Last Name'},
         { key: 'first_name', label: 'First Name', },
@@ -77,8 +83,8 @@ export class MasterListDialogComponent implements OnInit, OnChanges {
         });
 
     ngOnInit(): void {
-        if (this.dialogData?.members) {
-            this.members = this.dialogData.members;
+        if (this.dialogData?.data) {
+            this.data = this.dialogData.data;
             this.rebuildRows();
         }
     }
@@ -90,9 +96,18 @@ export class MasterListDialogComponent implements OnInit, OnChanges {
         }
     }
     private rebuildRows():void{
-        this.rows = (this.members?? []).map((m)=>({
-            ...m,
-            account_number_last_name: `${m.account_number} - ${m.last_name}`,
+        const masterLists = this.data?.master_lists ?? [];
+
+        this.rowsByMasterList = masterLists.map((ml) => ({
+            master_list_id: ml.master_list_id,
+            file_name: ml.file_name,
+            date_uploaded: ml.date_uploaded,
+            rows: ml.members.map((m) => ({
+                ...m,
+                file_name: ml.file_name,
+                date_uploaded: ml.date_uploaded,
+                account_number_last_name: `${m.account_number} - ${m.last_name}`,
+            })),
         }));
     }
 
@@ -100,9 +115,12 @@ export class MasterListDialogComponent implements OnInit, OnChanges {
         this.dialogRef?.close();
     }
 
-    protected onTableClick(event: MouseEvent): void {
+    protected onTableClick(event: MouseEvent, tabIndex:number): void {
         const target = event.target as HTMLElement | null;
-        if (!target || !this.table) return;
+        if (!target || !this.tables) return;
+
+        const table = this.tables.toArray()[tabIndex]; // ✅ get correct table
+        if (!table) return;
 
         const td = target.closest('td');
         if (!td) return;
@@ -118,13 +136,13 @@ export class MasterListDialogComponent implements OnInit, OnChanges {
         const rowIndex = Number(rowIndexAttr);
         if (Number.isNaN(rowIndex)) return;
 
-        const renderedRows = this.getRenderedRows();
+        const renderedRows = this.getRenderedRows(table); // ✅ pass table
         const clickedRow = renderedRows[rowIndex];
         if (!clickedRow) return;
 
         this.isActiveClicked.emit({
-            file_name: clickedRow.file_name,
-            master_list_member_id: clickedRow.master_list_member_id,
+            file_name: clickedRow.file_name ?? '',
+            master_list_member_id: clickedRow.id, // ✅ old field mapped from new id
             account_number: clickedRow.account_number,
             last_name: clickedRow.last_name,
             first_name: clickedRow.first_name,
@@ -137,17 +155,17 @@ export class MasterListDialogComponent implements OnInit, OnChanges {
      * Reconstruct the rows currently rendered by GenericDataTableComponent
      * so we can map the DOM row index -> actual row object.
      */
-    private getRenderedRows(): MasterListDialogRow[] {
-        if (!this.table) return [];
+    private getRenderedRows(
+        table: GenericDataTableComponent<MasterListDialogRow>
+    ): MasterListDialogRow[] {
+        let rows = [...table.dataSource.filteredData];
 
-        let rows = [...this.table.dataSource.filteredData];
-
-        const sort = this.table.sort;
+        const sort = table.sort;
         if (sort?.active && sort.direction) {
-            rows = this.table.dataSource.sortData(rows, sort);
+            rows = table.dataSource.sortData(rows, sort);
         }
 
-        const paginator = this.table.paginator;
+        const paginator = table.paginator;
         if (paginator) {
             const start = paginator.pageIndex * paginator.pageSize;
             const end = start + paginator.pageSize;
