@@ -1,5 +1,5 @@
 import {inject, Injectable} from '@angular/core';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient, HttpHeaders,HttpParams} from '@angular/common/http';
 import {LoginService} from '../login.service';
 import {environment} from '../../environments/environment';
 import {Observable} from 'rxjs';
@@ -36,11 +36,34 @@ export class UtilizationReportsService {
         return new HttpHeaders({Authorization: `Bearer ${token}`});
     }
 
-    getUtilizationReportForCompany(companyId: number): Observable<UtilizationReportRow[]> {
-        return this.http.get<UtilizationReportRow[]>(`${this.baseUtilizationReportsUrl}/company/${companyId}`, {headers: this.authHeaders()});
+    private dateParams(startDate:string, endDate:string):HttpParams{
+        return new HttpParams()
+            .set('start_date', startDate)
+            .set('end_date', endDate);
     }
-    downloadUtilizationReportForCompany(companyId:number){
-        return this.http.get(`${this.baseUtilizationReportsUrl}/company/${companyId}/download`, {headers: this.authHeaders(), responseType: 'blob'});
+
+
+    getUtilizationReportForCompany(
+        companyId: number,
+        startDate:string,
+        endDate:string,
+        ): Observable<UtilizationReportRow[]> {
+        return this.http.get<UtilizationReportRow[]>(`${this.baseUtilizationReportsUrl}/company/${companyId}`,
+            {
+                headers: this.authHeaders(),
+                params: this.dateParams(startDate, endDate)
+            });
+    }
+    downloadUtilizationReportForCompany(
+        companyId:number,
+        startDate:string,
+        endDate:string,
+        ){
+        return this.http.get(`${this.baseUtilizationReportsUrl}/company/${companyId}/download`,
+            {
+                headers: this.authHeaders(),
+                params: this.dateParams(startDate, endDate),
+                responseType: 'blob'});
     }
 
 }

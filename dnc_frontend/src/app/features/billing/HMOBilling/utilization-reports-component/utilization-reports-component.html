@@ -40,6 +40,26 @@
                 </mat-select>
             </mat-form-field>
 
+            <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input
+                    matInput
+                    type="date"
+                    [ngModel]="start_date()"
+                    (ngModelChange)="onStartDateChanged($event)"
+                />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>End Date</mat-label>
+                <input
+                    matInput
+                    type="date"
+                    [ngModel]="end_date()"
+                    (ngModelChange)="onEndDateChanged($event)"
+                />
+            </mat-form-field>
+
         </div>
 
         @if (loading_hmos()) {
@@ -68,11 +88,21 @@
                 />
             }
         }
+        <!-- ✅ added explicit load button -->
+        <button
+            mat-raised-button
+            color="primary"
+            [disabled]="selected_company_id() === null || start_date() === null || end_date() === null"
+            (click)="loadReport()"
+        >
+            Load Report
+        </button>
+
         <button
             mat-raised-button
             color="primary"
             class="downlload-excel-button"
-            [disabled]="selected_company_id() === null || data().length === 0"
+            [disabled]="selected_company_id() === null || start_date() === null || end_date() === null"
             (click)="downloadExcel()"
         >
             <mat-icon>download</mat-icon>

@@ -1,6 +1,5 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {HMOService, HMO, EndorsementCompanies} from '../../../../api_services/hmoservice';
-import {chmodSync} from 'node:fs';
 import {MatCardModule} from '@angular/material/card';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
@@ -14,6 +13,7 @@ import {
 import {TableColumn} from '../../../../components/generic-data-table-component/table-interfaces';
 import {MatButton} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
 
 @Component({
   selector: 'app-utilization-reports-component',
@@ -27,6 +27,7 @@ import {MatIconModule} from '@angular/material/icon';
         GenericDataTableComponent,
         MatButton,
         MatIconModule,
+        MatInputModule,
     ],
   templateUrl: './utilization-reports-component.html',
   styleUrl: './utilization-reports-component.scss',
@@ -41,6 +42,9 @@ export class UtilizationReportsComponent implements OnInit {
     selected_hmo_id = signal<number | null>(null);
     selected_company_id = signal<number | null>(null);
     selected_company_name = signal<string | null>(null);
+    start_date = signal<string | null>(null);
+    end_date = signal<string | null>(null);
+
     loading_hmos = signal<boolean>(false);
     loading_companies = signal<boolean>(false);
     data = signal<UtilizationReportRow[]>([]);
@@ -102,7 +106,15 @@ export class UtilizationReportsComponent implements OnInit {
                 }
             });
     }
+    onStartDateChanged(value: string) {
+        this.start_date.set(value || null); // ✅ added
+        this.data.set([]); // ✅ clear stale report rows when the start date changes
+    }
 
+    onEndDateChanged(value: string) {
+        this.end_date.set(value || null); // ✅ added
+        this.data.set([]); // ✅ clear stale report rows when the end date changes
+    }
     onCompanySelected(companyId: number) {
         this.selected_company_id.set(companyId);
         const selectedCompany = this.endorsement_companies()
@@ -110,12 +122,33 @@ export class UtilizationReportsComponent implements OnInit {
 
         this.selected_company_name.set(selectedCompany?.name ?? null);
 
-        // Later, this is where you will load the next data from the server.
-        console.log('Selected company_id:', companyId);
+        this.data.set([]);
+
+        if (this.start_date() !== null || this.end_date() !== null) {
+            this.getUtilizationReportData(companyId);
+        }
+    }
+
+    loadReport(){
+        const companyId = this.selected_company_id();
+        if (companyId === null || this.start_date()===null || this.end_date()===null) {
+            return;
+        }
         this.getUtilizationReportData(companyId);
     }
+
     getUtilizationReportData(companyId: number){
-        this.utilizationReportsService.getUtilizationReportForCompany(companyId)
+        const startDate = this.start_date();
+        const endDate = this.end_date();
+        if (startDate === null || endDate === null) {
+            return;
+        }
+        this.utilizationReportsService
+            .getUtilizationReportForCompany(
+                companyId,
+                startDate,
+                endDate,
+            )
             .subscribe({
                 next: (res) => {
                     this.data.set(res);
@@ -128,13 +161,19 @@ export class UtilizationReportsComponent implements OnInit {
 
     downloadExcel() {
         const companyId = this.selected_company_id();
+        const startDate = this.start_date();
+        const endDate = this.end_date();
 
-        if (companyId === null) {
+        if (companyId === null || startDate === null || endDate === null) {
             return;
         }
 
         this.utilizationReportsService
-            .downloadUtilizationReportForCompany(companyId)
+            .downloadUtilizationReportForCompany(
+                companyId,
+                startDate,
+                endDate,
+            )
             .subscribe({
                 next: (blob) => {
                     const url = window.URL.createObjectURL(blob);
