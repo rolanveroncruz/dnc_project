@@ -1,6 +1,6 @@
 use axum::{
     body::Body,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{header, StatusCode},
     Json,
     response::Response,
@@ -12,10 +12,19 @@ use sea_orm::{
 use serde::{Deserialize, Serialize};
 
 use crate::{AppState, entities::{endorsement, endorsement_company}};
-use rust_xlsxwriter::Workbook;
-#[derive(Debug, Serialize, Deserialize, FromQueryResult)]
+use std::io::Cursor;
+use umya_spreadsheet::{reader, writer, HorizontalAlignmentValues, Style};
+
+
 
 // region Get Utilization Report for Company
+#[derive(Debug, Deserialize)] // ✅ added query params for date filtering
+pub struct UtilizationReportParams {
+    pub start_date: Date,
+    pub end_date: Date,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromQueryResult)]
 pub struct UtilizationReportRow {
     pub source: String,
     pub id: i32,
@@ -31,13 +40,19 @@ pub struct UtilizationReportRow {
     pub date_service_performed: Option<Date>,
     pub tooth: Option<String>,
 }
+
 pub async fn get_utilization_report(
     State(state): State<AppState>,
     Path(company_id): Path<i32>,
+    Query(params): Query<UtilizationReportParams>,
 ) -> Result<Json<Vec<UtilizationReportRow>>, (StatusCode, String)> {
 
     let db: &DatabaseConnection = &state.db;
-    let rows = fetch_utilization_report_rows(db, company_id)
+    let rows = fetch_utilization_report_rows(
+        db,
+        company_id,
+    params.start_date,
+    params.end_date)
         .await
         .map_err(internal_error)?;
     Ok(Json(rows))
@@ -53,7 +68,9 @@ fn internal_error(err: DbErr) -> (StatusCode, String) {
 async fn fetch_utilization_report_rows(
     db: &DatabaseConnection,
     company_id: i32,
-) -> Result<Vec<UtilizationReportRow>, sea_orm::DbErr> {
+    start_date: Date,
+    end_date: Date,
+) -> Result<Vec<UtilizationReportRow>, DbErr> {
     let stmt = Statement::from_sql_and_values(
         DbBackend::Postgres,
         r#"
@@ -73,9 +90,15 @@ async fn fetch_utilization_report_rows(
             tooth
         FROM unified_approved
         WHERE company_id = $1
-        ORDER BY date_created DESC, id DESC
+        AND date_service_performed >= $2
+        AND date_service_performed <= $3
+        ORDER BY date_service_performed DESC, id DESC
         "#,
-        [company_id.into()],
+        [
+            company_id.into(),
+            start_date.into(),
+            end_date.into(),
+        ],
     );
 
     UtilizationReportRow::find_by_statement(stmt)
@@ -122,6 +145,7 @@ fn create_worksheet_name( company_name: &str)-> String{
 pub async fn download_utilization_report(
     State(state): State<AppState>,
     Path(company_id): Path<i32>,
+    Query(params): Query<UtilizationReportParams>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     tracing::info!("In download_utilization_report()");
 
@@ -152,94 +176,114 @@ pub async fn download_utilization_report(
                 format!("Company with id {} not found.", company_id),
             )
         })?;
+
     let company_name = company.name.clone();
 
 
     //-----2. Fetch the UtilizationReportRow[]
-    let rows = fetch_utilization_report_rows(db, company_id)
+    let rows = fetch_utilization_report_rows(
+        db,
+        company_id,
+        params.start_date,
+        params.end_date)
         .await
         .map_err(internal_error)?;
 
 
-    //----- 3. Setup the workbook and worksheet.
-    let mut workbook = Workbook::new();
-    let worksheet = workbook.add_worksheet();
-    let worksheet_name = create_worksheet_name(&company_name);
+    //----- 3. Set up the workbook and worksheet.
+    let template_path = "billing_templates/Utilization_Report_Template.xlsx";
+    let mut book = reader::xlsx::read(template_path)
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to read XLSX template:{}", e),
+            )
+        })?;
 
+    // Use the worksheet already present in the template.
+    let sheet_name = "Sheet1";
+
+    let worksheet = book
+        .get_sheet_by_name_mut(sheet_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Worksheet '{}' not found in template", sheet_name),
+            )
+        })?;
+
+    //----- 3a. Print the company name(agreement_corp_number)
+    let top_title = format!(
+        "{}({})",
+        company_name.clone(),
+        agreement_corp_number.unwrap_or_default()
+    );
     worksheet
-        .set_name(worksheet_name.clone())
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .get_cell_mut("A1")
+        .set_value(top_title);
 
-    //----3a. Print the company_name(agreement_corp_number) at 0,0
-    let top_title =format!("{}({})", company_name.clone(), agreement_corp_number.unwrap());
+    //----- 3b. Print the date range
+    let date_range_title = format!(
+        "Utilization Report for {} - {}",
+        params.start_date,
+        params.end_date
+    );
     worksheet
-        .write_string(0,0, top_title)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .get_cell_mut("A2")
+        .set_value(date_range_title);
 
-    //-----4. Write the headers.
-    // ✅ Headers
-    let headers = [
-        "CERT NUMBER",
-        "PATIENT NAME",
-        "TREATMENT DONE",
-        "TEETH NUMBER",
-        "TREATMENT DATE",
-        "DENTIST NAME",
-        "AMOUNT",
-    ];
-    let header_row= 4;
-    for (col, header_name) in headers.iter().enumerate() {
-        worksheet
-            .write_string(header_row, col as u16, *header_name)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    }
+    //----- 4. Write the rows, skip headers which are already there.
+    // Columns are: A - account_number, B - member_name, C - dental_service_name, D - tooth, E- date_service_performed, F - dentist_name
+    let first_data_row = 6;
+    let mut center_style = Style::default();
+    center_style
+        .get_alignment_mut()
+        .set_horizontal(HorizontalAlignmentValues::Center);
 
-    //-----5. Write the rows
-    // ✅ Rows
     for (index, row) in rows.iter().enumerate() {
-        let excel_row = (index + ((header_row as usize) +1))  as u32;
+        let excel_row = first_data_row +index as u32;
+        worksheet.insert_new_row(&excel_row, &1);
+        worksheet
+            .get_cell_mut(format!("A{}", excel_row))
+            .set_value(row.member_account_number.clone());
+        worksheet
+            .get_cell_mut(format!("B{}", excel_row))
+            .set_value(row.member_name.clone());
+        worksheet
+            .get_cell_mut(format!("C{}", excel_row))
+            .set_value(row.dental_service_name.clone());
+        let tooth_cell = format!("D{}", excel_row);
+        worksheet
+            .get_cell_mut(tooth_cell.as_str())
+            .set_value(row.tooth.clone().unwrap_or_default());
+        worksheet
+            .set_style(tooth_cell, center_style.clone());
 
-        worksheet.write_string(excel_row, 0, &row.member_account_number)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        let service_date_cell = format!("E{}", excel_row);
+        worksheet
+            .get_cell_mut(service_date_cell.as_str())
+            .set_value(row.date_service_performed.unwrap().to_string().clone());
 
-        worksheet.write_string(excel_row, 1, &row.member_name)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        worksheet
+            .set_style(service_date_cell, center_style.clone());
 
-        worksheet.write_string(excel_row, 2, &row.dental_service_name)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        worksheet.write_string(excel_row, 3, row.tooth.clone().as_deref().unwrap_or(" "),)
-            .map_err(|e|(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-         let treatment_date = row.
-             date_service_performed
-             .map(|d| d.to_string())
-             .unwrap_or("".to_string());
-        worksheet.write_string(excel_row, 4,  treatment_date)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        worksheet.write_string(excel_row, 5, &row.dentist_name)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-        worksheet.write_number(excel_row, 6, 500.00)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
+        worksheet
+            .get_cell_mut(format!("F{}", excel_row))
+            .set_value(row.dentist_name.clone());
     }
+    //----- 5. Save the workbook to a buffer.
+    let mut cursor = Cursor::new(Vec::<u8>::new());
 
-    // ✅ Optional column widths
-    worksheet.set_column_width(0, 16).ok();
-    worksheet.set_column_width(1, 24).ok();
-    worksheet.set_column_width(2, 30).ok();
-    worksheet.set_column_width(3, 30).ok();
-    worksheet.set_column_width(4, 22).ok();
-    worksheet.set_column_width(5, 30).ok();
-    worksheet.set_column_width(6, 30).ok();
+    writer::xlsx::write_writer(&book, &mut cursor)
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to write XLSX file:{}", e),
+            )
+        })?;
+    let bytes = cursor.into_inner();
 
-    let bytes = workbook
-        .save_to_buffer()
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    let filename = format!("util-z-rpt-{}.xlsx", company_name.clone());
+    let filename = format!("utilization-report-{}-{}-{}.xlsx", company_name.clone(), params.start_date, params.end_date);
 
     Response::builder()
         .status(StatusCode::OK)
@@ -252,7 +296,9 @@ pub async fn download_utilization_report(
             format!("attachment; filename=\"{}\"", filename),
         )
         .body(Body::from(bytes))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        .map_err(|e|(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+
+
 }
 
 // endregion Create Downloadable XLSX Utilization Report for Company
