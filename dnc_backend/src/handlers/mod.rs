@@ -7,6 +7,7 @@ mod request_parts;
 mod middlewares;
 mod helpers;
 mod api;
+mod app_config;
 
 pub use api::dental_services::{get_dental_services, post_dental_service, patch_dental_service};
 pub use api::dental_service_type::get_dental_service_types;

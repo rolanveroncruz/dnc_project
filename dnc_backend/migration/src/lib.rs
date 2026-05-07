@@ -48,6 +48,8 @@ mod m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation
 mod m20260428_075409_create_csr_role_add_rights;
 mod m20260428_081748_create_accounting_role_add_rights;
 mod m20260428_142434_create_dashboard_object_and_permissions;
+mod m20260507_045752_create_app_config_table;
+mod m20260507_061037_create_app_config_billing_key_values;
 
 pub struct Migrator;
 
@@ -103,6 +105,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260428_075409_create_csr_role_add_rights::Migration),
             Box::new(m20260428_081748_create_accounting_role_add_rights::Migration),
             Box::new(m20260428_142434_create_dashboard_object_and_permissions::Migration),
+            Box::new(m20260507_045752_create_app_config_table::Migration),
+            Box::new(m20260507_061037_create_app_config_billing_key_values::Migration),
         ]
     }
 }
