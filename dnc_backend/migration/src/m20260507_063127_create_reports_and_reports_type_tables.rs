@@ -16,9 +16,8 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        Self::drop_report_type_table(manager).await?;
-
         Self::drop_generated_report_table(manager).await?;
+        Self::drop_report_type_table(manager).await?;
         Ok(())
 
     }
@@ -86,6 +85,10 @@ impl Migration {
                         .to(ReportType::Table, ReportType::Id)
                         .on_delete(ForeignKeyAction::Restrict)
                     )
+                    .col(ColumnDef::new(GeneratedReport::FileName)
+                        .string()
+                        .not_null()
+                    )
                     .col(ColumnDef::new(GeneratedReport::DateGenerated)
                         .timestamp_with_time_zone()
                     )
@@ -118,6 +121,7 @@ pub enum GeneratedReport{
     Table,
     Id,
     ReportTypeId,
+    FileName,
     DateGenerated,
 }
 

@@ -9,6 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub report_type_id: i32,
+    pub file_name: String,
     pub date_generated: Option<DateTimeWithTimeZone>,
 }
 
