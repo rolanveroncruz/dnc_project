@@ -39,6 +39,5 @@ sha2 = "0.11.0"
 uuid = { version = "1.18.1", features = ["v4"] }
 bytes = "1.11.0"
 chrono-tz = "0.10.4"
-rust_xlsxwriter = "0.94.0"
 umya-spreadsheet = "2.3.3"
 anyhow = "1.0.100"
