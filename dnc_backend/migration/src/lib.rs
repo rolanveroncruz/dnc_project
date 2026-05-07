@@ -50,6 +50,8 @@ mod m20260428_081748_create_accounting_role_add_rights;
 mod m20260428_142434_create_dashboard_object_and_permissions;
 mod m20260507_045752_create_app_config_table;
 mod m20260507_061037_create_app_config_billing_key_values;
+mod m20260507_063127_create_reports_and_reports_type_tables;
+mod m20260507_075843_create_hmo_billing_data_table;
 
 pub struct Migrator;
 
@@ -107,6 +109,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260428_142434_create_dashboard_object_and_permissions::Migration),
             Box::new(m20260507_045752_create_app_config_table::Migration),
             Box::new(m20260507_061037_create_app_config_billing_key_values::Migration),
+            Box::new(m20260507_063127_create_reports_and_reports_type_tables::Migration),
+            Box::new(m20260507_075843_create_hmo_billing_data_table::Migration),
         ]
     }
 }

@@ -62,6 +62,8 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Hmo,
+    #[sea_orm(has_many = "super::hmo_billing_data::Entity")]
+    HmoBillingData,
     #[sea_orm(has_many = "super::master_list::Entity")]
     MasterList,
     #[sea_orm(has_many = "super::master_list_member::Entity")]
@@ -107,6 +109,12 @@ impl Related<super::endorsement_type::Entity> for Entity {
 impl Related<super::hmo::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Hmo.def()
+    }
+}
+
+impl Related<super::hmo_billing_data::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::HmoBillingData.def()
     }
 }
 
