@@ -57,6 +57,8 @@ pub async fn generate_hmo_billing_reports(
     Ok(())
 }
 
+
+
 /// For each endorsement, count the master_list_members for the period defined by start_date and end_date.
 /// The method of counting differs depending on whether its endorsement_billing_period_type is annual or monthly.
 async fn generate_billing_data_for_endorsement(
@@ -98,6 +100,8 @@ async fn generate_billing_data_for_endorsement(
     Ok(())
 }
 
+
+// region MLM: counters
 struct MLMCounts{
     master_list_members_count: u64,
     added_counts: u64,
@@ -163,6 +167,9 @@ async fn count_monthly_master_list_members_for_endorsement(
     };
     Ok(total_count)
 }
+
+// endregion: MLM counters
+
 /// generate_billing_report_for_hmo() creates the Excel report for the HMO.
 ///
 async fn generate_billing_report_for_hmo(
@@ -199,11 +206,23 @@ async fn generate_billing_report_for_hmo(
         );
         return Ok(());
     }
-    write_hmo_billing_to_spreadsheet( state.clone(), &the_hmo.short_name, hmo_billing_data_rows, end_date).await?;
+    let the_filename = write_hmo_billing_to_spreadsheet( state.clone(), &the_hmo.short_name, hmo_billing_data_rows, end_date).await?;
 
+
+    let generated_report_record = generated_report::ActiveModel{
+        id: Default::default(),
+        report_type_id: Set(1),
+        file_name: Set(the_filename.clone()),
+        date_generated: Set(Some(Utc::now().fixed_offset())),
+    };
+    let _ = generated_report_record.insert(db).await?;
     Ok(())
 }
+
+
 /// write_hmo_billing_to_spreadsheet() does the actual work of writing data to an Excel spreadsheet.
+///
+
 async fn write_hmo_billing_to_spreadsheet(
     state:AppState,
     hmo_name:&str,
@@ -316,18 +335,12 @@ async fn write_hmo_billing_to_spreadsheet(
 
     }
 
-    let the_filename = format!("generated_reports/{}_HMO_Billing_{}.xlsx", hmo_name, Utc::now().format("%Y-%m-%d"));
+    let the_filename = format!("{}_HMO_Billing_{}.xlsx", hmo_name, Utc::now().format("%Y-%m-%d"));
+    let full_filename = format!("generated_reports/{}", the_filename);
 
-    umya_spreadsheet::writer::xlsx::write(&book, &the_filename)
+    info!(target: "jobs", " writing report for {} to {}", hmo_name,full_filename );
+    umya_spreadsheet::writer::xlsx::write(&book, &full_filename)
         .map_err(|e| anyhow::anyhow!("Failed to write XLSX: {}", e))?;
-
-    let generated_report_record = generated_report::ActiveModel{
-        id: Default::default(),
-        report_type_id: Set(1),
-        file_name: Set(the_filename.clone()),
-        date_generated: Set(Some(Utc::now().fixed_offset())),
-    };
-    let _ = generated_report_record.insert(db).await?;
 
 
     Ok(the_filename)

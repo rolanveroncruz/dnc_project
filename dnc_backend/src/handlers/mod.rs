@@ -8,6 +8,7 @@ mod middlewares;
 mod helpers;
 mod api;
 mod app_config;
+mod reports;
 
 pub use api::dental_services::{get_dental_services, patch_dental_service, post_dental_service};
 pub use api::dental_service_type::get_dental_service_types;
@@ -102,6 +103,6 @@ pub use api::endorsement_company_master_list_members::{get_all_member_names_from
 pub use api::verification::check_approval_code;
 
 pub use api::hmo_utilization::{download_utilization_report, get_utilization_report};
-pub use api::hmo_billing::{download_hmo_billing, get_hmo_billing};
+pub use api::hmo_billing::{ get_generated_hmo_billing_reports, download_generated_report};
 
 pub use api::test_reports::{test_generate_hmo_billing_reports};
