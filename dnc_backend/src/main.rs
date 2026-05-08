@@ -1,7 +1,7 @@
 #[allow(unused_imports, dead_code)]
 mod db;
 mod entities;
-mod jobs;
+pub mod jobs;
 use std::error::Error;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;

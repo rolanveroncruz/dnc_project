@@ -2,6 +2,7 @@ pub mod handlers;
 pub use handlers::{LoginRequest, LoginResponse, Claims};
 mod db;
 mod entities;
+pub mod jobs;
 #[derive(Clone)]
 pub struct AppState {
     pub db: DatabaseConnection,
@@ -73,6 +74,7 @@ use crate::handlers::{get_master_list_members_for_endorsement};
 use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
 use crate::handlers::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};
 use crate::handlers::{save_member_name_for_company};
+use crate::handlers::{test_generate_hmo_billing_reports};
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -197,7 +199,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/utilization_reports/company/{company_id}/download", get(download_utilization_report))
         .route("/hmo_billing/{hmo_id}", get(get_hmo_billing))
         .route("/hmo_billing/{hmo_id}/download", get(download_hmo_billing))
-
+        .route("/test_hmo_billing", get(test_generate_hmo_billing_reports)) 
 
 }
 

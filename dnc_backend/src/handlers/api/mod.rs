@@ -49,3 +49,4 @@ pub mod acc_reconciliation;
 pub mod endorsement_company_master_list_members;
 pub mod hmo_billing;
 pub mod hmo_utilization;
+pub mod test_reports;
