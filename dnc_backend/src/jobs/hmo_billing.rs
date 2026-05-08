@@ -2,11 +2,13 @@ use sea_orm::{PaginatorTrait, QueryOrder};
 use sea_orm::QueryFilter;
 use sea_orm::ColumnTrait;
 use chrono::{NaiveDate, Months, Utc};
+use tracing::info;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, JoinType, QuerySelect, RelationTrait, Set};
 use crate::AppState;
 
 use crate::entities::{dental_service,
                       endorsement, endorsement_company,endorsement_counts,
+                      generated_report,
                       hmo, hmo_billing_data,
                       master_list, master_list_member};
 use umya_spreadsheet;
@@ -21,6 +23,7 @@ pub async fn generate_hmo_billing_reports(
     start_date: Option<NaiveDate>,
     end_date: NaiveDate,
 )-> anyhow::Result<()> {
+
    let request_key = Uuid::new_v4().to_string();
 
     let db : &DatabaseConnection = &state.db;
@@ -29,6 +32,12 @@ pub async fn generate_hmo_billing_reports(
         None => end_date
             .checked_sub_months(Months::new(1)).ok_or_else(|| anyhow::anyhow!("Could not calculate start date"))?,
     };
+    info!(target: "jobs",
+        "generate_hmo_billing_reports() started with request_key {} for period {}-{}",
+        request_key,
+        actual_start_date.format("%m/%d/%Y"),
+        end_date.format("%m/%d/%Y")
+    );
 
     //---1. Generate Billing Data per endorsement
     let endorsements = endorsement::Entity::find()
@@ -170,25 +179,40 @@ async fn generate_billing_report_for_hmo(
         .await?
         .ok_or_else(|| anyhow::anyhow!("Could not find HMO with id {}", hmo_id))?;
 
+    //----- Get all billing data for
     let hmo_billing_data_rows = hmo_billing_data::Entity::find()
     .join(
         JoinType::InnerJoin,
         hmo_billing_data::Relation::Endorsement.def(),
     )
         .filter(endorsement::Column::HmoId.eq(hmo_id))
-        .filter(hmo_billing_data::Column::DateGenerated.gte(start_date))
-        .filter(hmo_billing_data::Column::DateGenerated.lte(end_date))
-        .filter(hmo_billing_data::Column::RequestKey.eq(Some(request_key)))
+        .filter(hmo_billing_data::Column::RequestKey.eq(Some(request_key.clone())))
         .all(db)
         .await?;
+
+    //--- Generate the Excel report only for HMOs that aren't empty.
+    if hmo_billing_data_rows.is_empty() {
+        info!(target: "jobs",
+            "generate_billing_report_for_hmo() skipped for HMO id:{}({}) because it has no billing data",
+            hmo_id,
+            the_hmo.short_name
+        );
+        return Ok(());
+    }
     write_hmo_billing_to_spreadsheet( state.clone(), &the_hmo.short_name, hmo_billing_data_rows, end_date).await?;
 
     Ok(())
 }
 /// write_hmo_billing_to_spreadsheet() does the actual work of writing data to an Excel spreadsheet.
-async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing_data: Vec<hmo_billing_data::Model>, end_date: NaiveDate)-> anyhow::Result<String> {
+async fn write_hmo_billing_to_spreadsheet(
+    state:AppState,
+    hmo_name:&str,
+    billing_data: Vec<hmo_billing_data::Model>,
+    end_date: NaiveDate)
+    -> anyhow::Result<String> {
     let db : &DatabaseConnection = &state.db;
 
+    info!(target: "jobs", "write_hmo_billing_to_spreadsheet() started for HMO {} with {} rows", hmo_name, billing_data.len());
     //----1. Set the path to template XLSX
     let template_path = "billing_templates/HMO_Billing_Template.xlsx";
 
@@ -213,7 +237,11 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
     let start_row: u32 = 17;
     for (index, row) in billing_data.iter().enumerate() {
         let excel_row = start_row + index as u32;
+        if index > 0 {
+            sheet.insert_new_row(&excel_row, &1);
+        }
         let endorsement_id = row.endorsement_id;
+
 
         let endorsement = endorsement::Entity::find_by_id(endorsement_id)
             .one(db)
@@ -242,7 +270,7 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
         // H - dental benefits
         let dental_benefits = get_dental_benefits_string_from_endorsement(state.clone(),endorsement.id).await.unwrap_or_default();
         // I - effectivity period
-        let effectivity_period = format!("{}-{}", endorsement.date_start.format("%m/%d/%Y"),endorsement.date_end.format("%m/%d/%Y") );
+        let effectivity_period = format!("{} - {}", endorsement.date_start.format("%m/%d/%Y"),endorsement.date_end.format("%m/%d/%Y") );
         // J - retainer fee
         // K- 12% VAT
         // L= J+K
@@ -253,7 +281,7 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
 
         sheet
             .get_cell_mut(format!("D{}", excel_row))
-            .set_value(company_name);
+            .set_value(company_name.clone());
 
         sheet
             .get_cell_mut(format!("E{}", excel_row))
@@ -269,7 +297,7 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
 
         sheet
             .get_cell_mut(format!("H{}", excel_row))
-            .set_value(dental_benefits);
+            .set_value(dental_benefits.clone());
 
         sheet
             .get_cell_mut(format!("I{}", excel_row))
@@ -279,6 +307,12 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
             .get_cell_mut(format!("J{}", excel_row))
             .set_value(endorsement.retainer_fee.unwrap_or_default().to_string());
 
+        info!(target: "jobs",
+        "writing row {} for company {} with total_master_list_members {} and dental_benefits '{}'",
+        excel_row,
+            company_name.clone(),
+            total_master_list_members,
+            dental_benefits.clone());
 
     }
 
@@ -286,6 +320,14 @@ async fn write_hmo_billing_to_spreadsheet(state:AppState, hmo_name:&str, billing
 
     umya_spreadsheet::writer::xlsx::write(&book, &the_filename)
         .map_err(|e| anyhow::anyhow!("Failed to write XLSX: {}", e))?;
+
+    let generated_report_record = generated_report::ActiveModel{
+        id: Default::default(),
+        report_type_id: Set(1),
+        file_name: Set(the_filename.clone()),
+        date_generated: Set(Some(Utc::now().fixed_offset())),
+    };
+    let _ = generated_report_record.insert(db).await?;
 
 
     Ok(the_filename)
@@ -306,11 +348,16 @@ async fn get_dental_benefits_string_from_endorsement(
         .order_by_asc(dental_service::Column::Name)
         .all(db)
         .await?;
+    info!(target: "jobs",
+        "get_dental_benefits_string_from_endorsement id:{} found {} rows",
+        endorsement_id,
+        rows.len()
+    );
 
     let mut benefits = String::from("Basic");
     for (count_row, dental_service) in rows{
         if let Some(service) = dental_service{
-            benefits.push_str(&format!(" (+) {}{} ", service.name, count_row.count));
+            benefits.push_str(&format!(" (+) {} ({}) ", service.name, count_row.count));
         }
 
     }
