@@ -10,7 +10,9 @@ pub struct Model {
     pub id: i32,
     pub date_generated: DateTimeWithTimeZone,
     pub endorsement_id: i32,
-    pub master_list_count: i32,
+    pub request_key: Option<String>,
+    pub master_list_count: Option<i32>,
+    pub added_list_count: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

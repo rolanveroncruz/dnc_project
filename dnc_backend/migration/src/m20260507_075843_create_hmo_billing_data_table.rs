@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{prelude::*};
 use crate::m20260220_082933_create_endorsement_tables::Endorsement;
 
 #[derive(DeriveMigrationName)]
@@ -33,18 +33,26 @@ impl Migration{
                     .not_null()
                     .default(Expr::current_timestamp())
                 )
-                .col(integer(HMOBillingData::EndorsementId)
+                .col(ColumnDef::new(HMOBillingData::EndorsementId)
                     .integer()
                     .not_null()
+                )
+                .col(ColumnDef::new(HMOBillingData::RequestKey)
+                    .string()
+                    .null()
                 )
                 .foreign_key(ForeignKey::create()
                     .name("fk_hmo_billing_data_endorsement_id")
                     .from(HMOBillingData::Table, HMOBillingData::EndorsementId)
                     .to(Endorsement::Table, Endorsement::Id)
                 )
-                .col(integer(HMOBillingData::MasterListCount)
+                .col(ColumnDef::new(HMOBillingData::MasterListCount)
                     .integer()
-                    .not_null()
+                    .default(Expr::val(0))
+                )
+                .col(ColumnDef::new(HMOBillingData::AddedListCount)
+                    .integer()
+                    .default(Expr::val(0))
                 )
                 .to_owned()
         ).await?;
@@ -62,12 +70,19 @@ HMOBillngData allows separating computing billing data from generating the actua
 So each row in the HMOBillingData table represents the master list count for a given endorsement.
 From the endorsement, we know the billing type, and the period in question which is the from a month
 before DateGenerated to DateGenerated.
+
+We are adding a RequestKey field to allow better tracking of counts. Since counts can be generated theoretically
+anytime, when we generate the report for an HMO, we can't just filter on the EndorsementId, as there may
+have multiple rows in the HMOBillingData table for the same endorsement (because of successive counts.
+
  */
 #[derive(DeriveIden)]
 pub enum HMOBillingData{
     Table,
     Id,
+    RequestKey,
     DateGenerated,
     EndorsementId,
-    MasterListCount
+    MasterListCount,
+    AddedListCount
 }
