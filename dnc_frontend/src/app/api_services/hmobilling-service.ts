@@ -4,15 +4,11 @@ import {LoginService} from '../login.service';
 import {environment} from '../../environments/environment';
 import {Observable} from 'rxjs';
 
-export interface HMOBillingRow {
-    statement_of_account_no: string,
-    company_name: string,
-    agreement_corp_number: string | null,
-    total_master_list_members: number,
-    billing_period_type_name: string,
-    dental_benefits: string,
-    effectivity_period: string,
-    retainer_fee: string | null,
+export interface GeneratedBillingReportResponse {
+    id: number,
+    report_type_id: number,
+    file_name: string,
+    date_generated: string | null,
 }
 
 @Injectable({
@@ -31,11 +27,11 @@ export class HMOBillingService {
         return new HttpHeaders({Authorization: `Bearer ${token}`});
     }
 
-    getHMOBillingForHMO(hmo_id:number): Observable<HMOBillingRow[]>{
-        return this.http.get<HMOBillingRow[]>(`${this.baseHMOBillingUrl}/${hmo_id}`, {headers: this.authHeaders()});
+    getHMOBillingReports(): Observable<GeneratedBillingReportResponse[]>{
+        return this.http.get<GeneratedBillingReportResponse[]>(`${this.baseHMOBillingUrl}/`, {headers: this.authHeaders()});
     }
-    downloadBillingReportForHMO(hmoId:number){
-        return this.http.get(`${this.baseHMOBillingUrl}/${hmoId}/download`, {headers: this.authHeaders(), responseType: 'blob'});
+    downloadGeneratedReport(filename:string){
+        return this.http.get(`${this.baseHMOBillingUrl}/download/${filename}`, {headers: this.authHeaders(), responseType: 'blob'});
     }
 
 }

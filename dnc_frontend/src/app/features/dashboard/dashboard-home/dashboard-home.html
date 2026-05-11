@@ -1,1 +1,17 @@
-<p>dashboard-home works!</p>
+<div class="dashboard-page">
+    <h2>Dashboard</h2>
+
+    <div class="chart-card">
+        <h3>Monthly Verifications</h3>
+
+        <div class="chart-wrapper">
+            <canvas
+                baseChart
+                [data]="barChartData"
+                [options]="barChartOptions"
+                [type]="barChartType"
+            >
+            </canvas>
+        </div>
+    </div>
+</div>
