@@ -249,6 +249,7 @@ pub struct CreateVerificationRequest {
     pub dentist_id: i32,
     pub member_id: i32,
     pub dental_service_id: i32,
+    pub dental_clinic_id: i32,
 }
 #[derive(Debug, Serialize)]
 pub struct CreateVerificationResponse {
@@ -256,6 +257,7 @@ pub struct CreateVerificationResponse {
     pub date_created: sea_orm::prelude::DateTimeWithTimeZone,
     pub created_by: String,
     pub dentist_id: i32,
+    pub dental_clinic_id: i32,
     pub member_id: i32,
     pub dental_service_id: i32,
     pub date_service_performed: Option<Date>,
@@ -289,6 +291,7 @@ pub async fn create_verification(
         dentist_id: Set(payload.dentist_id),
         member_id: Set(payload.member_id),
         dental_service_id: Set(payload.dental_service_id),
+        dental_clinic_id: Set(payload.dental_clinic_id),
         date_service_performed: Set(None),
         status_id: Set(status_id), // temporary
         approved_by: Set(None),
@@ -309,6 +312,7 @@ pub async fn create_verification(
             date_created: inserted.date_created,
             created_by: inserted.created_by,
             dentist_id: inserted.dentist_id,
+            dental_clinic_id: inserted.dental_clinic_id,
             member_id: inserted.member_id,
             dental_service_id: inserted.dental_service_id,
             date_service_performed: inserted.date_service_performed,

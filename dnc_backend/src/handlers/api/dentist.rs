@@ -18,7 +18,8 @@ use crate::entities::{
     dentist_status,
 };
 
-/// Dentist row + lookup "name" fields
+// region: Helper functions
+/// Dentist row and lookup "name" fields
 #[derive(Debug, Serialize, FromQueryResult)]
 pub struct DentistWithLookups {
     // ---- Dentist columns (match dentist table column names)
@@ -80,6 +81,9 @@ fn dentist_with_lookups_query() -> sea_orm::Select<dentist::Entity> {
         )
 }
 
+// endregion: Helper functions
+
+// region: GET /api/dentists
 #[instrument(skip(state), err(Debug))]
 pub async fn get_all_dentists(
     State(state): State<AppState>,
@@ -97,6 +101,8 @@ pub async fn get_all_dentists(
 
     Ok(Json(rows))
 }
+
+// endregion: GET /api/dentists
 
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dentist_from_id(
