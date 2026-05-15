@@ -1,6 +1,5 @@
 import {Component, computed, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { DentistService, DentistNames } from '../../../../api_services/dentist-service';
 import { MatInput } from '@angular/material/input';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
@@ -13,6 +12,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {forkJoin} from 'rxjs';
 import {CreateVerificationResponse, VerificationService} from '../../../../api_services/verification-service';
 import {DatePipe} from '@angular/common';
+import {DentistClinicService, DentistWithClinicNames} from '../../../../api_services/dentist-clinic-service';
 
 @Component({
     selector: 'app-verification',
@@ -121,32 +121,41 @@ export class Verification implements OnInit,OnDestroy {
     * For dentist
      ***************/
     // These are to pull the dentists' data
-    readonly dentistService = inject(DentistService);
-    readonly dentistNames = signal<DentistNames[] >([]);
+    readonly dentistClinicService = inject(DentistClinicService);
+    readonly dentistsWithClinicNames= signal<DentistWithClinicNames[] >([]);
     // just an indicator
     readonly loadingDentists = signal<boolean>(false);
     // dentistSearch is the text box value. in ngOnInit(), we subscribe to the valueChanges and set the dentistSearchText signal
     // to the value of dentistSearch's value.
     // filteredDentists is the array then computed based on the dentistSearchText signal.
-    readonly dentistSearch = new FormControl<string|number>('', { nonNullable: true });
+    readonly dentistSearch = new FormControl<string|DentistWithClinicNames>('',
+        { nonNullable: true });
+    readonly selectedDentalClinicId = signal<number | null>(null);
     readonly selectedDentistId = signal<number | null>(null);
     readonly dentistSearchText = signal('');
     readonly filteredDentists = computed(() => {
 
         const search = this.dentistSearchText();
+        const rows = this.dentistsWithClinicNames();
 
         if (!search) {
-            return this.dentistNames();
+            return rows;
         }
 
-        return this.dentistNames().filter(dentist =>
-            dentist.full_name.toLowerCase().includes(search)
+        return rows.filter(row =>
+            row.dentist_with_clinic_name.toLowerCase().includes(search)
         );
     });
+    displayDentistClinic(row: DentistWithClinicNames | string | null): string {
+        if (!row) return '';
+        if (typeof row === 'string') return row;
 
+        return row.dentist_with_clinic_name;
+    }
     onDentistSelected(event: MatAutocompleteSelectedEvent): void {
-        const selectedId = event.option.value as number;
-        this.selectedDentistId.set(selectedId);
+        const selected = event.option.value as DentistWithClinicNames;
+        this.selectedDentistId.set(selected.dentist_id);
+        this.selectedDentalClinicId.set(selected.clinic_id);
 
         // reset the selectedMasterListMemberId
         this.selectedMasterListMemberId.set(null);
@@ -155,10 +164,7 @@ export class Verification implements OnInit,OnDestroy {
         this.saveError.set(null);
         this.saveSuccessMessage.set(null);
 
-        const selectedDentist = this.dentistNames().find(d => d.id === selectedId);
-        if (selectedDentist) {
-            this.dentistSearch.setValue(selectedDentist.full_name, { emitEvent: false });
-        }
+        this.dentistSearch.setValue(selected, { emitEvent: false });
     }
 
     // endregion: For the dentist autocomplete control
@@ -194,7 +200,7 @@ export class Verification implements OnInit,OnDestroy {
     }
 
     ngOnInit(): void {
-        this.loadDentists();
+        this.loadDentistsWithClinicNames();
 
         this.clockIntervalId = setInterval(() => {
             this.currentDateTime.set(new Date());
@@ -210,6 +216,7 @@ export class Verification implements OnInit,OnDestroy {
                 this.saveSuccessMessage.set(null);
 
                 this.selectedDentistId.set(null);
+                this.selectedDentalClinicId.set(null);
                 this.selectedMasterListMemberId.set(null);
                 this.memberServicesCountsSummary.set([]);
                 this.selectedDentalServiceIds.set([]);
@@ -226,12 +233,12 @@ export class Verification implements OnInit,OnDestroy {
 
 
     //endregion: constructor(), ngOnInit, ngOnDestroy
-    private loadDentists():void{
+    private loadDentistsWithClinicNames():void{
         this.loadingDentists.set(true);
 
-        this.dentistService.getAllDentistsNamesOnly().subscribe({
+        this.dentistClinicService.getDentistWithClinicNames().subscribe({
             next: (res)=>{
-                this.dentistNames.set(res);
+                this.dentistsWithClinicNames.set(res);
                 this.loadingDentists.set(false);
             },
             error: (err)=>{
@@ -245,6 +252,7 @@ export class Verification implements OnInit,OnDestroy {
     readonly canSave = computed(() =>
         this.isCreateMode() &&
         this.selectedDentistId() !== null &&
+        this.selectedDentistId() !== null &&
         this.selectedMasterListMemberId() !== null &&
         this.selectedDentalServiceIds().length > 0 &&
         !this.saving()
@@ -252,10 +260,15 @@ export class Verification implements OnInit,OnDestroy {
 
     saveVerifications(): void {
         const dentistId = this.selectedDentistId();
+        const dentalClinicId = this.selectedDentalClinicId();
         const memberId = this.selectedMasterListMemberId();
         const serviceIds = this.selectedDentalServiceIds();
 
-        if (dentistId === null || memberId === null || serviceIds.length === 0) {
+        if (dentistId === null ||
+            dentalClinicId===null ||
+            memberId === null
+            || serviceIds.length === 0
+        ) {
             this.saveError.set('Please select a dentist, a member, and at least one service.');
             this.saveSuccessMessage.set(null);
             return;
@@ -270,6 +283,7 @@ export class Verification implements OnInit,OnDestroy {
                     dentist_id: dentistId,
                     member_id: memberId,
                     dental_service_id: dental_service_id,
+                    dental_clinic_id: dentalClinicId,
                 }
             ));
 

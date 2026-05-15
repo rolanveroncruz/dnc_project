@@ -40,12 +40,13 @@
 
             <mat-autocomplete
                 #dentistAuto="matAutocomplete"
+                [displayWith] ="displayDentistClinic"
                 (optionSelected)="onDentistSelected($event)">
-                @for (dentist of filteredDentists(); track dentist.id) {
-                    <mat-option [value]="dentist.id">
-                        {{ dentist.full_name }}
-                    </mat-option>
-                }
+                    @for (dentist of filteredDentists(); track dentist.dentist_id +'-'+dentist.clinic_id) {
+                        <mat-option [value]="dentist">
+                            {{dentist.dentist_with_clinic_name}}
+                        </mat-option>
+                    }
             </mat-autocomplete>
         </mat-form-field>
     </div>

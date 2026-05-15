@@ -37,6 +37,7 @@ export interface CreateVerificationRequest {
     dentist_id: number;
     member_id: number;
     dental_service_id: number;
+    dental_clinic_id: number;
 }
 
 export interface CreateVerificationResponse {
@@ -46,6 +47,7 @@ export interface CreateVerificationResponse {
     dentist_id: number;
     member_id: number;
     dental_service_id: number;
+    dental_clinic_id: number;
     date_service_performed: string | null; // ISO date or null
     status_id: number;
     approved_by: string | null;

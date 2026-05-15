@@ -11,7 +11,6 @@ import {TableColumn} from '../../../../components/generic-data-table-component/t
   selector: 'app-billing-statements-component',
     imports: [
         GenericDataTableComponent,
-        MatButton,
         MatCard,
         MatCardContent,
         MatCardHeader,

@@ -1,11 +1,11 @@
 // src/app/api_services/dentist-clinic-service.ts
 import { Injectable, inject } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {map, Observable} from 'rxjs';
+import {Observable} from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {LoginService} from '../login.service';
-
+import {map} from 'rxjs/operators';
 //
 // ---- Types that mirror your Rust struct(s)
 //
@@ -23,6 +23,9 @@ export interface DentistClinicWithNames {
 
     clinic_name: string | null;
     position_name: string | null;
+}
+export interface DentistWithClinicNames extends DentistClinicWithNames {
+    dentist_with_clinic_name: string;
 }
 
 export interface DentistClinicWithNamesAndAddress {
@@ -102,6 +105,35 @@ export class DentistClinicService {
     removeDentistClinic(clinicId: number, dentistId: number): Observable<DentistClinicWithNames[]> {
         return this.http.delete<DentistClinicWithNames[]>(
             `${this.baseUrl}/dentists/${encodeURIComponent(String(dentistId))}/clinics/${encodeURIComponent(String(clinicId))}`, { headers: this.authHeaders()}
+        );
+    }
+
+    getDentistWithClinicNames(): Observable<DentistWithClinicNames[]>{
+        return this.http.get<DentistClinicWithNames[]>(
+            `${this.baseUrl}/dentist_clinics/`, { headers: this.authHeaders()}
+        ).pipe(
+            map((res)=> {
+                return res.map((row: DentistClinicWithNames): DentistWithClinicNames => {
+                    // ✅ Build name parts without extra spaces
+                    const dentistName = [
+                        `${row.last_name},`,
+                        row.given_name,
+                        row.middle_name,
+                    ]
+                        .filter(Boolean)
+                        .join(' ');
+
+                    // ✅ Append clinic only if present
+                    const dentistWithClinicName = row.clinic_name
+                        ? `${dentistName} (${row.clinic_name})`
+                        : dentistName;
+
+                    return {
+                        ...row,
+                        dentist_with_clinic_name: dentistWithClinicName,
+                    };
+                });
+            })
         );
     }
 }

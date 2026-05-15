@@ -137,15 +137,15 @@ export class MainComponent implements OnInit {
                 disabled: true,
                 children: [
                     {
-                        label: 'Summary of Claims',
-                        icon: 'history',
-                        route: '/main/billing/dentists/claims',
-                        disabled: true,
-                    },
-                    {
                         label: 'Retainer Fee Reports',
                         icon: 'history',
                         route: '/main/billing/dentists/retainer_fees',
+                        disabled: true,
+                    },
+                    {
+                        label: 'Summary of Claims',
+                        icon: 'history',
+                        route: '/main/billing/dentists/claims',
                         disabled: true,
                     },
                 ],
