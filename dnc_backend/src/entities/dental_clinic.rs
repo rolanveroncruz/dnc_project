@@ -73,6 +73,8 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     TaxType,
+    #[sea_orm(has_many = "super::verification::Entity")]
+    Verification,
 }
 
 impl Related<super::account_type::Entity> for Entity {
@@ -108,6 +110,12 @@ impl Related<super::tax_classification::Entity> for Entity {
 impl Related<super::tax_type::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::TaxType.def()
+    }
+}
+
+impl Related<super::verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Verification.def()
     }
 }
 
