@@ -1,4 +1,5 @@
 use sea_orm_migration::{prelude::*};
+use crate::m20260126_063012_create_tables_dental_clinic::DentalClinic;
 use crate::m20260126_161604_create_table_dentists::Dentist;
 
 #[derive(DeriveMigrationName)]
@@ -37,6 +38,15 @@ impl Migration{
                         .name("fk_dentist_payments_dentist_id")
                         .from(DentistPayments::Table, DentistPayments::DentistId)
                         .to(Dentist::Table, Dentist::Id)
+                    )
+                    .col(ColumnDef::new(DentistPayments::ClinicId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_dentist_payments_clinic_id")
+                        .from(DentistPayments::Table, DentistPayments::ClinicId)
+                        .to(DentalClinic::Table, DentalClinic::Id)
                     )
                     .col(ColumnDef::new(DentistPayments::Year)
                         .integer()
@@ -91,7 +101,7 @@ impl Migration{
 
 
 /*
-  In this table, we record the months on which a dentist has been paid their retainer.
+  In this table, we record the months on which a dentist+clinic has been paid their retainer.
   For easy querying, we record the year and month to which the payment was made.
   We could have
  */
@@ -100,6 +110,7 @@ pub enum DentistPayments{
     Table,
     Id,
     DentistId,
+    ClinicId,
     Year,       // for easy insertion and intuition
     Month,      // for easy insertion and intuition
     ReportName, // the name of the report which generated the payment.

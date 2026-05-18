@@ -11,6 +11,7 @@ pub struct Model {
     pub date_created: DateTimeWithTimeZone,
     pub created_by: String,
     pub dentist_id: i32,
+    pub dental_clinic_id: i32,
     pub member_id: Option<i32>,
     pub dental_service_id: i32,
     pub date_service_performed: Option<Date>,
@@ -26,6 +27,14 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::dental_clinic::Entity",
+        from = "Column::DentalClinicId",
+        to = "super::dental_clinic::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    DentalClinic,
     #[sea_orm(
         belongs_to = "super::dental_service::Entity",
         from = "Column::DentalServiceId",
@@ -74,6 +83,12 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     ToothSurface,
+}
+
+impl Related<super::dental_clinic::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentalClinic.def()
+    }
 }
 
 impl Related<super::dental_service::Entity> for Entity {

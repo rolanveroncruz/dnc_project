@@ -37,6 +37,8 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::acc_reconciliation::Entity")]
+    AccReconciliation,
     #[sea_orm(
         belongs_to = "super::account_type::Entity",
         from = "Column::AcctAccountTypeId",
@@ -57,6 +59,8 @@ pub enum Relation {
     ClinicCapabilitiesList,
     #[sea_orm(has_many = "super::dentist_clinic::Entity")]
     DentistClinic,
+    #[sea_orm(has_many = "super::dentist_payments::Entity")]
+    DentistPayments,
     #[sea_orm(
         belongs_to = "super::tax_classification::Entity",
         from = "Column::AcctTaxClassificationId",
@@ -75,6 +79,12 @@ pub enum Relation {
     TaxType,
     #[sea_orm(has_many = "super::verification::Entity")]
     Verification,
+}
+
+impl Related<super::acc_reconciliation::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AccReconciliation.def()
+    }
 }
 
 impl Related<super::account_type::Entity> for Entity {
@@ -98,6 +108,12 @@ impl Related<super::clinic_capabilities_list::Entity> for Entity {
 impl Related<super::dentist_clinic::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistClinic.def()
+    }
+}
+
+impl Related<super::dentist_payments::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistPayments.def()
     }
 }
 

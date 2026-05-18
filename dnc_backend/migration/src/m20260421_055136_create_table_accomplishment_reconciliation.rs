@@ -1,5 +1,6 @@
 use sea_orm_migration::{prelude::* };
 use crate::m20251221_124454_create_table_dental_services::DentalService;
+use crate::m20260126_063012_create_tables_dental_clinic::DentalClinic;
 use crate::m20260126_161604_create_table_dentists::Dentist;
 use crate::m20260307_083354_add_endorsement_rates_masterlists::MasterListMember;
 use crate::m20260408_060317_alter_table_verification_add_tooth_service_type_and_tooth_surface::{ToothSurface, ToothServiceType};
@@ -52,6 +53,15 @@ impl Migration {
                         .from(AccReconciliation::Table, AccReconciliation::DentistId)
                         .to(Dentist::Table, Dentist::Id)
                         .on_delete(ForeignKeyAction::Restrict)
+                    )
+                    .col(ColumnDef::new(AccReconciliation::DentalClinicId)
+                        .integer()
+                        .not_null()
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .name("fk_acc_recon_table_dental_clinic_id")
+                        .from(AccReconciliation::Table, AccReconciliation::DentalClinicId)
+                        .to(DentalClinic::Table, DentalClinic::Id)
                     )
                     .col(ColumnDef::new(AccReconciliation::MemberId)
                         .integer()
@@ -164,6 +174,7 @@ pub enum AccReconciliation {
     DateCreated,
     CreatedBy,
     DentistId,
+    DentalClinicId,
     MemberId,
     DentalServiceId,
     DateServicePerformed,

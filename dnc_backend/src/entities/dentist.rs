@@ -8,10 +8,14 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    #[sea_orm(unique)]
     pub prc_no: Option<String>,
     pub prc_expiry_date: Option<Date>,
+    #[sea_orm(unique_key = "dentist_name_contract_unique")]
     pub last_name: String,
+    #[sea_orm(unique_key = "dentist_name_contract_unique")]
     pub given_name: String,
+    #[sea_orm(unique_key = "dentist_name_contract_unique")]
     pub middle_name: Option<String>,
     pub email: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
@@ -22,6 +26,7 @@ pub struct Model {
     pub dentist_decline_remarks: Option<String>,
     pub dentist_history_id: Option<i32>,
     pub dentist_requested_by: Option<String>,
+    #[sea_orm(unique_key = "dentist_name_contract_unique")]
     pub accre_dentist_contract_id: Option<i32>,
     pub accre_document_code: Option<String>,
     pub accreditation_date: Option<String>,
@@ -55,6 +60,8 @@ pub enum Relation {
     DentistHistory,
     #[sea_orm(has_many = "super::dentist_hmo_relations::Entity")]
     DentistHmoRelations,
+    #[sea_orm(has_many = "super::dentist_payments::Entity")]
+    DentistPayments,
     #[sea_orm(
         belongs_to = "super::dentist_status::Entity",
         from = "Column::DentistStatusId",
@@ -100,6 +107,12 @@ impl Related<super::dentist_history::Entity> for Entity {
 impl Related<super::dentist_hmo_relations::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DentistHmoRelations.def()
+    }
+}
+
+impl Related<super::dentist_payments::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DentistPayments.def()
     }
 }
 

@@ -4,17 +4,20 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "dentist_clinic")]
+#[sea_orm(table_name = "dentist_payments")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique_key = "dentist_clinic_dentist_id_clinic_id_position_unique")]
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
     pub dentist_id: i32,
-    #[sea_orm(unique_key = "dentist_clinic_dentist_id_clinic_id_position_unique")]
-    pub clinic_id: Option<i32>,
-    #[sea_orm(unique_key = "dentist_clinic_dentist_id_clinic_id_position_unique")]
-    pub position_id: Option<i32>,
-    pub schedule: Option<String>,
+    pub clinic_id: i32,
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
+    pub year: i32,
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
+    pub month: i32,
+    pub report_name: Option<String>,
+    pub date_paid: Option<DateTimeWithTimeZone>,
+    pub date_paid_recorded_by: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -35,14 +38,6 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Dentist,
-    #[sea_orm(
-        belongs_to = "super::position::Entity",
-        from = "Column::PositionId",
-        to = "super::position::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    Position,
 }
 
 impl Related<super::dental_clinic::Entity> for Entity {
@@ -54,12 +49,6 @@ impl Related<super::dental_clinic::Entity> for Entity {
 impl Related<super::dentist::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Dentist.def()
-    }
-}
-
-impl Related<super::position::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Position.def()
     }
 }
 
