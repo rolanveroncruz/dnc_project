@@ -53,7 +53,6 @@ mod m20260507_061037_create_app_config_billing_key_values;
 mod m20260507_063127_create_reports_and_reports_type_tables;
 mod m20260507_075843_create_hmo_billing_data_table;
 mod m20260508_105459_create_dentist_payments_table;
-mod m20260508_121908_create_dentist_services_month_year_view;
 mod m20260515_031729_alter_verification_add_clinic_id;
 
 pub struct Migrator;
@@ -114,9 +113,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260507_061037_create_app_config_billing_key_values::Migration),
             Box::new(m20260507_063127_create_reports_and_reports_type_tables::Migration),
             Box::new(m20260507_075843_create_hmo_billing_data_table::Migration),
-            Box::new(m20260515_031729_alter_verification_add_clinic_id::Migration),
             Box::new(m20260508_105459_create_dentist_payments_table::Migration),
-            Box::new(m20260508_121908_create_dentist_services_month_year_view::Migration),
+            Box::new(m20260515_031729_alter_verification_add_clinic_id::Migration),
         ]
     }
 }

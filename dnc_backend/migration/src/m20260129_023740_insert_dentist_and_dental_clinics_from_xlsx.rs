@@ -68,28 +68,34 @@ impl DentistRow{
 }
 impl Migration{
     async fn insert_dentists_and_clinics_from_xlsx(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
+
+        //----1. get the filename of the xlsx file
         static DENTISTS_2026: &[u8] = include_bytes!("../../data_input/dentists_2026.xlsx");
 
+        //----2. open the workbook
         let mut workbook:Xlsx<_> = open_workbook_from_rs(Cursor::new(DENTISTS_2026))
             .map_err(|e| DbErr::Custom(format!("Failed to open workbook : {e}")))?;
 
+        //----3. get the first sheet name
         let sheet_name = workbook
             .sheet_names()
             .get(0)
             .cloned()
             .ok_or_else(|| DbErr::Custom("Failed to get sheet name".to_string()))?;
 
+        //----4. get the range of the first sheet
         let range = workbook
             .worksheet_range(&*sheet_name)
             .map_err(|e| DbErr::Custom(format!("Failed to get worksheet range: {e}")))?;
 
-
+        //----5. get the data and put it into a vector of DentistRow, dentists
         let dentists:Vec<DentistRow> = range
             .rows()
             .skip(1)
             .filter_map(DentistRow::from_row)
             .collect();
 
+        //----6. iterate over the dentists and insert them into the database
          for (i,dentist) in dentists.iter().enumerate() {
              if (i+1)%50==0{
                  println!("inserted {}/{} dentists",i+1, dentists.len());
@@ -151,9 +157,10 @@ impl Migration{
         let dentist_position_id = get_position_id_by_name(db, &dentist_position_name).await?;
 
 
-        insert_dentist(db, &dentist_given_name, &dentist_middle_name, &dentist_last_name,
-                       dentist_contract_id, dental_clinic_id, dentist_position_id).await?;
-        println!("dentist inserted:{dentist_given_name} {dentist_middle_name} {dentist_last_name}");
+        let dentist_id = get_or_insert_dentist(db, &dentist_given_name, &dentist_middle_name, &dentist_last_name, dentist_contract_id, ).await?;
+        println!("dentist processed:{dentist_given_name} {dentist_middle_name} {dentist_last_name}");
+
+        insert_dentist_clinic(db, dentist_id, dental_clinic_id, dentist_position_id).await?;
         Ok(())
     }
 }
@@ -329,22 +336,30 @@ async fn get_or_insert_dental_clinic(db: &impl ConnectionTrait,
 }
 
 
-async fn insert_dentist(db: &impl ConnectionTrait,
-                        given_name:&str, middle_name: &str, last_name: &str,
-                        dental_contract_id: i32, dental_clinic_id: i32, position_id: i32) -> Result<(), DbErr> {
+async fn get_or_insert_dentist(db: &impl ConnectionTrait,given_name: &str, middle_name: &str, last_name: &str,dental_contract_id: i32) -> Result<i32, DbErr> {
     let insert = Query::insert()
         .into_table(Dentist::Table)
         .columns([Dentist::AccreDentistContractId,
-        Dentist::GivenName,
-        Dentist::MiddleName,
-        Dentist::LastName,
+            Dentist::GivenName,
+            Dentist::MiddleName,
+            Dentist::LastName,
         ])
-        .values_panic([dental_contract_id.into(),
-                            given_name.into(),
-                            middle_name.into(),
-                            last_name.into(),
-                            ])
-        .to_owned();
+        .values_panic([
+            dental_contract_id.into(),
+            given_name.into(),
+            middle_name.into(),
+            last_name.into(),
+        ])
+        .on_conflict(OnConflict::columns([
+            Dentist::LastName,
+            Dentist::GivenName,
+            Dentist::MiddleName,
+            Dentist::AccreDentistContractId,
+        ])
+                         .do_nothing()
+                         .to_owned(),
+        ).to_owned();
+
     db.execute(&insert).await?;
 
     let select = Query::select()
@@ -353,24 +368,40 @@ async fn insert_dentist(db: &impl ConnectionTrait,
         .and_where(Expr::col(Dentist::GivenName).eq(given_name))
         .and_where(Expr::col(Dentist::MiddleName).eq(middle_name))
         .and_where(Expr::col(Dentist::LastName).eq(last_name))
+        .and_where(Expr::col(Dentist::AccreDentistContractId).eq(dental_contract_id))
         .limit(1)
         .to_owned();
 
     let row = db.query_one(&select).await?
-        .ok_or_else(|| DbErr::Custom(format!("Failed to get dentist id for {given_name} {middle_name} {last_name}")))?;
+        .ok_or_else(|| {
+            DbErr::Custom(format!(
+                "Failed to get dentist id for {given_name} {middle_name} {last_name}"
+            ))
+        })?;
+    Ok(row.try_get("", "id")?)
+}
 
-   let dentist_id: i32 = row.try_get("", "id")?;
-
-   let insert_dentist_clinic = Query::insert()
-       .into_table(DentistClinic::Table)
-       .columns([DentistClinic::DentistId, DentistClinic::ClinicId, DentistClinic::PositionId])
-       .values_panic([dentist_id.into(), dental_clinic_id.into(), position_id.into()])
-       .to_owned();
+async fn insert_dentist_clinic(db: &impl ConnectionTrait, dentist_id: i32, clinic_id: i32, position_id: i32) -> Result<(), DbErr> {
+    let insert_dentist_clinic = Query::insert()
+        .into_table(DentistClinic::Table)
+        .columns([DentistClinic::DentistId, DentistClinic::ClinicId, DentistClinic::PositionId])
+        .values_panic([dentist_id.into(), clinic_id.into(), position_id.into()])
+        .on_conflict(
+            OnConflict::columns([
+                DentistClinic::DentistId,
+                DentistClinic::ClinicId,
+                DentistClinic::PositionId,
+            ])
+                .do_nothing()
+                .to_owned(),
+        )
+        .to_owned();
 
     db.execute(&insert_dentist_clinic).await?;
-
     Ok(())
+
 }
+
 
 fn map_xlsx_position_to_position_name( raw:&str)->Result<String, DbErr>{
     // normalize comparison
