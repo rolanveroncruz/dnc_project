@@ -242,7 +242,8 @@ pub async fn reconcile_verification(
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateAccReconciliationRequest {
     pub dentist_id: i32,
-    company_id: i32,
+    pub dental_clinic_id: i32,
+    pub company_id: i32,
     pub member_id: Option<i32>,
     pub member_name: Option<String>,
     pub dental_service_id: i32,
@@ -281,6 +282,7 @@ pub async fn create_acc_reconciliation(
         tooth_id:  Set(payload.tooth_id),
         tooth_service_type_id: Set(payload.tooth_service_type_id),
         tooth_surface_id:  Set(payload.tooth_surface_id),
+        dental_clinic_id: Set(payload.dental_clinic_id),
     };
 
     tracing::info!("inserting new_reconciliation");
