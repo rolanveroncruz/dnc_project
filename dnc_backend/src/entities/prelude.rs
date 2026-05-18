@@ -17,6 +17,7 @@ pub use super::dentist_contract::Entity as DentistContract;
 pub use super::dentist_contract_service_rates::Entity as DentistContractServiceRates;
 pub use super::dentist_history::Entity as DentistHistory;
 pub use super::dentist_hmo_relations::Entity as DentistHmoRelations;
+pub use super::dentist_payments::Entity as DentistPayments;
 pub use super::dentist_status::Entity as DentistStatus;
 pub use super::endorsement::Entity as Endorsement;
 pub use super::endorsement_billing_period_type::Entity as EndorsementBillingPeriodType;

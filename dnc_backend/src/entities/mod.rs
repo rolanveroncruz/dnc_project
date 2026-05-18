@@ -19,6 +19,7 @@ pub mod dentist_contract;
 pub mod dentist_contract_service_rates;
 pub mod dentist_history;
 pub mod dentist_hmo_relations;
+pub mod dentist_payments;
 pub mod dentist_status;
 pub mod endorsement;
 pub mod endorsement_billing_period_type;
