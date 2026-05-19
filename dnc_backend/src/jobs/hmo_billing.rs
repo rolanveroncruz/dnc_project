@@ -18,6 +18,8 @@ use uuid::Uuid;
 ///
 /// It does this by computing the number of master_list_members for each endorsement, saving it to the DB;
 /// then iterating through all HMOs and generating the Excel report for each HMO
+/// First, it generates billing data per endorsement and saves it to the HMO_Billing_Data table.
+/// Then, it generates the spreadsheets for each hmo.
 pub async fn generate_hmo_billing_reports(
     state: AppState,
     start_date: Option<NaiveDate>,
@@ -67,7 +69,6 @@ async fn generate_billing_data_for_endorsement(
     endorsement_id: i32,
     start_date: NaiveDate,
     end_date: NaiveDate,
-
 )-> anyhow::Result<()> {
     let db : &DatabaseConnection = &state.db;
     let endorsement = endorsement::Entity::find_by_id(endorsement_id)
@@ -171,12 +172,13 @@ async fn count_monthly_master_list_members_for_endorsement(
 // endregion: MLM counters
 
 /// generate_billing_report_for_hmo() creates the Excel report for the HMO.
-///
+/// Essentially, it reads the data from the hmo_billing_data table for the hmo in question
+/// and writes it to a spreadsheet
 async fn generate_billing_report_for_hmo(
     state: AppState,
     request_key: String,
-    hmo_id: i32,
-    start_date: NaiveDate,
+    hmo_id: i32, // the HMO id
+    _start_date: NaiveDate,
     end_date: NaiveDate,
 )-> anyhow::Result<()> {
 
@@ -221,7 +223,7 @@ async fn generate_billing_report_for_hmo(
 
 
 /// write_hmo_billing_to_spreadsheet() does the actual work of writing data to an Excel spreadsheet.
-///
+/// this is called by generate_billing_report_for_hmo
 
 async fn write_hmo_billing_to_spreadsheet(
     state:AppState,
@@ -346,6 +348,9 @@ async fn write_hmo_billing_to_spreadsheet(
     Ok(the_filename)
 }
 
+/// get_dental_benefits_string_from_endorsement() generates a string to describe the dental benefits
+/// of an endorsement.
+/// this is called by write_hmo_billing_to_spreadsheet
 async fn get_dental_benefits_string_from_endorsement(
     state: AppState,
     endorsement_id: i32,

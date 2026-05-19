@@ -1,9 +1,12 @@
+/*
+ This exposes test_generate_hmo_billing_reports to be used as an API end point for testing purposes.
+ */
 use axum::{
-    extract::{Query, State},
+    extract::{State},
     Json,
 };
-use chrono::{NaiveDate, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::{Utc};
+use serde::{Serialize};
 
 
 use crate::AppState;
@@ -14,7 +17,8 @@ pub struct GenerateHmoBillingReportsResponse {
     pub success: bool,
     pub message: String,
 }
-
+// test_generate_hmo_billing_reports is an API endpoint that generates an HMO billing report.
+// it doesn't accept any parameters.
 pub async fn test_generate_hmo_billing_reports(
     State(state): State<AppState>,
 ) -> Result<Json<GenerateHmoBillingReportsResponse>, (axum::http::StatusCode, String)> {

@@ -74,6 +74,6 @@ where
         }
     })
 }
-async fn next_monthly_report_run_utc(state: AppState, report_name: &str, now_utc: chrono::DateTime<Utc>) -> Result<chrono::DateTime<Utc>> {
+async fn next_monthly_report_run_utc(_state: AppState, _report_name: &str, _now_utc: chrono::DateTime<Utc>) -> Result<chrono::DateTime<Utc>> {
     Ok(Utc::now())
 }
