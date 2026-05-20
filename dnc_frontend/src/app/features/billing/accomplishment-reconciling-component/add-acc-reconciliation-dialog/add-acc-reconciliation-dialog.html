@@ -119,6 +119,36 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Clinic</mat-label>
+
+                <mat-select
+                    formControlName="clinic_id"
+                    [disabled]="!form.controls.dentist_id.value || isLoadingClinics.value">
+
+                    @if (isLoadingClinics.value) {
+                        <mat-option [value]="null" disabled>Loading clinics...</mat-option>
+                    } @else {
+                        @for (option of clinics.value; track option.id) {
+                            <mat-option [value]="option.id">
+                                {{ option.label }}
+                            </mat-option>
+                        }
+                    }
+                </mat-select>
+
+                @if (!form.controls.dentist_id.value) {
+                    <mat-hint>Select a dentist first.</mat-hint>
+                } @else if (!isLoadingClinics.value && clinics.value?.length === 0) {
+                    <mat-hint>No clinics found for this dentist.</mat-hint>
+                }
+
+                @if (form.controls.clinic_id.touched && form.controls.clinic_id.hasError('required')) {
+                    <mat-error>Clinic is required.</mat-error>
+                }
+            </mat-form-field>
+
+
+            <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Dental Service</mat-label>
                 <input
                     matInput

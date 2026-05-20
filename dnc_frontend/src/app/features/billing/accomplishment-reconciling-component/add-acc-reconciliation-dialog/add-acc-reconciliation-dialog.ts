@@ -21,21 +21,8 @@ import {ConfirmNewMemberDialog, ConfirmNewMemberDialogData, ConfirmNewMemberDial
 import {MasterListMemberService, SaveMemberNameRequest} from '../../../../api_services/master-list-members-service';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule, provideNativeDateAdapter} from '@angular/material/core';
-
-
-
-export interface CreateAccReconciliationRequest {
-    company_id: number;
-    dentist_id: number;
-    member_id: number | null;
-    member_name: string;
-    dental_service_id: number;
-    date_service_performed: string | null;
-    approval_code: string | null;
-    tooth_id: string | null;
-    tooth_service_type_id: number | null;
-    tooth_surface_id: number | null;
-}
+import{CreateAccReconciliationRequest} from '../../../../api_services/accomplishment-reconciliation-service';
+import {DentalClinicService} from '../../../../api_services/dental-clinic-service';
 
 export interface IdLabelOption {
     id: number;
@@ -78,6 +65,7 @@ export class AddAccReconciliationDialog {
     readonly form: FormGroup<{
         company_id: FormControl<number | null>;
         dentist_id: FormControl<number | null>;
+        clinic_id: FormControl<number | null>;
         member_id: FormControl<number | null>;
         dental_service_id: FormControl<number | null>;
         date_service_performed: FormControl<Date | null>;
@@ -86,7 +74,8 @@ export class AddAccReconciliationDialog {
         tooth_service_type_id: FormControl<number | null>;
         tooth_surface_id: FormControl<number | null>;
     }>;
-
+    readonly clinics = new FormControl<IdLabelOption[] | null>(null, {nonNullable: true});
+    readonly isLoadingClinics = new FormControl<boolean>(false, {nonNullable: true});
     readonly companySearch = new FormControl<string>('', {nonNullable: true});
     readonly dentistSearch = new FormControl<string>('', {nonNullable: true});
     readonly memberSearch = new FormControl<string>('', {
@@ -112,12 +101,14 @@ export class AddAccReconciliationDialog {
             CreateAccReconciliationRequest | null
         >,
         private readonly memberService: MasterListMemberService,
+        private readonly clinicService: DentalClinicService,
         private readonly dialog: MatDialog,
         @Inject(MAT_DIALOG_DATA) public readonly data: AddAccReconciliationDialogData,
     ) {
         this.form = this.fb.group({
             company_id: this.fb.control<number | null>(null, {validators: [Validators.required]}),
             dentist_id: this.fb.control<number | null>(null, {validators: [Validators.required]}),
+            clinic_id: this.fb.control<number | null>(null, {validators:[Validators.required]}),
             member_id: this.fb.control<number | null>(null),
             dental_service_id: this.fb.control<number | null>(null, {validators: [Validators.required]}),
             date_service_performed: this.fb.control<Date | null>(null),
@@ -194,6 +185,24 @@ export class AddAccReconciliationDialog {
     onDentistSelected(option: IdLabelOption): void {
         this.form.controls.dentist_id.setValue(option.id);
         this.dentistSearch.setValue(option.label, {emitEvent: false});
+
+        this.clearClinic();
+        this.isLoadingClinics.setValue(true);
+        this.clinicService.getDentalClinicNamesForDentist(option.id).subscribe({
+            next:(clinics) => {
+                console.log("clinics: ", clinics);
+                this.clinics.setValue(clinics)
+                if (clinics.length === 1) {
+                    this.form.controls.clinic_id.setValue(clinics[0].id);
+                }
+                this.isLoadingClinics.setValue(false);
+            },
+            error: () => {
+                this.clinics.setValue([]);
+                this.isLoadingClinics.setValue(false);
+            },
+
+        });
     }
 
     onMemberSelected(option: IdLabelOption): void {
@@ -217,10 +226,15 @@ export class AddAccReconciliationDialog {
         this.members = [];
         this.resetMemberFiltering();
     }
+    clearClinic(): void { // ✅ add
+        this.form.controls.clinic_id.setValue(null); // ✅ add
+        this.clinics.setValue([]); // ✅ add
+    } // ✅ add
 
     clearDentist(): void {
         this.form.controls.dentist_id.setValue(null);
         this.dentistSearch.setValue('');
+        this.clearClinic();
     }
 
     clearMember(): void {
@@ -257,6 +271,7 @@ export class AddAccReconciliationDialog {
         const payload: CreateAccReconciliationRequest = {
             company_id: raw.company_id as number,
             dentist_id: raw.dentist_id as number,
+            clinic_id: raw.clinic_id as number,
             member_id: raw.member_id ?? null,
             member_name: memberName,
             dental_service_id: raw.dental_service_id as number,

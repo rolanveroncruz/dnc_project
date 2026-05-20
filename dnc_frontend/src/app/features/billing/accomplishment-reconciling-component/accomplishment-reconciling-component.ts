@@ -1,11 +1,11 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {AccomplishmentReconciliationService, DoneVerificationResponse} from '../../../api_services/accomplishment-reconciliation-service';
+import {CreateAccReconciliationRequest, AccomplishmentReconciliationService, DoneVerificationResponse} from '../../../api_services/accomplishment-reconciliation-service';
 import {GenericDataTableComponent} from '../../../components/generic-data-table-component/generic-data-table-component';
 import {MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle} from '@angular/material/card';
 import {TableColumn} from '../../../components/generic-data-table-component/table-interfaces';
 import {MatButton} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
-import {AddAccReconciliationDialog, AddAccReconciliationDialogData, CreateAccReconciliationRequest, IdLabelOption} from './add-acc-reconciliation-dialog/add-acc-reconciliation-dialog';
+import {AddAccReconciliationDialog, AddAccReconciliationDialogData,  IdLabelOption} from './add-acc-reconciliation-dialog/add-acc-reconciliation-dialog';
 import {DentistService} from '../../../api_services/dentist-service';
 import {DentalServicesService} from '../../../api_services/dental-services-service';
 import {VerificationService} from '../../../api_services/verification-service';

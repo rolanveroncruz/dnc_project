@@ -180,6 +180,15 @@ export interface PatchDentalClinicBody {
     last_modified_by: string; // required
 }
 
+export interface DentalClinicNames{
+    id: number,
+    name: string,
+}
+
+export interface IdLabelOption {
+    id: number;
+    label: string;
+}
 
 export interface ClinicWithCapabilities {
     // clinic fields
@@ -301,6 +310,19 @@ export class DentalClinicService {
             .pipe(catchError(this.handleError));
     }
 
+    getDentalClinicNamesForDentist(dentistId: number): Observable<IdLabelOption[]> {
+        const url = `${this.baseUrl}${this.API_PATH}/dentist/${dentistId}/names`;
+        return this.http
+            .get<DentalClinicNames[]>(url, { headers: this.authHeaders() })
+            .pipe(
+                map( clinics=>
+                    clinics.map((clinic)=>({
+                        id: clinic.id,
+                        label: clinic.name
+                    }))
+                )
+            );
+    }
 }
 
 function flattenClinicRows( clinics: ClinicWithCapabilities[]):FlattenedClinic[] {

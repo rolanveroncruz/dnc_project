@@ -7,6 +7,7 @@ import {VerificationLookupResponse} from './verification-service';
 
 export interface CreateAccReconciliationRequest {
     dentist_id: number,
+    clinic_id: number,
     company_id: number,
     member_id: number | null,
     member_name: string | null,
