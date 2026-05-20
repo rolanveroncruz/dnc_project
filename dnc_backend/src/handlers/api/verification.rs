@@ -10,6 +10,7 @@ use crate::{
     entities::{
         dental_service,
         dentist,
+        dental_clinic,
         endorsement,
         master_list_member,
         verification,
@@ -21,6 +22,8 @@ use crate::{
 };
 use crate::handlers::AuthUser;
 use sea_orm::prelude::{Date, Decimal};
+
+
 // region: get all verifications
 #[derive(Debug, Serialize)]
 pub struct VerificationLookupResponse {
@@ -28,6 +31,8 @@ pub struct VerificationLookupResponse {
     pub date_created: sea_orm::prelude::DateTimeWithTimeZone,
     pub dentist_id: i32,
     pub dentist_name: String,
+    pub dental_clinic_id: i32,
+    pub dental_clinic_name: String,
     pub master_list_member_id: i32,
     pub master_list_member_name: String,
     pub dental_service_id: i32,
@@ -60,6 +65,9 @@ struct VerificationLookupRow {
     pub dentist_last_name: String,
     pub dentist_given_name: String,
     pub dentist_middle_name: Option<String>,
+
+    pub dental_clinic_id: i32,
+    pub dental_clinic_name: String,
 
     pub master_list_member_id: i32,
     pub member_last_name: String,
@@ -124,6 +132,10 @@ pub async fn get_all_verifications(
         )
         .join(
             JoinType::InnerJoin,
+            verification::Relation::DentalClinic.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
             verification::Relation::MasterListMember.def(),
         )
         .join(
@@ -155,6 +167,8 @@ pub async fn get_all_verifications(
         .column_as(dentist::Column::LastName, "dentist_last_name")
         .column_as(dentist::Column::GivenName, "dentist_given_name")
         .column_as(dentist::Column::MiddleName, "dentist_middle_name")
+        .column_as(verification::Column::DentalClinicId, "dental_clinic_id")
+        .column_as(dental_clinic::Column::Name, "dental_clinic_name")
         .column_as(verification::Column::MemberId, "master_list_member_id")
         .column_as(master_list_member::Column::LastName, "member_last_name")
         .column_as(master_list_member::Column::FirstName, "member_first_name")
@@ -211,6 +225,8 @@ pub async fn get_all_verifications(
                     &row.dentist_given_name,
                     row.dentist_middle_name.as_deref(),
                 ),
+                dental_clinic_id: row.dental_clinic_id,
+                dental_clinic_name: row.dental_clinic_name,
                 master_list_member_id: row.master_list_member_id,
                 master_list_member_name: format_member_name(
                     &row.member_last_name,
@@ -281,6 +297,17 @@ pub async fn create_verification(
     .await
         .map_err(internal_error)?
         .ok_or_else(|| (StatusCode::BAD_REQUEST, "Dental service not found".to_string()))?;
+
+    let _dental_clinic = dental_clinic::Entity::find_by_id(payload.dental_clinic_id)
+        .one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .ok_or_else(||{
+            (
+                StatusCode::BAD_REQUEST,
+                "Dental clinic not found".to_string(),
+            )
+        })?;
 
     // status_id=2 if dental_service.type_id==3, else 1
     let status_id = if dental_service.type_id==3 {2} else {1};
@@ -391,10 +418,10 @@ pub struct GetApprovalCodeResponse {
 // region: Approval Code Release Check
 /*
 The following checks need to be performed:
-1. Service availment is below endorsement limit.
-1. Same dentist, same member, already have 3 approval codes for the same service_performed_day.
-2. An approval code was already released for the member but from another dentist in that day.
-3. Same service on same tooth id and same surface will be denied.
+1. The number of service availments must be below the endorsement limit.
+1. If it's the same dentist and the same member, reject if there are already have 3 approval codes for the same service_performed_day.
+2. An approval code was already released for the member but from another dentist on that day.
+3. The same service on the same tooth id and same surface will be denied.
 
  */
 #[derive(Debug)]
@@ -481,7 +508,7 @@ async fn check_service_allowed_by_endorsement_limit(
         return Ok(ValidationCheckResult::ok());
     }
 
-    // ---4 Get endorsement, by first getting the master_list_member record.
+    // ---4 Get endorsement by first getting the master_list_member record.
     let member = master_list_member::Entity::find_by_id(current_verification.member_id)
         .one(db)
         .await?
@@ -493,7 +520,7 @@ async fn check_service_allowed_by_endorsement_limit(
         })?;
 
     // ---5 Since dental_service is not unlimited, get the limit from endorsement counts.
-    // if record doesn't exist, assume 0.
+    // if the record doesn't exist, assume 0.
     let allowed_count = endorsement_counts::Entity::find()
         .filter(endorsement_counts::Column::EndorsementId.eq(member.endorsement_id))
         .filter(
@@ -564,7 +591,7 @@ async fn check_other_released_approval_codes_for_same_date(
 
 // check_no_same_dental_service_on_tooth_id_and_surface_and_service_type()
 // disallows having the same service on the same tooth and surface if dentists are different.
-// But the same dentist is allowed if the service_type are different.
+// But the same dentist is allowed if the service_types are different.
 async fn check_no_same_dental_service_on_tooth_id_and_surface_and_service_type(
     db: &DatabaseConnection,
     verification_id: i32,
@@ -582,7 +609,7 @@ async fn check_no_same_dental_service_on_tooth_id_and_surface_and_service_type(
         .ok_or_else(|| DbErr::Custom(format!("Verification {} not found", verification_id)))?;
 
     //---2. Create a condition of two verifications different from the one in question,
-    // but same member, same service, SAME DATE service performed, and an approval code is present.
+    // but the same member, same service, SAME DATE service performed, and an approval code is present.
     let mut base_condition = Condition::all()
         .add(verification::Column::Id.ne(verification_id))
         .add(verification::Column::MemberId.eq(current_verification.member_id))
@@ -862,7 +889,7 @@ pub fn decode_approval_code(code: &str) -> Option<i32> {
     }
     let verification_id = verification_id_u64 as i32;
 
-    // 6. Recompute expected 20-bit tag
+    // 6. Recompute the expected 20-bit tag
     let mut tag_mac =
         <HmacSha256 as KeyInit>::new_from_slice(secret.as_bytes())
             .expect("invalid HMAC key");
@@ -874,7 +901,7 @@ pub fn decode_approval_code(code: &str) -> Option<i32> {
     tag_arr.copy_from_slice(&tag_bytes[..4]);
     let expected_tag = (u32::from_be_bytes(tag_arr) >> 12) & ((1u32 << 20) - 1);
 
-    // 7. Compare supplied vs expected tag
+    // 7. Compare supplied vs. expected tag
     if supplied_tag != expected_tag {
         return None;
     }
