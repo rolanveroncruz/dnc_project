@@ -9,6 +9,8 @@ export interface VerificationLookupResponse {
     date_created: string; // ISO datetime string from Rust DateTimeWithTimeZone
     dentist_id: number;
     dentist_name: string;
+    dental_clinic_id: number;
+    dental_clinic_name: string;
     master_list_member_id: number;
     master_list_member_name: string;
     dental_service_id: number;

@@ -54,14 +54,14 @@ export class VerificationsComponent implements OnInit {
         { key: 'date_created', label: 'Date', cellTemplateKey: 'date' },
         {key: 'endorsement_agreement_corp_number', label: 'Agmt/Corp Number'},
         { key: 'dentist_name', label: 'Dentist'},
+        { key: 'dental_clinic_name', label: 'Clinic'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
         {key: 'tooth_id', label: 'Tooth'},
-        {key: 'tooth_surface_name', label: 'Surface'},
         {key: 'status_name', label: 'Status'},
         {key: 'date_service_performed', label: 'Service Date', cellTemplateKey: 'date'},
         {key: 'approval_string', label: 'Approval Details'},
-        { key: 'actions', label:'Actions', sortable: false, cellTemplateKey: 'actions',
+        { key: 'actions', label:'Actions', sortable: false, cellTemplateKey: 'actionsSmallFonts',
             actionButton: {
                 label: this.getRowLabel,
                 icon: this.getRowIcon,
@@ -78,7 +78,7 @@ export class VerificationsComponent implements OnInit {
     ]
     getRowLabel(row: ExtendedVerificationLookupResponse): string {
         if (row.status_id==1) {
-            return 'Get Approval';
+            return 'Approve';
         } else if (row.status_id==2) {
             return 'Upload X-Ray';
         }

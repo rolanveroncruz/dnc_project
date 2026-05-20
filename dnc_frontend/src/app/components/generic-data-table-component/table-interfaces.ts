@@ -21,7 +21,8 @@ export type TableCellTemplateKey =
     | 'chips'
     | 'check'
     | 'checkonly'
-    | 'actions';
+    | 'actions'
+    | 'actionsSmallFonts';
 
 export interface TableActionButton<T = any> {
     label: string | ((row:T)=>string);

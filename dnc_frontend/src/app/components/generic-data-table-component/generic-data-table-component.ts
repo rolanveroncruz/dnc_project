@@ -35,6 +35,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
   @ViewChild('checkCell', { static: true }) checkCell!: TemplateRef<any>;
   @ViewChild('checkOnlyCell', { static: true }) checkOnly!: TemplateRef<any>;
   @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<any>;
+    @ViewChild('actionsCellSmallFonts', { static: true }) actionsCellSmallFonts!: TemplateRef<any>;
   // --- INPUTS ---
   @Input({ required: true }) data: T[] = [];
   @Input({ required: true }) columnDefs: TableColumn<T>[] = [];
@@ -268,6 +269,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
       case 'checkonly': return this.checkOnly;
       case 'default': return this.defaultCell;
       case 'actions': return this.actionsCell;
+      case 'actionsSmallFonts': return this.actionsCellSmallFonts;
 
     }
     return this.defaultCell;

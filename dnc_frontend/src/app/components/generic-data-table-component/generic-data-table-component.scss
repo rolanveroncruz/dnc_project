@@ -265,3 +265,21 @@ mat-paginator {
     align-items: center;
     flex-wrap: wrap;
 }
+.action-buttons-small {
+    gap: 4px;
+
+    button {
+        font-size: 11px;
+        line-height: 1.1;
+        min-height: 28px;
+        padding: 0 6px;
+        white-space: normal;
+    }
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        margin-right: 2px;
+    }
+}
