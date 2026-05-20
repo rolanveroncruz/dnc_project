@@ -13,7 +13,9 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::{city, dental_clinic, province, region, clinic_capability, clinic_capabilities_list, account_type, tax_type, tax_classification};
+use crate::entities::{city, dental_clinic, dentist_clinic,
+                      province, region, clinic_capability, clinic_capabilities_list,
+                      account_type, tax_type, tax_classification};
 
 use std::collections::HashMap;
 
@@ -183,12 +185,7 @@ struct ClinicCapRow {
     pub capability_name: String,
 }
 
-//////////////
-//
-// get_dental_clinics
-//
-//////////////
-
+// region Get Dental Clinics
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dental_clinics(
     State(state): State<AppState>,
@@ -334,12 +331,9 @@ pub async fn get_dental_clinics(
     }))
 }
 
-//////////////
-//
-// get_dental_clinic_by_id
-//
-//////////////
+// endregion Get Dental Clinics
 
+// region: Get Dental Clinic by ID
 #[instrument(skip(state), err(Debug))]
 pub async fn get_dental_clinic_by_id(
     State(state): State<AppState>,
@@ -405,12 +399,10 @@ pub async fn get_dental_clinic_by_id(
 }
 
 
+// endregion: Get Dental Clinic by ID
 
 
-//
-// ---- POST: create clinic
-//
-
+// region: Create Dental Clinic
 #[derive(Debug, Deserialize)]
 pub struct CreateDentalClinicBody {
     pub name: String,
@@ -518,10 +510,10 @@ pub async fn create_dental_clinic(
     Ok(Json(created))
 }
 
-//
-// ---- PATCH: partial update
-//
+// endregion: Create Dental Clinic
 
+
+// region: Patch Dental Clinic
 #[derive(Debug, Deserialize)]
 pub struct PatchDentalClinicBody {
     pub name: Option<String>,
@@ -653,3 +645,52 @@ pub async fn patch_dental_clinic(
 
     Ok(Json(updated))
 }
+
+// endregion: Patch Dental Clinic
+
+
+// region: Get DentalClinicNamesForDentist
+// ✅ simple response for clinic dropdowns
+#[derive(Debug, Serialize, FromQueryResult)]
+pub struct DentalClinicNameRow {
+    pub id: i32,
+    pub name: String,
+}
+
+#[instrument(skip(state), err(Debug))]
+pub async fn get_dental_clinic_names_for_dentist(
+    State(state): State<AppState>,
+    Path(dentist_id): Path<i32>,
+) -> Result<Json<Vec<DentalClinicNameRow>>, StatusCode> {
+    let rows = dentist_clinic::Entity::find()
+        // ✅ only rows for this dentist
+        .filter(dentist_clinic::Column::DentistId.eq(dentist_id))
+
+        // ✅ join to dental_clinic so we can return clinic id + clinic name
+        .join(
+            JoinType::InnerJoin,
+            dentist_clinic::Relation::DentalClinic.def(),
+        )
+
+        // ✅ return only what the frontend dropdown needs
+        .select_only()
+        .column_as(dental_clinic::Column::Id, "id")
+        .column_as(dental_clinic::Column::Name, "name")
+
+        // ✅ nice stable ordering for the dropdown
+        .order_by_asc(dental_clinic::Column::Name)
+
+        .into_model::<DentalClinicNameRow>()
+        .all(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed to fetch dental clinic names for dentist {dentist_id}: {e:?}"
+            );
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    Ok(Json(rows))
+}
+
+// endregion: Get DentalClinicNamesForDentist
