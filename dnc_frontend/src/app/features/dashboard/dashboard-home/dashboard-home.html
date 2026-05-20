@@ -1,17 +1,12 @@
 <div class="dashboard-page">
     <h2>Dashboard</h2>
 
-    <div class="chart-card">
-        <h3>Monthly Verifications</h3>
+    <div class="dashboard-grid">
+        <app-test-chart1></app-test-chart1>
+        <app-test-stacked-bar></app-test-stacked-bar>
 
-        <div class="chart-wrapper">
-            <canvas
-                baseChart
-                [data]="barChartData"
-                [options]="barChartOptions"
-                [type]="barChartType"
-            >
-            </canvas>
-        </div>
+        <!-- temporary repeats, just to test the 2x2 layout -->
+        <app-test-chart1></app-test-chart1>
+        <app-test-stacked-bar></app-test-stacked-bar>
     </div>
 </div>
