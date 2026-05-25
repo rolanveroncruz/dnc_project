@@ -1,1 +1,76 @@
-<p>dashboard-operations-component works!</p>
+<h2>Dashboard: CSR Performance</h2>
+
+<div class="dashboard-toolbar"> <!-- ✅ added -->
+    <mat-form-field appearance="outline">
+        <mat-label>Date Range</mat-label>
+
+        <mat-select
+            [value]="selected_period()"
+            (selectionChange)="set_date_range($event.value)">
+
+            <mat-option value="today">Today</mat-option>
+            <mat-option value="this_week">This Week</mat-option>
+            <mat-option value="this_month">This Month</mat-option>
+
+        </mat-select>
+    </mat-form-field>
+</div>
+
+<div class="dashboard-grid">
+    <app-csrverification-totals
+        title="Created Verifications"
+        subtitle="Total created verifications per agent"
+        metric="created"
+        [date_start]="date_start()"
+        [date_end]="date_end()"
+        [refreshTick]="refreshTick()">
+    </app-csrverification-totals>
+
+    <app-csrverification-totals
+        title="Approved Verifications"
+        subtitle="Total approved verifications per agent"
+        metric="approved"
+        [date_start]="date_start()"
+        [date_end]="date_end()"
+        [refreshTick]="refreshTick()">
+    </app-csrverification-totals>
+
+    <app-csrverification-totals
+        title="Reconciled Verifications"
+        subtitle="Total reconciled verifications per agent"
+        metric="reconciled"
+        [date_start]="date_start()"
+        [date_end]="date_end()"
+        [refreshTick]="refreshTick()">
+    </app-csrverification-totals>
+</div>
+
+    <div class="dashboard-grid daily-charts">
+        <app-csrverification-daily-totals
+            title="Daily Created Verifications"
+            subtitle="Daily created verifications per CSR"
+            metric="created"
+            [date_start]="date_start()"
+            [date_end]="date_end()"
+            [refreshTick]="refreshTick()">
+        </app-csrverification-daily-totals>
+
+        <app-csrverification-daily-totals
+            title="Daily Approved Verifications"
+            subtitle="Daily approved verifications per CSR"
+            metric="approved"
+            [date_start]="date_start()"
+            [date_end]="date_end()"
+            [refreshTick]="refreshTick()">
+        </app-csrverification-daily-totals>
+
+        <app-csrverification-daily-totals
+            title="Daily Reconciled Verifications"
+            subtitle="Daily reconciled verifications per CSR"
+            metric="reconciled"
+            [date_start]="date_start()"
+            [date_end]="date_end()"
+            [refreshTick]="refreshTick()">
+        </app-csrverification-daily-totals>
+
+</div>

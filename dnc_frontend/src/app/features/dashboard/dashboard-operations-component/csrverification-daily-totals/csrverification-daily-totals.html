@@ -1,0 +1,33 @@
+<div class="daily-chart-card">
+    <div class="chart-header">
+        <div>
+            <h3>{{ title }}</h3>
+            @if (subtitle) {
+                <p>{{ subtitle }}</p>
+            }
+        </div>
+    </div>
+
+    @if (loading) {
+        <div class="chart-status" >
+            Loading...
+        </div>
+    }
+    @if (errorMsg) {
+        <div>
+            {{ errorMsg }}
+        </div>
+    }
+
+    @if(!loading && !errorMsg){
+        <div class="chart-wrapper" >
+            <canvas
+                baseChart
+                [type]="barChartType"
+                [data]="barChartData"
+                [options]="barChartOptions">
+            </canvas>
+        </div>
+
+    }
+</div>

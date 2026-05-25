@@ -1,0 +1,11 @@
+<div class="test-chart-card">
+    <h2>{{title()}}</h2>
+    <p>{{subtitle()}}</p>
+
+    <!-- ✅ added dropdown -->
+
+    <app-bar-chart
+        [labels]="labels()"
+        [series]="series()">
+    </app-bar-chart>
+</div>
