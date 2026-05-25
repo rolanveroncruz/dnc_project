@@ -106,3 +106,5 @@ pub use api::hmo_utilization::{download_utilization_report, get_utilization_repo
 pub use api::hmo_billing::{ get_generated_hmo_billing_reports, download_generated_report};
 
 pub use api::test_reports::{test_generate_hmo_billing_reports};
+
+pub use api::dashboard::verifications_csr::{get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts};
