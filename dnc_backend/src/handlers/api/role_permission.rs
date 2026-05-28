@@ -1,7 +1,11 @@
 use axum::{extract::{Query, State}, http::StatusCode, Json};
+use chrono::Utc;
 use crate::AppState;
 use crate::handlers::structs::AuthUser;
-use sea_orm::{ColumnTrait, Condition, EntityTrait, FromQueryResult, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, EntityTrait, FromQueryResult,
+              JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait,
+              Set,
+};
 use sea_orm::sea_query::extension::postgres::PgExpr;
 use serde::{Serialize, Deserialize};
 use crate::handlers::helpers::role_has_permission_by_data_object_name;
@@ -11,6 +15,7 @@ use crate::handlers::{ListQuery, PageResponse};
 use sea_orm::sea_query::Expr;
 use tracing::instrument;
 
+//region: get_role_permissions
 #[derive(Debug, Deserialize)]
 pub struct RolePermissionListQuery {
     #[serde(flatten)]
@@ -146,3 +151,130 @@ pub async fn get_role_permissions(
         total_pages,
     }))
 }
+
+
+//endregion: get_role_permissions
+
+// region: create_role_permission
+#[derive(Debug, Deserialize)]
+pub struct CreateRolePermissionRequest {
+    pub role_id: i32,
+    pub permission_id: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CreateRolePermissionResponse {
+    pub id: i32,
+    pub role_id: i32,
+    pub permission_id: i32,
+    pub active: bool,
+}
+
+#[instrument(
+    skip(state),
+    err(Debug)
+)]
+pub async fn create_role_permission(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<CreateRolePermissionRequest>,
+) -> Result<(StatusCode, Json<CreateRolePermissionResponse>), StatusCode> {
+    // 1. Permission check
+    let has_permission = role_has_permission_by_data_object_name(
+        &state.db,
+        user.claims.role_id,
+        "role_permission",
+        PermissionActionEnum::Create,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to check permission: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    if !has_permission {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    // 2. Validate role exists
+    let role_exists = role::Entity::find_by_id(payload.role_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check role existence: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .is_some();
+
+    if !role_exists {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // 3. Validate permission exists
+    let permission_exists = permission::Entity::find_by_id(payload.permission_id)
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check permission existence: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .is_some();
+
+    if !permission_exists {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // 4. Prevent duplicate role-permission pair
+    let existing = role_permission::Entity::find()
+        .filter(role_permission::Column::RoleId.eq(payload.role_id))
+        .filter(role_permission::Column::PermissionId.eq(payload.permission_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to check duplicate role_permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if existing.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    // 5. Insert
+    let now = Utc::now().fixed_offset();
+
+    let new_role_permission = role_permission::ActiveModel {
+        role_id: Set(payload.role_id),
+        permission_id: Set(payload.permission_id),
+        active: Set(true),
+        last_modified_by: Set(user.claims.email.clone()),
+        last_modified_on: Set(now),
+        ..Default::default()
+    };
+
+    let inserted = new_role_permission
+        .insert(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to create role_permission: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    tracing::info!(
+        "user {} created role_permission id {}",
+        user.claims.email,
+        inserted.id
+    );
+
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateRolePermissionResponse {
+            id: inserted.id,
+            role_id: inserted.role_id,
+            permission_id: inserted.permission_id,
+            active: inserted.active,
+        }),
+    ))
+}
+
+
+// endregion: create_role_permission

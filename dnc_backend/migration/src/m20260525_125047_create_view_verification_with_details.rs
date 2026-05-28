@@ -13,13 +13,11 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         Self::drop_view_verification_with_details(manager).await?;
-         Self::drop_view_acc_recon_with_details(manager).await?;
+        Self::drop_view_acc_recon_with_details(manager).await?;
         Ok(())
     }
-
 }
-
-impl Migration{
+impl Migration {
     async fn create_view_verification_with_details( manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .get_connection()
@@ -30,6 +28,7 @@ impl Migration{
                     v.id,
                     v.date_created,
                     v.dentist_id,
+                    v.dental_clinic_id,
                     CONCAT_WS(' ', d.given_name, d.middle_name, d.last_name) AS dentist_name,
                     ec.id as company_id,
                     ec.name as company_name,
@@ -78,6 +77,7 @@ impl Migration{
                     ar.id,
                     ar.date_created,
                     ar.dentist_id,
+                    ar.dental_clinic_id,
                     CONCAT_WS(' ', d.given_name, d.middle_name, d.last_name) AS dentist_name,
                     ar.company_id,
                     ec.name as company_name,

@@ -15,8 +15,7 @@ impl MigrationTrait for Migration {
         Ok(())
     }
 }
-
-impl Migration{
+impl Migration {
     pub async fn create_unified_view(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         manager
             .get_connection()
@@ -29,6 +28,7 @@ impl Migration{
                     date_created,
                     dentist_id,
                     dentist_name,
+                    dental_clinic_id,
                     company_id,
                     company_name,
                     member_id,
@@ -45,6 +45,7 @@ impl Migration{
                     date_created,
                     dentist_id,
                     dentist_name,
+                    dental_clinic_id,
                     company_id,
                     company_name,
                     member_id,

@@ -43,8 +43,6 @@ mod m20260421_055136_create_table_accomplishment_reconciliation;
 mod m20260421_090717_add_acc_reconciliation_permission_and_role_permissions;
 mod m20260423_055557_alter_acc_reconciliation_for_member_info;
 mod m20260423_121709_alter_acc_reconciliation_add_company_id;
-mod m20260427_052210_create_view_verification_with_details;
-mod m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation;
 mod m20260428_075409_create_csr_role_add_rights;
 mod m20260428_081748_create_accounting_role_add_rights;
 mod m20260428_142434_create_dashboard_object_and_permissions;
@@ -55,6 +53,8 @@ mod m20260507_075843_create_hmo_billing_data_table;
 mod m20260508_105459_create_dentist_payments_table;
 mod m20260515_031729_alter_verification_add_clinic_id;
 mod m20260522_062747_alter_user_and_verification_tables;
+mod m20260525_125047_create_view_verification_with_details;
+mod m20260525_125143_create_unified_view_of_verification_and_acc_reconciliation;
 
 pub struct Migrator;
 
@@ -105,8 +105,6 @@ impl MigratorTrait for Migrator {
             Box::new(m20260421_090717_add_acc_reconciliation_permission_and_role_permissions::Migration),
             Box::new(m20260423_055557_alter_acc_reconciliation_for_member_info::Migration),
             Box::new(m20260423_121709_alter_acc_reconciliation_add_company_id::Migration),
-            Box::new(m20260427_052210_create_view_verification_with_details::Migration),
-            Box::new(m20260427_141416_create_unified_view_for_verification_and_acc_reconciliation::Migration),
             Box::new(m20260428_075409_create_csr_role_add_rights::Migration),
             Box::new(m20260428_081748_create_accounting_role_add_rights::Migration),
             Box::new(m20260428_142434_create_dashboard_object_and_permissions::Migration),
@@ -117,6 +115,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260508_105459_create_dentist_payments_table::Migration),
             Box::new(m20260515_031729_alter_verification_add_clinic_id::Migration),
             Box::new(m20260522_062747_alter_user_and_verification_tables::Migration),
+            Box::new(m20260525_125047_create_view_verification_with_details::Migration),
+            Box::new(m20260525_125143_create_unified_view_of_verification_and_acc_reconciliation::Migration),
         ]
     }
 }
