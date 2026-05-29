@@ -12,14 +12,17 @@ use crate::AppState;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::sea_query::Expr;
 
-use crate::entities::verification;
+use crate::entities::{verification, verification_status};
 
 
 /// Starts the in-process background worker.
 ///
 /// Behavior:
-/// - Runs once immediately on startup
-/// - Then sleeps until the next midnight in Asia/Manila
+/// - Runs once immediately on startup. This calls run_daily_job_once().
+/// - Then, loop:{
+///     1. Sleep until the next midnight in Asia/Manila;
+///     2. Upon waking up, calls run_daily_job_once()
+/// }
 /// - Repeats forever
 pub fn start_daily_worker(state: AppState) -> JoinHandle<()> {
     tokio::spawn(async move {
@@ -83,14 +86,20 @@ fn next_manila_midnight_utc(now_utc: DateTime<Utc>) -> DateTime<Utc> {
     next_midnight_manila.with_timezone(&Utc)
 }
 
-
 // region: run_daily_job_once()
 // run_daily_job_once() runs once a day to:
+// 1. load all verifications that are still in status_id = 2
 #[instrument(skip(state), err)]
 async fn run_daily_job_once(
     state: AppState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
+    expire_verifications_older_than_seven_days(state).await?;
+
+    Ok(())
+}
+
+async fn expire_verifications_older_than_seven_days(state: AppState) -> anyhow::Result<()> {
     // ---- 0. setup variables.
     let db = &state.db;
 
@@ -99,13 +108,42 @@ async fn run_daily_job_once(
 
     info!(
         target: "jobs",
-        "run_daily_job_once() started at Manila={}",
+        "expire_verifications_older_than_seven_days() started at Manila={}",
         now_manila.format("%Y-%m-%d %H:%M:%S")
     );
+    // ----0. Get the verification_status with name = "Waiting for Approval Code"
+    let waiting_for_approval_code_status = verification_status::Entity::find()
+        .filter(verification_status::Column::Name.eq("Waiting for Approval Code"))
+        .one(db)
+        .await?
+        .ok_or_else(|| {
+            anyhow::anyhow!("verification_status named 'Waiting for Approval Code' was not found")
+        })?;
+    let waiting_for_approval_code = waiting_for_approval_code_status.int_code;
+    info!(
+        target: "jobs",
+        "Waiting for Approval Code Code is: {}",
+        waiting_for_approval_code
+    );
 
-    // ---- 1. Load only verifications that are still in status_id = 2
+    // --- 0.5 Get the verification_status with name = "Expired"
+    let expired_code_status = verification_status::Entity::find()
+        .filter(verification_status::Column::Name.eq("Expired"))
+        .one(db)
+        .await?
+        .ok_or_else(|| {
+            anyhow::anyhow!("verification_status named 'Expired' was not found")
+        })?;
+    let expired_code = expired_code_status.int_code;
+    info!(
+        target: "jobs",
+        "Waiting for Expired Code is: {}",
+        expired_code
+    );
+
+    // ---- 1. Load only verifications that are still in status_id = int_code for "Waiting for Approval Code"
     let pending_verifications = verification::Entity::find()
-        .filter(verification::Column::StatusId.eq(2))
+        .filter(verification::Column::StatusId.eq(waiting_for_approval_code))
         .all(db)
         .await?;
 
@@ -134,21 +172,22 @@ async fn run_daily_job_once(
         return Ok(());
     }
 
-    // 3. Update all matching verifications to status_id = 999
+
     let update_result = verification::Entity::update_many()
-        .col_expr(verification::Column::StatusId, Expr::value(999))
+        .col_expr(verification::Column::StatusId, Expr::value(expired_code))
         .filter(verification::Column::Id.is_in(ids_to_expire.clone()))
         .exec(db)
         .await?;
 
     info!(
         target: "jobs",
-        "run_daily_job_once() finished: updated {} verification(s) to status_id=999; ids={:?}",
+        "run_daily_job_once() finished: updated {} verification(s) to status_id=int_code('Expired'); ids={:?}",
         update_result.rows_affected,
         ids_to_expire
     );
 
     Ok(())
+
 }
 
 // endregion: run_daily_job_once()

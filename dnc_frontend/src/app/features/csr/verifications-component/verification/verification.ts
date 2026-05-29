@@ -35,6 +35,7 @@ import {DentistClinicService, DentistWithClinicNames} from '../../../../api_serv
 })
 export class Verification implements OnInit,OnDestroy {
     private readonly route = inject(ActivatedRoute);
+    // verificationService is the service that will be used to create verifications.
     readonly verificationService = inject(VerificationService);
 
     // region: Current date/time and saving

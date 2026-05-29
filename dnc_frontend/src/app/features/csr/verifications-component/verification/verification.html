@@ -60,6 +60,11 @@
     }
 
     @if (selectedDentistId() !== null) {
+        <!-- Master List Member
+        The master list member component allows selecting or inputting a Master List Member who is
+        the patient member who will receive the services.
+        It only displays once a dentist is selected.
+        -->
         <app-master-list-member
             [dentistId]="selectedDentistId()"
             [selectedMasterListMemberId]="selectedMasterListMemberId()"

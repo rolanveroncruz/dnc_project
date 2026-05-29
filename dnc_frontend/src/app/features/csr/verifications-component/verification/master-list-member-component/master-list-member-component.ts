@@ -55,7 +55,11 @@ import {
 })
 export class MasterListMemberComponent {
     private readonly destroyRef = inject(DestroyRef);
+
+    // masterListMemberService is for creating/patching a master list member.
     private readonly masterListMemberService = inject(MasterListMemberService);
+
+    // endorsementService is for fetching endorsements applicable to the selected dentist.
     private readonly endorsementService = inject(EndorsementService);
 
     readonly dentistId = input<number | null>(null);
