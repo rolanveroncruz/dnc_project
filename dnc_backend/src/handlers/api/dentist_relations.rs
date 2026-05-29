@@ -47,6 +47,8 @@ use crate::entities::{
     hmo,
 };
 
+use chrono::Utc;
+
 pub async fn get_endorsement_ids_for_dentist_id<C>(
     db: &C,
     dentist_id: i32,
@@ -171,40 +173,48 @@ pub async fn get_endorsements_for_dentist_id<C>(
 where
     C: ConnectionTrait,
 {
+    let today = Utc::now().date_naive();
+
+    // Get all company relations for this dentist
     let company_relations = dentist_company_relations::Entity::find()
         .filter(dentist_company_relations::Column::DentistId.eq(dentist_id))
         .all(db)
         .await?;
 
+    // Get all HMO relations for this dentist
     let hmo_relations = dentist_hmo_relations::Entity::find()
         .filter(dentist_hmo_relations::Column::DentistId.eq(dentist_id))
         .all(db)
         .await?;
 
+    // Of all company relations, get those the dentist is exclusive to
     let exclusive_company_ids: HashSet<i32> = company_relations
         .iter()
         .filter(|r| r.is_exclusive_to_company == Some(true))
         .map(|r| r.company_id)
         .collect();
 
+    // Of all company relations, get those the dentist has "except-for"
     let forbidden_company_ids: HashSet<i32> = company_relations
         .iter()
         .filter(|r| r.is_exclusive_to_company != Some(true))
         .map(|r| r.company_id)
         .collect();
 
+    // Of all HMO relations, get those the dentist is exclusive to
     let exclusive_hmo_ids: HashSet<i32> = hmo_relations
         .iter()
         .filter(|r| r.is_exclusive_to_hmo == Some(true))
         .map(|r| r.hmo_id)
         .collect();
-
+    // Of all HMO relations, get those the dentist has "except-for"
     let forbidden_hmo_ids: HashSet<i32> = hmo_relations
         .iter()
         .filter(|r| r.is_exclusive_to_hmo != Some(true))
         .map(|r| r.hmo_id)
         .collect();
 
+    // Get the endorsement_ids into a Vector
     let exclusive_company_ids: Vec<i32> = exclusive_company_ids.into_iter().collect();
     let forbidden_company_ids: Vec<i32> = forbidden_company_ids.into_iter().collect();
     let exclusive_hmo_ids: Vec<i32> = exclusive_hmo_ids.into_iter().collect();
@@ -232,7 +242,10 @@ where
         .column(endorsement::Column::AgreementCorpNumber)
         .column(endorsement::Column::IsActive)
         // ✅ active only
-        .filter(endorsement::Column::IsActive.eq(true));
+        .filter(endorsement::Column::IsActive.eq(true))
+        // filter only those were date_start <= today <= date_end
+        .filter(endorsement::Column::DateStart.lte(today))
+        .filter(endorsement::Column::DateEnd.gte(today));
 
     if has_any_exclusive {
         let mut exclusive_cond = Condition::any();
