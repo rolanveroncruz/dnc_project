@@ -23,7 +23,7 @@
                     type="button"
                     [disabled]="!canSave()"
                     (click)="saveVerifications()">
-                    {{ saving() ? 'Saving...' : 'Save' }}
+                    {{ saveCompleted()? 'Saved': saving() ? 'Saving...' : 'Save' }}
                 </button>
             }
         </div>

@@ -40,6 +40,7 @@ export class Verification implements OnInit,OnDestroy {
     // region: Current date/time and saving
     readonly currentDateTime = signal(new Date());
     readonly saving = signal(false);
+    readonly saveCompleted = signal(false);
     readonly saveError = signal<string | null>(null);
     readonly saveSuccessMessage = signal<string |null>(null);
     private clockIntervalId: ReturnType<typeof setInterval>|null = null;
@@ -60,6 +61,7 @@ export class Verification implements OnInit,OnDestroy {
         this.selectedDentalServiceIds.set(ids);
         this.saveError.set(null);
         this.saveSuccessMessage.set(null);
+        this.saveCompleted.set(false);
     }
 
     private loadMemberServicesCounts(memberId: number): void {
@@ -163,6 +165,7 @@ export class Verification implements OnInit,OnDestroy {
         this.selectedDentalServiceIds.set([]);
         this.saveError.set(null);
         this.saveSuccessMessage.set(null);
+        this.saveCompleted.set(false);
 
         this.dentistSearch.setValue(selected, { emitEvent: false });
     }
@@ -178,6 +181,7 @@ export class Verification implements OnInit,OnDestroy {
         this.selectedMasterListMemberId.set(memberId);
         this.saveError.set(null);
         this.saveSuccessMessage.set(null);
+        this.saveCompleted.set(false);
 
         //clear previous service selection first
         this.memberServicesCountsSummary.set([]);
@@ -214,6 +218,7 @@ export class Verification implements OnInit,OnDestroy {
             if (typeof value === 'string') {
                 this.saveError.set(null);
                 this.saveSuccessMessage.set(null);
+                this.saveCompleted.set(false);
 
                 this.selectedDentistId.set(null);
                 this.selectedDentalClinicId.set(null);
@@ -252,10 +257,11 @@ export class Verification implements OnInit,OnDestroy {
     readonly canSave = computed(() =>
         this.isCreateMode() &&
         this.selectedDentistId() !== null &&
-        this.selectedDentistId() !== null &&
+        this.selectedDentalClinicId() !== null &&
         this.selectedMasterListMemberId() !== null &&
         this.selectedDentalServiceIds().length > 0 &&
-        !this.saving()
+        !this.saving() &&
+        !this.saveCompleted()
     );
 
     saveVerifications(): void {
@@ -290,8 +296,10 @@ export class Verification implements OnInit,OnDestroy {
         forkJoin(requests).subscribe({
             next: (responses: CreateVerificationResponse[]) => {
                 this.saving.set(false);
+                this.saveCompleted.set(true);
                 this.saveSuccessMessage.set(
                     `${responses.length} verification(s) created successfully.`
+
                 );
             },
             error: (err) => {
