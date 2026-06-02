@@ -17,8 +17,8 @@ pub struct GenerateHmoBillingReportsResponse {
     pub success: bool,
     pub message: String,
 }
-// test_generate_hmo_billing_reports is an API endpoint that generates an HMO billing report.
-// it doesn't accept any parameters.
+// test_generate_hmo_billing_reports is an API endpoint that generates an HMO billing report
+// where today is the end_date.
 pub async fn test_generate_hmo_billing_reports(
     State(state): State<AppState>,
 ) -> Result<Json<GenerateHmoBillingReportsResponse>, (axum::http::StatusCode, String)> {

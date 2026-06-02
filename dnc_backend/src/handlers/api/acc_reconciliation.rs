@@ -157,6 +157,7 @@ pub async fn reconcile_verification(
     Path(verification_id): Path<i32>,
 ) -> Result<Json<DoneVerificationResponse>, (StatusCode, String)> {
     let db = &state.db;
+    tracing::info!("in reconcile_verification(): reconciling verification_id: {}", verification_id);
 
     let model = verification::Entity::find_by_id(verification_id)
         .one(db)

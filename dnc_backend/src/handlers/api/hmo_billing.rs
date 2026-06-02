@@ -13,6 +13,8 @@ use crate::{
 };
 use crate::handlers::reports::{get_bill_reports, GeneratedBillingReportResponse};
 
+// get_generated_hmo_billing_reports returns a list of generated billing reports based on
+// the table
 pub async fn get_generated_hmo_billing_reports(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<GeneratedBillingReportResponse>>, StatusCode> {

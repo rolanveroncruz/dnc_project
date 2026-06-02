@@ -204,7 +204,7 @@ fn protected_routes() ->Router<AppState>{
          */
         .route("/hmo_billing/", get(get_generated_hmo_billing_reports))
         .route("/hmo_billing/download/{file_name}", get(download_generated_report))
-        .route("/test_hmo_billing", get(test_generate_hmo_billing_reports))
+        .route("/generate_hmo_billings", get(test_generate_hmo_billing_reports))
         /*
         Dashboard
         */

@@ -20,6 +20,8 @@ use uuid::Uuid;
 /// then iterating through all HMOs and generating the Excel report for each HMO
 /// First, it generates billing data per endorsement and saves it to the HMO_Billing_Data table.
 /// Then, it generates the spreadsheets for each hmo.
+/// On the request key: 
+///
 pub async fn generate_hmo_billing_reports(
     state: AppState,
     start_date: Option<NaiveDate>,
