@@ -151,6 +151,7 @@ export class UtilizationReportsComponent implements OnInit {
             )
             .subscribe({
                 next: (res) => {
+                    console.log('Received utilization report data:', res);
                     this.data.set(res);
                 },
                 error: (err) => {

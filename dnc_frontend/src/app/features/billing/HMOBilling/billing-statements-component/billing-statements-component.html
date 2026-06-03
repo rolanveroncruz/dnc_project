@@ -19,6 +19,15 @@
                 />
             }
         }
+        <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            class="generate-billing-btn"
+            [disabled]="generatingBillingStatements()"
+            (click)="generateHmoBillingStatements()">
 
+            {{ generatingBillingStatements() ? 'Generating...' : 'Generate HMO Billing Statements' }}
+        </button>
     </mat-card-content>
 </mat-card>

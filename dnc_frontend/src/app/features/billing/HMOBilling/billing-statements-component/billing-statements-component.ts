@@ -16,12 +16,14 @@ import {TableColumn} from '../../../../components/generic-data-table-component/t
         MatCardHeader,
         MatCardSubtitle,
         MatCardTitle,
+        MatButton,
     ],
   templateUrl: './billing-statements-component.html',
   styleUrl: './billing-statements-component.scss',
 })
 export class BillingStatementsComponent implements OnInit {
     private hmoBillingService = inject(HMOBillingService);
+    readonly generatingBillingStatements = signal<boolean>(false);
 
     hmo_billing_reports = signal<GeneratedBillingReportResponse[]>([]);
 
@@ -63,6 +65,22 @@ export class BillingStatementsComponent implements OnInit {
                     console.log('Failed to download report', err);
                 }
             });
+    }
+    generateHmoBillingStatements() {
+        this.generatingBillingStatements.set(true);
+        this.hmoBillingService
+            .generateHMOBillingReports().subscribe({
+            next: (res) => {
+                console.log("In generateHmoBillingStatements(), res:", res);
+                this.generatingBillingStatements.set(false);
+                this.loadGeneratedHMOBillingReports();
+            },
+            error: (err) => {
+                console.log("In generateHmoBillingStatements(), failed to generate billing statements", err);
+                this.generatingBillingStatements.set(false);
+            }
+        })
+
     }
 
 

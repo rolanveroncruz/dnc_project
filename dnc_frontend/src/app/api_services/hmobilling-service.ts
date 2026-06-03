@@ -20,7 +20,8 @@ export class HMOBillingService {
 
     // Make sure environment.apiBaseUrl is something like "https://example.com/api"
     // and your routes are mounted at /endorsements under that base.
-    private readonly baseHMOBillingUrl = `${environment.apiBaseUrl}/api/hmo_billing`;
+    private readonly baseUrl = `${environment.apiBaseUrl}`;
+    private readonly baseHMOBillingUrl = `${this.baseUrl}/api/hmo_billing`;
 
     private authHeaders(): HttpHeaders {
         const token = this.loginService.token?.() ?? '';
@@ -32,6 +33,9 @@ export class HMOBillingService {
     }
     downloadGeneratedReport(filename:string){
         return this.http.get(`${this.baseHMOBillingUrl}/download/${filename}`, {headers: this.authHeaders(), responseType: 'blob'});
+    }
+    generateHMOBillingReports(): Observable<any>{
+        return this.http.get(`${this.baseUrl}/generate_hmo_billings`, {headers: this.authHeaders()});
     }
 
 }
