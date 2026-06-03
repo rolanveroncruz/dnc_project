@@ -34,6 +34,7 @@ pub struct VerificationLookupResponse {
     pub dental_clinic_id: i32,
     pub dental_clinic_name: String,
     pub master_list_member_id: i32,
+    pub member_account_number: String,
     pub master_list_member_name: String,
     pub dental_service_id: i32,
     pub dental_service_name: String,
@@ -70,6 +71,7 @@ struct VerificationLookupRow {
     pub dental_clinic_name: String,
 
     pub master_list_member_id: i32,
+    pub member_account_number: String,
     pub member_last_name: String,
     pub member_first_name: String,
     pub member_middle_name: String,
@@ -170,6 +172,7 @@ pub async fn get_all_verifications(
         .column_as(verification::Column::DentalClinicId, "dental_clinic_id")
         .column_as(dental_clinic::Column::Name, "dental_clinic_name")
         .column_as(verification::Column::MemberId, "master_list_member_id")
+        .column_as(master_list_member::Column::AccountNumber, "member_account_number")
         .column_as(master_list_member::Column::LastName, "member_last_name")
         .column_as(master_list_member::Column::FirstName, "member_first_name")
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
@@ -228,6 +231,7 @@ pub async fn get_all_verifications(
                 dental_clinic_id: row.dental_clinic_id,
                 dental_clinic_name: row.dental_clinic_name,
                 master_list_member_id: row.master_list_member_id,
+                member_account_number: row.member_account_number,
                 master_list_member_name: format_member_name(
                     &row.member_last_name,
                     &row.member_first_name,
