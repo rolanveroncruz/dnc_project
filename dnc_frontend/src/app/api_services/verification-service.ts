@@ -13,6 +13,7 @@ export interface VerificationLookupResponse {
     dental_clinic_name: string;
     master_list_member_id: number;
     master_list_member_name: string;
+    member_account_number: string;
     dental_service_id: number;
     dental_service_name: string;
     record_tooth:boolean,
