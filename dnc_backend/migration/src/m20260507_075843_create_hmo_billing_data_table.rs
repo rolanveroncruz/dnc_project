@@ -75,6 +75,7 @@ We are adding a RequestKey field to allow better tracking of counts. Since count
 anytime, when we generate the report for an HMO, we can't just filter on the EndorsementId, as there may
 have multiple rows in the HMOBillingData table for the same endorsement (because of successive counts.
 
+
  */
 #[derive(DeriveIden)]
 pub enum HMOBillingData{
@@ -83,6 +84,6 @@ pub enum HMOBillingData{
     RequestKey,
     DateGenerated,
     EndorsementId,
-    MasterListCount,
-    AddedListCount
+    MasterListCount, // total master list members
+    AddedListCount   // total added by CSR members
 }

@@ -26,7 +26,11 @@ This is used by: `.route("/hmo_billing/download/{file_name}", get(download_gener
 
 4. `jobs/hmo_billing.rs/generate_hmo_billing_reports()`:
    1. Generate BillingData for each endorsement.
+        - for each endorsement:
+            -- based on the billing type, count master_list_members count and count added_by_csrs count.
    2. Generate a Billing Report for each HMO.
+
+
 
 
 
