@@ -213,7 +213,7 @@ fn protected_routes() ->Router<AppState>{
         /*
         Dentist Retainer
         */
-        .route("/dentist_clinics/reconciled_jobs/", get(get_dentist_clinics_reconciled_jobs_count_last_12_months))
+        .route("/dentist_clinics/reconciled_jobs", get(get_dentist_clinics_reconciled_jobs_count_last_12_months))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
