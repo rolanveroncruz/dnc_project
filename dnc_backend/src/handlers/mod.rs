@@ -108,3 +108,5 @@ pub use api::billing_payments::hmo_billing::{get_generated_hmo_billing_reports, 
 pub use api::test_reports::{test_generate_hmo_billing_reports};
 
 pub use api::dashboard::verifications_csr::{get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts};
+
+pub use api::billing_payments::dentist_retainers::{get_dentist_clinics_reconciled_jobs_count_last_12_months};

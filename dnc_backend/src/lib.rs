@@ -39,7 +39,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code, get_companies_for_hmo_id, get_utilization_report, download_utilization_report, get_master_lists_with_members_for_endorsement, get_generated_hmo_billing_reports, download_generated_report, get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code, get_companies_for_hmo_id, get_utilization_report, download_utilization_report, get_master_lists_with_members_for_endorsement, get_generated_hmo_billing_reports, download_generated_report, get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts, get_dentist_clinics_reconciled_jobs_count_last_12_months};
 use crate::handlers::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id};
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
@@ -210,7 +210,10 @@ fn protected_routes() ->Router<AppState>{
         */
         .route("/dashboard/csr_verification_activity", get(get_csr_verification_activity_counts))
         .route("/dashboard/csr_verification_activity_unit_counts", get(get_csr_verification_activity_unit_counts))
-
+        /*
+        Dentist Retainer
+        */
+        .route("/dentist_clinics/reconciled_jobs/", get(get_dentist_clinics_reconciled_jobs_count_last_12_months))
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
