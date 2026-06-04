@@ -55,6 +55,7 @@ mod m20260515_031729_alter_verification_add_clinic_id;
 mod m20260522_062747_alter_user_and_verification_tables;
 mod m20260525_125047_create_view_verification_with_details;
 mod m20260525_125143_create_unified_view_of_verification_and_acc_reconciliation;
+mod m20260604_033257_create_view_dentists_jobs_count_per_month;
 
 pub struct Migrator;
 
@@ -117,6 +118,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260522_062747_alter_user_and_verification_tables::Migration),
             Box::new(m20260525_125047_create_view_verification_with_details::Migration),
             Box::new(m20260525_125143_create_unified_view_of_verification_and_acc_reconciliation::Migration),
+            Box::new(m20260604_033257_create_view_dentists_jobs_count_per_month::Migration),
         ]
     }
 }
