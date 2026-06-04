@@ -1,0 +1,17 @@
+/* ✅ added: lets the table scroll horizontally instead of shrinking too much */
+.table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* ✅ added: prevents the child table component from becoming narrower than its content */
+.table-scroll-wrapper app-generic-data-table {
+    display: block;
+    min-width: 1400px;
+}
+/* ✅ added: reaches into the generic table component if needed */
+.table-scroll-wrapper ::ng-deep table {
+    min-width: 1400px;
+    width: max-content;
+}
