@@ -28,6 +28,7 @@ impl MigrationTrait for Migration {
                             d.given_name,
                             nullif(d.middle_name, '')
                         ) as dentist_name,
+                        cl.id as clinic_id,
                         cl.name as clinic_name,
                         p.name as position_name,
                         contract.name as contract_name,
@@ -58,6 +59,7 @@ impl MigrationTrait for Migration {
                 CROSS JOIN months m
                 LEFT JOIN verification v
                     ON v.dentist_id = dc.dentist_id
+                    AND v.dental_clinic_id = dc.clinic_id
                     AND v.is_reconciled = true
                     AND v.date_service_performed >= m.month_start
                     AND v.date_service_performed <  m.month_start + interval '1 month'
