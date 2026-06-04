@@ -37,7 +37,7 @@ impl MigrationTrait for Migration {
                         -- dental_clinic inner join dentist inner join dental_clinic
                         FROM dentist_clinic dc
                         INNER JOIN dentist d on dc.dentist_id = d.id
-                        INNER JOIN dental_clinic cl on dc.clinic_id=dc.id
+                        INNER JOIN dental_clinic cl on dc.clinic_id=cl.id
 
                         -- now we need contract and position
                         INNER JOIN dentist_contract contract on d.accre_dentist_contract_id = contract.id
