@@ -46,6 +46,10 @@ import {
 import {
     DashboardOutliersComponent
 } from './features/dashboard/dashboard-outliers-component/dashboard-outliers-component';
+import {
+    MonthlyServicesCounts
+} from './features/billing/DentistPayments/monthly-services-counts/monthly-services-counts';
+import {RetainerFeesPaid} from './features/billing/DentistPayments/retainer-fees-paid/retainer-fees-paid';
 
 export const routes: Routes = [
   {
@@ -140,7 +144,18 @@ export const routes: Routes = [
                       path:'retainer_fees',
                       component: DentistRetainerFees,
                       title: 'Dentist Retainer Fees',
+                  },
+                  {
+                      path:'monthly_services_counts',
+                      component: MonthlyServicesCounts,
+                      title: 'Monthly Services Counts',
+                  },
+                  {
+                      path:'paid_retainer_fees',
+                      component: RetainerFeesPaid,
+                      title: 'Retainer Fees Paid',
                   }
+
               ]}
 
           ]

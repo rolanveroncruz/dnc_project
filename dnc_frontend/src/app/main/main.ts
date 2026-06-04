@@ -137,6 +137,20 @@ export class MainComponent implements OnInit {
                 disabled: true,
                 children: [
                     {
+                        label: 'Monthly Services Counts',
+                        icon: 'history',
+                        route: '/main/billing/dentists/monthly_services_counts',
+                        disabled: true,
+
+                    },
+                    {
+                        label: 'Retainer Fees Paid',
+                        icon: 'history',
+                        route: '/main/billing/dentists/paid_retainer_fees',
+                        disabled: true,
+
+                    },
+                    {
                         label: 'Retainer Fee Reports',
                         icon: 'history',
                         route: '/main/billing/dentists/retainer_fees',
@@ -278,6 +292,8 @@ export class MainComponent implements OnInit {
             this.activate_SideNav('billing', 'Dentist Payments', true);
             this.activate_SideNav('billing', 'Summary of Claims', true);
             this.activate_SideNav('billing', 'Retainer Fee Reports', true);
+            this.activate_SideNav('billing', 'Monthly Services Counts', true);
+            this.activate_SideNav('billing', 'Retainer Fees Paid', true);
         }
 
         // ✅ HMO Billing submenu permissions
