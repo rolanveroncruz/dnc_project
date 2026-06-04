@@ -5,7 +5,7 @@
 }
 
 .layout-sidenav {
-  width: 240px;
+  width: 280px;
   background: #fafafa;
   border-right: 1px solid #e0e0e0;
 }
@@ -228,9 +228,6 @@
 :host ::ng-deep .layout-sidenav .sidenav-label {
   display: inline-block;  /* NOT block */
   max-width: 100%;
-
-  padding-left: 40px;     /* indent wrapped line(s) */
-  text-indent: -40px;     /* keep first line aligned */
 }
 
 /* ensure the icon itself isn't clipped */
