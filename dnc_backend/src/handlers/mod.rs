@@ -103,7 +103,7 @@ pub use api::endorsement_company_master_list_members::{get_all_member_names_from
 pub use api::verification::check_approval_code;
 
 pub use api::hmo_utilization::{download_utilization_report, get_utilization_report};
-pub use api::hmo_billing::{ get_generated_hmo_billing_reports, download_generated_report};
+pub use api::billing_payments::hmo_billing::{get_generated_hmo_billing_reports, download_generated_report};
 
 pub use api::test_reports::{test_generate_hmo_billing_reports};
 

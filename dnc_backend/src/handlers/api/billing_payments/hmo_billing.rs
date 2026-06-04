@@ -30,7 +30,7 @@ pub async fn download_generated_report(
     Path(file_name): Path<String>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // ✅ Folder where your generated reports are stored
-    let reports_dir = PathBuf::from("generated_reports");
+    let reports_dir = PathBuf::from("../../../../generated_reports");
 
     // ✅ Prevent ../../ attacks
     let safe_file_name = FsPath::new(&file_name)
