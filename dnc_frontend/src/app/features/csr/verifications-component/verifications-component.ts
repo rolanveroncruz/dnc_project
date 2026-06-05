@@ -130,8 +130,7 @@ export class VerificationsComponent implements OnInit {
     }
 
     onNewVerification(){
-        const url = this.router.serializeUrl(this.router.createUrlTree(['main/csr/verifications/new']));
-        window.open(url, '_blank');
+        this.router.navigate(['main/csr/verifications/new']);
     }
 
 
