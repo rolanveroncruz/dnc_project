@@ -1,7 +1,8 @@
 // src/app/api_services/endorsement-service.ts
 import {Injectable, inject} from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
-import {Observable, map} from 'rxjs';
+import {Observable, of, forkJoin} from 'rxjs';
+import {map, switchMap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login.service';
 import {AddableAutocompleteItem} from '../components/addable-autocomplete-component/addable-autocomplete-component';
@@ -396,5 +397,33 @@ export class EndorsementService {
         if (q.page != null) params = params.set('page', String(q.page));
         if (q.page_size != null) params = params.set('page_size', String(q.page_size));
         return params;
+    }
+
+
+    getAllEndorsements(): Observable<EndorsementListRow[]> {
+        const pageSize = 200;
+
+        return this.getAll({ page: 1, page_size: pageSize }).pipe(
+            switchMap(firstPage => {
+                const totalPages = Math.ceil(firstPage.total / pageSize);
+
+                if (totalPages <= 1) {
+                    return of(firstPage.items);
+                }
+
+                const requests = [];
+
+                for (let page = 2; page <= totalPages; page++) {
+                    requests.push(this.getAll({ page, page_size: pageSize }));
+                }
+
+                return forkJoin(requests).pipe(
+                    map(pages => [
+                        ...firstPage.items,
+                        ...pages.flatMap(p => p.items),
+                    ])
+                );
+            })
+        );
     }
 }

@@ -45,12 +45,12 @@ export class SetupEndorsements implements OnInit{
         { key: 'is_active', label: 'Is Active', cellTemplateKey: 'check' },
     ];
     ngOnInit(): void {
-        this.endorsementsService.getAll()
+        this.endorsementsService.getAllEndorsements()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (res)=>{
-                    this.endorsements.set(res.items);
-                    console.log("In ngOnInit(), endorsements:", res.items);
+                next: (items)=>{
+                    this.endorsements.set(items);
+                    console.log("In ngOnInit(), endorsements:", items);
                 },
                 error: (err)=>{
                     console.log("In load(), failed to load users", err);
