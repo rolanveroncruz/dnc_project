@@ -13,16 +13,8 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::acc_reconciliation::Entity")]
-    AccReconciliation,
     #[sea_orm(has_many = "super::verification_tooth_surfaces::Entity")]
     VerificationToothSurfaces,
-}
-
-impl Related<super::acc_reconciliation::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::AccReconciliation.def()
-    }
 }
 
 impl Related<super::verification_tooth_surfaces::Entity> for Entity {

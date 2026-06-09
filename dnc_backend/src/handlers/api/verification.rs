@@ -1,10 +1,14 @@
 use axum::{extract::State, http::StatusCode, Json};
 use axum::extract::Path;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult, JoinType, QueryFilter, QueryOrder, QuerySelect, PaginatorTrait, RelationTrait, Set, Condition};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult,
+              JoinType, QueryFilter, QueryOrder, QuerySelect, PaginatorTrait, RelationTrait, Set,
+              TransactionTrait,
+              Condition};
 use sea_orm::sea_query::{Expr,ExprTrait};
 use serde::{Serialize, Deserialize};
 use tracing::instrument;
 use chrono::{ Utc};
+use std::collections::HashMap;
 use crate::{
     AppState,
     entities::{
@@ -18,6 +22,7 @@ use crate::{
         endorsement_counts,
         high_end_verification_information,
         tooth_surface,
+        verification_tooth_surfaces,
     },
 };
 use crate::handlers::AuthUser;
@@ -51,7 +56,7 @@ pub struct VerificationLookupResponse {
 
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
-    pub tooth_surface_name: Option<String>,
+    pub tooth_surface_names: Option<String>,
 
     pub approved_amount: Option<Decimal>,
     pub dentist_notes: Option<String>,
@@ -94,10 +99,14 @@ struct VerificationLookupRow {
 
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
-    pub tooth_surface_name: Option<String>,
 
     pub approved_amount: Option<Decimal>,
     pub dentist_notes: Option<String>,
+}
+#[derive(Debug, FromQueryResult)]
+struct VerificationSurfaceNameRow {
+    pub verification_id: i32,
+    pub tooth_surface_name: String,
 }
 
 fn format_dentist_name(
@@ -158,10 +167,6 @@ pub async fn get_all_verifications(
         .join(JoinType::LeftJoin,
               verification::Relation::HighEndVerificationInformation.def(),
         )
-        .join(
-            JoinType::LeftJoin,
-            verification::Relation::ToothSurface.def(),
-        )
         .select_only()
         .column_as(verification::Column::Id, "verification_id")
         .column_as(verification::Column::DateCreated, "date_created")
@@ -193,7 +198,6 @@ pub async fn get_all_verifications(
         .column_as(verification::Column::ApprovalDate, "approval_date")
         .column_as(verification::Column::DateServicePerformed, "date_service_performed")
         .column_as(verification::Column::ToothId, "tooth_id")
-        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(
             high_end_verification_information::Column::ApprovedCost,
             "approved_amount",
@@ -207,6 +211,52 @@ pub async fn get_all_verifications(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
+    let verification_ids: Vec<i32> = rows
+        .iter()
+        .map(|row| row.verification_id)
+        .collect();
+
+    let surface_rows: Vec<VerificationSurfaceNameRow> = if verification_ids.is_empty() {
+        Vec::new()
+    } else {
+        verification_tooth_surfaces::Entity::find()
+            .join(
+                JoinType::InnerJoin,
+                verification_tooth_surfaces::Entity::belongs_to(tooth_surface::Entity)
+                    .from(verification_tooth_surfaces::Column::ToothSurfaceId)
+                    .to(tooth_surface::Column::Id)
+                    .into(),
+            )
+            .filter(
+                verification_tooth_surfaces::Column::VerificationId.is_in(verification_ids.clone()),
+            )
+            .select_only()
+            .column_as(
+                verification_tooth_surfaces::Column::VerificationId,
+                "verification_id",
+            )
+            .column_as(tooth_surface::Column::Name, "tooth_surface_name")
+            .order_by_asc(verification_tooth_surfaces::Column::VerificationId)
+            .order_by_asc(tooth_surface::Column::Name)
+            .into_model::<VerificationSurfaceNameRow>()
+            .all(&state.db)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    };
+    let mut surfaces_by_verification_id: HashMap<i32, Vec<String>> = HashMap::new();
+
+    for surface in surface_rows {
+        let short_name = surface
+            .tooth_surface_name
+            .chars()
+            .take(3)
+            .collect::<String>();
+        surfaces_by_verification_id
+            .entry(surface.verification_id)
+            .or_default()
+            .push(short_name);
+    }
+
     let response = rows
         .into_iter()
         .map(|row| {
@@ -215,9 +265,9 @@ pub async fn get_all_verifications(
             } else{
                 (None, None, None)
             };
-            let tooth_surface_name = row
-                .tooth_surface_name
-                .map(|name| name.chars().take(3).collect::<String>());
+            let tooth_surface_names = surfaces_by_verification_id
+                .get(&row.verification_id)
+                .map(|names| names.join(", "));
 
             VerificationLookupResponse {
                 verification_id: row.verification_id,
@@ -251,7 +301,7 @@ pub async fn get_all_verifications(
                 approval_date,
                 date_service_performed: row.date_service_performed,
                 tooth_id: row.tooth_id,
-                tooth_surface_name,
+                tooth_surface_names,
                 approved_amount: row.approved_amount,
                 dentist_notes: row.dentist_notes,
             }
@@ -409,7 +459,7 @@ pub struct GetApprovalCodeRequest {
     pub date_service_performed: Date,
     pub tooth_id: Option<String>,
     pub tooth_service_type_id: Option<i32>,
-    pub tooth_surface_id: Option<i32>,
+    pub tooth_surface_ids: Vec<i32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -450,7 +500,7 @@ async fn check_approval_code_release(
     verification_id: i32,
     date_service_performed: Date,
     tooth_id: Option<String>,
-    tooth_surface_id: Option<i32>,
+    tooth_surface_ids: Vec<i32>,
     tooth_service_type_id: Option<i32>,
 ) -> Result<ValidationCheckResult, DbErr> {
     let checks = [
@@ -469,7 +519,7 @@ async fn check_approval_code_release(
             verification_id,
             date_service_performed,
             tooth_id,
-            tooth_surface_id,
+            tooth_surface_ids,
             tooth_service_type_id,
         ) .await?,
     ];
@@ -601,7 +651,7 @@ async fn check_no_same_dental_service_on_tooth_id_and_surface_and_service_type(
     verification_id: i32,
     date_service_performed: Date,
     tooth_id: Option<String>,
-    tooth_surface_id: Option<i32>,
+    tooth_surface_ids: Vec<i32>,
     tooth_service_type_id: Option<i32>,
 )->Result<ValidationCheckResult, DbErr> {
 
@@ -628,18 +678,38 @@ async fn check_no_same_dental_service_on_tooth_id_and_surface_and_service_type(
         None => base_condition.add(verification::Column::ToothId.is_null()),
     };
 
-    // ---2a2 if a tooth_surface_id is present, add the condition of same tooth_surface_id,
-    base_condition = match tooth_surface_id {
-        Some(v) => base_condition.add(verification::Column::ToothSurfaceId.eq(v)),
-        None => base_condition.add(verification::Column::ToothSurfaceId.is_null()),
-    };
+    // Add: Normalize the surface IDs so duplicates do not affect checks/inserts
+    let mut tooth_surface_ids = tooth_surface_ids;
+    tooth_surface_ids.sort();
+    tooth_surface_ids.dedup();
 
     // ---3a Find if another dentist did the other verifications.
-    let other_dentist_conflict = verification::Entity::find()
+    let mut other_dentist_query= verification::Entity::find()
         .filter(base_condition.clone())
-        .filter(verification::Column::DentistId.ne(current_verification.dentist_id))
-        .one(db)
-        .await?;
+        .filter(verification::Column::DentistId.ne(current_verification.dentist_id));
+
+    if tooth_surface_ids.is_empty() {
+        other_dentist_query = other_dentist_query
+            .join(
+                JoinType::LeftJoin,
+                verification::Relation::VerificationToothSurfaces.def(),
+            )
+            .filter(verification_tooth_surfaces::Column::Id.is_null());
+    } else {
+
+        other_dentist_query = other_dentist_query
+            .join(
+                JoinType::InnerJoin,
+                verification::Relation::VerificationToothSurfaces.def(),
+            )
+            .filter(
+                verification_tooth_surfaces::Column::ToothSurfaceId
+                    .is_in(tooth_surface_ids.clone())
+            );
+    }
+    let other_dentist_conflict = other_dentist_query.one(db).await?;
+
+
     // ---3b if that other dentist exists, error.
     if other_dentist_conflict.is_some() {
         return Ok(ValidationCheckResult {
@@ -661,10 +731,28 @@ async fn check_no_same_dental_service_on_tooth_id_and_surface_and_service_type(
             .add(verification::Column::ToothServiceTypeId.is_null()),
     };
     // --- 4b find a conflict of same service type.
-    let same_dentist_same_service_type_conflict = verification::Entity::find()
-        .filter(same_dentist_same_service_type_condition)
-        .one(db)
-        .await?;
+    let mut same_dentist_query= verification::Entity::find()
+        .filter(same_dentist_same_service_type_condition);
+
+    if tooth_surface_ids.is_empty() {
+        same_dentist_query = same_dentist_query
+            .join(
+                JoinType::LeftJoin,
+                verification::Relation::VerificationToothSurfaces.def(),
+            )
+            .filter(verification_tooth_surfaces::Column::Id.is_null());
+    } else {
+        same_dentist_query = same_dentist_query
+            .join(
+                JoinType::InnerJoin,
+                verification::Relation::VerificationToothSurfaces.def(),
+            )
+            .filter(
+                verification_tooth_surfaces::Column::ToothSurfaceId
+                    .is_in(tooth_surface_ids.clone())
+            );
+    }
+    let same_dentist_same_service_type_conflict = same_dentist_query.one(db).await?;
 
     // --- 4c If found, return error
     if same_dentist_same_service_type_conflict.is_some() {
@@ -700,13 +788,21 @@ pub async fn get_approval_code_for_verification_id(
             )
         })?;
 
+    if verification_model.approval_code.is_some() || verification_model.status_id == 99 {
+        return Ok(Json(GetApprovalCodeResponse {
+            reject_code: 7,
+            reject_message: "approval code already released for this verification".to_string(),
+            approval_code: verification_model.approval_code.clone(),
+        }));
+    }
+
     // --- 2. Do checks if the approval code could be released.
     let validation = check_approval_code_release(
         &state.db,
         verification_id,
         payload.date_service_performed,
         payload.tooth_id.clone(),
-        payload.tooth_surface_id,
+        payload.tooth_surface_ids.clone(),
         payload.tooth_service_type_id,
     )
         .await
@@ -720,12 +816,38 @@ pub async fn get_approval_code_for_verification_id(
             approval_code: None,
         }));
     }
+
     // --- 3. There were no problems. All clear. Save the approval code.
+    let mut tooth_surface_ids = payload.tooth_surface_ids.clone();
+    tooth_surface_ids.sort();
+    tooth_surface_ids.dedup();
+
+    // validate submitted tooth_surface_ids before saving
+    if !tooth_surface_ids.is_empty() {
+        let found_count = tooth_surface::Entity::find()
+            .filter(tooth_surface::Column::Id.is_in(tooth_surface_ids.clone()))
+            .count(&state.db)
+            .await
+            .map_err(internal_error)?;
+
+        if found_count != tooth_surface_ids.len() as u64 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "One or more tooth_surface_ids are invalid".to_string(),
+                ));
+        }
+
+    }
+
+    // Use transaction so verification update and surface rows save together
+    let txn = state.db.begin().await.map_err(internal_error)?;
+
     let approval_code = generate_approval_code(verification_id);
+
     let mut verification_active: verification::ActiveModel = verification_model.into();
     verification_active.date_service_performed = Set(Some(payload.date_service_performed));
     verification_active.tooth_id = Set(payload.tooth_id.clone());
-    verification_active.tooth_surface_id = Set(payload.tooth_surface_id);
+
     verification_active.tooth_service_type_id = Set(payload.tooth_service_type_id);
     verification_active.approved_by = Set(Some(auth_user.claims.email.clone()));
     verification_active.approval_date = Set(Some(Utc::now().into()));
@@ -733,9 +855,35 @@ pub async fn get_approval_code_for_verification_id(
     verification_active.status_id = Set(99); // 99 is "Done"
 
     verification_active
-        .update(&state.db)
+        .update(&txn)
         .await
         .map_err(internal_error)?;
+
+    // Delete any existing tooth surfaces rows for this verification.
+    verification_tooth_surfaces::Entity::delete_many()
+        .filter(verification_tooth_surfaces::Column::VerificationId.eq(verification_id))
+        .exec(&txn)
+        .await
+        .map_err(internal_error)?;
+
+        // Insert the submitted tooth surface rows.
+    if !tooth_surface_ids.is_empty() {
+        let surface_models = tooth_surface_ids
+            .into_iter()
+            .map(|tooth_surface_id| verification_tooth_surfaces::ActiveModel{
+                verification_id: Set(verification_id),
+                tooth_surface_id: Set(tooth_surface_id),
+                ..Default::default()
+            })
+            .collect::<Vec<_>>();
+
+        verification_tooth_surfaces::Entity::insert_many(surface_models)
+            .exec(&txn)
+            .await
+            .map_err(internal_error)?;
+    }
+
+    txn.commit().await.map_err(internal_error)?;
 
     // --- 4. Return the response.
     Ok(Json(GetApprovalCodeResponse {
