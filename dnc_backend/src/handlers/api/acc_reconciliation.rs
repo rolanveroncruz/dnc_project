@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use axum::{extract::{Path, State}, http::StatusCode, Json};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait,
-              JoinType, QueryFilter, QueryOrder, QuerySelect, Set,
+              JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Set,
 };
 
 use crate::entities::{
@@ -11,7 +11,7 @@ use crate::entities::{
     dental_service, dentist, endorsement,
     endorsement_company,
     master_list_member, tooth_service_type,
-    tooth_surface, verification,
+    tooth_surface, verification, verification_tooth_surfaces,
 };
 use chrono::{Utc};
 
@@ -27,7 +27,7 @@ pub struct DoneVerificationResponse {
     pub company_name: String,
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
-    pub tooth_surface_name: Option<String>,
+    pub tooth_surface_names: Option<String>,
     pub tooth_service_type_name: Option<String>,
     pub approval_code: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,
@@ -57,7 +57,7 @@ struct DoneVerificationRow {
     pub company_name: String,
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
-    pub tooth_surface_name: Option<String>,
+
     pub tooth_service_type_name: Option<String>,
     pub approval_code: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,
@@ -65,7 +65,11 @@ struct DoneVerificationRow {
     pub reconciled_by: Option<String>,
     pub reconciliation_date: Option<DateTimeWithTimeZone>,
 }
-
+#[derive(Debug, FromQueryResult)]
+struct DoneVerificationSurfaceNameRow {
+    pub verification_id: i32,
+    pub tooth_surface_name: String,
+}
 
 pub async fn get_done_verifications(
     State(state): State<AppState>,
@@ -78,7 +82,6 @@ pub async fn get_done_verifications(
         .join(JoinType::InnerJoin, verification::Relation::DentalService.def())
         .join(JoinType::InnerJoin, master_list_member::Relation::Endorsement.def())
         .join(JoinType::InnerJoin, endorsement::Relation::EndorsementCompany.def())
-        .join(JoinType::LeftJoin, verification::Relation::ToothSurface.def())
         .join(JoinType::LeftJoin, verification::Relation::ToothServiceType.def())
         .select_only()
         .column(verification::Column::Id)
@@ -98,13 +101,19 @@ pub async fn get_done_verifications(
         .column_as(dental_service::Column::Name, "dental_service_name")
         .column_as(endorsement::Column::AgreementCorpNumber, "agreement_corp_number")
         .column_as(endorsement_company::Column::Name, "company_name")
-        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(tooth_service_type::Column::Name, "tooth_service_type_name")
         .order_by_desc(verification::Column::DateCreated)
         .into_model::<DoneVerificationRow>()
         .all(db)
         .await
         .map_err(internal_error)?;
+
+    let verification_ids = rows
+        .iter()
+        .map(|row| row.id)
+        .collect::<Vec<i32>>();
+
+    let surface_names_by_verification_id = load_verification_surface_names(db, verification_ids).await?;
 
     let result = rows
         .into_iter()
@@ -122,7 +131,7 @@ pub async fn get_done_verifications(
             company_name: row.company_name,
             date_service_performed: row.date_service_performed,
             tooth_id: row.tooth_id,
-            tooth_surface_name: row.tooth_surface_name,
+            tooth_surface_names: surface_names_by_verification_id.get(&row.id).cloned(),
             tooth_service_type_name: row.tooth_service_type_name,
             approval_code: row.approval_code,
             approval_date: row.approval_date,
@@ -146,6 +155,62 @@ fn internal_error<E: std::fmt::Display>(err: E) -> (StatusCode, String) {
 }
 
 // endregion: Get Done Verifications
+async fn load_verification_surface_names(
+    db: &DatabaseConnection,
+    verification_ids: Vec<i32>,
+) -> Result<std::collections::HashMap<i32, String>, (StatusCode, String)> {
+    if verification_ids.is_empty() {
+        return Ok(std::collections::HashMap::new());
+    }
+
+    let surface_rows: Vec<DoneVerificationSurfaceNameRow> =
+        verification_tooth_surfaces::Entity::find()
+            .join(
+                JoinType::InnerJoin,
+                verification_tooth_surfaces::Entity::belongs_to(tooth_surface::Entity)
+                    .from(verification_tooth_surfaces::Column::ToothSurfaceId)
+                    .to(tooth_surface::Column::Id)
+                    .into(),
+            )
+            .filter(
+                verification_tooth_surfaces::Column::VerificationId.is_in(verification_ids),
+            )
+            .select_only()
+            .column_as(
+                verification_tooth_surfaces::Column::VerificationId,
+                "verification_id",
+            )
+            .column_as(tooth_surface::Column::Name, "tooth_surface_name")
+            .order_by_asc(verification_tooth_surfaces::Column::VerificationId)
+            .order_by_asc(tooth_surface::Column::Name)
+            .into_model::<DoneVerificationSurfaceNameRow>()
+            .all(db)
+            .await
+            .map_err(internal_error)?;
+
+    let mut grouped: std::collections::HashMap<i32, Vec<String>> =
+        std::collections::HashMap::new();
+
+    for row in surface_rows {
+        let short_name = row
+            .tooth_surface_name
+            .chars()
+            .take(3)
+            .collect::<String>();
+
+        grouped
+            .entry(row.verification_id)
+            .or_default()
+            .push(short_name);
+    }
+
+    let result = grouped
+        .into_iter()
+        .map(|(verification_id, names)| (verification_id, names.join(", ")))
+        .collect::<std::collections::HashMap<_, _>>();
+
+    Ok(result)
+}
 
 
 // region: Reconcile Verification
@@ -181,8 +246,9 @@ pub async fn reconcile_verification(
         .join(JoinType::InnerJoin, verification::Relation::Dentist.def())
         .join(JoinType::InnerJoin, verification::Relation::MasterListMember.def())
         .join(JoinType::InnerJoin, verification::Relation::DentalService.def())
-        .join(JoinType::LeftJoin, verification::Relation::ToothSurface.def())
         .join(JoinType::LeftJoin, verification::Relation::ToothServiceType.def())
+        .join(JoinType::InnerJoin, master_list_member::Relation::Endorsement.def())
+        .join(JoinType::InnerJoin, endorsement::Relation::EndorsementCompany.def())
         .select_only()
         .column(verification::Column::Id)
         .column(verification::Column::DateCreated)
@@ -199,8 +265,9 @@ pub async fn reconcile_verification(
         .column_as(master_list_member::Column::LastName, "member_last_name")
         .column_as(master_list_member::Column::MiddleName, "member_middle_name")
         .column_as(dental_service::Column::Name, "dental_service_name")
-        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(tooth_service_type::Column::Name, "tooth_service_type_name")
+        .column_as(endorsement::Column::AgreementCorpNumber, "agreement_corp_number")
+        .column_as(endorsement_company::Column::Name, "company_name")
         .into_model::<DoneVerificationRow>()
         .one(db)
         .await
@@ -209,6 +276,8 @@ pub async fn reconcile_verification(
             StatusCode::NOT_FOUND,
             format!("Verification {} not found after update", verification_id),
         ))?;
+
+        let surface_names_by_verification_id = load_verification_surface_names(db, vec![row.id]).await?;
 
         let response = DoneVerificationResponse {
             id: row.id,
@@ -224,7 +293,9 @@ pub async fn reconcile_verification(
             company_name: row.company_name,
             date_service_performed: row.date_service_performed,
             tooth_id: row.tooth_id,
-            tooth_surface_name: row.tooth_surface_name,
+            tooth_surface_names: surface_names_by_verification_id
+                .get(&row.id)
+                .cloned(),
             tooth_service_type_name: row.tooth_service_type_name,
             approval_code: row.approval_code,
             approval_date: row.approval_date,
@@ -253,7 +324,7 @@ pub struct CreateAccReconciliationRequest {
 
     pub tooth_id: Option<String>,
     pub tooth_service_type_id: Option<i32>,
-    pub tooth_surface_id: Option<i32>,
+    pub tooth_surface_names: Option<String>,
 }
 
 pub async fn create_acc_reconciliation(
@@ -282,7 +353,7 @@ pub async fn create_acc_reconciliation(
 
         tooth_id:  Set(payload.tooth_id),
         tooth_service_type_id: Set(payload.tooth_service_type_id),
-        tooth_surface_id:  Set(payload.tooth_surface_id),
+        tooth_surface_names: Set(payload.tooth_surface_names),
         dental_clinic_id: Set(payload.dental_clinic_id),
     };
 
@@ -319,7 +390,7 @@ struct AccReconQueryRow {
     pub company_name: String,
     pub date_service_performed: Option<Date>,
     pub tooth_id: Option<String>,
-    pub tooth_surface_name: Option<String>,
+    pub tooth_surface_names: Option<String>,
     pub tooth_service_type_name: Option<String>,
     pub approval_code: Option<String>,
     pub approval_date: Option<DateTimeWithTimeZone>,
@@ -345,7 +416,6 @@ pub async fn get_acc_recons(
                 .to(master_list_member::Column::Id)
                 .into(),
         )
-        .join(JoinType::LeftJoin, acc_reconciliation::Relation::ToothSurface.def())
         .join(
             JoinType::LeftJoin,
             acc_reconciliation::Relation::ToothServiceType.def(),
@@ -365,8 +435,8 @@ pub async fn get_acc_recons(
         .column_as(acc_reconciliation::Column::MemberName, "typed_member_name")
         .column_as(dental_service::Column::Name, "dental_service_name")
         .column_as(endorsement_company::Column::Name, "company_name")
-        .column_as(tooth_surface::Column::Name, "tooth_surface_name")
         .column_as(tooth_service_type::Column::Name, "tooth_service_type_name")
+        .column_as(acc_reconciliation::Column::ToothSurfaceNames, "tooth_surface_names")
         .order_by_desc(acc_reconciliation::Column::DateCreated)
         .into_model::<AccReconQueryRow>()
         .all(db)
@@ -396,7 +466,7 @@ pub async fn get_acc_recons(
                 company_name: row.company_name,
                 date_service_performed: row.date_service_performed,
                 tooth_id: row.tooth_id,
-                tooth_surface_name: row.tooth_surface_name,
+                tooth_surface_names: row.tooth_surface_names,
                 tooth_service_type_name: row.tooth_service_type_name,
                 approval_code: row.approval_code,
                 approval_date: row.approval_date,
