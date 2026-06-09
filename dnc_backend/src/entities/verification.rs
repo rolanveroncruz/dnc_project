@@ -20,7 +20,6 @@ pub struct Model {
     pub approval_code: Option<String>,
     pub tooth_id: Option<String>,
     pub tooth_service_type_id: Option<i32>,
-    pub tooth_surface_id: Option<i32>,
     pub is_reconciled: Option<bool>,
     pub reconciled_by: Option<String>,
     pub reconciliation_date: Option<DateTimeWithTimeZone>,
@@ -77,14 +76,6 @@ pub enum Relation {
     )]
     ToothServiceType,
     #[sea_orm(
-        belongs_to = "super::tooth_surface::Entity",
-        from = "Column::ToothSurfaceId",
-        to = "super::tooth_surface::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    ToothSurface,
-    #[sea_orm(
         belongs_to = "super::verification_status::Entity",
         from = "Column::StatusId",
         to = "super::verification_status::Column::Id",
@@ -92,6 +83,8 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     VerificationStatus,
+    #[sea_orm(has_many = "super::verification_tooth_surfaces::Entity")]
+    VerificationToothSurfaces,
 }
 
 impl Related<super::dental_clinic::Entity> for Entity {
@@ -136,15 +129,15 @@ impl Related<super::tooth_service_type::Entity> for Entity {
     }
 }
 
-impl Related<super::tooth_surface::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::ToothSurface.def()
-    }
-}
-
 impl Related<super::verification_status::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::VerificationStatus.def()
+    }
+}
+
+impl Related<super::verification_tooth_surfaces::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::VerificationToothSurfaces.def()
     }
 }
 

@@ -53,3 +53,10 @@ Dec 20, 2025
   - tooth_surface, (Distal, Facial, Incisal, Lingual, Mesial, etc) and 
   - verification 
 * added API for get_tooth_service_types() and get_tooth_surfaces()
+
+
+### June 08, 2026
+There are more asks for revisions:
+- Verifications of dental services that need to record tooth surfaces need to be able to record different tooth surfaces, not just one.
+- Currently, only one tooth surface is recorderd per verification. 
+- We need a new table to record verifications and tooth surfaces. 

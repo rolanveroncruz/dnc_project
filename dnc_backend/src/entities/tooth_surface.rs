@@ -15,8 +15,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::acc_reconciliation::Entity")]
     AccReconciliation,
-    #[sea_orm(has_many = "super::verification::Entity")]
-    Verification,
+    #[sea_orm(has_many = "super::verification_tooth_surfaces::Entity")]
+    VerificationToothSurfaces,
 }
 
 impl Related<super::acc_reconciliation::Entity> for Entity {
@@ -25,9 +25,9 @@ impl Related<super::acc_reconciliation::Entity> for Entity {
     }
 }
 
-impl Related<super::verification::Entity> for Entity {
+impl Related<super::verification_tooth_surfaces::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Verification.def()
+        Relation::VerificationToothSurfaces.def()
     }
 }
 

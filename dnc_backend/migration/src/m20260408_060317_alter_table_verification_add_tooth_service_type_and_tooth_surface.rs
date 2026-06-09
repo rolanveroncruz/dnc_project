@@ -164,7 +164,7 @@ pub enum ToothSurface{
     Name
 }
 #[derive(Iden)]
-enum Verification {
+pub enum Verification {
     Table,
     ToothServiceTypeId,
     ToothSurfaceId,

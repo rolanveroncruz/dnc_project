@@ -47,3 +47,4 @@ pub use super::tooth_surface::Entity as ToothSurface;
 pub use super::user::Entity as User;
 pub use super::verification::Entity as Verification;
 pub use super::verification_status::Entity as VerificationStatus;
+pub use super::verification_tooth_surfaces::Entity as VerificationToothSurfaces;

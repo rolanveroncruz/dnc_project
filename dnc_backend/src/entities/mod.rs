@@ -50,3 +50,4 @@ pub mod tooth_surface;
 pub mod user;
 pub mod verification;
 pub mod verification_status;
+pub mod verification_tooth_surfaces;
