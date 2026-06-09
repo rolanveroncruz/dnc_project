@@ -30,7 +30,7 @@ export interface VerificationLookupResponse {
     dentist_notes: string | null;
     date_service_performed: string | null;
     tooth_id: number | null;
-    tooth_surface_name: string | null;
+    tooth_surface_names: string | null;
 }
 export interface ExtendedVerificationLookupResponse extends VerificationLookupResponse {
     approval_string: string | null;

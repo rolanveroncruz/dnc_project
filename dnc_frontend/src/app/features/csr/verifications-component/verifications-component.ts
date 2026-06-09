@@ -58,7 +58,8 @@ export class VerificationsComponent implements OnInit {
         { key: 'member_account_number', label: 'Account No.'},
         { key: 'master_list_member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Service'},
-        // {key: 'tooth_id', label: 'Tooth'},
+         {key: 'tooth_id', label: 'Tooth'},
+        {key: 'tooth_surface_names', label: 'Surface'},
         {key: 'status_name', label: 'Status'},
         {key: 'date_service_performed', label: 'Service Date', cellTemplateKey: 'date'},
         {key: 'approval_string', label: 'Approval Details'},
@@ -107,7 +108,11 @@ export class VerificationsComponent implements OnInit {
         this.verificationService.getVerifications()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next:(res)=> this.verifications.set(res),
+                next:(res)=> {
+                    console.log("In load(), res:", res);
+                    this.verifications.set(res)
+                    console.log("In load(), this.verifications:", this.verifications());
+                },
                 error:(err)=> console.log("In load(), failed to load verifications",err )
             })
 
