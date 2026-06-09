@@ -58,6 +58,7 @@
                 <mat-error>Service availed date is required.</mat-error>
             }
         </mat-form-field>
+
         @if (data.dental_service_record_tooth) {
             <!--
             Tooth ID is required when record tooth is true.
@@ -77,22 +78,31 @@
             </mat-form-field>
         }
         @if (data.dental_service_record_surface) {
-            <!--
-            Tooth Surface ID is required when record tooth is true.
-            -->
-            <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tooth Surface</mat-label>
-                <select matNativeControl formControlName="tooth_surface_id">
-                    <option [ngValue]="null"></option>
+            <!-- ✅ multiple tooth surfaces using checkboxes -->
+            <div class="tooth-surface-section full-width">
+                <div class="tooth-surface-label">Tooth Surfaces</div>
+
+                <div class="tooth-surface-grid">
                     @for (surface of data.tooth_surfaces; track surface.id) {
-                        <option [ngValue]="surface.id">{{ surface.name }}</option>
+                        <mat-checkbox
+                            [checked]="isToothSurfaceChecked(surface.id)"
+                            (change)="onToothSurfaceToggle(surface.id, $event.checked)">
+                            {{ surface.name }}
+                        </mat-checkbox>
                     }
-                </select>
-                @if (form.controls.tooth_surface_id.hasError('required')) {
-                    <mat-error>Tooth surface is required.</mat-error>
+                </div>
+
+                @if (
+                    form.controls.tooth_surface_ids.hasError('required') &&
+                    form.controls.tooth_surface_ids.touched
+                    ) {
+                    <div class="field-error">
+                        At least one tooth surface is required.
+                    </div>
                 }
-            </mat-form-field>
+            </div>
         }
+
             <!--
             Tooth Service Type ID is required when record tooth is true.
             -->

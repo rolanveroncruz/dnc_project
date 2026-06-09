@@ -60,7 +60,7 @@ export interface CreateVerificationResponse {
 export interface GetApprovalCodeRequest{
     date_service_performed: string;
     tooth_id: string | null
-    tooth_surface_id: number | null;
+    tooth_surface_ids: number[];
     tooth_service_type_id: number | null;
 }
 

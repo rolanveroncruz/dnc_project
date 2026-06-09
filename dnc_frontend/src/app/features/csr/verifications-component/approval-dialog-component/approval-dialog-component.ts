@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import {Component, inject, Inject} from '@angular/core';
+import {Component, inject, Inject, signal} from '@angular/core';
 import {
+    AbstractControl,
     FormControl,
     FormGroup,
-    ReactiveFormsModule,
+    ReactiveFormsModule, ValidationErrors,
     Validators,
 } from '@angular/forms';
 import {
@@ -23,6 +24,7 @@ import {
     VerificationService
 } from '../../../../api_services/verification-service';
 import { ChangeDetectorRef } from '@angular/core';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 
 export interface ApprovalDialogData {
     verification_id: number;
@@ -47,7 +49,7 @@ export interface ApprovalDialogResult {
     confirmed: boolean;
     service_availed_date: string | null;
     tooth_id: string | null;
-    tooth_surface_id : number | null;
+    tooth_surface_ids: number[];
     tooth_service_type_id : number | null;
 }
 
@@ -62,6 +64,7 @@ export interface ApprovalDialogResult {
         MatFormFieldModule,
         MatInputModule,
         MatDatepickerModule,
+        MatCheckboxModule,
     ],
     providers: [provideNativeDateAdapter()],
     templateUrl: './approval-dialog-component.html',
@@ -88,7 +91,7 @@ export class ApprovalDialogComponent {
     readonly form: FormGroup<{
         service_availed_date: FormControl<Date | null>;
         tooth_id: FormControl<string | null>;
-        tooth_surface_id: FormControl<number | null>;
+        tooth_surface_ids: FormControl<number[]>;
         tooth_service_type_id: FormControl<number | null>;
     }>;
 
@@ -111,10 +114,11 @@ export class ApprovalDialogComponent {
                     validators: this.data.dental_service_record_tooth? [Validators.required]:[],
                 }
             ),
-            tooth_surface_id: new FormControl<number | null>(
-                null,
+            tooth_surface_ids: new FormControl<number[]>(
+                [],
                 {
-                    validators: this.data.dental_service_record_surface? [Validators.required]:[],
+                    nonNullable: true,
+                    validators: this.data.dental_service_record_surface? [this.requireAtLeastOneSurface]:[],
                 }
             ),
             tooth_service_type_id: new FormControl<number | null>(
@@ -126,18 +130,40 @@ export class ApprovalDialogComponent {
         });
         this.approvalCode = this.data.approval_code ?? null;
     }
+    // ✅ validator for "at least one checkbox must be selected"
+
+    private requireAtLeastOneSurface(control: AbstractControl): ValidationErrors | null {
+        const value =control.value as number[] |null;
+        return value && value.length > 0 ? null:{required: true};
+    }
 
     cancel(): void {
         this.dialogRef.close({
             confirmed: false,
             service_availed_date: null,
             tooth_id:null,
-            tooth_surface_id: null,
+            tooth_surface_ids: [],
             tooth_service_type_id: null,
         });
     }
     hasApprovalCode(): boolean {
         return !!this.approvalCode;
+    }
+    isToothSurfaceChecked(surfaceId: number): boolean {
+        return this.form.controls.tooth_surface_ids.value.includes(surfaceId);
+    }
+
+    onToothSurfaceToggle(surfaceId: number, checked: boolean): void {
+        const control = this.form.controls.tooth_surface_ids;
+        const current = control.value;
+
+        const next = checked
+            ? [...current, surfaceId]
+            : current.filter(id => id !== surfaceId);
+
+        control.setValue(next);
+        control.markAsTouched();
+        control.updateValueAndValidity();
     }
 
     getApprovalCode(): void {
@@ -156,7 +182,7 @@ export class ApprovalDialogComponent {
         }
         const serviceDate = this.toDateOnlyString(serviceDateValue);
         const toothId = this.form.controls.tooth_id.value;
-        const toothSurfaceId = this.form.controls.tooth_surface_id.value;
+        const toothSurfaceIds = this.form.controls.tooth_surface_ids.value;
         const toothServiceType = this.form.controls.tooth_service_type_id.value;
         if (!serviceDate) {
             this.isRequestingApprovalCode = false;
@@ -168,16 +194,17 @@ export class ApprovalDialogComponent {
             this.form.controls.tooth_id.markAsTouched();
             return;
         }
-        if (this.data.dental_service_record_tooth && !toothSurfaceId ==null) {
+        // ✅ if surfaces are required, at least one must be checked
+        if (this.data.dental_service_record_surface && toothSurfaceIds.length === 0) {
             this.isRequestingApprovalCode = false;
-            this.form.controls.tooth_surface_id.markAsTouched();
+            this.form.controls.tooth_surface_ids.markAsTouched();
             return;
         }
 
         var request:GetApprovalCodeRequest = {
             date_service_performed: serviceDate,
             tooth_id: toothId,
-            tooth_surface_id: toothSurfaceId,
+            tooth_surface_ids: toothSurfaceIds,
             tooth_service_type_id: toothServiceType,
         }
 

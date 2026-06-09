@@ -59,3 +59,25 @@
     color: rgba(0, 0, 0, 0.87);
     word-break: break-word;
 }
+.tooth-surface-section {
+    margin-bottom: 16px;
+}
+
+.tooth-surface-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.tooth-surface-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 16px;
+    padding: 8px 0;
+}
+
+.field-error {
+    color: #c62828;
+    font-size: 12px;
+    margin-top: 4px;
+}
