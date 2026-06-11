@@ -9,7 +9,7 @@ export type CSRVerificationMetric = 'created' | 'approved' | 'reconciled';
   selector: 'app-csrverification-totals',
     imports: [
         BarChart,
-        MatLabel,
+
     ],
   templateUrl: './csrverification-totals.html',
   styleUrl: './csrverification-totals.scss',
