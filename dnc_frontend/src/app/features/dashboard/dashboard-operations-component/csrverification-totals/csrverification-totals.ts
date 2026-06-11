@@ -1,4 +1,4 @@
-import {Component, effect, inject, input, OnInit, signal} from '@angular/core';
+import {Component, effect, inject, input,  signal} from '@angular/core';
 import {BarChart, SimpleBarChartDataset} from "../../components/bar-chart/bar-chart";
 import {DashboardCSRService, CsrVerificationActivityRow} from '../../../../api_services/dashboard-csrservice';
 import {MatLabel} from '@angular/material/input';
