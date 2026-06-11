@@ -50,6 +50,8 @@ import {
     MonthlyServicesCounts
 } from './features/billing/DentistPayments/monthly-services-counts/monthly-services-counts';
 import {RetainerFeesPaid} from './features/billing/DentistPayments/retainer-fees-paid/retainer-fees-paid';
+import {DentistVServices} from './features/billing/DentistPayments/dentist-vservices/dentist-vservices';
+import {DentistVHMOs} from './features/billing/DentistPayments/dentist-vhmos/dentist-vhmos';
 
 export const routes: Routes = [
   {
@@ -139,6 +141,17 @@ export const routes: Routes = [
                       path:'claims',
                       component: DentistClaims,
                       title: 'Dentist Claims',
+                  },
+                  {
+                      path:'services_performed',
+                      component: DentistVServices,
+                      title: 'Dentist vs Services Performed',
+                  },
+                  {
+                      path:'hmo_claims',
+                      component: DentistVHMOs,
+                      title: 'Dentist vs HMOs served',
+
                   },
                   {
                       path:'retainer_fees',

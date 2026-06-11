@@ -157,6 +157,18 @@ export class MainComponent implements OnInit {
                         disabled: true,
                     },
                     {
+                        label: 'Services Performed',
+                        icon: 'history',
+                        route: '/main/billing/dentists/services_performed',
+                        disabled: true,
+                    },
+                    {
+                        label: 'Claims to HMOs',
+                        icon: 'history',
+                        route: '/main/billing/dentists/hmo_claims',
+                        disabled: true,
+                    },
+                    {
                         label: 'Summary of Claims',
                         icon: 'history',
                         route: '/main/billing/dentists/claims',
@@ -290,6 +302,8 @@ export class MainComponent implements OnInit {
             this.activate_SideNav('billing', 'Utilization Reports', true);
             this.activate_SideNav('billing', 'Billing Statements', true);
             this.activate_SideNav('billing', 'Dentist Payments', true);
+            this.activate_SideNav('billing', 'Claims to HMOs', true);
+            this.activate_SideNav('billing', 'Services Performed', true);
             this.activate_SideNav('billing', 'Summary of Claims', true);
             this.activate_SideNav('billing', 'Retainer Fee Reports', true);
             this.activate_SideNav('billing', 'Monthly Services Counts', true);
