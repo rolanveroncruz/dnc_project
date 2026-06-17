@@ -157,21 +157,9 @@ export class MainComponent implements OnInit {
                         disabled: true,
                     },
                     {
-                        label: 'Services Performed',
-                        icon: 'history',
-                        route: '/main/billing/dentists/services_performed',
-                        disabled: true,
-                    },
-                    {
-                        label: 'Claims to HMOs',
-                        icon: 'history',
-                        route: '/main/billing/dentists/hmo_claims',
-                        disabled: true,
-                    },
-                    {
                         label: 'Summary of Claims',
                         icon: 'history',
-                        route: '/main/billing/dentists/claims',
+                        route: '/main/billing/dentists/claims_matrix',
                         disabled: true,
                     },
                 ],
