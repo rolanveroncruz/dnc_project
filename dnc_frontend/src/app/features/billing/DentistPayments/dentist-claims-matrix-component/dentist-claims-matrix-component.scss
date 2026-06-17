@@ -1,0 +1,171 @@
+.dentist-claims-matrix-page {
+    padding: 16px;
+}
+
+.page-card {
+    width: 100%;
+}
+
+.page-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.claims-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.claims-filter-form mat-form-field {
+    width: 220px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 4px;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #b00020;
+    margin-bottom: 12px;
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 0;
+}
+
+.empty-state {
+    padding: 24px;
+    border: 1px dashed rgba(0, 0, 0, 0.24);
+    border-radius: 8px;
+    color: rgba(0, 0, 0, 0.64);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.claims-matrix-summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 8px 0 12px;
+    font-size: 0.95rem;
+}
+
+.claims-matrix-scroll {
+    width: 100%;
+    overflow: auto;
+    border-radius: 8px;
+}
+
+.claims-matrix-table {
+    width: max-content;
+    min-width: 100%;
+}
+
+.claims-matrix-table th,
+.claims-matrix-table td {
+    vertical-align: top;
+    padding: 8px 12px;
+}
+
+.claims-matrix-table th {
+    white-space: nowrap;
+}
+
+.claims-matrix-table td {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.hmo-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hmo-header span {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+.claims-cell {
+    min-width: 220px;
+    max-width: 300px;
+}
+
+.service-line {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.service-line:last-of-type {
+    border-bottom: none;
+}
+
+.service-name {
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.service-details {
+    font-size: 0.78rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.cell-total {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0, 0, 0, 0.16);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.empty-cell {
+    opacity: 0.45;
+}
+
+.row-total,
+.hmo-footer-total,
+.grand-total {
+    white-space: nowrap;
+}
+
+.grand-total {
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .dentist-claims-matrix-page {
+        padding: 8px;
+    }
+
+    .claims-filter-form {
+        flex-direction: column;
+    }
+
+    .claims-filter-form mat-form-field {
+        width: 100%;
+    }
+
+    .filter-actions {
+        width: 100%;
+    }
+
+    .claims-matrix-summary {
+        flex-direction: column;
+    }
+}
