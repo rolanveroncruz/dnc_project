@@ -31,4 +31,5 @@ export interface TableActionButton<T = any> {
     color?: 'primary' | 'accent' | 'warn';
     disabled?: (row: T) => boolean;
     hidden?: (row: T) => boolean;
+    hiddenText?: string | ((row: T) => string);
 }

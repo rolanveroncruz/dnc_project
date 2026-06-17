@@ -117,6 +117,12 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
       return typeof icon === 'function' ? icon(row) : (icon ?? '');
     }
 
+    getPrimaryActionHiddenText(col: TableColumn<T>, row: T): string {
+        const hiddenText = col.actionButton?.hiddenText;
+        return typeof hiddenText === 'function' ? hiddenText(row) : (hiddenText ?? '');
+    }
+
+
   isSecondaryActionDisabled( row:T):boolean{
       return !!this.secondaryActionDisabled?.(row);
   }

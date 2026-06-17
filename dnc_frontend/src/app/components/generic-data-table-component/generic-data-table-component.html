@@ -183,7 +183,11 @@
                 }
                 {{ getPrimaryActionLabel(col, row) }}
             </button>
-        }
+        } @else if (col.actionButton && getPrimaryActionHiddenText(col, row)) {
+        <span class="action-status-text">
+                {{getPrimaryActionHiddenText(col, row)}}
+            </span>
+    }
 
         @if (!isSecondaryActionHidden(row)) {
             <button
@@ -214,6 +218,10 @@
                 }
                 {{ getPrimaryActionLabel(col, row) }}
             </button>
+        }@else if (col.actionButton && getPrimaryActionHiddenText(col, row)) {
+            <span class="action-status-text">
+                {{getPrimaryActionHiddenText(col, row)}}
+            </span>
         }
 
         @if (!isSecondaryActionHidden(row)) {

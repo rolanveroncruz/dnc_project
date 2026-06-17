@@ -283,3 +283,12 @@ mat-paginator {
         margin-right: 2px;
     }
 }
+
+.action-status-text {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    font-weight: 500;
+    color: #2e7d32;
+    white-space: nowrap;
+}
