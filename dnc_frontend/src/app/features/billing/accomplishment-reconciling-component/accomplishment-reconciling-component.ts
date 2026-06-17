@@ -63,6 +63,7 @@ export class AccomplishmentReconcilingComponent implements OnInit {
                 color: 'primary',
                 onClick: (row: any) => console.log("In onConfirmClick() onClick, row:", row),
                 hidden: (row: any) => row.is_reconciled,
+                hiddenText: 'Reconciled',
             }
         }
     ];

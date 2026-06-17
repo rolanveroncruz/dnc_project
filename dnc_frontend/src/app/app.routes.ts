@@ -52,6 +52,9 @@ import {
 import {RetainerFeesPaid} from './features/billing/DentistPayments/retainer-fees-paid/retainer-fees-paid';
 import {DentistVServices} from './features/billing/DentistPayments/dentist-vservices/dentist-vservices';
 import {DentistVHMOs} from './features/billing/DentistPayments/dentist-vhmos/dentist-vhmos';
+import {
+    DentistClaimsMatrixComponent
+} from './features/billing/DentistPayments/dentist-claims-matrix-component/dentist-claims-matrix-component';
 
 export const routes: Routes = [
   {
@@ -138,8 +141,8 @@ export const routes: Routes = [
               {path: 'dentists',
               children:[
                   {
-                      path:'claims',
-                      component: DentistClaims,
+                      path:'claims_matrix',
+                      component: DentistClaimsMatrixComponent,
                       title: 'Dentist Claims',
                   },
                   {
