@@ -1,5 +1,5 @@
 ### Nov 30, 2025
-Setup the repo and the starter code for this backend.
+Set up the repo and the starter code for this backend.
 
 
 ### Dec 2, 2025
@@ -10,14 +10,14 @@ Learning to use sea-orm.
 
 ### Dec 5, 2025
 * haven't started trying migrations yet.
-* will follow 02prod book re healthcheck endpoint.
+* will follow the prod book re health check endpoint.
 * The plan moving forward is to:
-    *   learn enough of SeaORM to be able to write migrations to setup the user+roles+permissions
+    *   learn enough of SeaORM to be able to write migrations to set up the user+roles+permissions
         tables with initial data.
     * Then implement the login endpoint, which requires checking the credentials against the database.
     * Refactor the code to automate testing the login endpoint.
     * Initialize the frontend to allow logging in.
-    * Setup the containerization and deployment.
+    * Set up the containerization and deployment.
 * Working on migrations now.
   1. dataobjects are what we want to give permissions to.
   2. permissions are specific actions like 'create,' 'read,' and 'update' on a dataobject.
@@ -32,7 +32,7 @@ Learning to use sea-orm.
 
 
 Dec 20, 2025
-* When login is successful, need to return a menu->activation map, which contains information about which menu items 
+* When login is successful, need to return a menu → activation map, which contains information about which menu items 
 * are activated for the user.
 
 ### Dec 21, 2025
@@ -43,14 +43,14 @@ Dec 20, 2025
 
 ### April 8, 2026
 * Fixed get_approval_code_for_verification_id() to have checks before releasing approval code.
-  - approval_code is now 9 characters AAA-BBB-CCC.
+  - approval_code is now nine characters AAA-BBB-CCC.
   - checks include not ALREADY having the same count(dentist+member+service_date) >=3.
-* Cleaned up get_master_list_for_endorsement vs get_master_list_members_for_endorsement_id.
+* Cleaned up get_master_list_for_endorsement vs. get_master_list_members_for_endorsement_id.
 
 ### April 9, 2026
 * migrations for creation and alteration, as well as generations for 
   - tooth_service_type (First time, Root Cleaning, Retreatment)
-  - tooth_surface, (Distal, Facial, Incisal, Lingual, Mesial, etc) and 
+  - tooth_surface, (Distal, Facial, Incisal, Lingual, Mesial, etc.) and 
   - verification 
 * added API for get_tooth_service_types() and get_tooth_surfaces()
 
@@ -58,5 +58,10 @@ Dec 20, 2025
 ### June 08, 2026
 There are more asks for revisions:
 - Verifications of dental services that need to record tooth surfaces need to be able to record different tooth surfaces, not just one.
-- Currently, only one tooth surface is recorderd per verification. 
+- Currently, only one tooth surface is recorded per verification. 
 - We need a new table to record verifications and tooth surfaces. 
+
+### June 11, 2026
+- Need to start work on Dentist Summary of Claims. Claims are payouts based on actual services done.
+- We need to do a matrix of dentists vs. services,
+- then matrix of dentists vs. hmos those services are credited to.

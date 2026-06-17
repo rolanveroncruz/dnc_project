@@ -76,6 +76,9 @@ use crate::handlers::{get_tooth_service_types, get_tooth_surfaces};
 use crate::handlers::{upload_high_end_file, list_uploaded_high_end_files, download_high_end_file};
 use crate::handlers::{save_member_name_for_company};
 use crate::handlers::{test_generate_hmo_billing_reports};
+use crate::handlers::{get_dentist_hmo_service_audit_matrix_handler};
+
+
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
         .route("/test_post", post(test_posting_json))
@@ -214,6 +217,12 @@ fn protected_routes() ->Router<AppState>{
         Dentist Retainer
         */
         .route("/dentist_clinics/reconciled_jobs", get(get_dentist_clinics_reconciled_jobs_count_last_12_months))
+        /*
+        Dentist Claims
+         */
+        .route("/dentists/claims_matrix", get(get_dentist_hmo_service_audit_matrix_handler))
+
+
 }
 
 async fn log_origin(req: Request, next: Next) -> Response {
