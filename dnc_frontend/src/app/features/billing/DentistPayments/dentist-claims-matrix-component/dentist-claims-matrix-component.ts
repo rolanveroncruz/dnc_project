@@ -41,12 +41,14 @@ export class DentistClaimsMatrixComponent {
 
     readonly matrix = signal<DentistHmoServiceAuditMatrixResponse | null>(null);
     readonly loading = signal(false);
+    readonly downloading = signal(false);
     readonly errorMessage = signal<string | null>(null);
 
     readonly today = formatDate(new Date(), 'yyyy-MM-dd', 'en-US');
+    readonly lastMonthToday = this.getSameDayPreviousMonth();
 
     readonly form = this.fb.nonNullable.group({
-        start_date: ['', Validators.required],
+        start_date: [this.lastMonthToday, Validators.required],
         end_date: [this.today, Validators.required],
     });
 
@@ -59,10 +61,31 @@ export class DentistClaimsMatrixComponent {
 
         return [
             'dentist_name',
+            'dentist_contract_name',
+            'period',
+            'claims',
+            'fps',
+            'mfps',
+            'subtotal',
             ...matrix.hmos.map(hmo => this.hmoColumnKey(hmo.hmo_id)),
             'row_total',
         ];
     });
+
+    private getSameDayPreviousMonth(): string {
+        const today = new Date();
+
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const day = today.getDate();
+
+        const previousMonthLastDay = new Date(year, month, 0).getDate();
+        const safeDay = Math.min(day, previousMonthLastDay);
+
+        const previousMonthDate = new Date(year, month - 1, safeDay);
+
+        return formatDate(previousMonthDate, 'yyyy-MM-dd', 'en-US');
+    }
 
     generateMatrix(): void {
         if (this.form.invalid) {
@@ -148,4 +171,63 @@ export class DentistClaimsMatrixComponent {
         const control = this.form.controls.end_date;
         return control.invalid && (control.dirty || control.touched);
     }
+    getClaims(row:DentistHmoAuditDentistRow ): number{
+        return row.total_nonbasic_fee;
+    }
+    getFPS(row:DentistHmoAuditDentistRow):number{
+        if (row.dentist_contract_id==32){
+            return row.total_basic_fee;
+        }
+        return 0;
+
+    }
+    getMFPS( row: DentistHmoAuditDentistRow): number{
+        if (row.dentist_contract_id!=32){
+            return row.total_basic_fee;
+        }
+        return 0;
+    }
+// ✅ Handles the actual browser download
+    downloadXlsx(): void {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+
+        const { start_date, end_date } = this.form.getRawValue();
+
+        if (start_date > end_date) {
+            this.errorMessage.set('Start date cannot be later than end date.');
+            return;
+        }
+
+        this.downloading.set(true);
+        this.errorMessage.set(null);
+
+        this.dentistHmoServicesMatrixService
+            .downloadSpreadsheet(start_date, end_date)
+            .subscribe({
+                next: blob => {
+                    // ✅ Create a temporary browser URL for the downloaded file
+                    const url = window.URL.createObjectURL(blob);
+
+                    // ✅ Create a temporary link and click it
+                    const anchor = document.createElement('a');
+                    anchor.href = url;
+                    anchor.download = `dentist-claims-matrix-${start_date}-to-${end_date}.xlsx`;
+                    anchor.click();
+
+                    // ✅ Clean up the temporary URL
+                    window.URL.revokeObjectURL(url);
+
+                    this.downloading.set(false);
+                },
+                error: err => {
+                    console.error('Failed to download dentist claims matrix XLSX', err);
+                    this.errorMessage.set('Failed to download dentist claims matrix XLSX.');
+                    this.downloading.set(false);
+                },
+            });
+    }
+
 }

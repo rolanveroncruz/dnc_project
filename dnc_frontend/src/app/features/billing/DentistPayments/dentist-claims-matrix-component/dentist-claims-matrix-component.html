@@ -51,6 +51,18 @@
                         (click)="clearMatrix()">
                         Clear
                     </button>
+
+                    <button
+                        mat-stroked-button
+                        type="button"
+                        [disabled]="loading() || downloading()"
+                        (click)="downloadXlsx()">
+                        @if (downloading()) {
+                            Downloading...
+                        } @else {
+                            Download XLSX
+                        }
+                    </button>
                 </div>
             </form>
 
@@ -104,6 +116,66 @@
                                 <td mat-footer-cell *matFooterCellDef>
                                     <strong>Grand Total</strong>
                                 </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="dentist_contract_name">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    Contract
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{ row.dentist_contract_name }}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="period">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    Period
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{ row.period }}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="claims">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    CLAIMS
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{ getClaims(row) }}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="fps">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    FPS
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{ getFPS(row) }}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="mfps">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    MFPS/MFPS-2/
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{getMFPS(row)}}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="subtotal">
+                                <th mat-header-cell *matHeaderCellDef>
+                                    SUBTOTAL
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    {{ row.period }}
+                                </td>
+                                <td mat-footer-cell *matFooterCellDef></td>
                             </ng-container>
 
                             <!-- Dynamic HMO Columns -->

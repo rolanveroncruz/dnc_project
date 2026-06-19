@@ -11,11 +11,20 @@ export interface DentistHmoServiceAuditMatrixResponse {
 
     hmos: DentistHmoAuditHmoColumn[];
     rows: DentistHmoAuditDentistRow[];
+    hmo_totals: DentistHmoAuditHmoTotal[];
 
     grand_total_qty: number;
     grand_total_fee: number;
+    grand_total_basic_fee: number;
+    grand_total_nonbasic_fee: number;
 }
-
+export interface DentistHmoAuditHmoTotal {
+    hmo_id: number;
+    hmo_short_name: string;
+    hmo_long_name: string;
+    total_qty: number;
+    total_fee: number;
+}
 export interface DentistHmoAuditHmoColumn {
     hmo_id: number;
     hmo_short_name: string;
@@ -25,11 +34,18 @@ export interface DentistHmoAuditHmoColumn {
 export interface DentistHmoAuditDentistRow {
     dentist_id: number;
     dentist_name: string;
+    dentist_contract_id: number;
+    dentist_contract_name: string;
+    period: string;
 
     cells: DentistHmoAuditCell[];
 
     row_total_qty: number;
     row_total_fee: number;
+
+    total_basic_fee: number;
+    total_nonbasic_fee: number;
+    subtotal_fee: number;
 }
 
 export interface DentistHmoAuditCell {
@@ -72,6 +88,16 @@ export class DentistHmoServicesMatrixService {
                 end_date: end_date,
             }
         });
+    }
+    downloadSpreadsheet(start_date:string, end_date:string,): Observable<Blob> {
+        return this.http.get(`${this.base}/download`,{
+            headers: this.authHeaders(),
+            params: {
+                start_date: start_date,
+                end_date: end_date,
+            },
+            responseType: 'blob',
+        })
     }
 
 }
