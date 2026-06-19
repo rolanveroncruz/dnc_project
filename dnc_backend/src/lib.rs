@@ -221,7 +221,7 @@ fn protected_routes() ->Router<AppState>{
         Dentist Claims
          */
         .route("/dentists/claims_matrix", get(get_dentist_hmo_service_audit_matrix_handler))
-        .route("/dentists/claims_matrix/excel", get(get_dentist_hmo_service_audit_matrix_excel_handler))
+        .route("/dentists/claims_matrix/download", get(get_dentist_hmo_service_audit_matrix_excel_handler))
 
 
 }

@@ -1,7 +1,6 @@
 use axum::body::Body;
 use axum::extract::{Query, State};
 use axum::response::Response;
-use axum::Json;
 use http::{header, StatusCode};
 use std::io::Cursor;
 use std::path::Path;
@@ -22,6 +21,10 @@ fn get_cell_total_fee_for_hmo(
         .map(|cell| cell.cell_total_fee)
         .unwrap_or(0.0)
 }
+
+// copy_template_row_styles copies the styles in the source row to the target row, for total_columns columns, in the worksheet sheet.
+
+
 
 // write_claims_matrix_to_workbook writes the claims matrix to a workbook.
 // It takes a report and a workbook as parameters and writes the report to the workbook.
@@ -63,6 +66,14 @@ fn write_claims_matrix_to_workbook(
         sheet
             .get_cell_mut((col, header_row))
             .set_value(hmo.hmo_short_name.as_str());
+    }
+    // 5 - insert the same number of rows as there are dentists in the report.rows.
+    // and style them like the original template row 7.
+
+    let data_row_count = report.rows.len() as u32;
+    if data_row_count > 0 {
+        sheet.insert_new_row(&first_data_row, &data_row_count);
+        // After insertion, the original template row 7 has moved down.
     }
 
     // 5- Write the dentist data by iterating over report.rows and writing each cell.
@@ -120,9 +131,16 @@ fn write_claims_matrix_to_workbook(
                 .set_value_number(total_fee);
         }
     }
+    if data_row_count >0 {
+        let left_over_template_row = first_data_row + data_row_count;
+        sheet.remove_row(&left_over_template_row, &1);
+    }
 
     Ok(())
 }
+
+
+
 // get_dentist_hmo_service_audit_matrix_excel_handler()
 // is an axum handler that
 // returns a spreadsheet report of the dentist hmo service audit matrix.

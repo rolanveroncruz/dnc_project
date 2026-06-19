@@ -524,10 +524,15 @@ pub fn build_dentist_hmo_service_audit_matrix(
     }
 
     rows.sort_by(|a, b| {
-        a.dentist_name
+        a.dentist_contract_name
             .to_lowercase()
-            .cmp(&b.dentist_name.to_lowercase())
-            .then(a.dentist_id.cmp(&b.dentist_id))
+            .cmp(&b.dentist_contract_name.to_lowercase())
+            .then(
+                a.dentist_name
+                    .to_lowercase()
+                    .cmp(&b.dentist_name.to_lowercase())
+                    .then(a.dentist_id.cmp(&b.dentist_id)),
+            )
     });
     let mut hmo_totals: Vec<DentistHmoAuditHmoTotal> = hmo_total_map
         .into_values()
