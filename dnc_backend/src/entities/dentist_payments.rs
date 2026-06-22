@@ -8,12 +8,13 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_clinic_year_month")]
     pub dentist_id: i32,
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_clinic_year_month")]
     pub clinic_id: i32,
-    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_clinic_year_month")]
     pub year: i32,
-    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_year_month")]
+    #[sea_orm(unique_key = "idx_dentist_payments_unique_dentist_clinic_year_month")]
     pub month: i32,
     pub report_name: Option<String>,
     pub date_paid: Option<DateTimeWithTimeZone>,

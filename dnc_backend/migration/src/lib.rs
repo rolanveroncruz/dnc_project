@@ -58,6 +58,7 @@ mod m20260525_125143_create_unified_view_of_verification_and_acc_reconciliation;
 mod m20260604_033257_create_view_dentists_jobs_count_per_month;
 mod m20260608_083301_create_table_verification_tooth_surfaces;
 mod m20260609_094757_alter_table_acc_reconciliation;
+mod m20260622_055235_update_dentist_payments_unique_index;
 
 pub struct Migrator;
 
@@ -123,6 +124,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260604_033257_create_view_dentists_jobs_count_per_month::Migration),
             Box::new(m20260608_083301_create_table_verification_tooth_surfaces::Migration),
             Box::new(m20260609_094757_alter_table_acc_reconciliation::Migration),
+            Box::new(m20260622_055235_update_dentist_payments_unique_index::Migration),
         ]
     }
 }
