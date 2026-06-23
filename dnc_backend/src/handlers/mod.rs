@@ -113,3 +113,4 @@ pub use api::billing_payments::dentist_retainers::{get_dentist_clinics_reconcile
 pub use api::billing_payments::dentist_matrices::core::get_dentist_hmo_service_audit_matrix_handler;
 pub use api::billing_payments::dentist_matrices::spreadsheet_report::get_dentist_hmo_service_audit_matrix_excel_handler;
 pub use api::billing_payments::dentist_payments::{get_dentist_payment_matrix_handler, make_dentist_payment_handler, delete_dentist_payment_handler};
+pub use api::billing_payments::dentist_retainer_report::{get_dentist_retainer_payables_handler};
