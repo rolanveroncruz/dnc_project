@@ -1,0 +1,132 @@
+<section class="contact-page">
+    <div class="contact-hero">
+        <p class="eyebrow">Contact Us</p>
+        <h1>How can we help you?</h1>
+        <p class="hero-subtitle">
+            Send us your message and our team will get back to you as soon as possible.
+        </p>
+    </div>
+
+    <section class="contact-content">
+        <mat-card class="contact-card">
+            <div class="form-header">
+                <div class="form-header-icon">
+                    <mat-icon>contact_support</mat-icon>
+                </div>
+
+                <div>
+                    <h2>Tell us more about yourself</h2>
+                    <p>
+                        Please choose the option that best describes you and provide your
+                        contact details below.
+                    </p>
+                </div>
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="submitMessage()" class="contact-form">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Tell us more about yourself</mat-label>
+
+                    <mat-select formControlName="person_type">
+                        @for (type of personTypes; track type.value) {
+                            <mat-option [value]="type.value">
+                                {{ type.label }}
+                            </mat-option>
+                        }
+                    </mat-select>
+
+                    @if (form.controls.person_type.hasError('required') && form.controls.person_type.touched) {
+                        <mat-error>Please select one option.</mat-error>
+                    }
+                </mat-form-field>
+
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Name</mat-label>
+                        <input matInput formControlName="name" [readonly]="isSubmitted()">
+
+                        @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+                            <mat-error>Name is required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Contact Nos.</mat-label>
+                        <input matInput formControlName="contact_numbers" [readonly]="isSubmitted()">
+
+                        @if (form.controls.contact_numbers.hasError('required') && form.controls.contact_numbers.touched) {
+                            <mat-error>Contact number is required.</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                @if (isMember) {
+                    <div class="member-fields">
+                        <h3>Member Information</h3>
+
+                        <div class="form-grid">
+                            <mat-form-field appearance="outline">
+                                <mat-label>Card Number</mat-label>
+                                <input matInput formControlName="card_number" [readonly]="isSubmitted()">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Company and HMO Enrolled</mat-label>
+                                <input matInput formControlName="company_and_hmo" [readonly]="isSubmitted()">
+                            </mat-form-field>
+                        </div>
+                    </div>
+                }
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Message</mat-label>
+                    <textarea
+                        matInput
+                        formControlName="message"
+                        rows="6"
+                        [readonly]="isSubmitted()">
+                    </textarea>
+
+                    @if (form.controls.message.hasError('required') && form.controls.message.touched) {
+                        <mat-error>Message is required.</mat-error>
+                    }
+                </mat-form-field>
+
+                <div class="submit-row">
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="!canSubmit">
+                        Send Message
+                    </button>
+                </div>
+            </form>
+
+            @if (isSubmitted()) {
+                <div class="thank-you-message">
+                    <mat-icon>check_circle</mat-icon>
+
+                    <div>
+                        <h3>Thank you for your message.</h3>
+
+                        <p>
+                            Please expect a response within <strong>1–2 working days</strong>.
+                        </p>
+
+                        <p>
+                            If you’d like to follow up, feel free to reach us at:
+                        </p>
+
+                        <div class="contact-numbers">
+                            <a href="tel:+63289117777">(02) 8911-7777</a>
+                            <a href="tel:+639455387714">0945-538 7714</a>
+                            <a href="tel:+639238095376">0923-809 5376</a>
+                            <a href="tel:+639167615277">0916-761 5277</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </mat-card>
+    </section>
+</section>

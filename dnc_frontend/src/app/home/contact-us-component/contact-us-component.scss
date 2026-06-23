@@ -1,0 +1,228 @@
+$primary-color: #3f51b5;
+$text-color: #2f2f2f;
+$muted-text: #666;
+$card-border: #e4e7ec;
+$accent-bg: #e8eaf6;
+$success-color: #2e7d32;
+
+.contact-page {
+    background: #fff;
+    color: $text-color;
+}
+
+.contact-hero {
+    padding: 80px 24px 56px;
+    text-align: center;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
+        linear-gradient(135deg, #e8eaf6, #ffffff);
+    border-bottom: 1px solid $card-border;
+
+    .eyebrow {
+        margin: 0 0 12px;
+        color: $primary-color;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+
+    h1 {
+        max-width: 850px;
+        margin: 0 auto 20px;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.12;
+        font-weight: 800;
+        color: $primary-color;
+    }
+
+    .hero-subtitle {
+        max-width: 720px;
+        margin: 0 auto;
+        font-size: 1.2rem;
+        line-height: 1.7;
+        color: $muted-text;
+    }
+}
+
+.contact-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 56px 24px 72px;
+}
+
+.contact-card {
+    padding: 36px;
+    border-radius: 24px;
+    border: 1px solid $card-border;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.08);
+}
+
+.form-header {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 32px;
+
+    .form-header-icon {
+        flex: 0 0 56px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: $accent-bg;
+        color: $primary-color;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+            font-size: 30px;
+            width: 30px;
+            height: 30px;
+        }
+    }
+
+    h2 {
+        margin: 0 0 8px;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: $text-color;
+    }
+
+    p {
+        margin: 0;
+        color: $muted-text;
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.member-fields {
+    padding: 24px;
+    border-radius: 18px;
+    background: #fafbff;
+    border: 1px solid #dfe3f3;
+
+    h3 {
+        margin: 0 0 18px;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: $text-color;
+    }
+}
+
+.submit-row {
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        min-width: 160px;
+        min-height: 44px;
+    }
+}
+
+.thank-you-message {
+    margin-top: 32px;
+    padding: 28px;
+    border-radius: 20px;
+    background: #e8f5e9;
+    color: $success-color;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+
+    mat-icon {
+        flex: 0 0 auto;
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+    }
+
+    h3 {
+        margin: 0 0 10px;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+
+    p {
+        margin: 0 0 10px;
+        color: #355e3b;
+        line-height: 1.6;
+    }
+
+    .contact-numbers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: white;
+            color: $success-color;
+            text-decoration: none;
+            font-weight: 700;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+@media (max-width: 750px) {
+    .contact-hero {
+        padding: 56px 20px 40px;
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+        }
+    }
+
+    .contact-content {
+        padding: 40px 20px 56px;
+    }
+
+    .contact-card {
+        padding: 28px;
+    }
+
+    .form-header {
+        flex-direction: column;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .submit-row {
+        justify-content: stretch;
+
+        button {
+            width: 100%;
+        }
+    }
+
+    .thank-you-message {
+        flex-direction: column;
+    }
+}

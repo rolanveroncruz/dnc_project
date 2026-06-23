@@ -1,0 +1,201 @@
+<section class="join-page">
+    <div class="join-hero">
+        <p class="eyebrow">How to Join</p>
+        <h1>Build your practice with DNC.</h1>
+        <p class="hero-subtitle">
+            Whether you’re a new clinic or an established practice looking to grow
+            referrals, DNC helps bring patients directly to you.
+        </p>
+    </div>
+
+    <section class="join-content">
+        <mat-card class="intro-card">
+            <div class="intro-icon">
+                <mat-icon>groups</mat-icon>
+            </div>
+
+            <div>
+                <h2>Grow with one of the largest dental care programs in the Philippines.</h2>
+                <p>
+                    Gain access to one of the largest dental care programs in the Philippines —
+                    no need to apply to or bill multiple HMOs.
+                </p>
+                <p>
+                    We pay you promptly and efficiently, so you can focus on what matters most:
+                    your patients.
+                </p>
+            </div>
+        </mat-card>
+
+        <mat-card class="application-card">
+            <div class="form-header">
+                <h2>Dentist / Clinic Application</h2>
+                <p>
+                    Please provide your contact details and upload the required documents.
+                </p>
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="submitApplication()" class="application-form">
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Name</mat-label>
+                        <input matInput formControlName="name" [readonly]="isSubmitted()">
+
+                        @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+                            <mat-error>Name is required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Clinic Name</mat-label>
+                        <input matInput formControlName="clinic_name" [readonly]="isSubmitted()">
+
+                        @if (form.controls.clinic_name.hasError('required') && form.controls.clinic_name.touched) {
+                            <mat-error>Clinic name is required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Contact Numbers</mat-label>
+                        <input matInput formControlName="contact_numbers" [readonly]="isSubmitted()">
+
+                        @if (form.controls.contact_numbers.hasError('required') && form.controls.contact_numbers.touched) {
+                            <mat-error>Contact number is required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Email Address</mat-label>
+                        <input matInput formControlName="email" [readonly]="isSubmitted()">
+
+                        @if (form.controls.email.hasError('required') && form.controls.email.touched) {
+                            <mat-error>Email address is required.</mat-error>
+                        }
+
+                        @if (form.controls.email.hasError('email') && form.controls.email.touched) {
+                            <mat-error>Please enter a valid email address.</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <div class="upload-section">
+                    <h3>Required Documents</h3>
+
+                    <div class="upload-grid">
+                        <div class="upload-box">
+                            <div class="upload-info">
+                                <mat-icon>description</mat-icon>
+                                <div>
+                                    <h4>PRC Dental License</h4>
+                                    <p>
+                                        {{ prcLicenseFile()?.name || 'No file selected yet.' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="upload-actions">
+                                <input
+                                    #prcInput
+                                    type="file"
+                                    hidden
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    [disabled]="isSubmitted()"
+                                    (change)="onPrcLicenseSelected($event)"
+                                >
+
+                                <button
+                                    mat-stroked-button
+                                    type="button"
+                                    [disabled]="isSubmitted()"
+                                    (click)="prcInput.click()">
+                                    Upload
+                                </button>
+
+                                @if (prcLicenseFile() && !isSubmitted()) {
+                                    <button mat-button type="button" color="warn" (click)="clearPrcLicense()">
+                                        Clear
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="upload-box">
+                            <div class="upload-info">
+                                <mat-icon>receipt_long</mat-icon>
+                                <div>
+                                    <h4>BIR Form 2303</h4>
+                                    <p>
+                                        {{ bir2303File()?.name || 'No file selected yet.' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="upload-actions">
+                                <input
+                                    #birInput
+                                    type="file"
+                                    hidden
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    [disabled]="isSubmitted()"
+                                    (change)="onBir2303Selected($event)"
+                                >
+
+                                <button
+                                    mat-stroked-button
+                                    type="button"
+                                    [disabled]="isSubmitted()"
+                                    (click)="birInput.click()">
+                                    Upload
+                                </button>
+
+                                @if (bir2303File() && !isSubmitted()) {
+                                    <button mat-button type="button" color="warn" (click)="clearBir2303()">
+                                        Clear
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-row">
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="!canSubmit">
+
+                        @if (isSubmitting()) {
+                            <mat-progress-spinner
+                                diameter="20"
+                                mode="indeterminate">
+                            </mat-progress-spinner>
+                            Submitting...
+                        } @else {
+                            Submit Application
+                        }
+                    </button>
+                </div>
+                @if (submitError()) {
+                    <div class="submit-error">
+                        <mat-icon>error</mat-icon>
+                        <span>{{ submitError() }}</span>
+                    </div>
+                }
+            </form>
+
+            @if (isSubmitted()) {
+                <div class="thank-you-message">
+                    <mat-icon>check_circle</mat-icon>
+                    <div>
+                        <h3>Thank you for your application.</h3>
+                        <p>
+                            Your information has been received. DNC will review your submission
+                            and contact you through the details provided.
+                        </p>
+                    </div>
+                </div>
+            }
+        </mat-card>
+    </section>
+</section>

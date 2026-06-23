@@ -1,0 +1,244 @@
+$primary-color: #3f51b5;
+$text-color: #2f2f2f;
+$muted-text: #666;
+$soft-bg: #f5f7fa;
+$card-border: #e4e7ec;
+$accent-bg: #e8eaf6;
+
+.members-info-page {
+    background: #fff;
+    color: $text-color;
+}
+
+.members-hero {
+    padding: 80px 24px 56px;
+    text-align: center;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
+        linear-gradient(135deg, #e8eaf6, #ffffff);
+    border-bottom: 1px solid $card-border;
+
+    .eyebrow {
+        margin: 0 0 12px;
+        color: $primary-color;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+
+    h1 {
+        max-width: 850px;
+        margin: 0 auto 20px;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.12;
+        font-weight: 800;
+        color: $primary-color;
+    }
+
+    .hero-subtitle {
+        max-width: 760px;
+        margin: 0 auto;
+        font-size: 1.2rem;
+        line-height: 1.7;
+        color: $muted-text;
+    }
+}
+
+.steps-section {
+    background: #fff;
+    padding: 64px 24px;
+}
+
+.steps-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.section-intro {
+    text-align: center;
+    margin-bottom: 40px;
+
+    h2 {
+        margin: 0 0 12px;
+        font-size: 2rem;
+        font-weight: 800;
+        color: $text-color;
+    }
+
+    p {
+        max-width: 720px;
+        margin: 0 auto;
+        color: $muted-text;
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+}
+
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.step-card {
+    position: relative;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 28px;
+    border: 1px solid $card-border;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 32px rgba(16, 24, 40, 0.12);
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 6px;
+        height: 100%;
+        background: $primary-color;
+    }
+}
+
+.step-number {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: $primary-color;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.step-content {
+    flex: 1;
+    min-width: 0;
+
+    .step-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: $accent-bg;
+        color: $primary-color;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 14px;
+
+        mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+        }
+    }
+
+    h3 {
+        margin: 0 0 10px;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: $text-color;
+    }
+
+    p {
+        margin: 0;
+        color: $muted-text;
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+}
+
+.reminder-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px 72px;
+}
+
+.reminder-card {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 32px;
+    border-radius: 24px;
+    background: $primary-color;
+    color: white;
+    box-shadow: 0 18px 40px rgba(63, 81, 181, 0.25);
+
+    .reminder-icon {
+        flex: 0 0 52px;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+        }
+    }
+
+    .reminder-content {
+        h2 {
+            margin: 0 0 8px;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        p {
+            margin: 0;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            opacity: 0.94;
+        }
+    }
+}
+
+@media (max-width: 700px) {
+    .members-hero {
+        padding: 56px 20px 40px;
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+        }
+    }
+
+    .steps-section {
+        padding: 48px 20px;
+    }
+
+    .step-card {
+        flex-direction: column;
+        padding: 24px;
+    }
+
+    .step-number {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+
+    .reminder-section {
+        padding: 0 20px 56px;
+    }
+
+    .reminder-card {
+        flex-direction: column;
+        padding: 28px;
+    }
+}
