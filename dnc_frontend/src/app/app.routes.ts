@@ -55,6 +55,12 @@ import {DentistVHMOs} from './features/billing/DentistPayments/dentist-vhmos/den
 import {
     DentistClaimsMatrixComponent
 } from './features/billing/DentistPayments/dentist-claims-matrix-component/dentist-claims-matrix-component';
+import {AboutDNCComponent} from './home/about-dnccomponent/about-dnccomponent';
+import {HomebodyComponent} from './home/homebody-component/homebody-component';
+import {FindDentistComponent} from './home/find-dentist-component/find-dentist-component';
+import {MembersInfoComponent} from './home/members-info-component/members-info-component';
+import {HowToJoinComponent} from './home/how-to-join-component/how-to-join-component';
+import {ContactUsComponent} from './home/contact-us-component/contact-us-component';
 
 export const routes: Routes = [
   {
@@ -182,6 +188,14 @@ export const routes: Routes = [
   },
   { path: '',
   component: HomeComponent,
-  title: 'Home'}
+      children: [
+          { path: '', component: HomebodyComponent, title: 'Home'},
+          { path: 'about_dnc', component: AboutDNCComponent, title: 'About DNC'},
+          { path: 'find_dentist', component: FindDentistComponent, title: 'Find My Dentist'},
+          { path: 'members_info', component: MembersInfoComponent, title: 'Members Info Component'},
+          { path: 'how_to_join', component: HowToJoinComponent, title: 'How To Join'},
+          { path: 'contact_us', component: ContactUsComponent, title: 'Comtact Us'},
+      ]
+  }
 
 ];
