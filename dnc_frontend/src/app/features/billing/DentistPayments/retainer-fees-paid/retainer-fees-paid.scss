@@ -1,0 +1,79 @@
+.page-card {
+    margin: 16px;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 32px;
+}
+
+.error-message {
+    padding: 12px 16px;
+    border-radius: 4px;
+    background: #fdecea;
+    color: #b00020;
+    margin-bottom: 16px;
+}
+
+.empty-message {
+    padding: 24px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.table-wrapper {
+    overflow: auto;
+    max-width: 100%;
+}
+
+.payments-table {
+    width: max-content;
+    min-width: 100%;
+}
+
+th,
+td {
+    white-space: nowrap;
+}
+
+.dentist-column {
+    min-width: 180px;
+}
+
+.clinic-column {
+    min-width: 220px;
+}
+
+.month-header {
+    min-width: 96px;
+    text-align: center;
+}
+
+.payment-cell {
+    text-align: center;
+}
+
+.sticky-column {
+    position: sticky;
+    z-index: 2;
+    background: inherit;
+}
+
+.dentist-column.sticky-column {
+    left: 0;
+}
+
+.clinic-column.sticky-column {
+    left: 180px;
+}
+
+th.sticky-column {
+    z-index: 3;
+}

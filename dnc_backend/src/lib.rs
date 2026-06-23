@@ -39,7 +39,7 @@ use handlers::JwtConfig;
 use std::sync::Arc;
 use axum::routing::delete;
 use handlers::{require_jwt};
-use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code, get_companies_for_hmo_id, get_utilization_report, download_utilization_report, get_master_lists_with_members_for_endorsement, get_generated_hmo_billing_reports, download_generated_report, get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts, get_dentist_clinics_reconciled_jobs_count_last_12_months, get_dentist_hmo_service_audit_matrix_excel_handler};
+use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_service, patch_dental_service, check_approval_code, get_companies_for_hmo_id, get_utilization_report, download_utilization_report, get_master_lists_with_members_for_endorsement, get_generated_hmo_billing_reports, download_generated_report, get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts, get_dentist_clinics_reconciled_jobs_count_last_12_months, get_dentist_hmo_service_audit_matrix_excel_handler, get_dentist_payment_matrix_handler, make_dentist_payment_handler, delete_dentist_payment_handler};
 use crate::handlers::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id};
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
@@ -222,7 +222,12 @@ fn protected_routes() ->Router<AppState>{
          */
         .route("/dentists/claims_matrix", get(get_dentist_hmo_service_audit_matrix_handler))
         .route("/dentists/claims_matrix/download", get(get_dentist_hmo_service_audit_matrix_excel_handler))
-
+        /*
+        Dentist Payments
+         */
+        .route("/dentists/payments/matrix", get(get_dentist_payment_matrix_handler))
+        .route("/dentists/payments/make_payment", get(make_dentist_payment_handler))
+        .route("/dentists/payments/{{payment_id}}", get(delete_dentist_payment_handler))
 
 }
 
