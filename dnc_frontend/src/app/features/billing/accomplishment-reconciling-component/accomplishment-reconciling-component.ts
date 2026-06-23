@@ -53,6 +53,7 @@ export class AccomplishmentReconcilingComponent implements OnInit {
         {key: 'dentist_name', label: 'Dentist'},
         {key: 'member_name', label: 'Member'},
         {key: 'dental_service_name', label: 'Procedure',},
+        {key: 'tooth_id', label: 'Tooth'},
         {key: 'date_service_performed', label: 'Service Date'},
         {key: 'approval_code', label: 'Approval Code'},
         {
