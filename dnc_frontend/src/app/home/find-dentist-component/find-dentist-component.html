@@ -1,0 +1,137 @@
+<section class="find-dentist-page">
+    <div class="find-hero">
+        <p class="eyebrow">Find My Dentist</p>
+        <h1>Search for an accredited dentist or clinic.</h1>
+        <p class="hero-subtitle">
+            Enter a dentist’s name, clinic name, address, city, or region to find
+            matching DNC accredited dentists and clinics.
+        </p>
+    </div>
+
+    <section class="find-content">
+        <mat-card class="search-card">
+            <div class="search-header">
+                <div class="search-icon">
+                    <mat-icon>search</mat-icon>
+                </div>
+
+                <div>
+                    <h2>Dentist and Clinic Search</h2>
+                    <p>
+                        You may search by dentist, clinic, address, city, or region.
+                    </p>
+                </div>
+            </div>
+
+            <form class="search-form" (submit)="$event.preventDefault(); searchDentists()">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Dentist, clinic, address, city, or region</mat-label>
+
+                    <input
+                        matInput
+                        [formControl]="searchControl"
+                        placeholder="Example: Santos, Makati, Quezon City, NCR"
+                    >
+
+                    @if (searchControl.hasError('required') && searchControl.touched) {
+                        <mat-error>Please enter a search term.</mat-error>
+                    }
+                </mat-form-field>
+
+                <div class="search-actions">
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="isSearching()">
+                        @if (isSearching()) {
+                            <mat-progress-spinner
+                                diameter="20"
+                                mode="indeterminate">
+                            </mat-progress-spinner>
+                            Searching...
+                        } @else {
+                            Search
+                        }
+                    </button>
+
+                    <button
+                        mat-stroked-button
+                        type="button"
+                        [disabled]="isSearching()"
+                        (click)="clearSearch()">
+                        Clear
+                    </button>
+                </div>
+            </form>
+
+            @if (searchError()) {
+                <div class="search-error">
+                    <mat-icon>error</mat-icon>
+                    <span>{{ searchError() }}</span>
+                </div>
+            }
+        </mat-card>
+
+        @if (hasSearched() && !isSearching() && !searchError()) {
+            <section class="results-section">
+                <div class="results-header">
+                    <h2>Search Results</h2>
+
+                    @if (results().length > 0) {
+                        <p>
+                            Found {{ results().length }}
+                            {{ results().length === 1 ? 'matching result' : 'matching results' }}.
+                        </p>
+                    }
+                </div>
+
+                @if (results().length === 0) {
+                    <mat-card class="empty-card">
+                        <mat-icon>person_search</mat-icon>
+                        <h3>No matching dentists or clinics found.</h3>
+                        <p>
+                            Try searching with a different dentist name, clinic name,
+                            address, city, or region.
+                        </p>
+                    </mat-card>
+                } @else {
+                    <div class="results-grid">
+                        @for (result of results(); track result.dentist_id + '-' + result.clinic_id) {
+                            <mat-card class="result-card">
+                                <div class="result-main">
+                                    <div class="dentist-icon">
+                                        <mat-icon>medical_services</mat-icon>
+                                    </div>
+
+                                    <div>
+                                        <h3>{{ result.dentist_name }}</h3>
+                                        <p class="clinic-name">{{ result.clinic_name }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="result-details">
+                                    <p>
+                                        <mat-icon inline>place</mat-icon>
+                                        <span>
+                                            {{ result.clinic_address }},
+                                            {{ result.city_name }},
+                                            {{ result.region_name }}
+                                        </span>
+                                    </p>
+
+                                    @if (result.contact_numbers) {
+                                        <p>
+                                            <mat-icon inline>phone</mat-icon>
+                                            <span>{{ result.contact_numbers }}</span>
+                                        </p>
+                                    }
+                                </div>
+                            </mat-card>
+                        }
+                    </div>
+                }
+            </section>
+        }
+    </section>
+</section>
