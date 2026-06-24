@@ -4,6 +4,7 @@ $muted-text: #666;
 $card-border: #e4e7ec;
 $accent-bg: #e8eaf6;
 $error-color: #c62828;
+$info-color: #3f51b5;
 
 .find-dentist-page {
     background: #fff;
@@ -99,22 +100,43 @@ $error-color: #c62828;
 
 .search-form {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.search-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
 }
 
 .search-field {
-    flex: 1;
+    width: 100%;
+}
+
+.validation-error {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #eef2ff;
+    color: $info-color;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+
+    mat-icon {
+        flex: 0 0 auto;
+    }
 }
 
 .search-actions {
     display: flex;
     gap: 10px;
-    padding-top: 4px;
+    justify-content: flex-end;
 
     button {
-        min-height: 52px;
-        min-width: 110px;
+        min-height: 46px;
+        min-width: 120px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -132,6 +154,10 @@ $error-color: #c62828;
     align-items: center;
     gap: 10px;
     font-weight: 500;
+
+    mat-icon {
+        flex: 0 0 auto;
+    }
 }
 
 .results-section {
@@ -276,21 +302,59 @@ $error-color: #c62828;
         flex-direction: column;
     }
 
-    .search-form {
-        flex-direction: column;
-    }
-
-    .search-field,
-    .search-actions,
-    .search-actions button {
-        width: 100%;
+    .search-fields {
+        grid-template-columns: 1fr;
     }
 
     .search-actions {
-        padding-top: 0;
+        justify-content: stretch;
+
+        button {
+            width: 100%;
+        }
     }
 
     .results-grid {
         grid-template-columns: 1fr;
     }
+}
+
+@media (max-width: 520px) {
+    .search-actions {
+        flex-direction: column;
+    }
+}
+// ✅ ADD special services styling
+.special-services {
+    margin-top: 6px;
+}
+
+.special-services-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $primary-color;
+    font-weight: 700;
+    margin-bottom: 10px;
+
+    mat-icon {
+        color: $primary-color;
+    }
+}
+
+.special-services-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.special-service-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: $accent-bg;
+    color: $primary-color;
+    font-size: 0.85rem;
+    font-weight: 700;
 }

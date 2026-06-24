@@ -1,6 +1,6 @@
 import {Component, inject, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {MatCard} from '@angular/material/card';
 import {MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
@@ -32,41 +32,49 @@ import {
 export class FindDentistComponent {
     private readonly findDentistService = inject(FindDentistService);
 
-    readonly searchControl = new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required],
+    readonly form = new FormGroup({
+        name_query: new FormControl('', {
+            nonNullable: true,
+        }),
+        location_query: new FormControl('', {
+            nonNullable: true,
+        }),
     });
 
     readonly results = signal<PublicDentistSearchResult[]>([]);
     readonly hasSearched = signal(false);
     readonly isSearching = signal(false);
     readonly searchError = signal<string | null>(null);
+    readonly validationError = signal<string | null>(null);
 
     searchDentists(): void {
-        if (this.searchControl.invalid) {
-            this.searchControl.markAsTouched();
+        const rawValue = this.form.getRawValue();
+
+        const nameQuery = rawValue.name_query.trim();
+        const locationQuery = rawValue.location_query.trim();
+
+        if (!nameQuery && !locationQuery) {
+            this.validationError.set(
+                'Please enter a dentist or clinic name, address, city, or zip code.'
+            );
+            this.form.markAllAsTouched();
             return;
         }
 
-        const query = this.searchControl.value.trim();
-
-        if (!query) {
-            this.searchControl.markAsTouched();
-            return;
-        }
-
+        this.validationError.set(null);
+        this.searchError.set(null);
         this.hasSearched.set(true);
         this.isSearching.set(true);
-        this.searchError.set(null);
         this.results.set([]);
 
-        this.findDentistService.searchDentists(query).subscribe({
+        this.findDentistService.searchDentists(nameQuery, locationQuery).subscribe({
             next: (results) => {
                 this.results.set(results);
                 this.isSearching.set(false);
             },
             error: (error) => {
                 console.error('Error searching dentists:', error);
+
                 this.isSearching.set(false);
                 this.searchError.set(
                     'Sorry, we could not complete your search. Please try again.'
@@ -76,14 +84,15 @@ export class FindDentistComponent {
     }
 
     clearSearch(): void {
-        this.searchControl.setValue('');
+        this.form.reset({
+            name_query: '',
+            location_query: '',
+        });
+
         this.results.set([]);
         this.hasSearched.set(false);
         this.isSearching.set(false);
         this.searchError.set(null);
-    }
-
-    get fullAddressLabel(): string {
-        return 'Address, City, or Region';
+        this.validationError.set(null);
     }
 }

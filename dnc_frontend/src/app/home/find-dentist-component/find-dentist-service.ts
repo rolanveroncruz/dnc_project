@@ -11,7 +11,10 @@ export interface PublicDentistSearchResult {
     clinic_address: string;
     city_name: string;
     region_name: string;
+    zip_code: string | null;
     contact_numbers: string | null;
+    schedule: string | null;
+    special_services: string[];
 }
 
 @Injectable({
@@ -21,12 +24,13 @@ export class FindDentistService {
     private readonly http = inject(HttpClient);
     private readonly baseUrl = environment.apiUrl;
 
-    searchDentists(query: string): Observable<PublicDentistSearchResult[]> {
+    searchDentists(nameQuery: string, locationQuery:string): Observable<PublicDentistSearchResult[]> {
         return this.http.get<PublicDentistSearchResult[]>(
             `${this.baseUrl}/public/dentists/search`,
             {
                 params: {
-                    q: query,
+                    name: nameQuery,
+                    location: locationQuery,
                 },
             }
         );

@@ -3,8 +3,8 @@
         <p class="eyebrow">Find My Dentist</p>
         <h1>Search for an accredited dentist or clinic.</h1>
         <p class="hero-subtitle">
-            Enter a dentist’s name, clinic name, address, city, or region to find
-            matching DNC accredited dentists and clinics.
+            Enter a dentist or clinic name, and optionally narrow your search by
+            address, city, or zip code.
         </p>
     </div>
 
@@ -18,25 +18,45 @@
                 <div>
                     <h2>Dentist and Clinic Search</h2>
                     <p>
-                        You may search by dentist, clinic, address, city, or region.
+                        Search by dentist name, clinic name, address, city, or zip code.
+                        You may fill in one field or both fields.
                     </p>
                 </div>
             </div>
 
-            <form class="search-form" (submit)="$event.preventDefault(); searchDentists()">
-                <mat-form-field appearance="outline" class="search-field">
-                    <mat-label>Dentist, clinic, address, city, or region</mat-label>
+            <form
+                [formGroup]="form"
+                class="search-form"
+                (ngSubmit)="searchDentists()">
 
-                    <input
-                        matInput
-                        [formControl]="searchControl"
-                        placeholder="Example: Santos, Makati, Quezon City, NCR"
-                    >
+                <div class="search-fields">
+                    <mat-form-field appearance="outline" class="search-field">
+                        <mat-label>Dentist or Clinic Name</mat-label>
 
-                    @if (searchControl.hasError('required') && searchControl.touched) {
-                        <mat-error>Please enter a search term.</mat-error>
-                    }
-                </mat-form-field>
+                        <input
+                            matInput
+                            formControlName="name_query"
+                            placeholder="Example: Santos or Bright Smile Dental"
+                        >
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="search-field">
+                        <mat-label>Address, City, or Zip Code</mat-label>
+
+                        <input
+                            matInput
+                            formControlName="location_query"
+                            placeholder="Example: Makati, Quezon City, 1200"
+                        >
+                    </mat-form-field>
+                </div>
+
+                @if (validationError()) {
+                    <div class="validation-error">
+                        <mat-icon>info</mat-icon>
+                        <span>{{ validationError() }}</span>
+                    </div>
+                }
 
                 <div class="search-actions">
                     <button
@@ -92,7 +112,7 @@
                         <h3>No matching dentists or clinics found.</h3>
                         <p>
                             Try searching with a different dentist name, clinic name,
-                            address, city, or region.
+                            address, city, or zip code.
                         </p>
                     </mat-card>
                 } @else {
@@ -115,8 +135,10 @@
                                         <mat-icon inline>place</mat-icon>
                                         <span>
                                             {{ result.clinic_address }},
-                                            {{ result.city_name }},
-                                            {{ result.region_name }}
+                                            {{ result.city_name }}
+                                            @if (result.region_name) {
+                                                , {{ result.region_name }}
+                                            }
                                         </span>
                                     </p>
 
@@ -125,6 +147,23 @@
                                             <mat-icon inline>phone</mat-icon>
                                             <span>{{ result.contact_numbers }}</span>
                                         </p>
+                                    }
+
+                                    @if (result.special_services && result.special_services.length > 0) {
+                                        <div class="special-services">
+                                            <div class="special-services-heading">
+                                                <mat-icon inline>star</mat-icon>
+                                                <span>Special Services</span>
+                                            </div>
+
+                                            <div class="special-services-list">
+                                                @for (service of result.special_services; track service) {
+                                                    <span class="special-service-chip">
+                        {{ service }}
+                    </span>
+                                                }
+                                            </div>
+                                        </div>
                                     }
                                 </div>
                             </mat-card>
