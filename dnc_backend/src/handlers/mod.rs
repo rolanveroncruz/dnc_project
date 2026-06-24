@@ -9,6 +9,7 @@ mod helpers;
 mod api;
 mod app_config;
 mod reports;
+pub mod public;
 
 pub use api::dental_services::{get_dental_services, patch_dental_service, post_dental_service};
 pub use api::dental_service_type::get_dental_service_types;

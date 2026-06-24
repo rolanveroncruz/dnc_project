@@ -13,6 +13,7 @@ pub mod dental_clinic;
 pub mod dental_service;
 pub mod dental_service_type;
 pub mod dentist;
+pub mod dentist_applications;
 pub mod dentist_clinic;
 pub mod dentist_company_relations;
 pub mod dentist_contract;
