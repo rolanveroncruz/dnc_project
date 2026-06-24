@@ -61,6 +61,9 @@ import {FindDentistComponent} from './home/find-dentist-component/find-dentist-c
 import {MembersInfoComponent} from './home/members-info-component/members-info-component';
 import {HowToJoinComponent} from './home/how-to-join-component/how-to-join-component';
 import {ContactUsComponent} from './home/contact-us-component/contact-us-component';
+import {WebsiteData} from './features/website/website-data/website-data';
+import {WebsiteApplications} from './features/website/website-applications/website-applications';
+import {WebsiteInquiries} from './features/website/website-inquiries/website-inquiries';
 
 export const routes: Routes = [
   {
@@ -120,6 +123,16 @@ export const routes: Routes = [
               { path: 'high_end_verification', component:HighEndVerification, title: 'High End Verifications'},
           ]
       }, // end of 'csr'
+        {
+            path: 'website',
+            title :'Website Data',
+            children:[
+                {path: '', component: WebsiteData, title: 'Website Data'},
+                {path: 'applications',component: WebsiteApplications, title: 'Website Dentist Applications'},
+                {path: 'inquiries',component: WebsiteInquiries, title: 'Website Inquiries'}
+            ]
+
+        },
       {
         path: 'reports',
         component: ReportsHome,

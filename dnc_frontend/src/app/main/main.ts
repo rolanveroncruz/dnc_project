@@ -18,7 +18,7 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { DomSanitizer } from '@angular/platform-browser';
 import { trace } from '@opentelemetry/api';
 
-type TopNavKey = 'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
+type TopNavKey = 'website'|'dashboard' | 'csr' | 'reports' | 'billing' | 'setup';
 
 interface TopNavItem {
     key: TopNavKey;
@@ -78,6 +78,7 @@ export class MainComponent implements OnInit {
     private sanitizer = inject(DomSanitizer);
 
     topNavItems: TopNavItem[] = [
+        { key: 'website', label: 'Website', icon: 'dashboard', route: '/main/website', disabled: false},
         { key: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/main/dashboard', disabled: true },
         { key: 'csr', label: 'CSR', icon: 'build', route: '/main/csr', disabled: true },
         { key: 'reports', label: 'Reports', icon: 'bar_chart', route: '/main/reports', disabled: true },
@@ -86,6 +87,10 @@ export class MainComponent implements OnInit {
     ];
 
     sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
+        website: [
+            {label: 'Applications', icon: 'apps', route: '/main/website/applications', disabled: false},
+            {label: 'Inquiries', icon: 'apps', route: '/main/website/inquiries', disabled: false},
+        ],
         dashboard: [
             { label: 'Operations', icon: 'dashboard', route: '/main/dashboard/operations', disabled: true },
             { label: 'Outliers', icon: 'timeline', route: '/main/dashboard/outliers', disabled: true },
@@ -403,7 +408,7 @@ export class MainComponent implements OnInit {
 
         const firstSegment = (segments[1] ?? 'dashboard') as TopNavKey;
 
-        const validKeys: TopNavKey[] = ['dashboard', 'csr', 'reports', 'billing', 'setup'];
+        const validKeys: TopNavKey[] = ['website', 'dashboard', 'csr', 'reports', 'billing', 'setup'];
 
         this.activeTopNav = validKeys.includes(firstSegment)
             ? firstSegment
