@@ -11,7 +11,7 @@ use chrono::Datelike;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 
-use sea_orm::{ConnectionTrait, DatabaseBackend, DatabaseConnection, Statement};
+use sea_orm::{DatabaseBackend, DatabaseConnection, Statement};
 use crate::AppState;
 
 // region: Structures
@@ -89,7 +89,7 @@ pub enum DentistRetainerPayablesError {
 // region: get_dentist_retainer_payables
 //
 // get_dentist_retainer_payables from a Query { year, month}, returns
-// a response {year, month, rows of DentistRetainerPayableRow {dentist, dental_clinic, rate, remarks}.
+// a response {year, month}, rows of DentistRetainerPayableRow {dentist, dental_clinic, rate, remarks}.
 pub async fn get_dentist_retainer_payables(
     db: &DatabaseConnection,
     query: DentistRetainerPayablesQuery,

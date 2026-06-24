@@ -78,6 +78,7 @@ use crate::handlers::{save_member_name_for_company};
 use crate::handlers::{test_generate_hmo_billing_reports};
 use crate::handlers::{get_dentist_hmo_service_audit_matrix_handler};
 use crate::handlers::public::dentist_applications::submit_dentist_application_handler;
+use crate::handlers::public::find_dentist::search_public_dentists_handler;
 
 fn protected_routes() ->Router<AppState>{
     Router::<AppState>::new()
@@ -293,6 +294,7 @@ pub fn build_app(my_state:AppState) ->Router{
         .route("/healthcheck", get( healthcheck))
         .route("/login", post(login_handler))
         .route("/public/dentist_applications", post(submit_dentist_application_handler))
+        .route("/public/dentists/search", get(search_public_dentists_handler))
         .with_state(my_state)
         .layer(OtelInResponseLayer::default())
         .layer(OtelAxumLayer::default())
