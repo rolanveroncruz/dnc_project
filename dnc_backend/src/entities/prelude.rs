@@ -6,6 +6,7 @@ pub use super::app_config::Entity as AppConfig;
 pub use super::city::Entity as City;
 pub use super::clinic_capabilities_list::Entity as ClinicCapabilitiesList;
 pub use super::clinic_capability::Entity as ClinicCapability;
+pub use super::contact_us_messages::Entity as ContactUsMessages;
 pub use super::data_object::Entity as DataObject;
 pub use super::dental_clinic::Entity as DentalClinic;
 pub use super::dental_service::Entity as DentalService;

@@ -8,6 +8,7 @@ pub mod app_config;
 pub mod city;
 pub mod clinic_capabilities_list;
 pub mod clinic_capability;
+pub mod contact_us_messages;
 pub mod data_object;
 pub mod dental_clinic;
 pub mod dental_service;
