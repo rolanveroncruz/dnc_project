@@ -1,0 +1,159 @@
+<section class="website-inquiries-page">
+    <mat-card class="page-card">
+        <div class="page-header">
+            <div>
+                <p class="eyebrow">Website</p>
+                <h1>Contact Us Messages</h1>
+                <p class="subtitle">
+                    View inquiries submitted through the public Contact Us page.
+                </p>
+            </div>
+
+            <button
+                mat-stroked-button
+                type="button"
+                [disabled]="isLoading()"
+                (click)="loadInquiries()">
+                <mat-icon>refresh</mat-icon>
+                Refresh
+            </button>
+        </div>
+
+        @if (isLoading()) {
+            <div class="loading-state">
+                <mat-progress-spinner
+                    diameter="40"
+                    mode="indeterminate">
+                </mat-progress-spinner>
+
+                <p>Loading website inquiries...</p>
+            </div>
+        } @else if (loadError()) {
+            <div class="error-state">
+                <mat-icon>error</mat-icon>
+
+                <div>
+                    <h3>Unable to load inquiries</h3>
+                    <p>{{ loadError() }}</p>
+
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        type="button"
+                        (click)="loadInquiries()">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        } @else if (inquiries().length === 0) {
+            <div class="empty-state">
+                <mat-icon>inbox</mat-icon>
+
+                <h3>No inquiries yet.</h3>
+
+                <p>
+                    New messages from the public Contact Us page will appear here.
+                </p>
+            </div>
+        } @else {
+            <div class="table-wrapper">
+                <table
+                    mat-table
+                    [dataSource]="inquiries()"
+                    class="inquiries-table">
+
+                    <ng-container matColumnDef="id">
+                        <th mat-header-cell *matHeaderCellDef>ID</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            {{ row.id }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="date_submitted">
+                        <th mat-header-cell *matHeaderCellDef>Date Submitted</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            {{ formatDate(row.date_submitted) }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="person_type">
+                        <th mat-header-cell *matHeaderCellDef>Type</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            <span class="person-type-pill">
+                                {{ displayPersonType(row.person_type) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="name">
+                        <th mat-header-cell *matHeaderCellDef>Name</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            <strong>{{ displayValue(row.name) }}</strong>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="member_info">
+                        <th mat-header-cell *matHeaderCellDef>Member Info</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            @if (hasMemberInfo(row)) {
+                                <div class="member-info">
+                                    @if (row.card_number) {
+                                        <div>
+                                            <span class="field-label">Card:</span>
+                                            {{ row.card_number }}
+                                        </div>
+                                    }
+
+                                    @if (row.company_and_hmo) {
+                                        <div>
+                                            <span class="field-label">Company/HMO:</span>
+                                            {{ row.company_and_hmo }}
+                                        </div>
+                                    }
+                                </div>
+                            } @else {
+                                —
+                            }
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="contact_numbers">
+                        <th mat-header-cell *matHeaderCellDef>Contact Nos.</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            {{ displayValue(row.contact_numbers) }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="message">
+                        <th mat-header-cell *matHeaderCellDef>Message</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            <div class="message-text">
+                                {{ displayValue(row.message) }}
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            <span class="status-pill">
+                                {{ displayValue(row.status) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                </table>
+            </div>
+        }
+    </mat-card>
+</section>
