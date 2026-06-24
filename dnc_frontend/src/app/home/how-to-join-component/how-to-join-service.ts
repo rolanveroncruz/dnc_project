@@ -3,6 +3,10 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
 
+export interface SubmitDentistApplicationResponse {
+    id: number;
+    message: string;
+}
 
 
 @Injectable({
@@ -13,7 +17,7 @@ export class HowToJoinService {
     private baseUrl = environment.apiUrl;
 
 
-    submitDentistApplication(formData: FormData):Observable<void>{
-        return this.http.post<void>(`${this.baseUrl}/public/dentist_applications`, formData);
+    submitDentistApplication(formData: FormData):Observable<SubmitDentistApplicationResponse>{
+        return this.http.post<SubmitDentistApplicationResponse>(`${this.baseUrl}/public/dentist_applications`, formData);
     }
 }
