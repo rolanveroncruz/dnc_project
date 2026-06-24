@@ -1,1 +1,1 @@
-pub mod how_to_join;
+pub mod dentist_applications;
