@@ -1,10 +1,10 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {MatCard} from '@angular/material/card';
-import {MatButton} from '@angular/material/button';
-import {MatIcon} from '@angular/material/icon';
-import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {MatCardModule} from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {
     MatTable,
     MatColumnDef,
@@ -29,9 +29,14 @@ export interface DentistApplicationRow {
     contact_numbers: string;
     email: string;
 
-    // These are guarded backend download URLs, not raw server file paths.
+    clinic_ownership_type: string | null;
+    hmo_affiliations: string | null;
+    clinic_address: string | null;
+
     prc_license_file_path: string | null;
     bir_2303_file_path: string | null;
+    registration_doc_file_path: string | null;
+    supporting_docs_file_path1: string | null;
 
     status: string | null;
 }
@@ -40,10 +45,10 @@ export interface DentistApplicationRow {
     selector: 'app-website-applications',
     imports: [
         CommonModule,
-        MatCard,
-        MatButton,
-        MatIcon,
-        MatProgressSpinner,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
 
         MatTable,
         MatColumnDef,
@@ -74,6 +79,11 @@ export class WebsiteApplications implements OnInit {
         'date_submitted',
         'name',
         'clinic_name',
+
+        'clinic_ownership_type',
+        'clinic_address',
+        'hmo_affiliations',
+
         'contact_numbers',
         'email',
         'documents',
@@ -138,7 +148,10 @@ export class WebsiteApplications implements OnInit {
     }
 
     hasDocuments(row: DentistApplicationRow): boolean {
-        return !!row.prc_license_file_path || !!row.bir_2303_file_path;
+        return !!row.prc_license_file_path ||
+            !!row.bir_2303_file_path ||
+            !!row.registration_doc_file_path ||
+            !!row.supporting_docs_file_path1;
     }
 
     documentUrl(path: string): string {
@@ -216,5 +229,49 @@ export class WebsiteApplications implements OnInit {
         const plainMatch = /filename=([^;]+)/.exec(contentDisposition);
 
         return plainMatch?.[1]?.trim() ?? null;
+    }
+
+    // ✅ NEW: display ownership type nicely
+    formatOwnershipType(value: string | null | undefined): string {
+        switch (value) {
+            case 'single_proprietorship':
+                return 'Single Proprietorship';
+            case 'company':
+                return 'Company';
+            case 'corporation':
+                return 'Corporation';
+            default:
+                return this.displayValue(value);
+        }
+    }
+
+    registrationDocumentLabel(row: DentistApplicationRow): string {
+        if (row.clinic_ownership_type === 'single_proprietorship') {
+            return 'DTI Registration';
+        }
+
+        if (
+            row.clinic_ownership_type === 'company' ||
+            row.clinic_ownership_type === 'corporation'
+        ) {
+            return 'SEC Registration';
+        }
+
+        return 'Registration';
+    }
+
+    registrationFallbackFileName(row: DentistApplicationRow): string {
+        if (row.clinic_ownership_type === 'single_proprietorship') {
+            return 'dti-registration';
+        }
+
+        if (
+            row.clinic_ownership_type === 'company' ||
+            row.clinic_ownership_type === 'corporation'
+        ) {
+            return 'sec-registration';
+        }
+
+        return 'registration-document';
     }
 }

@@ -94,6 +94,33 @@
                         </td>
                     </ng-container>
 
+                    <ng-container matColumnDef="clinic_address">
+                        <th mat-header-cell *matHeaderCellDef>Clinic Address</th>
+                        <td mat-cell *matCellDef="let row">
+                            <span class="long-text">
+                                {{ displayValue(row.clinic_address) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="clinic_ownership_type">
+                        <th mat-header-cell *matHeaderCellDef>Ownership</th>
+
+                        <td mat-cell *matCellDef="let row">
+                            {{ formatOwnershipType(row.clinic_ownership_type) }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="hmo_affiliations">
+                        <th mat-header-cell *matHeaderCellDef>HMO Affiliations</th>
+                        <td mat-cell *matCellDef="let row">
+                            <span class="long-text">
+                                {{ displayValue(row.hmo_affiliations) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+
                     <ng-container matColumnDef="contact_numbers">
                         <th mat-header-cell *matHeaderCellDef>Contact Nos.</th>
 
@@ -128,10 +155,10 @@
                                             type="button"
                                             [disabled]="isDownloading(row.id + '-prc')"
                                             (click)="downloadDocument(
-                                                row.prc_license_file_path,
-                                                'prc-license',
-                                                row.id + '-prc'
-                                            )">
+                            row.prc_license_file_path,
+                            'prc-license',
+                            row.id + '-prc'
+                        )">
                                             <mat-icon>description</mat-icon>
 
                                             @if (isDownloading(row.id + '-prc')) {
@@ -148,16 +175,58 @@
                                             type="button"
                                             [disabled]="isDownloading(row.id + '-bir2303')"
                                             (click)="downloadDocument(
-                                                row.bir_2303_file_path,
-                                                'bir-2303',
-                                                row.id + '-bir2303'
-                                            )">
+                            row.bir_2303_file_path,
+                            'bir-2303',
+                            row.id + '-bir2303'
+                        )">
                                             <mat-icon>description</mat-icon>
 
                                             @if (isDownloading(row.id + '-bir2303')) {
                                                 Downloading...
                                             } @else {
                                                 BIR 2303
+                                            }
+                                        </button>
+                                    }
+
+                                    <!-- ✅ NEW: DTI / SEC Registration -->
+                                    @if (row.registration_doc_file_path) {
+                                        <button
+                                            mat-stroked-button
+                                            type="button"
+                                            [disabled]="isDownloading(row.id + '-registration')"
+                                            (click)="downloadDocument(
+                            row.registration_doc_file_path,
+                            registrationFallbackFileName(row),
+                            row.id + '-registration'
+                        )">
+                                            <mat-icon>business</mat-icon>
+
+                                            @if (isDownloading(row.id + '-registration')) {
+                                                Downloading...
+                                            } @else {
+                                                {{ registrationDocumentLabel(row) }}
+                                            }
+                                        </button>
+                                    }
+
+                                    <!-- ✅ NEW: Secretary's Certificate -->
+                                    @if (row.supporting_docs_file_path1) {
+                                        <button
+                                            mat-stroked-button
+                                            type="button"
+                                            [disabled]="isDownloading(row.id + '-secretary-certificate')"
+                                            (click)="downloadDocument(
+                            row.supporting_docs_file_path1,
+                            'secretarys-certificate',
+                            row.id + '-secretary-certificate'
+                        )">
+                                            <mat-icon>verified</mat-icon>
+
+                                            @if (isDownloading(row.id + '-secretary-certificate')) {
+                                                Downloading...
+                                            } @else {
+                                                Secretary's Certificate
                                             }
                                         </button>
                                     }
