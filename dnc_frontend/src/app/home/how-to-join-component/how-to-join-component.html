@@ -76,6 +76,52 @@
                             <mat-error>Please enter a valid email address.</mat-error>
                         }
                     </mat-form-field>
+
+                    <!-- ✅ NEW: ownership type -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Clinic Ownership Type</mat-label>
+                        <mat-select formControlName="clinic_ownership_type" [disabled]="isSubmitted()">
+                            @for (option of clinicOwnershipOptions; track option.value) {
+                                <mat-option [value]="option.value">
+                                    {{ option.label }}
+                                </mat-option>
+                            }
+                        </mat-select>
+
+                        @if (form.controls.clinic_ownership_type.hasError('required') && form.controls.clinic_ownership_type.touched) {
+                            <mat-error>Clinic ownership type is required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <!-- ✅ NEW: HMO affiliations -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Current HMO Affiliations</mat-label>
+                        <textarea
+                            matInput
+                            rows="3"
+                            formControlName="hmo_affiliations"
+                            [readonly]="isSubmitted()">
+                        </textarea>
+
+                        @if (form.controls.hmo_affiliations.hasError('required') && form.controls.hmo_affiliations.touched) {
+                            <mat-error>HMO affiliations are required.</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <!-- ✅ NEW: clinic address -->
+                    <mat-form-field appearance="outline" class="full-width-field">
+                        <mat-label>Clinic Address</mat-label>
+                        <textarea
+                            matInput
+                            rows="3"
+                            formControlName="clinic_address"
+                            [readonly]="isSubmitted()">
+                        </textarea>
+
+                        @if (form.controls.clinic_address.hasError('required') && form.controls.clinic_address.touched) {
+                            <mat-error>Clinic address is required.</mat-error>
+                        }
+                    </mat-form-field>
                 </div>
 
                 <div class="upload-section">
@@ -90,6 +136,10 @@
                                     <p>
                                         {{ prcLicenseFile()?.name || 'No file selected yet.' }}
                                     </p>
+
+                                    @if (submitAttempted() && !prcLicenseFile()) {
+                                        <p class="file-error">PRC Dental License is required.</p>
+                                    }
                                 </div>
                             </div>
 
@@ -127,6 +177,10 @@
                                     <p>
                                         {{ bir2303File()?.name || 'No file selected yet.' }}
                                     </p>
+
+                                    @if (submitAttempted() && !bir2303File()) {
+                                        <p class="file-error">BIR Form 2303 is required.</p>
+                                    }
                                 </div>
                             </div>
 
@@ -155,6 +209,92 @@
                                 }
                             </div>
                         </div>
+
+                        <!-- ✅ NEW: DTI or SEC Registration -->
+                        <div class="upload-box">
+                            <div class="upload-info">
+                                <mat-icon>business</mat-icon>
+                                <div>
+                                    <h4>{{ registrationDocLabel }}</h4>
+                                    <p>
+                                        {{ registrationDocFile()?.name || 'No file selected yet.' }}
+                                    </p>
+
+                                    @if (submitAttempted() && !registrationDocFile()) {
+                                        <p class="file-error">{{ registrationDocLabel }} is required.</p>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="upload-actions">
+                                <input
+                                    #registrationDocInput
+                                    type="file"
+                                    hidden
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    [disabled]="isSubmitted()"
+                                    (change)="onRegistrationDocSelected($event)"
+                                >
+
+                                <button
+                                    mat-stroked-button
+                                    type="button"
+                                    [disabled]="isSubmitted()"
+                                    (click)="registrationDocInput.click()">
+                                    Upload
+                                </button>
+
+                                @if (registrationDocFile() && !isSubmitted()) {
+                                    <button mat-button type="button" color="warn" (click)="clearRegistrationDoc()">
+                                        Clear
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- ✅ NEW: Secretary's Certificate, only company/corporation -->
+                        @if (supportingDocsRequired) {
+                            <div class="upload-box">
+                                <div class="upload-info">
+                                    <mat-icon>verified</mat-icon>
+                                    <div>
+                                        <h4>Secretary's Certificate</h4>
+                                        <p>
+                                            {{ supportingDocsFile1()?.name || 'No file selected yet.' }}
+                                        </p>
+
+                                        @if (submitAttempted() && !supportingDocsFile1()) {
+                                            <p class="file-error">Secretary's Certificate is required.</p>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="upload-actions">
+                                    <input
+                                        #supportingDocsInput
+                                        type="file"
+                                        hidden
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        [disabled]="isSubmitted()"
+                                        (change)="onSupportingDocsFile1Selected($event)"
+                                    >
+
+                                    <button
+                                        mat-stroked-button
+                                        type="button"
+                                        [disabled]="isSubmitted()"
+                                        (click)="supportingDocsInput.click()">
+                                        Upload
+                                    </button>
+
+                                    @if (supportingDocsFile1() && !isSubmitted()) {
+                                        <button mat-button type="button" color="warn" (click)="clearSupportingDocsFile1()">
+                                            Clear
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -176,6 +316,7 @@
                         }
                     </button>
                 </div>
+
                 @if (submitError()) {
                     <div class="submit-error">
                         <mat-icon>error</mat-icon>
