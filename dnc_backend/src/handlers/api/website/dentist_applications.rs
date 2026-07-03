@@ -21,10 +21,17 @@ pub struct DentistApplicationListRow {
     pub contact_numbers: String,
     pub email: String,
 
+    pub clinic_ownership_type: Option<String>,
+    pub hmo_affiliations: Option<String>,
+    pub clinic_address: Option<String>,
+
     // These are guarded download URLs returned to the frontend,
     // not raw server filesystem paths.
     pub prc_license_file_path: Option<String>,
     pub bir_2303_file_path: Option<String>,
+
+    pub registration_doc_file_path: Option<String>,
+    pub supporting_docs_file_path1: Option<String>,
 
     pub status: String,
 }
@@ -54,6 +61,10 @@ pub async fn get_dentist_applications_handler(
             contact_numbers: application.contact_numbers,
             email: application.email,
 
+            clinic_ownership_type: application.clinic_ownership_type,
+            hmo_affiliations: application.hmo_affiliations,
+            clinic_address: application.clinic_address,
+
             // Return API download URL, not the stored path.
             prc_license_file_path: non_empty_string(application.prc_license_file_path).map(|_| {
                 format!(
@@ -69,6 +80,26 @@ pub async fn get_dentist_applications_handler(
                     application.id
                 )
             }),
+
+            registration_doc_file_path: non_empty_optional_string(
+                application.registration_doc_file_path
+            )
+                .map(|_|{
+                format!(
+                    "/api/website/dentist_applications/{}/documents/registration_doc",
+                    application.id
+                )
+            }),
+
+            supporting_docs_file_path1: non_empty_optional_string(
+                application.supporting_docs_file_path1
+            )
+                .map(|_|{
+                    format!(
+                        "/api/website/dentist_applications/{}/documents/supporting_docs1",
+                        application.id
+                    )
+                }),
 
             status: application.status,
         })
@@ -253,4 +284,8 @@ fn content_type_from_path(path: &PathBuf) -> &'static str {
         Some("xlsx") => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         _ => "application/octet-stream",
     }
+}
+
+fn non_empty_optional_string(value: Option<String>) -> Option<String> {
+    value.and_then(non_empty_string)
 }

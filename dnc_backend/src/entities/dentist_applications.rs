@@ -23,6 +23,16 @@ pub struct Model {
     pub bir2303_file_path: String,
     #[sea_orm(column_type = "Text")]
     pub status: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub clinic_ownership_type: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub registration_doc_file_path: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub supporting_docs_file_path1: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub hmo_affiliations: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub clinic_address: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

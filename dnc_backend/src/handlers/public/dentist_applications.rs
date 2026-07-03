@@ -24,6 +24,13 @@ struct DentistApplicationForm {
     email: Option<String>,
     prc_license_file_path: Option<String>,
     bir_2303_file_path: Option<String>,
+
+    clinic_ownership_type: Option<String>,
+    hmo_affiliations: Option<String>,
+    clinic_address: Option<String>,
+
+    registration_doc_file_path: Option<String>,
+    supporting_docs_file_path1: Option<String>,
 }
 
 pub async fn submit_dentist_application_handler(
@@ -68,6 +75,16 @@ pub async fn submit_dentist_application_handler(
             "email" => {
                 form.email = Some(read_text_field(field).await?);
             }
+            "clinic_ownership_type" => {
+                form.clinic_ownership_type = optional_text(read_text_field(field).await?);
+            }
+            "hmo_affiliations" => {
+                form.hmo_affiliations = optional_text(read_text_field(field).await?);
+            }
+            "clinic_address" => {
+                form.clinic_address = optional_text(read_text_field(field).await?);
+            }
+
             "prc_license_file" => {
                 let saved_path = save_uploaded_file(field, &upload_dir, "prc_license").await?;
                 form.prc_license_file_path = Some(saved_path);
@@ -76,6 +93,17 @@ pub async fn submit_dentist_application_handler(
                 let saved_path = save_uploaded_file(field, &upload_dir, "bir_2303").await?;
                 form.bir_2303_file_path = Some(saved_path);
             }
+            "registration_doc_file" => {
+                let saved_path =
+                    save_uploaded_file(field, &upload_dir, "registration_doc").await?;
+                form.registration_doc_file_path = Some(saved_path);
+            }
+            "supporting_docs_file1" => {
+                let saved_path =
+                    save_uploaded_file(field, &upload_dir, "supporting_docs1").await?;
+                form.supporting_docs_file_path1 = Some(saved_path);
+            }
+
             _ => {
                 // Ignore unexpected fields for now.
             }
@@ -89,6 +117,8 @@ pub async fn submit_dentist_application_handler(
     let prc_license_file_path = required(form.prc_license_file_path, "prc_license_file")?;
     let bir_2303_file_path = required(form.bir_2303_file_path, "bir_2303_file")?;
 
+    validate_clinic_ownership_type(form.clinic_ownership_type.as_deref())?;
+
     let active_model = dentist_applications::ActiveModel {
         name: Set(name),
         clinic_name: Set(clinic_name),
@@ -97,6 +127,16 @@ pub async fn submit_dentist_application_handler(
         prc_license_file_path: Set(prc_license_file_path),
         bir2303_file_path: Set(bir_2303_file_path),
         status: Set("new".to_string()),
+
+        // ✅ NEW: nullable text fields
+        clinic_ownership_type: Set(form.clinic_ownership_type),
+        hmo_affiliations: Set(form.hmo_affiliations),
+        clinic_address: Set(form.clinic_address),
+
+        // ✅ NEW: nullable file path fields
+        registration_doc_file_path: Set(form.registration_doc_file_path),
+        supporting_docs_file_path1: Set(form.supporting_docs_file_path1),
+
         ..Default::default()
     };
 
@@ -188,7 +228,30 @@ fn required(value: Option<String>, field_name: &str) -> Result<String, (StatusCo
         )),
     }
 }
+fn optional_text(value: String) -> Option<String> {
+    let cleaned = value.trim().to_string();
 
+    if cleaned.is_empty() {
+        None
+    } else {
+        Some(cleaned)
+    }
+}
+
+fn validate_clinic_ownership_type(value: Option<&str>) -> Result<(), (StatusCode, String)> {
+    let Some(value) = value else {
+        return Ok(());
+    };
+
+    match value {
+        "single_proprietorship" | "company" | "corporation" => Ok(()),
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            "clinic_ownership_type must be one of: single_proprietorship, company, corporation"
+                .to_string(),
+        )),
+    }
+}
 fn sanitize_filename(filename: &str) -> String {
     filename
         .chars()
