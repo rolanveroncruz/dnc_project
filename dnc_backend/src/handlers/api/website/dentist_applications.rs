@@ -129,22 +129,24 @@ pub async fn download_dentist_application_document_handler(
         })?;
 
     let stored_file_path = match document_type.as_str() {
-        "prc_license" => application.prc_license_file_path,
-        "bir2303" => application.bir2303_file_path,
+        "prc_license" => non_empty_string(application.prc_license_file_path),
+        "bir2303" => non_empty_string(application.bir2303_file_path),
+        "registration_doc" => non_empty_optional_string(application.registration_doc_file_path),
+        "supporting_docs1" => non_empty_optional_string(application.supporting_docs_file_path1),
         _ => {
             return Err((
                 StatusCode::BAD_REQUEST,
                 "Invalid document type.".to_string(),
             ));
         }
-    };
+    }
+        .ok_or_else(||{
+            (
+                StatusCode::NOT_FOUND,
+                "Document file path not found.".to_string(),)
+        })?;
 
-    let stored_file_path = non_empty_string(stored_file_path).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            "Document file path is empty.".to_string(),
-        )
-    })?;
+
 
     let path = PathBuf::from(&stored_file_path);
 
@@ -207,6 +209,17 @@ fn download_file_name_from_path(path: &PathBuf, document_type: &str) -> String {
 
         "bir2303" => file_name
             .strip_prefix("bir_2303_")
+            .unwrap_or(&file_name)
+            .to_string(),
+
+        "registration_doc" => file_name
+            .strip_prefix("registration_doc_")
+            .unwrap_or(&file_name)
+            .to_string(),
+
+        // ✅ NEW
+        "supporting_docs1" => file_name
+            .strip_prefix("supporting_docs1_")
             .unwrap_or(&file_name)
             .to_string(),
 
