@@ -85,7 +85,24 @@ export class MainComponent implements OnInit {
         { key: 'billing', label: 'Billing', icon: 'receipt_long', route: '/main/billing', disabled: true },
         { key: 'setup', label: 'Setup', icon: 'settings', route: '/main/setup', disabled: true },
     ];
+    private setTopNavDisabled(key: TopNavKey, disabled: boolean): void {
+        const item = this.topNavItems.find((item) => item.key === key);
 
+        if (!item) {
+            console.warn(`Top nav item not found: ${key}`);
+            return;
+        }
+
+        item.disabled = disabled;
+    }
+
+    private enableTopNav(key: TopNavKey): void {
+        this.setTopNavDisabled(key, false);
+    }
+
+    private disableTopNav(key: TopNavKey): void {
+        this.setTopNavDisabled(key, true);
+    }
     sideNavConfig: Record<TopNavKey, SideNavItem[]> = {
         website: [
             {label: 'Applications', icon: 'apps', route: '/main/website/applications', disabled: false},
@@ -261,7 +278,7 @@ export class MainComponent implements OnInit {
             'dentist' in this.menu_activation_map ||
             'endorsements' in this.menu_activation_map
         ) {
-            this.topNavItems[4].disabled = false;
+            this.enableTopNav('setup');
 
             this.activate_item('setup', 'dental_service', 'Dental Services');
             this.activate_item('setup', 'clinic_capability', 'Clinic Capabilities');
@@ -277,19 +294,19 @@ export class MainComponent implements OnInit {
 
     configure_csr_menu() {
         if ('verifications' in this.menu_activation_map) {
-            this.topNavItems[1].disabled = false;
+            this.enableTopNav('csr');
             this.activate_item('csr', 'verifications', 'Verifications');
         }
 
         if ('high_end_verification_information' in this.menu_activation_map) {
-            this.topNavItems[1].disabled = false;
+            this.enableTopNav('csr');
             this.activate_item('csr', 'high_end_verification_information', 'HighEndVerification');
         }
     }
 
     configure_billing_menu() {
         if ('acc_reconciliation' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
             this.activate_SideNav('billing', 'Accomplishment Reporting', true);
             this.activate_SideNav('billing', 'HMO Billing', true);
             this.activate_SideNav('billing', 'Utilization Reports', true);
@@ -305,28 +322,28 @@ export class MainComponent implements OnInit {
 
         // ✅ HMO Billing submenu permissions
         if ('hmo_billing' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         if ('utilization_reports' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         if ('billing_statements' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         // ✅ Dentist Payments submenu permissions
         if ('dentist_payments' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         if ('summary_of_claims' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         if ('retainer_fee_reports' in this.menu_activation_map) {
-            this.topNavItems[3].disabled = false;
+            this.enableTopNav('billing');
         }
 
         // ✅ If any child is enabled, enable the parent submenu automatically
@@ -336,7 +353,7 @@ export class MainComponent implements OnInit {
 
     configure_dashboard_menu(){
         if ('dashboard' in this.menu_activation_map) {
-            this.topNavItems[0].disabled = false;
+            this.enableTopNav('dashboard');
             this.activate_item('dashboard', 'dashboard', 'Operations');
             this.activate_item('dashboard', 'dashboard', 'Outliers');
         }
