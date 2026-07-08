@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -8,50 +8,33 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
-import {MatCardModule} from '@angular/material/card';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
+    selector: 'app-home',
+    standalone: true,
     imports: [
-      CommonModule,
-      RouterModule,
-      MatToolbarModule,
-      MatSidenavModule,
-      MatIconModule,
-      MatListModule,
-      MatButtonModule,
-      MatCardModule,
-      MatDividerModule,
-
+        CommonModule,
+        RouterModule,
+        MatToolbarModule,
+        MatSidenavModule,
+        MatIconModule,
+        MatListModule,
+        MatButtonModule,
+        MatCardModule,
+        MatDividerModule,
     ],
-  templateUrl: './home.html',
-  styleUrl: './home.scss',
+    templateUrl: './home.html',
+    styleUrl: './home.scss',
 })
 export class HomeComponent {
+    readonly mobileMenuOpen = signal(false);
+
+    toggleMobileMenu(): void {
+        this.mobileMenuOpen.update(open => !open);
+    }
+
+    closeMobileMenu(): void {
+        this.mobileMenuOpen.set(false);
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,33 +1,156 @@
-<mat-toolbar color="primary" class="navbar">
-  <span class="logo">
-      <img src="/dnc_logo.png" alt="DNC Logo" class="navbar-logo">
-      Dental Network Company
-  </span>
-  <span class="spacer"></span>
-  <div class="nav-links">
-      <button mat-button routerLink="/">Home</button>
-      <button mat-button routerLink="/about_dnc">About DNC</button>
-      <button mat-button routerLink="/find_dentist">Find My Dentist</button>
-      <button mat-button routerLink="/members_info">Member's Info</button>
-      <button mat-button routerLink="how_to_join">How to Join</button>
-      <button mat-button routerLink="contact_us">Contact Us</button>
-  </div>
-</mat-toolbar>
+<header class="site-header">
+    <mat-toolbar color="primary" class="navbar">
+        <a
+            class="logo"
+            routerLink="/"
+            aria-label="Dental Network Company home"
+            (click)="closeMobileMenu()"
+        >
+            <img
+                src="/dnc_logo.png"
+                alt="DNC Logo"
+                class="navbar-logo"
+            >
+
+            <span class="company-name">
+        Dental Network Company
+      </span>
+        </a>
+
+        <span class="spacer"></span>
+
+        <!-- Desktop navigation -->
+        <nav class="nav-links" aria-label="Main navigation">
+            <button mat-button routerLink="/">
+                Home
+            </button>
+
+            <button mat-button routerLink="/about_dnc">
+                About DNC
+            </button>
+
+            <button mat-button routerLink="/find_dentist">
+                Find My Dentist
+            </button>
+
+            <button mat-button routerLink="/members_info">
+                Member's Info
+            </button>
+
+            <button mat-button routerLink="/how_to_join">
+                How to Join
+            </button>
+
+            <button mat-button routerLink="/contact_us">
+                Contact Us
+            </button>
+        </nav>
+
+        <!-- Mobile hamburger -->
+        <button
+            mat-icon-button
+            type="button"
+            class="mobile-menu-button"
+            aria-label="Toggle navigation menu"
+            [attr.aria-expanded]="mobileMenuOpen()"
+            aria-controls="mobile-navigation"
+            (click)="toggleMobileMenu()"
+        >
+            <mat-icon>
+                {{ mobileMenuOpen() ? 'close' : 'menu' }}
+            </mat-icon>
+        </button>
+    </mat-toolbar>
+
+    <!-- Mobile navigation -->
+    <div
+        id="mobile-navigation"
+        class="mobile-nav"
+        [class.mobile-nav-open]="mobileMenuOpen()"
+    >
+        <nav
+            class="mobile-nav-links"
+            aria-label="Mobile navigation"
+        >
+            <a
+                mat-button
+                routerLink="/"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>home</mat-icon>
+                <span>Home</span>
+            </a>
+
+            <a
+                mat-button
+                routerLink="/about_dnc"
+                routerLinkActive="active-link"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>business</mat-icon>
+                <span>About DNC</span>
+            </a>
+
+            <a
+                mat-button
+                routerLink="/find_dentist"
+                routerLinkActive="active-link"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>search</mat-icon>
+                <span>Find My Dentist</span>
+            </a>
+
+            <a
+                mat-button
+                routerLink="/members_info"
+                routerLinkActive="active-link"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>badge</mat-icon>
+                <span>Member's Info</span>
+            </a>
+
+            <a
+                mat-button
+                routerLink="/how_to_join"
+                routerLinkActive="active-link"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>person_add</mat-icon>
+                <span>How to Join</span>
+            </a>
+
+            <a
+                mat-button
+                routerLink="/contact_us"
+                routerLinkActive="active-link"
+                (click)="closeMobileMenu()"
+            >
+                <mat-icon>contact_support</mat-icon>
+                <span>Contact Us</span>
+            </a>
+        </nav>
+    </div>
+</header>
+
 <main class="public-page-content">
     <router-outlet></router-outlet>
 </main>
 
-
 <footer class="footer">
-  <div class="footer-content">
-    <div>
-      <h3>Dental Network Company</h3>
-      <p>&copy; 2026 All Rights Reserved.</p>
+    <div class="footer-content">
+        <div>
+            <h3>Dental Network Company</h3>
+            <p>&copy; 2026 All Rights Reserved.</p>
+        </div>
+
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Patient Portal</a>
+        </div>
     </div>
-    <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-      <a href="#">Patient Portal</a>
-    </div>
-  </div>
 </footer>
