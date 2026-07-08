@@ -1,4 +1,5 @@
 $primary-color: #3f51b5;
+$primary-dark: #29388d;
 $text-color: #2f2f2f;
 $muted-text: #666;
 $card-border: #e4e7ec;
@@ -6,97 +7,366 @@ $accent-bg: #e8eaf6;
 $error-color: #c62828;
 $info-color: #3f51b5;
 
+
+/* =========================================================
+   Page
+   ========================================================= */
+
 .find-dentist-page {
-    background: #fff;
+    min-height: 100%;
+
     color: $text-color;
+    background: #ffffff;
 }
 
+
+/* =========================================================
+   Hero
+   ========================================================= */
+
 .find-hero {
-    padding: 80px 24px 56px;
-    text-align: center;
+    position: relative;
+
+    padding: 88px 24px 108px;
+
+    overflow: hidden;
+    box-sizing: border-box;
+
     background:
-        linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
-        linear-gradient(135deg, #e8eaf6, #ffffff);
-    border-bottom: 1px solid $card-border;
+        radial-gradient(
+                circle at 89% 17%,
+                rgba(63, 81, 181, 0.14),
+                transparent 31%
+        ),
+        radial-gradient(
+                circle at 4% 92%,
+                rgba(63, 81, 181, 0.07),
+                transparent 27%
+        ),
+        linear-gradient(
+                135deg,
+                #f7f8ff 0%,
+                #ffffff 48%,
+                #eef1ff 100%
+        );
+
+    &::before {
+        content: "";
+
+        position: absolute;
+        left: -220px;
+        bottom: -290px;
+
+        width: 460px;
+        height: 460px;
+
+        border-radius: 50%;
+
+        background: rgba(63, 81, 181, 0.06);
+    }
+
+    &::after {
+        content: "";
+
+        position: absolute;
+        top: 70px;
+        right: 5%;
+
+        width: 110px;
+        height: 110px;
+
+        border: 1px solid rgba(63, 81, 181, 0.1);
+        border-radius: 50%;
+    }
+}
+
+.find-hero-inner {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    max-width: 1220px;
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.02fr)
+        minmax(400px, 0.98fr);
+
+    gap: 72px;
+    align-items: center;
+}
+
+.find-hero-content {
+    min-width: 0;
 
     .eyebrow {
-        margin: 0 0 12px;
+        margin: 0 0 16px;
+
         color: $primary-color;
-        font-weight: 700;
-        letter-spacing: 0.08em;
+
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        font-size: 0.85rem;
     }
 
     h1 {
-        max-width: 850px;
-        margin: 0 auto 20px;
-        font-size: clamp(2rem, 4vw, 3.5rem);
-        line-height: 1.12;
-        font-weight: 800;
-        color: $primary-color;
+        max-width: 720px;
+        margin: 0 0 24px;
+
+        color: $text-color;
+
+        font-size: clamp(2.7rem, 5vw, 4.6rem);
+        font-weight: 900;
+        line-height: 1.04;
+        letter-spacing: -0.045em;
     }
 
     .hero-subtitle {
-        max-width: 760px;
-        margin: 0 auto;
-        font-size: 1.2rem;
-        line-height: 1.7;
+        max-width: 690px;
+        margin: 0;
+
         color: $muted-text;
+
+        font-size: 1.18rem;
+        line-height: 1.75;
     }
 }
+
+.hero-highlights {
+    display: grid;
+    gap: 12px;
+
+    margin-top: 30px;
+}
+
+.hero-highlight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #555;
+
+    font-size: 0.94rem;
+    font-weight: 600;
+
+    mat-icon {
+        flex: 0 0 auto;
+
+        width: 21px;
+        height: 21px;
+
+        color: $primary-color;
+
+        font-size: 21px;
+    }
+}
+
+.find-hero-visual {
+    min-width: 0;
+}
+
+.find-image-frame {
+    position: relative;
+
+    min-height: 550px;
+
+    &::before {
+        content: "";
+
+        position: absolute;
+        inset: 28px -24px -24px 28px;
+
+        z-index: -1;
+
+        border-radius: 34px;
+
+        background: rgba(63, 81, 181, 0.12);
+    }
+
+    > img {
+        display: block;
+
+        width: 100%;
+        height: 550px;
+
+        object-fit: cover;
+        object-position: center;
+
+        border-radius: 34px;
+
+        box-shadow:
+            0 30px 70px rgba(16, 24, 40, 0.18);
+    }
+}
+
+.find-image-badge {
+    position: absolute;
+    left: -38px;
+    bottom: 32px;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    width: min(335px, calc(100% - 32px));
+    padding: 18px 20px;
+
+    box-sizing: border-box;
+
+    border: 1px solid rgba(255, 255, 255, 0.74);
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.95);
+
+    box-shadow:
+        0 18px 42px rgba(16, 24, 40, 0.18);
+
+    backdrop-filter: blur(10px);
+}
+
+.find-image-badge-icon {
+    flex: 0 0 auto;
+
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    color: $primary-color;
+    background: $accent-bg;
+
+    mat-icon {
+        width: 27px;
+        height: 27px;
+
+        font-size: 27px;
+    }
+}
+
+.find-image-badge-text {
+    min-width: 0;
+
+    strong {
+        display: block;
+
+        margin-bottom: 3px;
+
+        color: $text-color;
+
+        font-size: 0.95rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    span {
+        display: block;
+
+        color: $muted-text;
+
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+}
+
+
+/* =========================================================
+   Main content
+   ========================================================= */
 
 .find-content {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 56px 24px 72px;
+    padding: 72px 24px 88px;
+
+    box-sizing: border-box;
 }
+
+
+/* =========================================================
+   Search card
+   ========================================================= */
 
 .search-card {
     padding: 36px;
-    border-radius: 24px;
+
+    overflow: hidden;
+
     border: 1px solid $card-border;
-    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.08);
+    border-radius: 24px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 14px 36px rgba(16, 24, 40, 0.09);
 }
 
 .search-header {
     display: flex;
     gap: 20px;
     align-items: flex-start;
-    margin-bottom: 28px;
+
+    margin-bottom: 30px;
 
     .search-icon {
         flex: 0 0 56px;
+
         width: 56px;
         height: 56px;
-        border-radius: 16px;
-        background: $accent-bg;
-        color: $primary-color;
+
         display: flex;
         align-items: center;
         justify-content: center;
 
+        border-radius: 16px;
+
+        color: $primary-color;
+
+        background:
+            linear-gradient(
+                    135deg,
+                    $accent-bg,
+                    #f4f5ff
+            );
+
         mat-icon {
-            font-size: 30px;
             width: 30px;
             height: 30px;
+
+            font-size: 30px;
         }
     }
 
     h2 {
         margin: 0 0 8px;
+
+        color: $text-color;
+
         font-size: 1.8rem;
         font-weight: 800;
-        color: $text-color;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
     }
 
     p {
         margin: 0;
+
         color: $muted-text;
+
         font-size: 1.05rem;
         line-height: 1.7;
     }
 }
+
+
+/* =========================================================
+   Search form
+   ========================================================= */
 
 .search-form {
     display: flex;
@@ -115,13 +385,18 @@ $info-color: #3f51b5;
 }
 
 .validation-error {
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: #eef2ff;
-    color: $info-color;
     display: flex;
     align-items: center;
     gap: 10px;
+
+    padding: 14px 16px;
+
+    border: 1px solid rgba(63, 81, 181, 0.1);
+    border-radius: 14px;
+
+    color: $info-color;
+    background: #eef2ff;
+
     font-weight: 500;
 
     mat-icon {
@@ -135,8 +410,9 @@ $info-color: #3f51b5;
     justify-content: flex-end;
 
     button {
-        min-height: 46px;
         min-width: 120px;
+        min-height: 46px;
+
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -145,14 +421,19 @@ $info-color: #3f51b5;
 }
 
 .search-error {
-    margin-top: 20px;
-    padding: 16px 18px;
-    border-radius: 14px;
-    background: #ffebee;
-    color: $error-color;
     display: flex;
     align-items: center;
     gap: 10px;
+
+    margin-top: 20px;
+    padding: 16px 18px;
+
+    border: 1px solid rgba(198, 40, 40, 0.1);
+    border-radius: 14px;
+
+    color: $error-color;
+    background: #ffebee;
+
     font-weight: 500;
 
     mat-icon {
@@ -160,23 +441,52 @@ $info-color: #3f51b5;
     }
 }
 
+
+/* =========================================================
+   Results
+   ========================================================= */
+
 .results-section {
-    margin-top: 40px;
+    margin-top: 52px;
 }
 
 .results-header {
-    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
 
-    h2 {
+    margin-bottom: 24px;
+
+    .results-eyebrow {
         margin: 0 0 6px;
-        font-size: 1.8rem;
+
+        color: $primary-color;
+
+        font-size: 0.78rem;
         font-weight: 800;
-        color: $text-color;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
-    p {
+    h2 {
         margin: 0;
+
+        color: $text-color;
+
+        font-size: 1.9rem;
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+    }
+
+    .results-count {
+        margin: 0;
+
         color: $muted-text;
+
+        font-size: 0.96rem;
+        line-height: 1.5;
     }
 }
 
@@ -187,15 +497,29 @@ $info-color: #3f51b5;
 }
 
 .result-card {
+    min-width: 0;
     padding: 24px;
-    border-radius: 20px;
+
     border: 1px solid $card-border;
-    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 8px 24px rgba(16, 24, 40, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 
     &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 14px 32px rgba(16, 24, 40, 0.12);
+
+        border-color: rgba(63, 81, 181, 0.2);
+
+        box-shadow:
+            0 14px 32px rgba(16, 24, 40, 0.12);
     }
 }
 
@@ -203,31 +527,52 @@ $info-color: #3f51b5;
     display: flex;
     gap: 16px;
     align-items: flex-start;
+
     margin-bottom: 18px;
 
     .dentist-icon {
         flex: 0 0 48px;
+
         width: 48px;
         height: 48px;
-        border-radius: 14px;
-        background: $accent-bg;
-        color: $primary-color;
+
         display: flex;
         align-items: center;
         justify-content: center;
+
+        border-radius: 14px;
+
+        color: $primary-color;
+
+        background:
+            linear-gradient(
+                    135deg,
+                    $accent-bg,
+                    #f4f5ff
+            );
+    }
+
+    .result-main-text {
+        min-width: 0;
     }
 
     h3 {
         margin: 0 0 6px;
+
+        color: $text-color;
+
         font-size: 1.25rem;
         font-weight: 800;
-        color: $text-color;
+        line-height: 1.3;
     }
 
     .clinic-name {
         margin: 0;
+
         color: $primary-color;
+
         font-weight: 700;
+        line-height: 1.45;
     }
 }
 
@@ -238,60 +583,180 @@ $info-color: #3f51b5;
 
     p {
         margin: 0;
-        color: $muted-text;
+
         display: flex;
         align-items: flex-start;
         gap: 8px;
+
+        color: $muted-text;
+
         line-height: 1.5;
     }
 
     mat-icon {
-        color: $primary-color;
+        flex: 0 0 auto;
+
         margin-top: 2px;
+
+        color: $primary-color;
     }
 }
 
+
+/* =========================================================
+   Empty state
+   ========================================================= */
+
 .empty-card {
-    padding: 40px 28px;
+    padding: 44px 28px;
+
     text-align: center;
-    border-radius: 20px;
+
     border: 1px dashed #b8bfd8;
-    background: #fafbff;
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+                135deg,
+                #fafbff,
+                #f5f6ff
+        );
 
     mat-icon {
-        font-size: 44px;
-        width: 44px;
-        height: 44px;
-        color: $primary-color;
+        width: 46px;
+        height: 46px;
+
         margin-bottom: 14px;
+
+        color: $primary-color;
+
+        font-size: 46px;
     }
 
     h3 {
         margin: 0 0 8px;
+
+        color: $text-color;
+
         font-size: 1.35rem;
         font-weight: 800;
-        color: $text-color;
     }
 
     p {
-        margin: 0 auto;
         max-width: 520px;
+        margin: 0 auto;
+
         color: $muted-text;
+
         line-height: 1.6;
     }
 }
 
-@media (max-width: 850px) {
-    .find-hero {
-        padding: 56px 20px 40px;
 
+/* =========================================================
+   Special services
+   ========================================================= */
+
+.special-services {
+    margin-top: 8px;
+    padding-top: 14px;
+
+    border-top: 1px solid rgba(228, 231, 236, 0.9);
+}
+
+.special-services-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 10px;
+
+    color: $primary-color;
+
+    font-weight: 700;
+
+    mat-icon {
+        color: $primary-color;
+    }
+}
+
+.special-services-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.special-service-chip {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 10px;
+
+    border: 1px solid rgba(63, 81, 181, 0.08);
+    border-radius: 999px;
+
+    color: $primary-color;
+    background: $accent-bg;
+
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1000px) {
+    .find-hero-inner {
+        grid-template-columns: 1fr;
+
+        gap: 52px;
+    }
+
+    .find-hero-content {
+        max-width: 840px;
+        margin: 0 auto;
+
+        text-align: center;
+
+        h1,
         .hero-subtitle {
-            font-size: 1.05rem;
+            margin-left: auto;
+            margin-right: auto;
         }
     }
 
+    .hero-highlights {
+        max-width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+
+        text-align: left;
+    }
+
+    .find-hero-visual {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .find-image-badge {
+        left: 24px;
+    }
+}
+
+
+/* =========================================================
+   Small tablet
+   ========================================================= */
+
+@media (max-width: 850px) {
     .find-content {
-        padding: 40px 20px 56px;
+        padding:
+            56px
+            20px
+            72px;
     }
 
     .search-card {
@@ -310,8 +775,15 @@ $info-color: #3f51b5;
         justify-content: stretch;
 
         button {
-            width: 100%;
+            flex: 1 1 0;
         }
+    }
+
+    .results-header {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 8px;
     }
 
     .results-grid {
@@ -319,42 +791,150 @@ $info-color: #3f51b5;
     }
 }
 
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .find-hero {
+        padding:
+            62px
+            20px
+            84px;
+    }
+
+    .find-hero-inner {
+        gap: 42px;
+    }
+
+    .find-hero-content {
+        h1 {
+            font-size: clamp(2.3rem, 11vw, 3.3rem);
+            line-height: 1.05;
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            line-height: 1.68;
+        }
+    }
+
+    .hero-highlights {
+        gap: 11px;
+    }
+
+    .find-image-frame {
+        min-height: 420px;
+
+        &::before {
+            inset: 18px -10px -14px 14px;
+
+            border-radius: 25px;
+        }
+
+        > img {
+            height: 420px;
+
+            border-radius: 24px;
+        }
+    }
+
+    .find-image-badge {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+
+        width: auto;
+        max-width: none;
+
+        padding: 15px;
+    }
+
+    .find-content {
+        padding:
+            48px
+            20px
+            64px;
+    }
+
+    .search-card {
+        padding: 24px 20px;
+    }
+
+    .search-header {
+        margin-bottom: 24px;
+
+        h2 {
+            font-size: 1.55rem;
+        }
+
+        p {
+            font-size: 1rem;
+        }
+    }
+
+    .results-section {
+        margin-top: 42px;
+    }
+
+    .result-card {
+        padding: 21px 20px;
+    }
+}
+
+
+/* =========================================================
+   Small phones
+   ========================================================= */
+
 @media (max-width: 520px) {
     .search-actions {
         flex-direction: column;
-    }
-}
-// ✅ ADD special services styling
-.special-services {
-    margin-top: 6px;
-}
 
-.special-services-heading {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: $primary-color;
-    font-weight: 700;
-    margin-bottom: 10px;
-
-    mat-icon {
-        color: $primary-color;
+        button {
+            width: 100%;
+        }
     }
 }
 
-.special-services-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
 
-.special-service-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: $accent-bg;
-    color: $primary-color;
-    font-size: 0.85rem;
-    font-weight: 700;
+/* =========================================================
+   Very small phones
+   ========================================================= */
+
+@media (max-width: 420px) {
+    .find-hero-content {
+        h1 {
+            font-size: 2.25rem;
+        }
+    }
+
+    .find-image-frame {
+        min-height: 380px;
+
+        > img {
+            height: 380px;
+        }
+    }
+
+    .find-image-badge-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .result-main {
+        gap: 13px;
+
+        .dentist-icon {
+            flex-basis: 44px;
+
+            width: 44px;
+            height: 44px;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+        }
+    }
 }

@@ -1,12 +1,65 @@
 <section class="find-dentist-page">
-    <div class="find-hero">
-        <p class="eyebrow">Find My Dentist</p>
-        <h1>Search for an accredited dentist or clinic.</h1>
-        <p class="hero-subtitle">
-            Enter a dentist or clinic name, and optionally narrow your search by
-            address, city, or zip code.
-        </p>
-    </div>
+    <header class="find-hero">
+        <div class="find-hero-inner">
+            <div class="find-hero-content">
+                <p class="eyebrow">
+                    Find My Dentist
+                </p>
+
+                <h1>
+                    Search for an accredited dentist or clinic.
+                </h1>
+
+                <p class="hero-subtitle">
+                    Enter a dentist or clinic name, and optionally narrow your search by
+                    address, city, or zip code.
+                </p>
+
+                <div class="hero-highlights">
+                    <div class="hero-highlight">
+                        <mat-icon>verified</mat-icon>
+                        <span>Accredited dental providers</span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>location_on</mat-icon>
+                        <span>Search by city, address, or zip code</span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>medical_services</mat-icon>
+                        <span>Find clinics and available special services</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="find-hero-visual">
+                <div class="find-image-frame">
+                    <img
+                        src="/images/find-dentist/find-dentist-hero.png"
+                        alt="Patient consulting with a dental professional"
+                    >
+
+                    <div class="find-image-badge">
+                        <div class="find-image-badge-icon">
+                            <mat-icon>person_search</mat-icon>
+                        </div>
+
+                        <div class="find-image-badge-text">
+                            <strong>
+                                Find care near you
+                            </strong>
+
+                            <span>
+                                Search DNC accredited dentists and clinics across the network
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
 
     <section class="find-content">
         <mat-card class="search-card">
@@ -16,7 +69,10 @@
                 </div>
 
                 <div>
-                    <h2>Dentist and Clinic Search</h2>
+                    <h2>
+                        Dentist and Clinic Search
+                    </h2>
+
                     <p>
                         Search by dentist name, clinic name, address, city, or zip code.
                         You may fill in one field or both fields.
@@ -30,8 +86,13 @@
                 (ngSubmit)="searchDentists()">
 
                 <div class="search-fields">
-                    <mat-form-field appearance="outline" class="search-field">
-                        <mat-label>Dentist or Clinic Name</mat-label>
+                    <mat-form-field
+                        appearance="outline"
+                        class="search-field">
+
+                        <mat-label>
+                            Dentist or Clinic Name
+                        </mat-label>
 
                         <input
                             matInput
@@ -40,8 +101,13 @@
                         >
                     </mat-form-field>
 
-                    <mat-form-field appearance="outline" class="search-field">
-                        <mat-label>Address, City, or Zip Code</mat-label>
+                    <mat-form-field
+                        appearance="outline"
+                        class="search-field">
+
+                        <mat-label>
+                            Address, City, or Zip Code
+                        </mat-label>
 
                         <input
                             matInput
@@ -64,13 +130,16 @@
                         color="primary"
                         type="submit"
                         [disabled]="isSearching()">
+
                         @if (isSearching()) {
                             <mat-progress-spinner
                                 diameter="20"
                                 mode="indeterminate">
                             </mat-progress-spinner>
+
                             Searching...
                         } @else {
+                            <mat-icon>search</mat-icon>
                             Search
                         }
                     </button>
@@ -93,13 +162,22 @@
             }
         </mat-card>
 
+
         @if (hasSearched() && !isSearching() && !searchError()) {
             <section class="results-section">
                 <div class="results-header">
-                    <h2>Search Results</h2>
+                    <div>
+                        <p class="results-eyebrow">
+                            Accredited Network
+                        </p>
+
+                        <h2>
+                            Search Results
+                        </h2>
+                    </div>
 
                     @if (results().length > 0) {
-                        <p>
+                        <p class="results-count">
                             Found {{ results().length }}
                             {{ results().length === 1 ? 'matching result' : 'matching results' }}.
                         </p>
@@ -109,7 +187,11 @@
                 @if (results().length === 0) {
                     <mat-card class="empty-card">
                         <mat-icon>person_search</mat-icon>
-                        <h3>No matching dentists or clinics found.</h3>
+
+                        <h3>
+                            No matching dentists or clinics found.
+                        </h3>
+
                         <p>
                             Try searching with a different dentist name, clinic name,
                             address, city, or zip code.
@@ -117,25 +199,35 @@
                     </mat-card>
                 } @else {
                     <div class="results-grid">
-                        @for (result of results(); track result.dentist_id + '-' + result.clinic_id) {
+                        @for (
+                            result of results();
+                            track result.dentist_id + '-' + result.clinic_id
+                            ) {
                             <mat-card class="result-card">
                                 <div class="result-main">
                                     <div class="dentist-icon">
                                         <mat-icon>medical_services</mat-icon>
                                     </div>
 
-                                    <div>
-                                        <h3>{{ result.dentist_name }}</h3>
-                                        <p class="clinic-name">{{ result.clinic_name }}</p>
+                                    <div class="result-main-text">
+                                        <h3>
+                                            {{ result.dentist_name }}
+                                        </h3>
+
+                                        <p class="clinic-name">
+                                            {{ result.clinic_name }}
+                                        </p>
                                     </div>
                                 </div>
 
                                 <div class="result-details">
                                     <p>
                                         <mat-icon inline>place</mat-icon>
+
                                         <span>
                                             {{ result.clinic_address }},
                                             {{ result.city_name }}
+
                                             @if (result.region_name) {
                                                 , {{ result.region_name }}
                                             }
@@ -145,22 +237,34 @@
                                     @if (result.contact_numbers) {
                                         <p>
                                             <mat-icon inline>phone</mat-icon>
-                                            <span>{{ result.contact_numbers }}</span>
+
+                                            <span>
+                                                {{ result.contact_numbers }}
+                                            </span>
                                         </p>
                                     }
 
-                                    @if (result.special_services && result.special_services.length > 0) {
+                                    @if (
+                                        result.special_services &&
+                                        result.special_services.length > 0
+                                        ) {
                                         <div class="special-services">
                                             <div class="special-services-heading">
                                                 <mat-icon inline>star</mat-icon>
-                                                <span>Special Services</span>
+
+                                                <span>
+                                                    Special Services
+                                                </span>
                                             </div>
 
                                             <div class="special-services-list">
-                                                @for (service of result.special_services; track service) {
+                                                @for (
+                                                    service of result.special_services;
+                                                    track service
+                                                    ) {
                                                     <span class="special-service-chip">
-                        {{ service }}
-                    </span>
+                                                        {{ service }}
+                                                    </span>
                                                 }
                                             </div>
                                         </div>
