@@ -1,5 +1,5 @@
 import {Component, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatCard} from '@angular/material/card';
@@ -40,6 +40,7 @@ interface SubmitContactUsMessageResponse {
         MatInput,
         MatSelect,
         MatOption,
+        NgOptimizedImage,
     ],
     templateUrl: './contact-us-component.html',
     styleUrl: './contact-us-component.scss',
