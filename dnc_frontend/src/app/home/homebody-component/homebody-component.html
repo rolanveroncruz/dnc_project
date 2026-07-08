@@ -1,230 +1,510 @@
 <header class="hero">
-    <div class="hero-content">
-        <p class="hero-eyebrow">Dental Network Company</p>
+    <div class="hero-inner">
+        <div class="hero-content">
+            <p class="hero-eyebrow">
+                Dental Network Company
+            </p>
 
-        <h1>Nationwide dental care support for members, companies, HMOs, and dentists.</h1>
+            <h1>
+                Nationwide dental care support for members, companies, HMOs, and dentists.
+            </h1>
 
-        <p>
-            DNC provides well-managed dental care administration through a nationwide
-            network of accredited dentists, helping members access benefits and helping
-            partners deliver quality dental care efficiently.
-        </p>
+            <p class="hero-description">
+                DNC provides well-managed dental care administration through a nationwide
+                network of accredited dentists, helping members access benefits and helping
+                partners deliver quality dental care efficiently.
+            </p>
 
-        <div class="hero-actions">
-            <button mat-raised-button color="primary" routerLink="/find_dentist">
-                Find My Dentist
-                <mat-icon iconPositionEnd>search</mat-icon>
-            </button>
+            <div class="hero-actions">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    routerLink="/find_dentist">
+                    Find My Dentist
+                    <mat-icon iconPositionEnd>search</mat-icon>
+                </button>
 
-            <button mat-stroked-button class="learn-more-btn" routerLink="/about_dnc">
-                Learn More About DNC
-            </button>
+                <button
+                    mat-stroked-button
+                    class="learn-more-btn"
+                    routerLink="/about_dnc">
+                    Learn More About DNC
+                </button>
+            </div>
+
+            <div class="hero-trust">
+                <div class="hero-trust-item">
+                    <mat-icon>verified</mat-icon>
+                    <span>Accredited dental network</span>
+                </div>
+
+                <div class="hero-trust-item">
+                    <mat-icon>location_on</mat-icon>
+                    <span>Nationwide access</span>
+                </div>
+
+                <div class="hero-trust-item">
+                    <mat-icon>groups</mat-icon>
+                    <span>Serving members and partners</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-image-frame">
+                <img
+                    ngSrc="/images/home/hero-dental-care-1.jpg"
+                    alt="Patient receiving professional dental care"
+                    height="5472" width="3648">
+
+                <div class="hero-image-badge">
+                    <div class="hero-image-badge-icon">
+                        <mat-icon>public</mat-icon>
+                    </div>
+
+                    <div class="hero-image-badge-text">
+                        <strong>Nationwide Network</strong>
+                        <span>
+                            Connecting members with accredited dentists
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </header>
 
-<section class="section-container highlights-section">
-    <div class="section-heading">
-        <p class="section-eyebrow">Trusted Dental Network</p>
-        <h2>Built for nationwide dental benefit management</h2>
-        <p>
-            DNC supports members, corporations, HMOs, insurance brokers, and dental
-            providers through organized access, verification, administration, and care
-            coordination.
-        </p>
-    </div>
 
-    <div class="stats-grid">
-        <mat-card class="stat-card">
-            <mat-card-content>
-                <span class="stat-value">800+</span>
-                <span class="stat-label">Dentists Nationwide</span>
-            </mat-card-content>
-        </mat-card>
+<section class="highlights-section">
+    <div class="stats-wrapper">
+        <div class="stats-grid">
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <span class="stat-value">800+</span>
+                    <span class="stat-label">
+                        Dentists Nationwide
+                    </span>
+                </mat-card-content>
+            </mat-card>
 
-        <mat-card class="stat-card">
-            <mat-card-content>
-                <span class="stat-value">31+</span>
-                <span class="stat-label">Years of Dental Management Experience</span>
-            </mat-card-content>
-        </mat-card>
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <span class="stat-value">31+</span>
+                    <span class="stat-label">
+                        Years of Dental Management Experience
+                    </span>
+                </mat-card-content>
+            </mat-card>
 
-        <mat-card class="stat-card">
-            <mat-card-content>
-                <span class="stat-value">1M+</span>
-                <span class="stat-label">Cardholders Served Nationwide</span>
-            </mat-card-content>
-        </mat-card>
-    </div>
-</section>
-
-<mat-divider></mat-divider>
-
-<section class="section-container audience-section">
-    <div class="section-heading">
-        <p class="section-eyebrow">How We Can Help</p>
-        <h2>Choose the service that fits your need</h2>
-        <p>
-            Whether you are a member looking for care, a dentist looking to grow your
-            practice, or an organization managing dental benefits, DNC is ready to help.
-        </p>
-    </div>
-
-    <div class="cards-grid audience-grid">
-        <mat-card class="audience-card">
-            <mat-card-header>
-                <div mat-card-avatar class="audience-icon">
-                    <mat-icon>badge</mat-icon>
-                </div>
-                <mat-card-title>For Members</mat-card-title>
-                <mat-card-subtitle>Avail of your dental benefits</mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content>
-                <p>
-                    Learn how to verify your benefits, schedule an appointment with an
-                    accredited dentist, and prepare the required documents for your visit.
-                </p>
-            </mat-card-content>
-
-            <mat-card-actions align="end">
-                <button mat-button color="primary" routerLink="/members_info">
-                    Member’s Info
-                </button>
-            </mat-card-actions>
-        </mat-card>
-
-        <mat-card class="audience-card">
-            <mat-card-header>
-                <div mat-card-avatar class="audience-icon">
-                    <mat-icon>person_search</mat-icon>
-                </div>
-                <mat-card-title>Find a Dentist</mat-card-title>
-                <mat-card-subtitle>Search the accredited network</mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content>
-                <p>
-                    Search by dentist name, clinic name, address, city, or region to find
-                    DNC accredited dental providers near you.
-                </p>
-            </mat-card-content>
-
-            <mat-card-actions align="end">
-                <button mat-button color="primary" routerLink="/find_dentist">
-                    Search Now
-                </button>
-            </mat-card-actions>
-        </mat-card>
-
-        <mat-card class="audience-card">
-            <mat-card-header>
-                <div mat-card-avatar class="audience-icon">
-                    <mat-icon>medical_services</mat-icon>
-                </div>
-                <mat-card-title>For Dentists</mat-card-title>
-                <mat-card-subtitle>Build your practice with DNC</mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content>
-                <p>
-                    Join one of the largest dental care programs in the Philippines and
-                    receive patient referrals without applying to multiple HMOs.
-                </p>
-            </mat-card-content>
-
-            <mat-card-actions align="end">
-                <button mat-button color="primary" routerLink="/how_to_join">
-                    How to Join
-                </button>
-            </mat-card-actions>
-        </mat-card>
-
-        <mat-card class="audience-card">
-            <mat-card-header>
-                <div mat-card-avatar class="audience-icon">
-                    <mat-icon>business_center</mat-icon>
-                </div>
-                <mat-card-title>For Brokers and HMOs</mat-card-title>
-                <mat-card-subtitle>Administrative support and care delivery</mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content>
-                <p>
-                    DNC provides comprehensive support for dental benefit administration,
-                    dentist coordination, verification, and nationwide member access.
-                </p>
-            </mat-card-content>
-
-            <mat-card-actions align="end">
-                <button mat-button color="primary" routerLink="/contact_us">
-                    Contact Us
-                </button>
-            </mat-card-actions>
-        </mat-card>
-    </div>
-</section>
-
-<section class="section-container process-section">
-    <div class="section-heading">
-        <p class="section-eyebrow">Simple Member Process</p>
-        <h2>How members avail of dental benefits</h2>
-        <p>
-            DNC helps make the availment process organized and easy to follow.
-        </p>
-    </div>
-
-    <div class="process-grid">
-        <div class="process-step">
-            <div class="step-number">1</div>
-            <h3>Check benefits and dentist availability</h3>
-            <p>
-                Members may contact DNC or check the website for current dentists,
-                locations, schedules, and benefit verification.
-            </p>
-        </div>
-
-        <div class="process-step">
-            <div class="step-number">2</div>
-            <h3>Secure an appointment</h3>
-            <p>
-                Members call the accredited dentist directly to schedule their dental
-                visit.
-            </p>
-        </div>
-
-        <div class="process-step">
-            <div class="step-number">3</div>
-            <h3>Visit the dentist</h3>
-            <p>
-                Members bring their dental card and valid ID for identity and benefit
-                verification.
-            </p>
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <span class="stat-value">1M+</span>
+                    <span class="stat-label">
+                        Cardholders Served Nationwide
+                    </span>
+                </mat-card-content>
+            </mat-card>
         </div>
     </div>
 
-    <div class="center-action">
-        <button mat-raised-button color="primary" routerLink="/members_info">
-            View Complete Member Instructions
-        </button>
+    <div class="section-container highlights-content">
+        <div class="section-heading">
+            <p class="section-eyebrow">
+                Trusted Dental Network
+            </p>
+
+            <h2>
+                Built for nationwide dental benefit management
+            </h2>
+
+            <p>
+                DNC supports members, corporations, HMOs, insurance brokers, and dental
+                providers through organized access, verification, administration, and care
+                coordination.
+            </p>
+        </div>
     </div>
 </section>
+
+
+<section class="network-section">
+    <div class="network-inner">
+        <div class="network-visual">
+            <div class="network-image-frame">
+                <img
+                    ngSrc="/images/home/philippines-dental-network.png"
+                    alt="DNC nationwide dental network across the Philippines"
+                    height="941" width="1672">
+
+                <div class="network-floating-card">
+                    <mat-icon>location_on</mat-icon>
+
+                    <div>
+                        <strong>Nationwide Reach</strong>
+                        <span>
+                            Supporting dental access across the Philippines
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="network-content">
+            <p class="section-eyebrow">
+                Nationwide Reach
+            </p>
+
+            <h2>
+                Dental access across the Philippines
+            </h2>
+
+            <p class="network-description">
+                DNC connects members and partner organizations with an established
+                network of accredited dental professionals, helping make quality dental
+                care more accessible across multiple regions and communities.
+            </p>
+
+            <div class="network-points">
+                <div class="network-point">
+                    <div class="network-point-icon">
+                        <mat-icon>check_circle</mat-icon>
+                    </div>
+
+                    <div>
+                        <strong>Accredited provider network</strong>
+                        <span>
+                            Organized access to dental professionals and clinics.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="network-point">
+                    <div class="network-point-icon">
+                        <mat-icon>check_circle</mat-icon>
+                    </div>
+
+                    <div>
+                        <strong>Partner support</strong>
+                        <span>
+                            Administration and coordination for companies and HMOs.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="network-point">
+                    <div class="network-point-icon">
+                        <mat-icon>check_circle</mat-icon>
+                    </div>
+
+                    <div>
+                        <strong>Member assistance</strong>
+                        <span>
+                            Clear processes for verification and dental care access.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                mat-raised-button
+                color="primary"
+                routerLink="/find_dentist">
+                Explore the Dental Network
+                <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+            </button>
+        </div>
+    </div>
+</section>
+
+
+<section class="audience-section">
+    <div class="section-container">
+        <div class="section-heading">
+            <p class="section-eyebrow">
+                How We Can Help
+            </p>
+
+            <h2>
+                Choose the service that fits your need
+            </h2>
+
+            <p>
+                Whether you are a member looking for care, a dentist looking to grow your
+                practice, or an organization managing dental benefits, DNC is ready to help.
+            </p>
+        </div>
+
+        <div class="cards-grid audience-grid">
+            <mat-card class="audience-card">
+                <mat-card-header>
+                    <div mat-card-avatar class="audience-icon">
+                        <mat-icon>badge</mat-icon>
+                    </div>
+
+                    <mat-card-title>
+                        For Members
+                    </mat-card-title>
+
+                    <mat-card-subtitle>
+                        Avail of your dental benefits
+                    </mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-card-content>
+                    <p>
+                        Learn how to verify your benefits, schedule an appointment with an
+                        accredited dentist, and prepare the required documents for your visit.
+                    </p>
+                </mat-card-content>
+
+                <mat-card-actions align="end">
+                    <button
+                        mat-button
+                        color="primary"
+                        routerLink="/members_info">
+                        Member’s Info
+                        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+
+            <mat-card class="audience-card">
+                <mat-card-header>
+                    <div mat-card-avatar class="audience-icon">
+                        <mat-icon>person_search</mat-icon>
+                    </div>
+
+                    <mat-card-title>
+                        Find a Dentist
+                    </mat-card-title>
+
+                    <mat-card-subtitle>
+                        Search the accredited network
+                    </mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-card-content>
+                    <p>
+                        Search by dentist name, clinic name, address, city, or region to find
+                        DNC accredited dental providers near you.
+                    </p>
+                </mat-card-content>
+
+                <mat-card-actions align="end">
+                    <button
+                        mat-button
+                        color="primary"
+                        routerLink="/find_dentist">
+                        Search Now
+                        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+
+            <mat-card class="audience-card">
+                <mat-card-header>
+                    <div mat-card-avatar class="audience-icon">
+                        <mat-icon>medical_services</mat-icon>
+                    </div>
+
+                    <mat-card-title>
+                        For Dentists
+                    </mat-card-title>
+
+                    <mat-card-subtitle>
+                        Build your practice with DNC
+                    </mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-card-content>
+                    <p>
+                        Join one of the largest dental care programs in the Philippines and
+                        receive patient referrals without applying to multiple HMOs.
+                    </p>
+                </mat-card-content>
+
+                <mat-card-actions align="end">
+                    <button
+                        mat-button
+                        color="primary"
+                        routerLink="/how_to_join">
+                        How to Join
+                        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+
+            <mat-card class="audience-card">
+                <mat-card-header>
+                    <div mat-card-avatar class="audience-icon">
+                        <mat-icon>business_center</mat-icon>
+                    </div>
+
+                    <mat-card-title>
+                        For Brokers and HMOs
+                    </mat-card-title>
+
+                    <mat-card-subtitle>
+                        Administrative support and care delivery
+                    </mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-card-content>
+                    <p>
+                        DNC provides comprehensive support for dental benefit administration,
+                        dentist coordination, verification, and nationwide member access.
+                    </p>
+                </mat-card-content>
+
+                <mat-card-actions align="end">
+                    <button
+                        mat-button
+                        color="primary"
+                        routerLink="/contact_us">
+                        Contact Us
+                        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </div>
+    </div>
+</section>
+
+
+<section class="process-section">
+    <div class="process-inner">
+        <div class="process-photo">
+            <img
+                ngSrc="/images/home/member-dental-visit.png"
+                alt="Member consulting with an accredited dentist"
+                height="1122" width="1402">
+
+            <div class="process-photo-caption">
+                <div class="process-photo-caption-icon">
+                    <mat-icon>sentiment_satisfied</mat-icon>
+                </div>
+
+                <div>
+                    <strong>
+                        A simpler path to dental care
+                    </strong>
+
+                    <span>
+                        From benefit checking to your dental visit
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="process-content">
+            <div class="process-heading">
+                <p class="section-eyebrow">
+                    Simple Member Process
+                </p>
+
+                <h2>
+                    How members avail of dental benefits
+                </h2>
+
+                <p>
+                    DNC helps make the availment process organized and easy to follow.
+                </p>
+            </div>
+
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">
+                        1
+                    </div>
+
+                    <div class="step-content">
+                        <h3>
+                            Check benefits and dentist availability
+                        </h3>
+
+                        <p>
+                            Members may contact DNC or check the website for current dentists,
+                            locations, schedules, and benefit verification.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-number">
+                        2
+                    </div>
+
+                    <div class="step-content">
+                        <h3>
+                            Secure an appointment
+                        </h3>
+
+                        <p>
+                            Members call the accredited dentist directly to schedule their
+                            dental visit.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-number">
+                        3
+                    </div>
+
+                    <div class="step-content">
+                        <h3>
+                            Visit the dentist
+                        </h3>
+
+                        <p>
+                            Members bring their dental card and valid ID for identity and
+                            benefit verification.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-action">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    routerLink="/members_info">
+                    View Complete Member Instructions
+                    <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
 
 <section class="cta-section">
     <div class="cta-content">
-        <p class="section-eyebrow">Get in Touch</p>
-        <h2>Need help with dental benefits, accreditation, or partnerships?</h2>
+        <p class="section-eyebrow">
+            Get in Touch
+        </p>
+
+        <h2>
+            Need help with dental benefits, accreditation, or partnerships?
+        </h2>
+
         <p>
             Send us a message and our team will respond within 1–2 working days.
         </p>
 
         <div class="cta-actions">
-            <button mat-raised-button color="primary" routerLink="/contact_us">
+            <button
+                mat-raised-button
+                class="cta-primary-button"
+                routerLink="/contact_us">
                 Contact Us
                 <mat-icon iconPositionEnd>mail</mat-icon>
             </button>
 
-            <button mat-stroked-button routerLink="/how_to_join">
+            <button
+                mat-stroked-button
+                class="cta-secondary-button"
+                routerLink="/how_to_join">
                 Apply as a Dentist
             </button>
         </div>

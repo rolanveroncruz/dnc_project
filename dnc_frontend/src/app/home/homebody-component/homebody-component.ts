@@ -11,6 +11,7 @@ import {
 import {MatIcon} from "@angular/material/icon";
 import {MatDivider} from '@angular/material/list';
 import {RouterLink} from '@angular/router';
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-homebody-component',
@@ -25,7 +26,8 @@ import {RouterLink} from '@angular/router';
         MatIcon,
         MatCardSubtitle,
         MatDivider,
-        RouterLink
+        RouterLink,
+        NgOptimizedImage
     ],
   templateUrl: './homebody-component.html',
   styleUrl: './homebody-component.scss',
