@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import {MatButton} from "@angular/material/button";
 import {
-    MatCard,
+    MatCardModule,
     MatCardActions,
     MatCardAvatar,
     MatCardContent,
@@ -9,7 +9,6 @@ import {
     MatCardTitle
 } from "@angular/material/card";
 import {MatIcon} from "@angular/material/icon";
-import {MatDivider} from '@angular/material/list';
 import {RouterLink} from '@angular/router';
 import {NgOptimizedImage} from '@angular/common';
 
@@ -17,7 +16,7 @@ import {NgOptimizedImage} from '@angular/common';
   selector: 'app-homebody-component',
     imports: [
         MatButton,
-        MatCard,
+        MatCardModule,
         MatCardActions,
         MatCardAvatar,
         MatCardContent,
@@ -25,7 +24,6 @@ import {NgOptimizedImage} from '@angular/common';
         MatCardTitle,
         MatIcon,
         MatCardSubtitle,
-        MatDivider,
         RouterLink,
         NgOptimizedImage
     ],

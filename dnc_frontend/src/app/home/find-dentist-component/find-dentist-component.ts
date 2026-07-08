@@ -1,11 +1,11 @@
 import {Component, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {MatCard} from '@angular/material/card';
 import {MatButton} from '@angular/material/button';
-import {MatIcon} from '@angular/material/icon';
+import {MatIconModule} from '@angular/material/icon';
 import {MatFormField, MatLabel, MatError} from '@angular/material/form-field';
-import {MatInput} from '@angular/material/input';
+import {MatInputModule} from '@angular/material/input';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {
     FindDentistService,
@@ -19,12 +19,12 @@ import {
         ReactiveFormsModule,
         MatCard,
         MatButton,
-        MatIcon,
+        MatIconModule,
         MatFormField,
         MatLabel,
-        MatError,
-        MatInput,
+        MatInputModule,
         MatProgressSpinner,
+        NgOptimizedImage,
     ],
     templateUrl: './find-dentist-component.html',
     styleUrl: './find-dentist-component.scss',
