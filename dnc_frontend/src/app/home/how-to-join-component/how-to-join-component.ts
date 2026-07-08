@@ -1,5 +1,5 @@
 import {Component,DestroyRef, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
@@ -31,6 +31,7 @@ import {MatSelectModule} from '@angular/material/select';
         MatProgressSpinnerModule,
         MatOption,
         MatSelectModule,
+        NgOptimizedImage,
     ],
     templateUrl: './how-to-join-component.html',
     styleUrl: './how-to-join-component.scss',

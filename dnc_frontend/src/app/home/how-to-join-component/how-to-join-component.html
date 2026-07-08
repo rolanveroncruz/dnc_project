@@ -1,12 +1,65 @@
 <section class="join-page">
-    <div class="join-hero">
-        <p class="eyebrow">How to Join</p>
-        <h1>Build your practice with DNC.</h1>
-        <p class="hero-subtitle">
-            Whether you’re a new clinic or an established practice looking to grow
-            referrals, DNC helps bring patients directly to you.
-        </p>
-    </div>
+    <header class="join-hero">
+        <div class="join-hero-inner">
+            <div class="join-hero-content">
+                <p class="eyebrow">
+                    How to Join
+                </p>
+
+                <h1>
+                    Build your practice with DNC.
+                </h1>
+
+                <p class="hero-subtitle">
+                    Whether you’re a new clinic or an established practice looking to grow
+                    referrals, DNC helps bring patients directly to you.
+                </p>
+
+                <div class="hero-highlights">
+                    <div class="hero-highlight">
+                        <mat-icon>groups</mat-icon>
+                        <span>Access a nationwide member network</span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>account_balance_wallet</mat-icon>
+                        <span>Simplified coordination and payments</span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>medical_services</mat-icon>
+                        <span>Focus more time on patient care</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="join-hero-visual">
+                <div class="join-image-frame">
+                    <img
+                        ngSrc="/images/how-to-join/how-to-join-hero.png"
+                        alt="Professional dentist welcoming a patient to a dental clinic"
+                        height="1086" width="1448">
+
+                    <div class="join-image-badge">
+                        <div class="join-image-badge-icon">
+                            <mat-icon>handshake</mat-icon>
+                        </div>
+
+                        <div class="join-image-badge-text">
+                            <strong>
+                                Grow your practice with DNC
+                            </strong>
+
+                            <span>
+                                Join a nationwide dental care network and reach more patients
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
 
     <section class="join-content">
         <mat-card class="intro-card">
@@ -15,11 +68,15 @@
             </div>
 
             <div>
-                <h2>Grow with one of the largest dental care programs in the Philippines.</h2>
+                <h2>
+                    Grow with one of the largest dental care programs in the Philippines.
+                </h2>
+
                 <p>
                     Gain access to one of the largest dental care programs in the Philippines —
                     no need to apply to or bill multiple HMOs.
                 </p>
+
                 <p>
                     We pay you promptly and efficiently, so you can focus on what matters most:
                     your patients.
@@ -27,75 +84,143 @@
             </div>
         </mat-card>
 
+
         <mat-card class="application-card">
             <div class="form-header">
-                <h2>Dentist / Clinic Application</h2>
+                <p class="form-eyebrow">
+                    Join the Network
+                </p>
+
+                <h2>
+                    Dentist / Clinic Application
+                </h2>
+
                 <p>
                     Please provide your contact details and upload the required documents.
                 </p>
             </div>
 
-            <form [formGroup]="form" (ngSubmit)="submitApplication()" class="application-form">
+            <form
+                [formGroup]="form"
+                (ngSubmit)="submitApplication()"
+                class="application-form">
+
                 <div class="form-grid">
                     <mat-form-field appearance="outline">
                         <mat-label>Name</mat-label>
-                        <input matInput formControlName="name" [readonly]="isSubmitted()">
 
-                        @if (form.controls.name.hasError('required') && form.controls.name.touched) {
-                            <mat-error>Name is required.</mat-error>
+                        <input
+                            matInput
+                            formControlName="name"
+                            [readonly]="isSubmitted()"
+                        >
+
+                        @if (
+                            form.controls.name.hasError('required') &&
+                            form.controls.name.touched
+                            ) {
+                            <mat-error>
+                                Name is required.
+                            </mat-error>
                         }
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
                         <mat-label>Clinic Name</mat-label>
-                        <input matInput formControlName="clinic_name" [readonly]="isSubmitted()">
 
-                        @if (form.controls.clinic_name.hasError('required') && form.controls.clinic_name.touched) {
-                            <mat-error>Clinic name is required.</mat-error>
+                        <input
+                            matInput
+                            formControlName="clinic_name"
+                            [readonly]="isSubmitted()"
+                        >
+
+                        @if (
+                            form.controls.clinic_name.hasError('required') &&
+                            form.controls.clinic_name.touched
+                            ) {
+                            <mat-error>
+                                Clinic name is required.
+                            </mat-error>
                         }
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
                         <mat-label>Contact Numbers</mat-label>
-                        <input matInput formControlName="contact_numbers" [readonly]="isSubmitted()">
 
-                        @if (form.controls.contact_numbers.hasError('required') && form.controls.contact_numbers.touched) {
-                            <mat-error>Contact number is required.</mat-error>
+                        <input
+                            matInput
+                            formControlName="contact_numbers"
+                            [readonly]="isSubmitted()"
+                        >
+
+                        @if (
+                            form.controls.contact_numbers.hasError('required') &&
+                            form.controls.contact_numbers.touched
+                            ) {
+                            <mat-error>
+                                Contact number is required.
+                            </mat-error>
                         }
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
                         <mat-label>Email Address</mat-label>
-                        <input matInput formControlName="email" [readonly]="isSubmitted()">
 
-                        @if (form.controls.email.hasError('required') && form.controls.email.touched) {
-                            <mat-error>Email address is required.</mat-error>
+                        <input
+                            matInput
+                            formControlName="email"
+                            [readonly]="isSubmitted()"
+                        >
+
+                        @if (
+                            form.controls.email.hasError('required') &&
+                            form.controls.email.touched
+                            ) {
+                            <mat-error>
+                                Email address is required.
+                            </mat-error>
                         }
 
-                        @if (form.controls.email.hasError('email') && form.controls.email.touched) {
-                            <mat-error>Please enter a valid email address.</mat-error>
+                        @if (
+                            form.controls.email.hasError('email') &&
+                            form.controls.email.touched
+                            ) {
+                            <mat-error>
+                                Please enter a valid email address.
+                            </mat-error>
                         }
                     </mat-form-field>
 
-                    <!-- ✅ NEW: ownership type -->
                     <mat-form-field appearance="outline">
                         <mat-label>Clinic Ownership Type</mat-label>
-                        <mat-select formControlName="clinic_ownership_type" [disabled]="isSubmitted()">
-                            @for (option of clinicOwnershipOptions; track option.value) {
+
+                        <mat-select
+                            formControlName="clinic_ownership_type"
+                            [disabled]="isSubmitted()">
+
+                            @for (
+                                option of clinicOwnershipOptions;
+                                track option.value
+                                ) {
                                 <mat-option [value]="option.value">
                                     {{ option.label }}
                                 </mat-option>
                             }
                         </mat-select>
 
-                        @if (form.controls.clinic_ownership_type.hasError('required') && form.controls.clinic_ownership_type.touched) {
-                            <mat-error>Clinic ownership type is required.</mat-error>
+                        @if (
+                            form.controls.clinic_ownership_type.hasError('required') &&
+                            form.controls.clinic_ownership_type.touched
+                            ) {
+                            <mat-error>
+                                Clinic ownership type is required.
+                            </mat-error>
                         }
                     </mat-form-field>
 
-                    <!-- ✅ NEW: HMO affiliations -->
                     <mat-form-field appearance="outline">
                         <mat-label>Current HMO Affiliations</mat-label>
+
                         <textarea
                             matInput
                             rows="3"
@@ -103,14 +228,22 @@
                             [readonly]="isSubmitted()">
                         </textarea>
 
-                        @if (form.controls.hmo_affiliations.hasError('required') && form.controls.hmo_affiliations.touched) {
-                            <mat-error>HMO affiliations are required.</mat-error>
+                        @if (
+                            form.controls.hmo_affiliations.hasError('required') &&
+                            form.controls.hmo_affiliations.touched
+                            ) {
+                            <mat-error>
+                                HMO affiliations are required.
+                            </mat-error>
                         }
                     </mat-form-field>
 
-                    <!-- ✅ NEW: clinic address -->
-                    <mat-form-field appearance="outline" class="full-width-field">
+                    <mat-form-field
+                        appearance="outline"
+                        class="full-width-field">
+
                         <mat-label>Clinic Address</mat-label>
+
                         <textarea
                             matInput
                             rows="3"
@@ -118,27 +251,53 @@
                             [readonly]="isSubmitted()">
                         </textarea>
 
-                        @if (form.controls.clinic_address.hasError('required') && form.controls.clinic_address.touched) {
-                            <mat-error>Clinic address is required.</mat-error>
+                        @if (
+                            form.controls.clinic_address.hasError('required') &&
+                            form.controls.clinic_address.touched
+                            ) {
+                            <mat-error>
+                                Clinic address is required.
+                            </mat-error>
                         }
                     </mat-form-field>
                 </div>
 
+
                 <div class="upload-section">
-                    <h3>Required Documents</h3>
+                    <div class="upload-section-header">
+                        <div>
+                            <p class="upload-eyebrow">
+                                Supporting Requirements
+                            </p>
+
+                            <h3>
+                                Required Documents
+                            </h3>
+                        </div>
+
+                        <p class="upload-section-note">
+                            Accepted formats: PDF, JPG, JPEG, and PNG
+                        </p>
+                    </div>
 
                     <div class="upload-grid">
                         <div class="upload-box">
                             <div class="upload-info">
                                 <mat-icon>description</mat-icon>
+
                                 <div>
-                                    <h4>PRC Dental License</h4>
+                                    <h4>
+                                        PRC Dental License
+                                    </h4>
+
                                     <p>
                                         {{ prcLicenseFile()?.name || 'No file selected yet.' }}
                                     </p>
 
                                     @if (submitAttempted() && !prcLicenseFile()) {
-                                        <p class="file-error">PRC Dental License is required.</p>
+                                        <p class="file-error">
+                                            PRC Dental License is required.
+                                        </p>
                                     }
                                 </div>
                             </div>
@@ -158,28 +317,40 @@
                                     type="button"
                                     [disabled]="isSubmitted()"
                                     (click)="prcInput.click()">
+                                    <mat-icon>upload_file</mat-icon>
                                     Upload
                                 </button>
 
                                 @if (prcLicenseFile() && !isSubmitted()) {
-                                    <button mat-button type="button" color="warn" (click)="clearPrcLicense()">
+                                    <button
+                                        mat-button
+                                        type="button"
+                                        color="warn"
+                                        (click)="clearPrcLicense()">
                                         Clear
                                     </button>
                                 }
                             </div>
                         </div>
 
+
                         <div class="upload-box">
                             <div class="upload-info">
                                 <mat-icon>receipt_long</mat-icon>
+
                                 <div>
-                                    <h4>BIR Form 2303</h4>
+                                    <h4>
+                                        BIR Form 2303
+                                    </h4>
+
                                     <p>
                                         {{ bir2303File()?.name || 'No file selected yet.' }}
                                     </p>
 
                                     @if (submitAttempted() && !bir2303File()) {
-                                        <p class="file-error">BIR Form 2303 is required.</p>
+                                        <p class="file-error">
+                                            BIR Form 2303 is required.
+                                        </p>
                                     }
                                 </div>
                             </div>
@@ -199,29 +370,43 @@
                                     type="button"
                                     [disabled]="isSubmitted()"
                                     (click)="birInput.click()">
+                                    <mat-icon>upload_file</mat-icon>
                                     Upload
                                 </button>
 
                                 @if (bir2303File() && !isSubmitted()) {
-                                    <button mat-button type="button" color="warn" (click)="clearBir2303()">
+                                    <button
+                                        mat-button
+                                        type="button"
+                                        color="warn"
+                                        (click)="clearBir2303()">
                                         Clear
                                     </button>
                                 }
                             </div>
                         </div>
 
-                        <!-- ✅ NEW: DTI or SEC Registration -->
+
                         <div class="upload-box">
                             <div class="upload-info">
                                 <mat-icon>business</mat-icon>
+
                                 <div>
-                                    <h4>{{ registrationDocLabel }}</h4>
+                                    <h4>
+                                        {{ registrationDocLabel }}
+                                    </h4>
+
                                     <p>
                                         {{ registrationDocFile()?.name || 'No file selected yet.' }}
                                     </p>
 
-                                    @if (submitAttempted() && !registrationDocFile()) {
-                                        <p class="file-error">{{ registrationDocLabel }} is required.</p>
+                                    @if (
+                                        submitAttempted() &&
+                                        !registrationDocFile()
+                                        ) {
+                                        <p class="file-error">
+                                            {{ registrationDocLabel }} is required.
+                                        </p>
                                     }
                                 </div>
                             </div>
@@ -241,30 +426,47 @@
                                     type="button"
                                     [disabled]="isSubmitted()"
                                     (click)="registrationDocInput.click()">
+                                    <mat-icon>upload_file</mat-icon>
                                     Upload
                                 </button>
 
-                                @if (registrationDocFile() && !isSubmitted()) {
-                                    <button mat-button type="button" color="warn" (click)="clearRegistrationDoc()">
+                                @if (
+                                    registrationDocFile() &&
+                                    !isSubmitted()
+                                    ) {
+                                    <button
+                                        mat-button
+                                        type="button"
+                                        color="warn"
+                                        (click)="clearRegistrationDoc()">
                                         Clear
                                     </button>
                                 }
                             </div>
                         </div>
 
-                        <!-- ✅ NEW: Secretary's Certificate, only company/corporation -->
+
                         @if (supportingDocsRequired) {
                             <div class="upload-box">
                                 <div class="upload-info">
                                     <mat-icon>verified</mat-icon>
+
                                     <div>
-                                        <h4>Secretary's Certificate</h4>
+                                        <h4>
+                                            Secretary's Certificate
+                                        </h4>
+
                                         <p>
                                             {{ supportingDocsFile1()?.name || 'No file selected yet.' }}
                                         </p>
 
-                                        @if (submitAttempted() && !supportingDocsFile1()) {
-                                            <p class="file-error">Secretary's Certificate is required.</p>
+                                        @if (
+                                            submitAttempted() &&
+                                            !supportingDocsFile1()
+                                            ) {
+                                            <p class="file-error">
+                                                Secretary's Certificate is required.
+                                            </p>
                                         }
                                     </div>
                                 </div>
@@ -284,11 +486,19 @@
                                         type="button"
                                         [disabled]="isSubmitted()"
                                         (click)="supportingDocsInput.click()">
+                                        <mat-icon>upload_file</mat-icon>
                                         Upload
                                     </button>
 
-                                    @if (supportingDocsFile1() && !isSubmitted()) {
-                                        <button mat-button type="button" color="warn" (click)="clearSupportingDocsFile1()">
+                                    @if (
+                                        supportingDocsFile1() &&
+                                        !isSubmitted()
+                                        ) {
+                                        <button
+                                            mat-button
+                                            type="button"
+                                            color="warn"
+                                            (click)="clearSupportingDocsFile1()">
                                             Clear
                                         </button>
                                     }
@@ -297,6 +507,7 @@
                         }
                     </div>
                 </div>
+
 
                 <div class="submit-row">
                     <button
@@ -310,12 +521,15 @@
                                 diameter="20"
                                 mode="indeterminate">
                             </mat-progress-spinner>
+
                             Submitting...
                         } @else {
+                            <mat-icon>send</mat-icon>
                             Submit Application
                         }
                     </button>
                 </div>
+
 
                 @if (submitError()) {
                     <div class="submit-error">
@@ -325,11 +539,16 @@
                 }
             </form>
 
+
             @if (isSubmitted()) {
                 <div class="thank-you-message">
                     <mat-icon>check_circle</mat-icon>
+
                     <div>
-                        <h3>Thank you for your application.</h3>
+                        <h3>
+                            Thank you for your application.
+                        </h3>
+
                         <p>
                             Your information has been received. DNC will review your submission
                             and contact you through the details provided.
