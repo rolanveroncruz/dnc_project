@@ -23,6 +23,10 @@ pub struct Model {
     pub message: String,
     #[sea_orm(column_type = "Text")]
     pub status: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub company_address: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub designation: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

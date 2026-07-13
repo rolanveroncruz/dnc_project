@@ -62,6 +62,7 @@ mod m20260622_055235_update_dentist_payments_unique_index;
 mod m20260624_064339_create_dentist_applications_table;
 mod m20260624_125338_create_contact_us_messages_table;
 mod m20260701_035605_alter_table_dentist_applications_table;
+mod m20260713_161522_alter_contact_us_messages;
 
 pub struct Migrator;
 
@@ -131,6 +132,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260624_064339_create_dentist_applications_table::Migration),
             Box::new(m20260624_125338_create_contact_us_messages_table::Migration),
             Box::new(m20260701_035605_alter_table_dentist_applications_table::Migration),
+            Box::new(m20260713_161522_alter_contact_us_messages::Migration),
         ]
     }
 }
