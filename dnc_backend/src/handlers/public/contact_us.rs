@@ -15,6 +15,8 @@ pub struct SubmitContactUsMessageRequest {
     pub company_and_hmo: Option<String>,
     pub contact_numbers: String,
     pub message: String,
+    pub company_address: Option<String>,
+    pub designation: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -36,6 +38,8 @@ pub async fn submit_contact_us_message_handler(
 
     let card_number = clean_optional(request.card_number);
     let company_and_hmo = clean_optional(request.company_and_hmo);
+    let company_address = clean_optional(request.company_address);
+    let designation = clean_optional(request.designation);
 
     let active_model = contact_us_messages::ActiveModel {
         person_type: Set(person_type),
@@ -45,6 +49,8 @@ pub async fn submit_contact_us_message_handler(
         contact_numbers: Set(contact_numbers),
         message: Set(message),
         status: Set("new".to_string()),
+        company_address: Set(company_address),
+        designation: Set(designation),
         ..Default::default()
     };
 
@@ -88,10 +94,10 @@ fn clean_optional(value: Option<String>) -> Option<String> {
 
 fn validate_person_type(person_type: &str) -> Result<(), (StatusCode, String)> {
     match person_type {
-        "member" | "dentist" | "broker" | "hmo_rep" => Ok(()),
+        "member" | "dentist" |   "hmo_rep" | "company_rep" => Ok(()),
         _ => Err((
             StatusCode::BAD_REQUEST,
-            "person_type must be one of: member, dentist, broker, hmo_rep".to_string(),
+            "person_type must be one of: member, dentist, hmo_rep, company_rep".to_string(),
         )),
     }
 }
