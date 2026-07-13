@@ -29,6 +29,8 @@ export interface ContactUsMessageRow {
     name: string;
     card_number: string | null;
     company_and_hmo: string | null;
+    company_address: string | null;
+    designation: string | null;
     contact_numbers: string;
     message: string;
 
@@ -57,6 +59,7 @@ export interface ContactUsMessageRow {
     ],
     templateUrl: './website-inquiries.html',
     styleUrl: './website-inquiries.scss',
+    standalone: true
 })
 export class WebsiteInquiries implements OnInit {
     private readonly http = inject(HttpClient);
@@ -72,7 +75,10 @@ export class WebsiteInquiries implements OnInit {
         'date_submitted',
         'person_type',
         'name',
-        'member_info',
+        'card_number',
+        'company_and_hmo',
+        'company_address',
+        'designation',
         'contact_numbers',
         'message',
         'status',
@@ -105,7 +111,10 @@ export class WebsiteInquiries implements OnInit {
                 this.isLoading.set(false);
             },
             error: (error) => {
-                console.error('Error loading contact us messages:', error);
+                console.error(
+                    'Error loading contact us messages:',
+                    error
+                );
 
                 this.inquiries.set([]);
                 this.isLoading.set(false);
@@ -140,18 +149,18 @@ export class WebsiteInquiries implements OnInit {
         switch (value) {
             case 'member':
                 return 'Member';
+
             case 'dentist':
                 return 'Dentist';
-            case 'broker':
-                return 'Broker';
+
             case 'hmo_rep':
-                return 'HMO Representative';
+                return 'HMO/Broker Representative';
+
+            case 'company_rep':
+                return 'Company Representative';
+
             default:
                 return this.displayValue(value);
         }
-    }
-
-    hasMemberInfo(row: ContactUsMessageRow): boolean {
-        return !!row.card_number || !!row.company_and_hmo;
     }
 }

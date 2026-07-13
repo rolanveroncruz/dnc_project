@@ -181,3 +181,11 @@
         align-self: flex-start;
     }
 }
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.inquiries-table {
+    min-width: 1600px;
+}

@@ -1,16 +1,29 @@
 import {Component, inject, signal} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+    FormControl,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators
+} from '@angular/forms';
 import {MatCard} from '@angular/material/card';
 import {MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
-import {MatFormField, MatLabel, MatError} from '@angular/material/form-field';
+import {
+    MatError,
+    MatFormField,
+    MatLabel
+} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
-import {MatSelect, MatOption} from '@angular/material/select';
+import {MatOption, MatSelect} from '@angular/material/select';
 import {environment} from '../../../environments/environment';
 
-type ContactPersonType = 'member' | 'dentist' | 'broker' | 'hmo_rep';
+type ContactPersonType =
+    | 'member'
+    | 'dentist'
+    | 'hmo_rep'
+    | 'company_rep';
 
 interface SubmitContactUsMessageRequest {
     person_type: ContactPersonType;
@@ -19,6 +32,8 @@ interface SubmitContactUsMessageRequest {
     company_and_hmo: string | null;
     contact_numbers: string;
     message: string;
+    company_address: string | null;
+    designation: string | null;
 }
 
 interface SubmitContactUsMessageResponse {
@@ -44,6 +59,7 @@ interface SubmitContactUsMessageResponse {
     ],
     templateUrl: './contact-us-component.html',
     styleUrl: './contact-us-component.scss',
+    standalone: true,
 })
 export class ContactUsComponent {
     private readonly http = inject(HttpClient);
@@ -53,31 +69,59 @@ export class ContactUsComponent {
     readonly isSubmitting = signal(false);
     readonly submitError = signal<string | null>(null);
 
-    readonly personTypes: { value: ContactPersonType; label: string }[] = [
-        { value: 'member', label: 'I’m a member' },
-        { value: 'dentist', label: 'I’m a dentist' },
-        { value: 'broker', label: 'I’m a broker' },
-        { value: 'hmo_rep', label: 'I’m an HMO representative' },
+    readonly personTypes: {
+        value: ContactPersonType;
+        label: string;
+    }[] = [
+        {
+            value: 'member',
+            label: 'I’m a Member',
+        },
+        {
+            value: 'dentist',
+            label: 'I’m a Dentist',
+        },
+        {
+            value: 'hmo_rep',
+            label: 'I’m an HMO/Broker Representative',
+        },
+        {
+            value: 'company_rep',
+            label: 'I’m a Company Representative',
+        },
     ];
 
     readonly form = new FormGroup({
         person_type: new FormControl<ContactPersonType | null>(null, {
             validators: [Validators.required],
         }),
+
         name: new FormControl('', {
             nonNullable: true,
             validators: [Validators.required],
         }),
+
         card_number: new FormControl('', {
             nonNullable: true,
         }),
+
         company_and_hmo: new FormControl('', {
             nonNullable: true,
         }),
+
+        company_address: new FormControl('', {
+            nonNullable: true,
+        }),
+
+        designation: new FormControl('', {
+            nonNullable: true,
+        }),
+
         contact_numbers: new FormControl('', {
             nonNullable: true,
             validators: [Validators.required],
         }),
+
         message: new FormControl('', {
             nonNullable: true,
             validators: [Validators.required],
@@ -88,8 +132,18 @@ export class ContactUsComponent {
         return this.form.controls.person_type.value === 'member';
     }
 
+    get isOrganizationRepresentative(): boolean {
+        const personType = this.form.controls.person_type.value;
+
+        return personType === 'hmo_rep' || personType === 'company_rep';
+    }
+
     get canSubmit(): boolean {
-        return this.form.valid && !this.isSubmitted() && !this.isSubmitting();
+        return (
+            this.form.valid &&
+            !this.isSubmitted() &&
+            !this.isSubmitting()
+        );
     }
 
     submitMessage(): void {
@@ -99,17 +153,40 @@ export class ContactUsComponent {
         }
 
         const rawValue = this.form.getRawValue();
+        const personType = rawValue.person_type;
 
-        if (!rawValue.person_type) {
+        if (!personType) {
             this.form.controls.person_type.markAsTouched();
             return;
         }
 
+        const isMember = personType === 'member';
+
+        const isOrganizationRepresentative =
+            personType === 'hmo_rep' ||
+            personType === 'company_rep';
+
         const request: SubmitContactUsMessageRequest = {
-            person_type: rawValue.person_type,
+            person_type: personType,
             name: rawValue.name.trim(),
-            card_number: rawValue.card_number.trim() || null,
-            company_and_hmo: rawValue.company_and_hmo.trim() || null,
+
+            card_number: isMember
+                ? rawValue.card_number.trim() || null
+                : null,
+
+            company_and_hmo:
+                isMember || isOrganizationRepresentative
+                    ? rawValue.company_and_hmo.trim() || null
+                    : null,
+
+            company_address: isOrganizationRepresentative
+                ? rawValue.company_address.trim() || null
+                : null,
+
+            designation: isOrganizationRepresentative
+                ? rawValue.designation.trim() || null
+                : null,
+
             contact_numbers: rawValue.contact_numbers.trim(),
             message: rawValue.message.trim(),
         };
@@ -117,23 +194,29 @@ export class ContactUsComponent {
         this.submitError.set(null);
         this.isSubmitting.set(true);
 
-        this.http.post<SubmitContactUsMessageResponse>(
-            `${this.baseUrl}/public/contact_messages`,
-            request
-        ).subscribe({
-            next: () => {
-                this.isSubmitting.set(false);
-                this.isSubmitted.set(true);
-                this.form.disable();
-            },
-            error: (error) => {
-                console.error('Error submitting contact us message:', error);
+        this.http
+            .post<SubmitContactUsMessageResponse>(
+                `${this.baseUrl}/public/contact_messages`,
+                request
+            )
+            .subscribe({
+                next: () => {
+                    this.isSubmitting.set(false);
+                    this.isSubmitted.set(true);
+                    this.form.disable();
+                },
 
-                this.isSubmitting.set(false);
-                this.submitError.set(
-                    'Sorry, your message could not be submitted. Please try again.'
-                );
-            },
-        });
+                error: (error) => {
+                    console.error(
+                        'Error submitting contact us message:',
+                        error
+                    );
+
+                    this.isSubmitting.set(false);
+                    this.submitError.set(
+                        'Sorry, your message could not be submitted. Please try again.'
+                    );
+                },
+            });
     }
 }

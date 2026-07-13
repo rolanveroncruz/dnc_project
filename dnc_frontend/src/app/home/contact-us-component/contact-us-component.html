@@ -1,4 +1,3 @@
-```html
 <section class="contact-page">
     <header class="contact-hero">
         <div class="contact-hero-inner">
@@ -12,23 +11,33 @@
                 </h1>
 
                 <p class="hero-subtitle">
-                    Send us your message and our team will get back to you as soon as possible.
+                    Send us your message and our team will get back to you
+                    as soon as possible.
                 </p>
 
                 <div class="hero-highlights">
                     <div class="hero-highlight">
                         <mat-icon>support_agent</mat-icon>
-                        <span>Responsive member and partner support</span>
+
+                        <span>
+                            Responsive member and partner support
+                        </span>
                     </div>
 
                     <div class="hero-highlight">
                         <mat-icon>groups</mat-icon>
-                        <span>Assistance for members, dentists, and organizations</span>
+
+                        <span>
+                            Assistance for members, dentists, and organizations
+                        </span>
                     </div>
 
                     <div class="hero-highlight">
                         <mat-icon>schedule</mat-icon>
-                        <span>Response within 1–2 working days</span>
+
+                        <span>
+                            Response within 1–2 working days
+                        </span>
                     </div>
                 </div>
             </div>
@@ -38,7 +47,9 @@
                     <img
                         ngSrc="/images/contact-us/contact-us-hero.png"
                         alt="Professional Filipina dental network coordinator assisting a client"
-                        height="941" width="1672">
+                        height="1536"
+                        width="2816"
+                    >
 
                     <div class="contact-image-badge">
                         <div class="contact-image-badge-icon">
@@ -51,7 +62,8 @@
                             </strong>
 
                             <span>
-                                Connect with the DNC team for dental benefits, accreditation, and partnership support
+                                Connect with the DNC team for dental benefits,
+                                accreditation, and partnership support
                             </span>
                         </div>
                     </div>
@@ -59,7 +71,6 @@
             </div>
         </div>
     </header>
-
 
     <section class="contact-content">
         <mat-card class="contact-card">
@@ -78,8 +89,8 @@
                     </h2>
 
                     <p>
-                        Please choose the option that best describes you and provide your
-                        contact details below.
+                        Please choose the option that best describes you and
+                        provide your contact details below.
                     </p>
                 </div>
             </div>
@@ -87,12 +98,12 @@
             <form
                 [formGroup]="form"
                 (ngSubmit)="submitMessage()"
-                class="contact-form">
-
+                class="contact-form"
+            >
                 <mat-form-field
                     appearance="outline"
-                    class="full-width">
-
+                    class="full-width"
+                >
                     <mat-label>
                         Tell us more about yourself
                     </mat-label>
@@ -114,7 +125,6 @@
                         </mat-error>
                     }
                 </mat-form-field>
-
 
                 <div class="form-grid">
                     <mat-form-field appearance="outline">
@@ -159,7 +169,6 @@
                         }
                     </mat-form-field>
                 </div>
-
 
                 @if (isMember) {
                     <div class="member-fields">
@@ -207,11 +216,72 @@
                     </div>
                 }
 
+                @if (isOrganizationRepresentative) {
+                    <div class="member-fields">
+                        <div class="member-fields-header">
+                            <div class="member-fields-icon">
+                                <mat-icon>business</mat-icon>
+                            </div>
+
+                            <div>
+                                <p class="member-eyebrow">
+                                    Organization Details
+                                </p>
+
+                                <h3>
+                                    Company Information
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <mat-form-field appearance="outline">
+                                <mat-label>
+                                    Company
+                                </mat-label>
+
+                                <input
+                                    matInput
+                                    formControlName="company_and_hmo"
+                                    [readonly]="isSubmitted()"
+                                >
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>
+                                    Designation
+                                </mat-label>
+
+                                <input
+                                    matInput
+                                    formControlName="designation"
+                                    [readonly]="isSubmitted()"
+                                >
+                            </mat-form-field>
+                        </div>
+
+                        <mat-form-field
+                            appearance="outline"
+                            class="full-width"
+                        >
+                            <mat-label>
+                                Company Address
+                            </mat-label>
+
+                            <textarea
+                                matInput
+                                formControlName="company_address"
+                                rows="3"
+                                [readonly]="isSubmitted()"
+                            ></textarea>
+                        </mat-form-field>
+                    </div>
+                }
 
                 <mat-form-field
                     appearance="outline"
-                    class="full-width">
-
+                    class="full-width"
+                >
                     <mat-label>
                         Message
                     </mat-label>
@@ -220,8 +290,8 @@
                         matInput
                         formControlName="message"
                         rows="6"
-                        [readonly]="isSubmitted()">
-                    </textarea>
+                        [readonly]="isSubmitted()"
+                    ></textarea>
 
                     @if (
                         form.controls.message.hasError('required') &&
@@ -233,23 +303,31 @@
                     }
                 </mat-form-field>
 
+                @if (submitError(); as errorMessage) {
+                    <div role="alert">
+                        {{ errorMessage }}
+                    </div>
+                }
 
                 <div class="submit-row">
                     <button
                         mat-raised-button
                         color="primary"
                         type="submit"
-                        [disabled]="!canSubmit">
-
+                        [disabled]="!canSubmit"
+                    >
                         <mat-icon>
                             send
                         </mat-icon>
 
-                        Send Message
+                        @if (isSubmitting()) {
+                            Sending...
+                        } @else {
+                            Send Message
+                        }
                     </button>
                 </div>
             </form>
-
 
             @if (isSubmitted()) {
                 <div class="thank-you-message">
@@ -294,4 +372,3 @@
         </mat-card>
     </section>
 </section>
-```
