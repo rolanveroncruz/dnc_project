@@ -17,6 +17,8 @@ pub struct ContactUsMessageListRow {
     pub name: String,
     pub card_number: Option<String>,
     pub company_and_hmo: Option<String>,
+    pub company_address: Option<String>,
+    pub designation: Option<String>,
     pub contact_numbers: String,
     pub message: String,
 
@@ -47,6 +49,8 @@ pub async fn get_contact_us_messages_handler(
             name: message.name,
             card_number: message.card_number,
             company_and_hmo: message.company_and_hmo,
+            company_address: message.company_address,
+            designation: message.designation,
             contact_numbers: message.contact_numbers,
             message: message.message,
 
