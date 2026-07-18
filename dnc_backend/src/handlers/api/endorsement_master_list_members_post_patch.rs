@@ -183,3 +183,24 @@ pub async fn patch_master_list_member(
 fn internal_error<E: std::fmt::Display>(err: E) -> (StatusCode, String) {
     (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
 }
+
+
+#[instrument(skip(state), err(Debug))]
+pub async fn get_master_list_member(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<Json<MasterListMemberResponse>, (StatusCode, String)> {
+    let member = master_list_member::Entity::find_by_id(id)
+        .one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("master_list_member {} not found", id),
+            )
+        })?;
+
+    Ok(Json(member.into()))
+}
+

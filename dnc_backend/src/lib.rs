@@ -43,7 +43,7 @@ use crate::handlers::{get_data_objects, get_dental_service_types, post_dental_se
 use crate::handlers::{get_billing_rules_for_endorsement_id, post_billing_rule, patch_billing_rule, delete_billing_rule};
 use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_for_endorsement_id};
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
-use crate::handlers::{patch_master_list_member, get_approval_code_for_verification_id, get_high_end_verifications};
+use crate::handlers::{patch_master_list_member, get_master_list_member, get_approval_code_for_verification_id, get_high_end_verifications};
 use crate::handlers::{post_high_end_verification_approval};
 use crate::handlers::{get_done_verifications, reconcile_verification, get_all_member_names_from_company};
 use crate::handlers::{create_acc_reconciliation, get_acc_recons};
@@ -186,6 +186,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/master_list_members/{master_list_member_id}/used_service_counts", get(get_used_service_counts_for_member_id))
         .route("/master_list_members/{master_list_member_id}/service_counts", get(get_service_counts_for_member_id))
         .route("/master_list_members", post(create_master_list_member))
+        .route("/master_list_members/{id}", get(get_master_list_member))
         .route("/master_list_members/{id}", patch(patch_master_list_member))
         .route("/verifications", get(get_all_verifications))
         .route("/verifications", post(create_verification))
