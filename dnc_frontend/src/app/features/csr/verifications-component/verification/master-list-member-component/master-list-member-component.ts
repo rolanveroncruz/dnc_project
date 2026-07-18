@@ -159,9 +159,9 @@ export class MasterListMemberComponent {
             last_name: this.normalize(this.lastName.value),
             first_name: this.normalize(this.firstName.value),
             middle_name: this.normalize(this.middleName.value),
-            mobile_number: this.normalize(this.mobileNumber.value),
-            email_address: this.normalize(this.emailAddress.value),
-            birth_date: this.normalize(this.birthDate.value),
+            mobile_number: this.normalizeOptional(this.mobileNumber.value),
+            email_address: this.normalizeOptional(this.emailAddress.value),
+            birth_date: this.normalizeOptional(this.birthDate.value),
             is_active: true,
             last_edited_by: null,
         }
@@ -548,6 +548,11 @@ export class MasterListMemberComponent {
 
     private normalize(value: string | null | undefined): string {
         return (value ?? '').trim();
+    }
+
+    private normalizeOptional(value: string | null | undefined): string | null {
+        const normalized = (value ?? '').trim();
+        return normalized == ''? null: normalized;
     }
 
     private normalizedAccountNumber(): string {
