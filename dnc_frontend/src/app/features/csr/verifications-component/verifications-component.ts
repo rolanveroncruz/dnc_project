@@ -209,7 +209,10 @@ export class VerificationsComponent implements OnInit {
             ApprovalDialogData,
             ApprovalDialogResult
         >(ApprovalDialogComponent, {
-            width: '600px',
+            width: '900px',
+            maxWidth: '95vw',
+            maxHeight: '95vh',
+            panelClass: 'approval-dialog-panel',
             data: dialogData,
             disableClose: true,
         });

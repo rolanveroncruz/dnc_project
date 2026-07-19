@@ -2,36 +2,36 @@
 
 <mat-dialog-content>
     <div class="details-grid">
-
         <div class="detail-row">
             <span class="label">Date</span>
             <span class="value">{{ data.date | date:'medium' }}</span>
         </div>
-
 
         <div class="detail-row">
             <span class="label">Dentist Name</span>
             <span class="value">{{ data.dentist_name }}</span>
         </div>
 
-
         <div class="detail-row">
             <span class="label">Member Name</span>
             <span class="value">{{ data.master_list_member_name }}</span>
         </div>
 
-
         <div class="detail-row">
             <span class="label">Dental Service Name</span>
             <span class="value">{{ data.dental_service_name }}</span>
         </div>
-        @if(data.approved_amount !== null){
+
+        @if (data.approved_amount !== null) {
             <div class="detail-row">
                 <span class="label">Approved Amount</span>
-                <span class="value">{{ data.approved_amount | currency:'PHP':'symbol':'1.2-2' }}</span>
+                <span class="value">
+                    {{ data.approved_amount | currency:'PHP':'symbol':'1.2-2' }}
+                </span>
             </div>
         }
-        @if(data.dentist_notes !== null){
+
+        @if (data.dentist_notes !== null) {
             <div class="detail-row">
                 <span class="label">Dentist Notes</span>
                 <span class="value">{{ data.dentist_notes }}</span>
@@ -40,60 +40,187 @@
     </div>
 
     <form [formGroup]="form" class="form-section">
+        <!-- ✅ Editable member details -->
+        <section class="member-details-section">
+            <h3>Member Details</h3>
+
+            @if (loadingMemberDetails()) {
+                <p class="member-loading-message">
+                    Loading member details...
+                </p>
+            } @else if (memberDetailsError()) {
+                <div class="field-error">
+                    {{ memberDetailsError() }}
+                </div>
+            } @else {
+                <div class="member-details-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Mobile Number</mat-label>
+                        <input
+                            matInput
+                            type="text"
+                            formControlName="member_mobile_number"
+                            autocomplete="off"
+                            [readonly] = "savingMemberDetails()"
+                        />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Email Address</mat-label>
+                        <input
+                            matInput
+                            type="email"
+                            formControlName="member_email_address"
+                            autocomplete="off"
+                            [readonly] = "savingMemberDetails()"
+                        />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Birthdate</mat-label>
+                        <input
+                            matInput
+                            type="date"
+                            formControlName="member_birth_date"
+                            [readonly] = "savingMemberDetails()"
+                        />
+                    </mat-form-field>
+                </div>
+
+                @if (hasUnsavedMemberDetails()) {
+                    <div class="member-unsaved-message">
+                        Member details have unsaved changes.
+                    </div>
+                }
+
+                @if (memberDetailsSaveMessage()) {
+                    <div class="member-save-success">
+                        {{ memberDetailsSaveMessage() }}
+                    </div>
+                }
+
+                @if (memberDetailsSaveError()) {
+                    <div class="field-error member-save-error">
+                        {{ memberDetailsSaveError() }}
+                    </div>
+                }
+
+                <div class="member-details-actions">
+                    <!-- ✅ Restore the last loaded or saved values -->
+                    <button
+                        mat-stroked-button
+                        type="button"
+                        [disabled]="
+                            !hasUnsavedMemberDetails() ||
+                            savingMemberDetails()
+                        "
+                        (click)="revertMemberDetails()">
+                        Revert
+                    </button>
+
+                    <!-- ✅ Patch the three member fields -->
+                    <button
+                        mat-flat-button
+                        color="primary"
+                        type="button"
+                        [disabled]="
+                            !hasUnsavedMemberDetails() ||
+                            savingMemberDetails()
+                        "
+                        (click)="saveMemberDetails()">
+                        {{
+                            savingMemberDetails()
+                                ? 'Saving...'
+                                : 'Save Member Details'
+                        }}
+                    </button>
+                </div>
+            }
+        </section>
+
         <mat-form-field appearance="outline" class="full-width">
             <mat-label>Service Availed Date</mat-label>
+
             <input
                 matInput
                 [matDatepicker]="serviceAvailedDatePicker"
-                formControlName="service_availed_date">
+                formControlName="service_availed_date"
+            />
 
             <mat-datepicker-toggle
                 matIconSuffix
                 [for]="serviceAvailedDatePicker">
             </mat-datepicker-toggle>
 
-            <mat-datepicker #serviceAvailedDatePicker></mat-datepicker>
+            <mat-datepicker
+                #serviceAvailedDatePicker>
+            </mat-datepicker>
 
-            @if (form.controls.service_availed_date.hasError('required')) {
-                <mat-error>Service availed date is required.</mat-error>
+            @if (
+                form.controls.service_availed_date.hasError('required')
+                ) {
+                <mat-error>
+                    Service availed date is required.
+                </mat-error>
             }
         </mat-form-field>
 
         @if (data.dental_service_record_tooth) {
-            <!--
-            Tooth ID is required when record tooth is true.
-            -->
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Tooth ID</mat-label>
-            <select matNativeControl formControlName="tooth_id">
-                <option [value]="''">Select tooth</option>
-                @for (toothId of toothIds; track toothId) {
-                    <option [value]="toothId">{{ toothId }}</option>
-                }
-            </select>
+
+                <select
+                    matNativeControl
+                    formControlName="tooth_id">
+                    <option [value]="''">
+                        Select tooth
+                    </option>
+
+                    @for (toothId of toothIds; track toothId) {
+                        <option [value]="toothId">
+                            {{ toothId }}
+                        </option>
+                    }
+                </select>
 
                 @if (form.controls.tooth_id.hasError('required')) {
-                    <mat-error>Tooth ID is required.</mat-error>
+                    <mat-error>
+                        Tooth ID is required.
+                    </mat-error>
                 }
             </mat-form-field>
         }
+
         @if (data.dental_service_record_surface) {
-            <!-- ✅ multiple tooth surfaces using checkboxes -->
             <div class="tooth-surface-section full-width">
-                <div class="tooth-surface-label">Tooth Surfaces</div>
+                <div class="tooth-surface-label">
+                    Tooth Surfaces
+                </div>
 
                 <div class="tooth-surface-grid">
-                    @for (surface of data.tooth_surfaces; track surface.id) {
+                    @for (
+                        surface of data.tooth_surfaces;
+                        track surface.id
+                        ) {
                         <mat-checkbox
-                            [checked]="isToothSurfaceChecked(surface.id)"
-                            (change)="onToothSurfaceToggle(surface.id, $event.checked)">
+                            [checked]="
+                                isToothSurfaceChecked(surface.id)
+                            "
+                            (change)="
+                                onToothSurfaceToggle(
+                                    surface.id,
+                                    $event.checked
+                                )
+                            ">
                             {{ surface.name }}
                         </mat-checkbox>
                     }
                 </div>
 
                 @if (
-                    form.controls.tooth_surface_ids.hasError('required') &&
+                    form.controls.tooth_surface_ids.hasError(
+                        'required'
+                    ) &&
                     form.controls.tooth_surface_ids.touched
                     ) {
                     <div class="field-error">
@@ -103,46 +230,86 @@
             </div>
         }
 
-            <!--
-            Tooth Service Type ID is required when record tooth is true.
-            -->
-        @if (data.dental_service_record_tooth || data.dental_service_record_surface){
+        @if (
+            data.dental_service_record_tooth ||
+            data.dental_service_record_surface
+            ) {
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Comments...</mat-label>
-                <select matNativeControl formControlName="tooth_service_type_id">
+
+                <select
+                    matNativeControl
+                    formControlName="tooth_service_type_id">
                     <option [ngValue]="null"></option>
-                    @for (serviceType of data.tooth_service_types; track serviceType.id) {
-                        <option [ngValue]="serviceType.id">{{ serviceType.name }}</option>
+
+                    @for (
+                        serviceType of data.tooth_service_types;
+                        track serviceType.id
+                        ) {
+                        <option [ngValue]="serviceType.id">
+                            {{ serviceType.name }}
+                        </option>
                     }
                 </select>
-                @if (form.controls.tooth_service_type_id.hasError('required')) {
-                    <mat-error>Tooth service type is required.</mat-error>
+
+                @if (
+                    form.controls.tooth_service_type_id.hasError(
+                        'required'
+                    )
+                    ) {
+                    <mat-error>
+                        Tooth service type is required.
+                    </mat-error>
                 }
             </mat-form-field>
         }
 
         <div class="static-field full-width">
-            <div class="static-field-label">Approval Code</div>
-            <div class="static-field-value">{{ approvalCode ?? '' }}</div>
+            <div class="static-field-label">
+                Approval Code
+            </div>
+
+            <div class="static-field-value">
+                {{ approvalCode ?? '' }}
+            </div>
         </div>
-        @if(rejectMessage) {
-            <div class="full-width" style="color: #c62828; margin-top: 8px;">
+
+        @if (rejectMessage) {
+            <div class="reject-message full-width">
                 {{ rejectMessage }}
+            </div>
+        }
+        @if (hasUnsavedMemberDetails()) {
+            <div class="approval-blocked-message full-width">
+                Save or revert the member-detail changes before requesting an approval code.
             </div>
         }
     </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-    <button mat-button type="button" (click)="cancel()">
+    <button
+        mat-button
+        type="button"
+        (click)="cancel()">
         {{ hasApprovalCode() ? 'Close' : 'Cancel' }}
     </button>
+
     <button
         mat-flat-button
         color="primary"
         type="button"
-        [disabled]="form.invalid || isRequestingApprovalCode || hasApprovalCode()"
+        [disabled]="
+            form.invalid ||
+            isRequestingApprovalCode ||
+            hasApprovalCode() ||
+            hasUnsavedMemberDetails()
+        "
         (click)="getApprovalCode()">
-        Get Approval Code
+        {{
+            isRequestingApprovalCode
+                ? 'Requesting...'
+                : 'Get Approval Code'
+        }}
     </button>
 </mat-dialog-actions>

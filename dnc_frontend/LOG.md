@@ -21,3 +21,17 @@ Working on Endorsements now.
    a. In the ServicesComponent (used by Verification), the memberServicesCountSummary passes a list of services along with availed/allowed counts.
        In the list of services, the record_tooth field should be included, to allow reservations of up to 3.
 2. approval codes will be up to 12 characters long.
+
+### July 19, 2026
+
+#### Remaining steps
+
+3. Add the Save handler using patchMasterListMember().
+4. Convert blank optional values to null before patching.
+5. update saved baseline after a successful save.
+6. Add saving, success, and error messages.
+7. Add Save and Revert buttons to the dialog.
+8. Disable the buttons appropriately while loading or saving.
+9. Disable Get Approval Codee if unsaved changes.
+9. Test loading, editing, reverting, saving, and blank birthdate behavior.
+9. Clean up any TypeScript or template compilation errors.

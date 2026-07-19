@@ -76,6 +76,7 @@ export interface PatchMasterListMemberRequest {
 
 export interface MasterListMemberMutationResponse {
     id: number;
+    endorsement_id: number;
     master_list_id: number | null;
     account_number: string;
     last_name: string;
@@ -85,6 +86,8 @@ export interface MasterListMemberMutationResponse {
     mobile_number: string | null;
     birth_date: string | null;
     is_active: boolean;
+    last_edited_by: string | null;
+    last_edited_date: string;
 }
 export interface SaveMemberNameRequest {
     name: string,
@@ -158,6 +161,15 @@ export class MasterListMemberService {
             payload,
             {headers: this.authHeaders()}
         )
+    }
+
+    getMasterListMember(
+        id: number
+    ): Observable<MasterListMemberMutationResponse> {
+        return this.http.get<MasterListMemberMutationResponse>(
+            `${this.baseUrl}/${id}`,
+            { headers: this.authHeaders() }
+        );
     }
 
 }

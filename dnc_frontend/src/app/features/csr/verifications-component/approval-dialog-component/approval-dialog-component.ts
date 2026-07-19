@@ -25,6 +25,7 @@ import {
 } from '../../../../api_services/verification-service';
 import { ChangeDetectorRef } from '@angular/core';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MasterListMemberService} from '../../../../api_services/master-list-members-service';
 
 export interface ApprovalDialogData {
     verification_id: number;
@@ -52,6 +53,11 @@ export interface ApprovalDialogResult {
     tooth_surface_ids: number[];
     tooth_service_type_id : number | null;
 }
+interface MemberDetailsSnapshot {
+    mobileNumber: string;
+    emailAddress: string;
+    birthDate: string;
+}
 
 @Component({
     selector: 'app-approval-dialog-component',
@@ -72,6 +78,19 @@ export interface ApprovalDialogResult {
 })
 export class ApprovalDialogComponent {
     readonly verificationService = inject(VerificationService);
+    private readonly masterListMemberService = inject(MasterListMemberService);
+
+    readonly loadingMemberDetails = signal(false);
+    readonly memberDetailsError = signal<string | null>(null);
+
+    private readonly memberDetailsBaseline
+        = signal<MemberDetailsSnapshot |null >(null);
+
+    readonly hasUnsavedMemberDetails = signal(false);
+    readonly savingMemberDetails = signal(false);
+    readonly memberDetailsSaveError = signal<string | null>(null);
+    readonly memberDetailsSaveMessage = signal<string | null>(null);
+
 
     approvalCode: string | null;
     rejectMessage: string | null = null;
@@ -93,6 +112,9 @@ export class ApprovalDialogComponent {
         tooth_id: FormControl<string | null>;
         tooth_surface_ids: FormControl<number[]>;
         tooth_service_type_id: FormControl<number | null>;
+        member_mobile_number: FormControl<string>;
+        member_email_address: FormControl<string>;
+        member_birth_date: FormControl<string>;
     }>;
 
     constructor(
@@ -127,8 +149,34 @@ export class ApprovalDialogComponent {
                     validators: [],
                 }
             ),
+            member_mobile_number: new FormControl<string> ('', {
+                nonNullable: true,
+            }),
+            member_email_address: new FormControl<string>('',{
+                nonNullable:true,
+            }),
+            member_birth_date: new FormControl<string> ('',{
+                nonNullable:true
+            })
         });
         this.approvalCode = this.data.approval_code ?? null;
+
+        // if and when mobile_number, email_address, or birthdate is edited, call updateMemberDetailsChangeState().
+        this.form.controls.member_mobile_number.valueChanges.subscribe(() => {
+            this.onMemberDetailsChanged();
+        });
+
+        this.form.controls.member_email_address.valueChanges.subscribe(() => {
+            this.onMemberDetailsChanged();
+        });
+
+        this.form.controls.member_birth_date.valueChanges.subscribe(() => {
+            this.onMemberDetailsChanged();
+        });
+        this.loadMemberDetails();
+
+
+
     }
     // ✅ validator for "at least one checkbox must be selected"
 
@@ -167,6 +215,9 @@ export class ApprovalDialogComponent {
     }
 
     getApprovalCode(): void {
+        if (this.hasUnsavedMemberDetails()){
+            return;
+        }
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
@@ -239,5 +290,191 @@ export class ApprovalDialogComponent {
         return `${year}-${month}-${day}`;
     }
 
+// ✅ ADD
+    private loadMemberDetails(): void {
+        this.loadingMemberDetails.set(true);
+        this.memberDetailsError.set(null);
 
+        this.masterListMemberService
+            .getMasterListMember(this.data.master_list_member_id)
+            .subscribe({
+                next: member => {
+
+                    const memberDetails: MemberDetailsSnapshot = {
+                        mobileNumber: member.mobile_number ?? '',
+                        emailAddress: member.email_address ?? "",
+                        birthDate: member.birth_date ?? "",
+                    };
+
+                    this.form.controls.member_mobile_number.setValue(
+                        member.mobile_number ?? '',
+                        { emitEvent: false }
+                    );
+
+                    this.form.controls.member_email_address.setValue(
+                        member.email_address ?? '',
+                        { emitEvent: false }
+                    );
+
+                    this.form.controls.member_birth_date.setValue(
+                        member.birth_date ?? '',
+                        { emitEvent: false }
+                    );
+
+                    this.memberDetailsBaseline.set(memberDetails);
+
+                    this.loadingMemberDetails.set(false);
+                    this.hasUnsavedMemberDetails.set(false);
+                },
+                error: error => {
+                    console.error(
+                        'Failed to load master list member details:',
+                        error
+                    );
+
+                    this.memberDetailsError.set(
+                        'Failed to load member contact details.'
+                    );
+
+                    this.loadingMemberDetails.set(false);
+                },
+            });
+    }
+    private updateMemberDetailsChangeState(): void {
+        const baseline = this.memberDetailsBaseline();
+
+        if (baseline === null) {
+            this.hasUnsavedMemberDetails.set(false);
+            return;
+        }
+
+        const hasChanges =
+            this.form.controls.member_mobile_number.value !== baseline.mobileNumber ||
+            this.form.controls.member_email_address.value !== baseline.emailAddress ||
+            this.form.controls.member_birth_date.value !== baseline.birthDate;
+
+        this.hasUnsavedMemberDetails.set(hasChanges);
+    }
+
+
+    revertMemberDetails(): void {
+        const baseline = this.memberDetailsBaseline();
+
+        if (baseline === null) {
+            return;
+        }
+
+        this.form.controls.member_mobile_number.setValue(
+            baseline.mobileNumber,
+            { emitEvent: false }
+        );
+
+        this.form.controls.member_email_address.setValue(
+            baseline.emailAddress,
+            { emitEvent: false }
+        );
+
+        this.form.controls.member_birth_date.setValue(
+            baseline.birthDate,
+            { emitEvent: false }
+        );
+
+        this.hasUnsavedMemberDetails.set(false);
+
+        this.memberDetailsSaveMessage.set(null);
+        this.memberDetailsSaveError.set(null);
+    }
+
+    private normalizeOptional( value: string | null | undefined): string | null {
+        const normalized = (value ?? '').trim();
+        return normalized === '' ? null : normalized;
+    }
+
+    saveMemberDetails(): void {
+        if (
+            !this.hasUnsavedMemberDetails() ||
+            this.savingMemberDetails()
+        ) {
+            return;
+        }
+
+        this.savingMemberDetails.set(true);
+        this.memberDetailsSaveError.set(null);
+        this.memberDetailsSaveMessage.set(null);
+
+        const payload = {
+            // ✅ Blank optional fields are sent as null
+            mobile_number: this.normalizeOptional(
+                this.form.controls.member_mobile_number.value
+            ),
+            email_address: this.normalizeOptional(
+                this.form.controls.member_email_address.value
+            ),
+            birth_date: this.normalizeOptional(
+                this.form.controls.member_birth_date.value
+            ),
+        };
+
+        this.masterListMemberService
+            .patchMasterListMember(
+                this.data.master_list_member_id,
+                payload
+            )
+            .subscribe({
+                next: member => {
+                    const savedDetails: MemberDetailsSnapshot = {
+                        mobileNumber: member.mobile_number ?? '',
+                        emailAddress: member.email_address ?? '',
+                        birthDate: member.birth_date ?? '',
+                    };
+
+                    // ✅ Reflect the values returned by the backend
+                    this.form.controls.member_mobile_number.setValue(
+                        savedDetails.mobileNumber,
+                        { emitEvent: false }
+                    );
+
+                    this.form.controls.member_email_address.setValue(
+                        savedDetails.emailAddress,
+                        { emitEvent: false }
+                    );
+
+                    this.form.controls.member_birth_date.setValue(
+                        savedDetails.birthDate,
+                        { emitEvent: false }
+                    );
+
+                    // ✅ The successfully saved values become the new baseline
+                    this.memberDetailsBaseline.set(savedDetails);
+                    this.hasUnsavedMemberDetails.set(false);
+
+                    this.memberDetailsSaveMessage.set(
+                        'Member details saved successfully.'
+                    );
+
+                    this.savingMemberDetails.set(false);
+                },
+                error: error => {
+                    console.error(
+                        'Failed to save member details:',
+                        error
+                    );
+
+                    this.memberDetailsSaveError.set(
+                        'Failed to save member details.'
+                    );
+
+                    this.savingMemberDetails.set(false);
+                },
+            });
+    }
+
+    // ✅ ADD
+    private onMemberDetailsChanged(): void {
+        this.updateMemberDetailsChangeState();
+
+        // Clear messages from the previous save attempt
+        this.memberDetailsSaveMessage.set(null);
+        this.memberDetailsSaveError.set(null);
+    }
 }

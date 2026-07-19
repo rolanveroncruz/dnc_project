@@ -68,3 +68,14 @@ mat-icon.avatar-icon > svg,
     border-radius: 20px !important; // ✅ actual Material dialog surface
     overflow: visible; // ✅
 }
+// ✅ Allow the approval dialog to grow up to the viewport height
+.approval-dialog-panel {
+    .mat-mdc-dialog-container {
+        max-height: 95vh;
+    }
+
+    .mat-mdc-dialog-surface {
+        max-height: 95vh;
+        overflow: visible;
+    }
+}
