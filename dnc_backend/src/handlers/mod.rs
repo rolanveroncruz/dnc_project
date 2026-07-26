@@ -117,5 +117,5 @@ pub use api::billing_payments::dentist_payments::{get_dentist_payment_matrix_han
 pub use api::billing_payments::dentist_retainer_report::{get_dentist_retainer_payables_handler};
 
 
-pub use api::website::dentist_applications::{get_dentist_applications_handler, download_dentist_application_document_handler};
+pub use api::website::dentist_applications::{get_dentist_applications_handler, download_dentist_application_document_handler, update_dentist_application_status_handler};
 pub use api::website::contact_us_messages::{get_contact_us_messages_handler};

@@ -4,13 +4,14 @@ use axum::http::{header, StatusCode};
 use axum::response::Response;
 use axum::Json;
 use sea_orm::entity::prelude::DateTimeWithTimeZone;
-use sea_orm::{EntityTrait, QueryOrder};
-use serde::Serialize;
+use sea_orm::{ActiveModelTrait, EntityTrait, IntoActiveModel, QueryOrder, Set};
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use crate::entities::dentist_applications;
 use crate::AppState;
 
+// region: Get Dentist Applications
 #[derive(Debug, Serialize)]
 pub struct DentistApplicationListRow {
     pub id: i32,
@@ -302,3 +303,86 @@ fn content_type_from_path(path: &PathBuf) -> &'static str {
 fn non_empty_optional_string(value: Option<String>) -> Option<String> {
     value.and_then(non_empty_string)
 }
+// endregion: Get Dentist Applications
+
+// region: Patch Dentist Application Status
+#[derive(Debug, Deserialize)]
+pub struct UpdateDentistApplicationStatusRequest {
+    pub status: String,
+}
+
+
+
+#[derive(Debug, Serialize)]
+pub struct UpdateDentistApplicationStatusResponse {
+    pub id: i32,
+    pub status: String,
+    pub message: String,
+}
+pub async fn update_dentist_application_status_handler(
+    State(state): State<AppState>,
+    AxumPath(application_id): AxumPath<i32>,
+    Json(payload): Json<UpdateDentistApplicationStatusRequest>,
+) -> Result<Json<UpdateDentistApplicationStatusResponse>, (StatusCode, String)> {
+    let status = validate_application_status(payload.status)?;
+
+    let application = dentist_applications::Entity::find_by_id(application_id)
+        .one(&state.db)
+        .await
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to load dentist application: {err}"),
+            )
+        })?
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                "Dentist application not found.".to_string(),
+            )
+        })?;
+
+    let mut active_model = application.into_active_model();
+
+    active_model.status = Set(status.clone());
+
+    let updated_application = active_model
+        .update(&state.db)
+        .await
+        .map_err(|err| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to update dentist application status: {err}"),
+            )
+        })?;
+
+    Ok(Json(UpdateDentistApplicationStatusResponse {
+        id: updated_application.id,
+        status: updated_application.status,
+        message: "Dentist application status updated successfully.".to_string(),
+    }))
+}
+
+fn validate_application_status(
+    status: String,
+) -> Result<String, (StatusCode, String)> {
+    let normalized = status
+        .trim()
+        .to_ascii_lowercase()
+        .replace([' ', '-'], "_");
+
+    match normalized.as_str() {
+        "new"
+        | "for_evaluation"
+        | "declined"
+        | "accredited" => Ok(normalized),
+
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            "Status must be one of: new, for_evaluation, declined, accredited."
+                .to_string(),
+        )),
+    }
+}
+
+// endregion: Patch Dentist Application Status
