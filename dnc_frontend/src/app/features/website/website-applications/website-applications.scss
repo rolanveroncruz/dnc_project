@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 .website-applications-page {
     padding: 24px;
 }
@@ -104,7 +106,7 @@
 
 .applications-table {
     width: 100%;
-    min-width: 1100px;
+    min-width: 1250px;
 
     th {
         font-weight: 700;
@@ -145,17 +147,24 @@
         text-decoration: none;
     }
 }
-
-.status-pill {
-    display: inline-flex;
+.status-control {
+    display: flex;
     align-items: center;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: #3f51b5;
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-transform: capitalize;
+    gap: 10px;
+    min-width: 190px;
+}
+
+.status-field {
+    width: 165px;
+    margin: 0;
+
+    @include mat.form-field-overrides((
+        outlined-container-shape: 28px,
+    ));
+
+    @include mat.select-overrides((
+        enabled-trigger-text-color: #3f51b5,
+    ));
 }
 
 @media (max-width: 800px) {
