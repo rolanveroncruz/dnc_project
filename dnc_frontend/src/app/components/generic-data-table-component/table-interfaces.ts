@@ -7,6 +7,7 @@ export interface TableColumn<T extends object = any> {
     maxWidthPx?: number; // maximum width in pixels
     cellTemplateKey?: TableCellTemplateKey; // e.g. 'chips', 'date', 'money', etc.
     actionButton?: TableActionButton<T>;
+    checkbox?: TableCheckbox<T>;
 }
 
 export interface FilterConfig {
@@ -21,6 +22,7 @@ export type TableCellTemplateKey =
     | 'chips'
     | 'check'
     | 'checkonly'
+    | 'checkbox'
     | 'actions'
     | 'actionsSmallFonts';
 
@@ -32,4 +34,10 @@ export interface TableActionButton<T = any> {
     disabled?: (row: T) => boolean;
     hidden?: (row: T) => boolean;
     hiddenText?: string | ((row: T) => string);
+}
+
+export interface TableCheckbox<T = any> {
+    checked: (row: T)=>boolean;
+    onChange: (row: T, checked:boolean) => void;
+    disabled: (row: T) => boolean;
 }

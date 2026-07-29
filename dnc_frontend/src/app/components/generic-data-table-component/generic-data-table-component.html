@@ -169,6 +169,24 @@
 
     }
 </ng-template>
+
+<!-- ✅ NEW: Interactive Checkbox Template -->
+<ng-template #checkboxCell let-row let-col="col">
+    <div
+        class="checkbox-cell"
+        (click)="$event.stopPropagation()">
+
+        <mat-checkbox
+            [checked]="col.checkbox?.checked(row) ?? false"
+            [disabled]="col.checkbox?.disabled?.(row) ?? false"
+            (change)="col.checkbox?.onChange(row, $event.checked)"
+            aria-label="Toggle checkbox">
+        </mat-checkbox>
+
+    </div>
+</ng-template>
+
+
 <ng-template #actionsCell let-row let-col="col">
     <div class="action-buttons" (click)="$event.stopPropagation()">
         @if (col.actionButton && !isPrimaryActionHidden(col, row)) {

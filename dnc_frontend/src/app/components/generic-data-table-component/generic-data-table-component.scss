@@ -292,3 +292,25 @@ mat-paginator {
     color: #2e7d32;
     white-space: nowrap;
 }
+// ✅ NEW: Centers the interactive checkbox inside its table cell
+.checkbox-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+// ✅ NEW: Centers the checkbox column's header and body content
+.mat-mdc-header-cell.checkbox-column,
+.mat-mdc-cell.checkbox-column {
+    text-align: center;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+// ✅ NEW: Angular Material sort headers use an internal container
+.mat-mdc-header-cell.checkbox-column {
+    .mat-sort-header-container {
+        justify-content: center;
+    }
+}

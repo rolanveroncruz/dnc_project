@@ -64,6 +64,12 @@ export class AccomplishmentReconciliationService {
             {headers: this.authHeaders()}
         )
     }
+    unreconcileVerification(verification_id:number): Observable<DoneVerificationResponse>{
+        return this.http.post<DoneVerificationResponse>(`${this.baseUrl}/${verification_id}/unreconcile`,
+            {},
+            {headers: this.authHeaders()}
+        )
+    }
 
     postAccReconciliation(request: CreateAccReconciliationRequest): Observable<DoneVerificationResponse> {
         return this.http.post<DoneVerificationResponse>(`${this.baseUrl}`,

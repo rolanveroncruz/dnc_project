@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TableColumn,   } from './table-interfaces';
 import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from where you defined it
+import {MatCheckboxModule} from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-generic-data-table', // Renamed
@@ -21,7 +22,8 @@ import {MatChip, MatChipSet} from '@angular/material/chips'; // Import from wher
   imports: [
     CommonModule, ReactiveFormsModule, MatTableModule, MatSortModule,
     MatPaginatorModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatChipSet, MatChip,
+    MatSelectModule, MatButtonModule, MatIconModule, MatChipSet,
+    MatChip, MatCheckboxModule,
   ],
   templateUrl: './generic-data-table-component.html',
   styleUrls: ['./generic-data-table-component.scss'],
@@ -34,6 +36,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
   @ViewChild('chipsCell', { static: true }) chipsCell!: TemplateRef<any>;
   @ViewChild('checkCell', { static: true }) checkCell!: TemplateRef<any>;
   @ViewChild('checkOnlyCell', { static: true }) checkOnly!: TemplateRef<any>;
+  @ViewChild('checkboxCell', { static: true }) checkboxCell!: TemplateRef<any>;
   @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<any>;
     @ViewChild('actionsCellSmallFonts', { static: true }) actionsCellSmallFonts!: TemplateRef<any>;
   // --- INPUTS ---
@@ -273,6 +276,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
       case 'chips': return this.chipsCell;
       case 'check': return this.checkCell;
       case 'checkonly': return this.checkOnly;
+      case 'checkbox': return this.checkboxCell;
       case 'default': return this.defaultCell;
       case 'actions': return this.actionsCell;
       case 'actionsSmallFonts': return this.actionsCellSmallFonts;

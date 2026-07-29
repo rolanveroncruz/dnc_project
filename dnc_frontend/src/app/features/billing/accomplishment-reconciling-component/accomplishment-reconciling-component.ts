@@ -10,6 +10,7 @@ import {DentistService} from '../../../api_services/dentist-service';
 import {DentalServicesService} from '../../../api_services/dental-services-service';
 import {VerificationService} from '../../../api_services/verification-service';
 import {EndorsementCompanyOptions, EndorsementService} from '../../../api_services/endorsement-service';
+import {finalize} from 'rxjs/operators';
 
 @Component({
   selector: 'app-accomplishment-reconciling-component',
@@ -30,6 +31,7 @@ export class AccomplishmentReconcilingComponent implements OnInit {
     dialog = inject(MatDialog);
     readonly done_verifications = signal<DoneVerificationResponse[]>([]);
     readonly accomplishment_reconciliations = signal<DoneVerificationResponse[]>([]);
+    readonly updatingVerificationIds = signal<ReadonlySet<number>>(new Set<number>());
 
     // region: Dialog Data Services
     endorsementService = inject(EndorsementService);
@@ -46,7 +48,7 @@ export class AccomplishmentReconcilingComponent implements OnInit {
     toothSurfaces = signal<IdLabelOption[]>([]);
     // endregion: Dialog Data
 
-    DoneVerificationsColumns: TableColumn[] = [
+    DoneVerificationsColumns: TableColumn<DoneVerificationResponse>[] = [
         {key: 'id', label: 'ID'},
         {key: 'agreement_corp_number', label: 'Agmt/Corp Number'},
         {key: 'company_name', label: 'Company'},
@@ -57,15 +59,28 @@ export class AccomplishmentReconcilingComponent implements OnInit {
         {key: 'date_service_performed', label: 'Service Date'},
         {key: 'approval_code', label: 'Approval Code'},
         {
-            key: 'actions', label: 'Actions', cellTemplateKey: 'actions',
-            actionButton: {
-                label: "Confirm",
-                icon: 'check',
-                color: 'primary',
-                onClick: (row: any) => console.log("In onConfirmClick() onClick, row:", row),
-                hidden: (row: any) => row.is_reconciled,
-                hiddenText: 'Reconciled',
-            }
+            // ✅ CHANGED: The last column now displays a reconciliation checkbox
+            key: 'is_reconciled',
+            label: 'Reconciled',
+            sortable: true,
+            widthPx: 120,
+            cellTemplateKey: 'checkbox',
+
+            // ✅ NEW: Interactive checkbox configuration
+            checkbox: {
+                checked: (row: DoneVerificationResponse): boolean =>
+                    row.is_reconciled,
+
+                disabled: (row: DoneVerificationResponse): boolean =>
+                    this.isVerificationUpdating(row),
+
+                onChange: (
+                    row: DoneVerificationResponse,
+                    checked: boolean
+                ): void => {
+                    this.onReconciledCheckboxChange(row, checked);
+                },
+            },
         }
     ];
     AddlAccomplishmentReportsCols: TableColumn[] = [
@@ -199,21 +214,114 @@ export class AccomplishmentReconcilingComponent implements OnInit {
 
     AlwaysHide = (_row: any): boolean => true;
 
+    // ✅ NEW: Used by the checkbox column to disable a row while saving
+    isVerificationUpdating = (
+        row: DoneVerificationResponse
+    ): boolean => {
+        return this.updatingVerificationIds().has(row.id);
+    };
 
-    onConfirmClick(row: any) {
-        console.log("OnConfirmClick(), row id:", row.id);
+    // ✅ NEW: Adds or removes a verification ID from the updating set
+    private setVerificationUpdating(
+        verificationId: number,
+        updating: boolean
+    ): void {
+        this.updatingVerificationIds.update(currentIds => {
+            const nextIds = new Set(currentIds);
 
-        this.accomplishment_reconciliation_service.reconcileVerification(row.id)
+            if (updating) {
+                nextIds.add(verificationId);
+            } else {
+                nextIds.delete(verificationId);
+            }
+
+            return nextIds;
+        });
+    }
+
+// ✅ NEW: Replaces one verification row without reloading the whole table
+    private updateDoneVerificationRow(
+        updatedRow: DoneVerificationResponse
+    ): void {
+        this.done_verifications.update(rows =>
+            rows.map(row =>
+                row.id === updatedRow.id
+                    ? updatedRow
+                    : row
+            )
+        );
+    }
+
+// ✅ CHANGED: Reconciles or unreconciles based on the checkbox state
+    onReconciledCheckboxChange(
+        row: DoneVerificationResponse,
+        checked: boolean
+    ): void {
+        // ✅ Save the original value so it can be restored on failure
+        const originalReconciledState = row.is_reconciled;
+
+        // ✅ Prevent duplicate requests for the same verification
+        if (this.isVerificationUpdating(row)) {
+            return;
+        }
+
+        // ✅ Disable the checkbox while the request is running
+        this.setVerificationUpdating(row.id, true);
+
+        // ✅ Optimistically update the checkbox display
+        this.done_verifications.update(rows =>
+            rows.map(currentRow =>
+                currentRow.id === row.id
+                    ? {
+                        ...currentRow,
+                        is_reconciled: checked,
+                    }
+                    : currentRow
+            )
+        );
+
+        // ✅ Select the correct backend request
+        const request$ = checked
+            ? this.accomplishment_reconciliation_service
+                .reconcileVerification(row.id)
+            : this.accomplishment_reconciliation_service
+                .unreconcileVerification(row.id);
+
+        request$
+            .pipe(
+                // ✅ Always re-enable the checkbox afterward
+                finalize(() => {
+                    this.setVerificationUpdating(row.id, false);
+                })
+            )
             .subscribe({
-                next: (res) => {
-                    console.log("In reconcileVerification(), res:", res);
-                    this.loadDoneVerifications();
+                next: (updatedVerification) => {
+                    // ✅ Replace the row with the authoritative backend response
+                    this.updateDoneVerificationRow(updatedVerification);
                 },
                 error: (err) => {
-                    console.log("In reconcileVerification(), failed to reconcile verification", err);
-                }
+                    console.error(
+                        `Failed to ${
+                            checked ? 'reconcile' : 'unreconcile'
+                        } verification ${row.id}`,
+                        err
+                    );
+
+                    // ✅ Restore the original checkbox state
+                    this.done_verifications.update(rows =>
+                        rows.map(currentRow =>
+                            currentRow.id === row.id
+                                ? {
+                                    ...currentRow,
+                                    is_reconciled: originalReconciledState,
+                                }
+                                : currentRow
+                        )
+                    );
+                },
             });
     }
+
 
     addAccomplishment() {
         console.log("In addAccomplishment(). Opening dialog...");
