@@ -496,3 +496,164 @@ fn build_member_name_optional(
 // ✅ endregion: Get Acc Reconciliations
 
 // endregion: Get Accomplishment Reconciliations
+
+
+// region: Unreconcile Verification
+
+pub async fn unreconcile_verification(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(verification_id): Path<i32>,
+) -> Result<Json<DoneVerificationResponse>, (StatusCode, String)> {
+    let db = &state.db;
+
+    tracing::info!(
+        "in unreconcile_verification(): unreconciling verification_id: {}",
+        verification_id
+    );
+
+    let model = verification::Entity::find_by_id(verification_id)
+        .one(db)
+        .await
+        .map_err(internal_error)?
+        .ok_or((
+            StatusCode::NOT_FOUND,
+            format!("Verification {} not found", verification_id),
+        ))?;
+
+    let mut active_model: verification::ActiveModel = model.into();
+
+    active_model.is_reconciled = Set(Some(false));
+
+    // Since there is no unreconciled_by field, this records the user
+    // who performed the most recent reconciliation-related action.
+    active_model.reconciled_by = Set(Some(user.claims.email));
+    active_model.reconciliation_date = Set(Some(Utc::now().fixed_offset()));
+
+    let updated = active_model
+        .update(db)
+        .await
+        .map_err(internal_error)?;
+
+    let row: DoneVerificationRow = verification::Entity::find()
+        .filter(verification::Column::Id.eq(updated.id))
+        .join(
+            JoinType::InnerJoin,
+            verification::Relation::Dentist.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
+            verification::Relation::MasterListMember.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
+            verification::Relation::DentalService.def(),
+        )
+        .join(
+            JoinType::LeftJoin,
+            verification::Relation::ToothServiceType.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
+            master_list_member::Relation::Endorsement.def(),
+        )
+        .join(
+            JoinType::InnerJoin,
+            endorsement::Relation::EndorsementCompany.def(),
+        )
+        .select_only()
+        .column(verification::Column::Id)
+        .column(verification::Column::DateCreated)
+        .column(verification::Column::DateServicePerformed)
+        .column(verification::Column::ToothId)
+        .column(verification::Column::ApprovalCode)
+        .column(verification::Column::ApprovalDate)
+        .column(verification::Column::IsReconciled)
+        .column(verification::Column::ReconciledBy)
+        .column(verification::Column::ReconciliationDate)
+        .column_as(
+            dentist::Column::GivenName,
+            "dentist_first_name",
+        )
+        .column_as(
+            dentist::Column::LastName,
+            "dentist_last_name",
+        )
+        .column_as(
+            master_list_member::Column::FirstName,
+            "member_first_name",
+        )
+        .column_as(
+            master_list_member::Column::LastName,
+            "member_last_name",
+        )
+        .column_as(
+            master_list_member::Column::MiddleName,
+            "member_middle_name",
+        )
+        .column_as(
+            dental_service::Column::Name,
+            "dental_service_name",
+        )
+        .column_as(
+            tooth_service_type::Column::Name,
+            "tooth_service_type_name",
+        )
+        .column_as(
+            endorsement::Column::AgreementCorpNumber,
+            "agreement_corp_number",
+        )
+        .column_as(
+            endorsement_company::Column::Name,
+            "company_name",
+        )
+        .into_model::<DoneVerificationRow>()
+        .one(db)
+        .await
+        .map_err(internal_error)?
+        .ok_or((
+            StatusCode::NOT_FOUND,
+            format!(
+                "Verification {} not found after update",
+                verification_id
+            ),
+        ))?;
+
+    let surface_names_by_verification_id =
+        load_verification_surface_names(db, vec![row.id]).await?;
+
+    let response = DoneVerificationResponse {
+        id: row.id,
+        date_created: row.date_created,
+        dentist_name: format!(
+            "{}, {}",
+            row.dentist_last_name,
+            row.dentist_first_name
+        ),
+        member_name: build_member_name(
+            &row.member_last_name,
+            &row.member_first_name,
+            row.member_middle_name.as_deref(),
+        ),
+        dental_service_name: row.dental_service_name,
+        agreement_corp_number: row.agreement_corp_number,
+        company_name: row.company_name,
+        date_service_performed: row.date_service_performed,
+        tooth_id: row.tooth_id,
+        tooth_surface_names: surface_names_by_verification_id
+            .get(&row.id)
+            .cloned(),
+        tooth_service_type_name: row.tooth_service_type_name,
+        approval_code: row.approval_code,
+        approval_date: row.approval_date,
+        is_reconciled: row.is_reconciled,
+        reconciled_by: row.reconciled_by,
+        reconciliation_date: row.reconciliation_date,
+    };
+
+    Ok(Json(response))
+}
+
+// endregion: Unreconcile Verification
+
+

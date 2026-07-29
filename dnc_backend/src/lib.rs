@@ -47,7 +47,7 @@ use crate::handlers::{get_used_service_counts_for_member_id, get_service_counts_
 use crate::handlers::{get_service_counts_for_member_id, create_verification, cancel_verification, create_master_list_member};
 use crate::handlers::{patch_master_list_member, get_master_list_member, get_approval_code_for_verification_id, get_high_end_verifications};
 use crate::handlers::{post_high_end_verification_approval};
-use crate::handlers::{get_done_verifications, reconcile_verification, get_all_member_names_from_company};
+use crate::handlers::{get_done_verifications, reconcile_verification, unreconcile_verification, get_all_member_names_from_company};
 use crate::handlers::{create_acc_reconciliation, get_acc_recons};
 use crate::handlers::{get_hmos, post_hmo, patch_hmo, get_hmo_by_id, post_dentist_contract, patch_dentist_contract};
 use crate::handlers::{patch_dentist_contract_rates, get_regions, get_provinces, get_cities_by_province, get_cities};
@@ -202,6 +202,7 @@ fn protected_routes() ->Router<AppState>{
         .route("/high_end_verifications/{verification_id}/approval", post(post_high_end_verification_approval))
         .route("/acc_recon/verifications",get(get_done_verifications))
         .route("/acc_recon/{id}/reconcile", post(reconcile_verification))
+        .route("/acc_recon/{id}/unreconcile", post(unreconcile_verification))
         .route("/endorsements/companies/{company_id}/members", get(get_all_member_names_from_company).post(save_member_name_for_company))
         .route("/acc_recon", post(create_acc_reconciliation).get(get_acc_recons))
         .route("/approval_codes/check/{code}", get(check_approval_code))

@@ -99,7 +99,7 @@ pub use api::high_end_verification_uploading_and_approval::{download_high_end_fi
 pub use api::high_end_verification_dentist_approval::{get_high_end_verifications, post_high_end_verification_approval};
 
 
-pub use api::acc_reconciliation::{create_acc_reconciliation, get_acc_recons, get_done_verifications, reconcile_verification};
+pub use api::acc_reconciliation::{create_acc_reconciliation, get_acc_recons, get_done_verifications, reconcile_verification, unreconcile_verification};
 pub use api::endorsement_company_master_list_members::{get_all_member_names_from_company, save_member_name_for_company};
 pub use api::verification::check_approval_code;
 
