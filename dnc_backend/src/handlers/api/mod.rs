@@ -53,3 +53,5 @@ pub mod dashboard;
 pub mod billing_payments;
 pub mod endorsements;
 pub mod website;
+pub mod csr_dentists;
+

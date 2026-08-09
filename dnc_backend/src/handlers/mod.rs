@@ -31,7 +31,7 @@ pub use api::dentist_contracts::{get_all_dentist_contracts, get_dentist_contract
 pub use api::region::{get_region_by_id, get_regions, patch_region, post_region};
 pub use api::province::{get_cities_by_province, get_provinces};
 pub use api::city::get_cities;
-pub use api::dental_clinic::{create_dental_clinic, get_dental_clinic_by_id, get_dental_clinics, patch_dental_clinic, get_dental_clinic_names_for_dentist};
+pub use api::dental_clinic::{create_dental_clinic, get_dental_clinic_by_id, get_dental_clinic_names_for_dentist, get_dental_clinics, patch_dental_clinic};
 pub use api::clinic_capabilities_list::{add_clinic_capability_to_clinic,
                                         get_clinic_capabilities_for_clinic,
                                         remove_clinic_capability_from_clinic,
@@ -93,7 +93,7 @@ pub use api::dentist_relations::get_endorsements_for_dentist_id_handler;
  */
 pub use api::master_list_member::{get_master_list_members_for_endorsement, get_master_lists_with_members_for_endorsement};
 pub use api::master_list_member_counts::{get_service_counts_for_endorsement_id, get_service_counts_for_member_id, get_used_service_counts_for_member_id};
-pub use api::endorsement_master_list_members_post_patch::{create_master_list_member, patch_master_list_member, get_master_list_member};
+pub use api::endorsement_master_list_members_post_patch::{create_master_list_member, get_master_list_member, patch_master_list_member};
 pub use api::verification_tooth_specifics::{get_tooth_service_types, get_tooth_surfaces};
 pub use api::high_end_verification_uploading_and_approval::{download_high_end_file, list_uploaded_high_end_files, upload_high_end_file};
 pub use api::high_end_verification_dentist_approval::{get_high_end_verifications, post_high_end_verification_approval};
@@ -104,18 +104,20 @@ pub use api::endorsement_company_master_list_members::{get_all_member_names_from
 pub use api::verification::check_approval_code;
 
 pub use api::hmo_utilization::{download_utilization_report, get_utilization_report};
-pub use api::billing_payments::hmo_billing::{get_generated_hmo_billing_reports, download_generated_report};
+pub use api::billing_payments::hmo_billing::{download_generated_report, get_generated_hmo_billing_reports};
 
-pub use api::test_reports::{test_generate_hmo_billing_reports};
+pub use api::test_reports::test_generate_hmo_billing_reports;
 
 pub use api::dashboard::verifications_csr::{get_csr_verification_activity_counts, get_csr_verification_activity_unit_counts};
 
-pub use api::billing_payments::dentist_retainers::{get_dentist_clinics_reconciled_jobs_count_last_12_months};
+pub use api::billing_payments::dentist_retainers::get_dentist_clinics_reconciled_jobs_count_last_12_months;
 pub use api::billing_payments::dentist_matrices::core::get_dentist_hmo_service_audit_matrix_handler;
 pub use api::billing_payments::dentist_matrices::spreadsheet_report::get_dentist_hmo_service_audit_matrix_excel_handler;
-pub use api::billing_payments::dentist_payments::{get_dentist_payment_matrix_handler, make_dentist_payment_handler, delete_dentist_payment_handler};
-pub use api::billing_payments::dentist_retainer_report::{get_dentist_retainer_payables_handler};
+pub use api::billing_payments::dentist_payments::{delete_dentist_payment_handler, get_dentist_payment_matrix_handler, make_dentist_payment_handler};
+pub use api::billing_payments::dentist_retainer_report::get_dentist_retainer_payables_handler;
 
 
-pub use api::website::dentist_applications::{get_dentist_applications_handler, download_dentist_application_document_handler, update_dentist_application_status_handler};
-pub use api::website::contact_us_messages::{get_contact_us_messages_handler};
+pub use api::website::dentist_applications::{download_dentist_application_document_handler, get_dentist_applications_handler, update_dentist_application_status_handler};
+pub use api::website::contact_us_messages::get_contact_us_messages_handler;
+
+pub use api::csr_dentists::get_all_dentists_for_csr;
