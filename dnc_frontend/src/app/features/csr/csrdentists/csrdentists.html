@@ -1,0 +1,85 @@
+<section class="csr-dentists-page">
+
+    <mat-card class="setup-card">
+
+        <mat-card-header class="card-header">
+
+            <div class="title-block">
+
+                <mat-card-title>
+                    Dentists
+                </mat-card-title>
+
+                <mat-card-subtitle>
+                    Click a dentist to view their clinics and capabilities
+                </mat-card-subtitle>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="loadDentists()"
+                    [disabled]="loading()">
+
+                    <mat-icon>refresh</mat-icon>
+                    Refresh
+
+                </button>
+
+            </div>
+
+        </mat-card-header>
+
+
+        <mat-card-content>
+
+            @if (loading()) {
+
+                <div class="message-state">
+                    Loading dentists...
+                </div>
+
+            } @else if (errorMessage()) {
+
+                <div class="message-state error-state">
+
+                    <mat-icon>error_outline</mat-icon>
+
+                    <span>
+                        {{ errorMessage() }}
+                    </span>
+
+                    <button
+                        mat-stroked-button
+                        type="button"
+                        (click)="loadDentists()">
+
+                        Try Again
+
+                    </button>
+
+                </div>
+
+            } @else {
+
+                <app-generic-data-table
+                    [columnDefs]="columns"
+                    [data]="dentists()"
+                    [showAddButton]="false"
+                    [showHeaderFilters]="true"
+                    [pageSize]="15"
+                    [pageSizeOptions]="[15, 25, 50, 100]"
+                    (rowClicked)="onDentistClicked($event)">
+                </app-generic-data-table>
+
+            }
+
+        </mat-card-content>
+
+    </mat-card>
+
+</section>

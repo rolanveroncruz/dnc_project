@@ -1,0 +1,130 @@
+<h2 mat-dialog-title>
+    {{ dentistName }}
+</h2>
+
+
+<mat-dialog-content>
+
+    <div class="dialog-header">
+
+        <div class="dentist-detail">
+            <span class="label">PRC No.</span>
+            <span>{{ data.prc_no || '—' }}</span>
+        </div>
+
+        <div class="dentist-detail">
+            <span class="label">Email</span>
+            <span>{{ data.email || '—' }}</span>
+        </div>
+
+    </div>
+
+
+    <h3 class="section-title">
+        Clinics
+    </h3>
+
+
+    @if (clinics.length === 0) {
+
+        <div class="empty-state">
+
+            <mat-icon>local_hospital</mat-icon>
+
+            <p>
+                No clinics are currently assigned to this dentist.
+            </p>
+
+        </div>
+
+    } @else {
+
+        <div class="table-container">
+
+            <table
+                mat-table
+                [dataSource]="clinics"
+                class="clinic-table">
+
+
+                <!-- Clinic -->
+                <ng-container matColumnDef="name">
+
+                    <th mat-header-cell *matHeaderCellDef>
+                        Clinic
+                    </th>
+
+                    <td mat-cell *matCellDef="let clinic">
+                        {{ clinic.name }}
+                    </td>
+
+                </ng-container>
+
+
+                <!-- Address -->
+                <ng-container matColumnDef="address">
+
+                    <th mat-header-cell *matHeaderCellDef>
+                        Address
+                    </th>
+
+                    <td mat-cell *matCellDef="let clinic">
+                        {{ clinic.address }}
+                    </td>
+
+                </ng-container>
+
+
+                <!-- Capabilities -->
+                <ng-container matColumnDef="capabilities">
+
+                    <th mat-header-cell *matHeaderCellDef>
+                        Capabilities
+                    </th>
+
+                    <td mat-cell *matCellDef="let clinic">
+
+                        @if (clinic.capabilities) {
+                            {{ clinic.capabilities }}
+                        } @else {
+                            <span class="no-capabilities">
+                                None
+                            </span>
+                        }
+
+                    </td>
+
+                </ng-container>
+
+
+                <tr
+                    mat-header-row
+                    *matHeaderRowDef="displayedColumns">
+                </tr>
+
+                <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns">
+                </tr>
+
+            </table>
+
+        </div>
+
+    }
+
+</mat-dialog-content>
+
+
+<mat-dialog-actions align="end">
+
+    <button
+        mat-flat-button
+        type="button"
+        (click)="close()">
+
+        Close
+
+    </button>
+
+</mat-dialog-actions>

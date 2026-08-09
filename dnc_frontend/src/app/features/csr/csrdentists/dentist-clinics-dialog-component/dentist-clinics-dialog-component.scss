@@ -1,0 +1,112 @@
+:host {
+    display: block;
+}
+
+.dialog-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+
+    padding-bottom: 20px;
+    margin-bottom: 12px;
+
+    border-bottom: 1px solid
+    var(--mat-sys-outline-variant);
+}
+
+.dentist-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.label {
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.section-title {
+    margin: 16px 0 12px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+
+    border: 1px solid
+    var(--mat-sys-outline-variant);
+
+    border-radius: 8px;
+}
+
+.clinic-table {
+    width: 100%;
+}
+
+.clinic-table th {
+    font-weight: 600;
+}
+
+.clinic-table th,
+.clinic-table td {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.clinic-table td {
+    vertical-align: top;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+/*
+ * Clinic name
+ */
+.mat-column-name {
+    min-width: 180px;
+    width: 25%;
+}
+
+/*
+ * Clinic address
+ */
+.mat-column-address {
+    min-width: 250px;
+    width: 35%;
+}
+
+/*
+ * Capabilities
+ */
+.mat-column-capabilities {
+    min-width: 280px;
+    width: 40%;
+
+    white-space: normal;
+    line-height: 1.5;
+}
+
+.no-capabilities {
+    color: var(--mat-sys-on-surface-variant);
+    font-style: italic;
+}
+
+.empty-state {
+    min-height: 130px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.empty-state mat-icon {
+    width: 36px;
+    height: 36px;
+
+    font-size: 36px;
+}

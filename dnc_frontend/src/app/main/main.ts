@@ -115,8 +115,8 @@ export class MainComponent implements OnInit {
 
         csr: [
             { label: 'Verifications', icon: 'shopping_cart', route: '/main/csr/verifications', disabled: true },
-            { label: 'Inventory', icon: 'inventory_2', route: '/operations/inventory', disabled: true },
-            { label: 'Customers', icon: 'group', route: '/operations/customers', disabled: true },
+            { label: 'Dentists', icon: 'inventory_2', route: '/main/csr/dentists', disabled: true },
+            { label: 'Companies', icon: 'group', route: '/main/csr/companies', disabled: true },
             { label: 'HighEndVerification', icon: 'group', route: '/main/csr/high_end_verification', disabled: true },
         ],
 
@@ -296,12 +296,15 @@ export class MainComponent implements OnInit {
         if ('verifications' in this.menu_activation_map) {
             this.enableTopNav('csr');
             this.activate_item('csr', 'verifications', 'Verifications');
+            this.activate_item('csr','verifications', 'Companies');
+            this.activate_item('csr','verifications', 'Dentists');
         }
 
         if ('high_end_verification_information' in this.menu_activation_map) {
             this.enableTopNav('csr');
             this.activate_item('csr', 'high_end_verification_information', 'HighEndVerification');
         }
+
     }
 
     configure_billing_menu() {
