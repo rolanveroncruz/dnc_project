@@ -121,3 +121,4 @@ pub use api::website::dentist_applications::{download_dentist_application_docume
 pub use api::website::contact_us_messages::get_contact_us_messages_handler;
 
 pub use api::csr_dentists::get_all_dentists_for_csr;
+pub use api::csr_endorsements::get_endorsements_for_csr;
