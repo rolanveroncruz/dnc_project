@@ -314,3 +314,14 @@ mat-paginator {
         justify-content: center;
     }
 }
+
+// ✅ NEW: Compact unordered list inside table cells
+.table-list {
+    margin: 4px 0;
+    padding-left: 20px;
+
+    li {
+        margin: 2px 0;
+        line-height: 1.35;
+    }
+}

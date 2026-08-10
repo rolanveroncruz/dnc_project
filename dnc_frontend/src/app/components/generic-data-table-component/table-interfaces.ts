@@ -23,6 +23,7 @@ export type TableCellTemplateKey =
     | 'check'
     | 'checkonly'
     | 'checkbox'
+    | 'unorderedListCell'
     | 'actions'
     | 'actionsSmallFonts';
 

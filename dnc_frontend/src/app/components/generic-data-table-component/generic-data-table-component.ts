@@ -37,6 +37,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
   @ViewChild('checkCell', { static: true }) checkCell!: TemplateRef<any>;
   @ViewChild('checkOnlyCell', { static: true }) checkOnly!: TemplateRef<any>;
   @ViewChild('checkboxCell', { static: true }) checkboxCell!: TemplateRef<any>;
+  @ViewChild('unorderedListCell', { static: true }) unorderedListCell!: TemplateRef<any>;
   @ViewChild('actionsCell', { static: true }) actionsCell!: TemplateRef<any>;
     @ViewChild('actionsCellSmallFonts', { static: true }) actionsCellSmallFonts!: TemplateRef<any>;
   // --- INPUTS ---
@@ -277,6 +278,7 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
       case 'check': return this.checkCell;
       case 'checkonly': return this.checkOnly;
       case 'checkbox': return this.checkboxCell;
+      case 'unorderedListCell': return this.unorderedListCell;
       case 'default': return this.defaultCell;
       case 'actions': return this.actionsCell;
       case 'actionsSmallFonts': return this.actionsCellSmallFonts;

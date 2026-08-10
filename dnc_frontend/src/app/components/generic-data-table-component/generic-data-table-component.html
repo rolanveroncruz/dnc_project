@@ -186,6 +186,16 @@
     </div>
 </ng-template>
 
+<!-- ✅ NEW: Display array values as an unordered list -->
+<ng-template #unorderedListCell let-row let-col="col">
+    @if (row[col.key]?.length) {
+        <ul class="table-list">
+            @for (item of row[col.key]; track $index) {
+                <li>{{ item }}</li>
+            }
+        </ul>
+    }
+</ng-template>
 
 <ng-template #actionsCell let-row let-col="col">
     <div class="action-buttons" (click)="$event.stopPropagation()">
@@ -256,3 +266,5 @@
         }
     </div>
 </ng-template>
+
+
