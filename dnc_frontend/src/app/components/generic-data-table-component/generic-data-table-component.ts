@@ -68,7 +68,17 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
 
   // --- STATE ---
   dataSource = new MatTableDataSource<T>([]);
-  displayedColumns: string[] = [];
+  /**
+   * Keep the row definitions in lockstep with the column definitions.
+   *
+   * This is intentionally derived instead of being a separately maintained
+   * array. A table component can be reused while its columnDefs input changes;
+   * retaining the previous array in that case makes MatTable try to render a
+   * column that no longer has a matching matColumnDef.
+   */
+  get displayedColumns(): string[] {
+    return this.columnDefs.map(column => column.key);
+  }
 
   // Dynamic filter options (Map of key -> unique values)
   filterOptions: { [key: string]: string[] } = {};
@@ -147,7 +157,6 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
     }
 
     if (changes['columnDefs']) {
-      this.displayedColumns = this.columnDefs.map(c => c.key);
       // Set default sort by first column if not set
       if (!this.form.get('sortBy')?.value && this.columnDefs.length > 0) {
         this.form.patchValue({ sortBy: this.columnDefs[0].key }, { emitEvent: false });
@@ -295,4 +304,3 @@ export class GenericDataTableComponent<T extends object> implements AfterViewIni
     return 'tag-other';
   }
 }
-

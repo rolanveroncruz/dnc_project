@@ -21,6 +21,8 @@ interface DentistClinicTableRow {
     name: string;
     address: string;
     capabilities: string;
+    contact_number: string;
+    schedule: string;
 }
 
 
@@ -51,6 +53,8 @@ export class DentistClinicsDialogComponent {
         'name',
         'address',
         'capabilities',
+        'contact_number',
+        'schedule',
     ];
 
 
@@ -89,7 +93,7 @@ export class DentistClinicsDialogComponent {
         clinic: DentistClinicResponse
     ): DentistClinicTableRow {
 
-        return {
+        let data ={
             id: clinic.id,
             name: clinic.name,
             address: clinic.address,
@@ -98,6 +102,10 @@ export class DentistClinicsDialogComponent {
             capabilities: clinic.capabilities
                 .map(capability => capability.name)
                 .join(', '),
+            contact_number: clinic.contact_number,
+            schedule: clinic.schedule,
         };
+        console.log('data', data);
+        return data;
     }
 }

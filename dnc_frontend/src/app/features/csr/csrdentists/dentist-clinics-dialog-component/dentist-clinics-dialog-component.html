@@ -97,6 +97,34 @@
                 </ng-container>
 
 
+                <!-- Contact number -->
+                <ng-container matColumnDef="contact_number">
+
+                    <th mat-header-cell *matHeaderCellDef>
+                        Contact
+                    </th>
+
+                    <td mat-cell *matCellDef="let clinic">
+                        {{ clinic.contact_number || '—' }}
+                    </td>
+
+                </ng-container>
+
+
+                <!-- Schedule -->
+                <ng-container matColumnDef="schedule">
+
+                    <th mat-header-cell *matHeaderCellDef>
+                        Schedule
+                    </th>
+
+                    <td mat-cell *matCellDef="let clinic">
+                        {{ clinic.schedule || '—' }}
+                    </td>
+
+                </ng-container>
+
+
                 <tr
                     mat-header-row
                     *matHeaderRowDef="displayedColumns">
