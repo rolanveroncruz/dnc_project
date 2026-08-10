@@ -1,0 +1,24 @@
+.setup-card {
+    margin: 24px;
+}
+
+.card-header-center {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.title-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    padding: 16px 0;
+}
+
+.error-message {
+    padding: 16px 0;
+    color: var(--mat-sys-error);
+}

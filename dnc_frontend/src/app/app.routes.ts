@@ -65,7 +65,7 @@ import {WebsiteData} from './features/website/website-data/website-data';
 import {WebsiteApplications} from './features/website/website-applications/website-applications';
 import {WebsiteInquiries} from './features/website/website-inquiries/website-inquiries';
 import {CSRDentistsComponent} from './features/csr/csrdentists/csrdentists';
-import {CSRCompanies} from './features/csr/csrcompanies/csrcompanies';
+import {CSREndorsements} from './features/csr/csrendorsements/csrendorsements'
 
 export const routes: Routes = [
   {
@@ -124,7 +124,7 @@ export const routes: Routes = [
               { path: 'verifications/:id', component:Verification, title: 'Verifications'},
               { path: 'high_end_verification', component:HighEndVerification, title: 'High End Verifications'},
               {path: 'dentists', component: CSRDentistsComponent, title: 'CSR-Dentists'},
-              {path: 'companies', component: CSRCompanies, title: 'CSR-Companies'},
+              {path: 'endorsements', component: CSREndorsements, title: 'CSR-Endorsements'},
           ]
       }, // end of 'csr'
         {
