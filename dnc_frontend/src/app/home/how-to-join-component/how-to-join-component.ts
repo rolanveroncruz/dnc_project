@@ -53,15 +53,15 @@ export class HowToJoinComponent {
     readonly clinicOwnershipOptions: { value: ClinicOwnershipType; label: string }[] = [
         {
             value: 'single_proprietorship',
-            label: 'Single Proprietorship',
+            label: 'Sole Proprietorship',
         },
         {
             value: 'company',
-            label: 'Company',
+            label: 'Partnership',
         },
         {
             value: 'corporation',
-            label: 'Corporation',
+            label: 'Corporation/Professional Corporation',
         },
     ];
 
