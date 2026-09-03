@@ -67,6 +67,7 @@ import {WebsiteInquiries} from './features/website/website-inquiries/website-inq
 import {CSRDentistsComponent} from './features/csr/csrdentists/csrdentists';
 import {CSREndorsements} from './features/csr/csrendorsements/csrendorsements'
 import {SearchDentist} from './features/csr/search-dentist/search-dentist';
+import {FAQComponent} from './home/faqcomponent/faqcomponent';
 
 export const routes: Routes = [
   {
@@ -213,7 +214,8 @@ export const routes: Routes = [
           { path: 'find_dentist', component: FindDentistComponent, title: 'Find My Dentist'},
           { path: 'members_info', component: MembersInfoComponent, title: 'Members Info Component'},
           { path: 'how_to_join', component: HowToJoinComponent, title: 'How To Join'},
-          { path: 'contact_us', component: ContactUsComponent, title: 'Comtact Us'},
+          { path: 'contact_us', component: ContactUsComponent, title: 'Contact Us'},
+          { path: 'faq', component: FAQComponent, title: 'FAQ'},
       ]
   }
 

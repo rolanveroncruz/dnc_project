@@ -1,0 +1,198 @@
+<section class="faq-page">
+
+    <!-- Hero -->
+    <header class="faq-hero">
+        <div class="faq-hero-inner">
+
+            <div class="faq-hero-content">
+
+                <p class="eyebrow">
+                    Frequently Asked Questions
+                </p>
+
+                <h1>
+                    How can we help?
+                </h1>
+
+                <p class="hero-subtitle">
+                    Find answers to common questions about your DNC dental
+                    benefits, appointments, coverage, and accredited clinics.
+                </p>
+
+                <div class="hero-highlights">
+
+                    <div class="hero-highlight">
+                        <mat-icon>help_outline</mat-icon>
+
+                        <span>
+                            Answers to common dental benefit questions
+                        </span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>verified</mat-icon>
+
+                        <span>
+                            Information for members and dependents
+                        </span>
+                    </div>
+
+                    <div class="hero-highlight">
+                        <mat-icon>support_agent</mat-icon>
+
+                        <span>
+                            DNC support when you need additional assistance
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="faq-hero-visual">
+
+                <div class="faq-image-frame">
+
+                    <img
+                        ngSrc="/images/faq/faq-hero.png"
+                        alt="Dental professional assisting a patient"
+                        height="1024"
+                        width="1536"
+                    >
+
+
+                </div>
+
+            </div>
+
+        </div>
+    </header>
+
+
+    <!-- FAQ Content -->
+    <section class="faq-content">
+
+        <mat-card class="faq-card">
+
+            <div class="faq-header">
+
+                <div class="faq-header-icon">
+                    <mat-icon>quiz</mat-icon>
+                </div>
+
+                <div>
+
+                    <p class="faq-eyebrow">
+                        Dental Benefits
+                    </p>
+
+                    <h2>
+                        Frequently Asked Questions
+                    </h2>
+
+                    <p>
+                        Browse the questions below to learn more about your
+                        dental benefits and how to use them.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <mat-accordion
+                class="faq-accordion"
+                multi
+            >
+
+                @for (faq of faqs; track faq.question) {
+
+                    <mat-expansion-panel>
+
+                        <mat-expansion-panel-header>
+
+                            <mat-panel-title>
+                                {{ faq.question }}
+                            </mat-panel-title>
+
+                        </mat-expansion-panel-header>
+
+                        <div class="faq-answer">
+
+                            <p>
+                                {{ faq.answer }}
+                            </p>
+
+                            @if (faq.bullets?.length) {
+
+                                <ul>
+                                    @for (
+                                        bullet of faq.bullets;
+                                        track bullet
+                                        ) {
+                                        <li>
+                                            {{ bullet }}
+                                        </li>
+                                    }
+                                </ul>
+
+                            }
+
+                        </div>
+
+                    </mat-expansion-panel>
+
+                }
+
+            </mat-accordion>
+
+        </mat-card>
+
+    </section>
+
+
+    <!-- Contact CTA -->
+    <section class="faq-contact">
+
+        <mat-card class="faq-contact-card">
+
+            <div class="faq-contact-icon">
+                <mat-icon>support_agent</mat-icon>
+            </div>
+
+            <div class="faq-contact-content">
+
+                <p class="faq-contact-eyebrow">
+                    Still have questions?
+                </p>
+
+                <h2>
+                    We're here to help.
+                </h2>
+
+                <p>
+                    If you cannot find the answer you're looking for,
+                    please contact DNC and our team will be happy to assist you.
+                </p>
+
+                <div class="faq-contact-details">
+
+                    <a href="mailto:concerns@dnc.com.ph">
+                        <mat-icon>email</mat-icon>
+                        concerns&#64;dnc.com.ph
+                    </a>
+
+                    <a href="tel:+63289117777">
+                        <mat-icon>phone</mat-icon>
+                        (02) 8911-7777
+                    </a>
+
+                </div>
+
+            </div>
+
+        </mat-card>
+
+    </section>
+
+</section>
