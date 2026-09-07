@@ -99,6 +99,9 @@ async fn search_public_dentists(
         INNER JOIN dentist d
             ON d.id = dc.dentist_id
 
+        INNER JOIN dentist_status ds
+            ON ds.id = d.dentist_status_id
+
         INNER JOIN dental_clinic c
             ON c.id = dc.clinic_id
 
@@ -119,6 +122,8 @@ async fn search_public_dentists(
             AND cc.active = true
 
         WHERE dc.clinic_id IS NOT NULL
+
+        AND ds.name = 'Accredited'
 
           AND (
                 $1::text IS NULL
