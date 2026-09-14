@@ -29,6 +29,11 @@ pub struct PublicDentistSearchResult {
     pub schedule: Option<String>,
 
     pub special_services: Vec<String>,
+
+    pub except_hmos: Vec<String>,
+    pub except_companies: Vec<String>,
+    pub exclusive_hmos: Vec<String>,
+    pub exclusive_companies: Vec<String>,
 }
 
 pub async fn search_public_dentists_handler(
@@ -92,7 +97,31 @@ async fn search_public_dentists(
             COALESCE(
                 array_agg(DISTINCT cc.name) FILTER (WHERE cc.name IS NOT NULL),
                 ARRAY[]::text[]
-            ) AS special_services
+            ) AS special_services,
+
+            COALESCE(
+                array_agg(DISTINCT h.short_name) FILTER (WHERE dhr.is_exclusive_to_hmo=false
+                AND h.short_name IS NOT NULL),
+                ARRAY[]::text[]
+             ) AS except_hmos,
+
+            COALESCE(
+                array_agg(DISTINCT ec.name) FILTER (WHERE dcr.is_exclusive_to_company=false
+                AND ec.name IS NOT NULL),
+                ARRAY[]::text[]
+             ) AS except_companies,
+
+            COALESCE(
+                array_agg(DISTINCT h.short_name) FILTER (WHERE dhr.is_exclusive_to_hmo=true
+                AND h.short_name IS NOT NULL),
+                ARRAY[]::text[]
+             ) AS exclusive_hmos,
+
+            COALESCE(
+                array_agg(DISTINCT ec.name) FILTER (WHERE dcr.is_exclusive_to_company=true
+                AND ec.name IS NOT NULL),
+                ARRAY[]::text[]
+             ) AS exclusive_companies
 
         FROM dentist_clinic dc
 
@@ -120,6 +149,18 @@ async fn search_public_dentists(
         LEFT JOIN clinic_capability cc
             ON cc.id = ccl.capability_id
             AND cc.active = true
+
+        LEFT JOIN dentist_hmo_relations dhr
+            ON dhr.dentist_id = d.id
+
+        LEFT JOIN hmo h
+            ON h.id = dhr.hmo_id
+
+        LEFT JOIN dentist_company_relations dcr
+            ON dcr.dentist_id = d.id
+
+        LEFT JOIN endorsement_company ec
+        ON ec.id = dcr.company_id
 
         WHERE dc.clinic_id IS NOT NULL
 
