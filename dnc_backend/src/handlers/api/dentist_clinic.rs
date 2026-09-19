@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::AppState;
-use crate::entities::{dentist, dentist_clinic, dental_clinic, position};
+use crate::entities::{dentist, dentist_clinic, dental_clinic, position, dentist_status};
 
 /// Joined row returned to the client
 #[derive(Debug, Serialize, FromQueryResult)]
@@ -98,6 +98,10 @@ pub async fn get_all_dentist_clinics(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<DentistClinicWithNames>>, StatusCode> {
     let rows = dentist_clinic_select_base()
+        .join(
+            JoinType::InnerJoin,
+            dentist::Relation::DentistStatus.def()
+        ).filter(dentist_status::Column::Name.eq("Accredited"))
         .into_model::<DentistClinicWithNames>()
         .all(&state.db)
         .await
