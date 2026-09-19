@@ -204,6 +204,56 @@
                                         </p>
                                     </div>
                                 </div>
+                                @if (
+                                    result.exclusive_hmos &&
+                                    result.exclusive_hmos.length > 0
+                                    ) {
+                                    <div class="hmo_relation">
+                                    <p class="coverage-detail">
+                                        <strong>Exclusive to HMOs:</strong>
+                                        {{ result.exclusive_hmos.join(', ') }}
+                                    </p>
+                                    </div>
+                                }
+
+                                @if (
+                                    result.exclusive_companies &&
+                                    result.exclusive_companies.length > 0
+                                    ) {
+                                    <div class="company_relation">
+                                    <p class="coverage-detail">
+                                        <strong>Exclusive to Companies:</strong>
+                                        {{ result.exclusive_companies.join(', ') }}
+                                    </p>
+                                    </div>
+                                }
+
+                                @if (
+                                    result.except_hmos &&
+                                    result.except_hmos.length > 0
+                                    ) {
+                                    <div class="hmo_relation">
+                                    <p class="coverage-detail">
+                                        <strong>Except HMOs:</strong>
+                                        {{ result.except_hmos.join(', ') }}
+                                    </p>
+                                    </div>
+                                }
+                                @if (
+                                    result.except_companies &&
+                                        result.except_companies.length > 0
+                                        ) {
+                                    <div class="company_relation">
+                                    <p class="coverage-detail">
+                                        <strong>Except Companies:</strong>
+                                        {{ result.except_companies.join(', ') }}
+                                    </p>
+                                    </div>
+                                    }
+
+
+
+
 
                                 <div class="result-details">
                                     <p>

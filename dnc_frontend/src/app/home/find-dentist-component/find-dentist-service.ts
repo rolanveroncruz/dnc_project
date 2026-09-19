@@ -15,6 +15,10 @@ export interface PublicDentistSearchResult {
     contact_numbers: string | null;
     schedule: string | null;
     special_services: string[];
+    except_hmos:string[];
+    except_companies:string[];
+    exclusive_hmos:string[];
+    exclusive_companies:string[];
 }
 
 @Injectable({
